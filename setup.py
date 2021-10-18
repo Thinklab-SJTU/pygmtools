@@ -14,10 +14,10 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = 'pygmtools'
 DESCRIPTION = 'Preprocess dataset, fetch data and evaluate prediction result for graph matching on several datasets, including PascalVOC, WillowObject, CUB2011, IMC-PT-SparseGM and SPair71k.'
-URL = ''
-EMAIL = ''
+URL = 'https://github.com/Thinklab-SJTU/pygmtools'
+EMAIL = '1115712590@sjtu.edu.cn'
 AUTHOR = 'Ziao Guo'
-VERSION = '0.1'
+VERSION = '0.1.1'
 
 REQUIRED = [
      'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7',
