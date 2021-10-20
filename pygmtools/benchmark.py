@@ -7,6 +7,7 @@ import random
 import json
 import itertools
 from scipy.sparse import coo_matrix
+from dataset import *
 
 
 class Benchmark:
