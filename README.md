@@ -19,7 +19,12 @@ The pygmtools package is developed to fairly compare existing deep graph matchin
 
 ### Requirements
 
-- Python >=3.5
+- Python >= 3.5
+- requests >= 2.25.1
+- scipy >= 1.4.1
+- Pillow >= 7.2.0
+- numpy >= 1.18.5
+- easydict >= 1.7
 
 
 

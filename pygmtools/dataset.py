@@ -2,7 +2,7 @@ import requests
 import os
 import zipfile
 import tarfile
-from dataset_config import dataset_cfg
+from pygmtools.dataset_config import dataset_cfg
 from pathlib import Path
 from xml.etree.ElementTree import Element
 from PIL import Image

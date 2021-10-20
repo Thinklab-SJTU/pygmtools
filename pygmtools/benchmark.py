@@ -7,7 +7,7 @@ import random
 import json
 import itertools
 from scipy.sparse import coo_matrix
-from dataset import *
+from pygmtools.dataset import *
 
 
 class Benchmark:
@@ -389,3 +389,6 @@ class Benchmark:
 
             if not last_epoch:
                 os.mkdir(self.gt_cache_path)
+
+if __name__ == '__main__':
+    bm = Benchmark('PascalVOC', 'train')
