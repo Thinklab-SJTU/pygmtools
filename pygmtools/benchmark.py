@@ -13,17 +13,17 @@ from pygmtools.dataset import *
 class Benchmark:
     def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', **args):
         """
-        :param name: dataset name, currently support 'PascalVOC', 'WillowObject', 'CUB2011', 'CUB2011', 'SPair71k'
+        :param name: dataset name, currently support 'PascalVOC', 'WillowObject', 'IMC_PT_SparseGM', 'CUB2011', 'SPair71k'
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
         :param problem: '2GM' or 'MGM'
         :param filter: 'intersection', 'inclusion' or 'unfiltered'
         :param args: specific settings for dataset
         """
-        assert name == 'PascalVOC' or name == 'SPair71k' or name == 'WillowObject' or name == 'CUB2011' or name == 'CUB2011', 'No match found for dataset {}'.format(name)
-        assert problem == '2GM' or problem == 'MGM', 'No match found for problem {}'.format(problem)
+        assert name == 'PascalVOC' or name == 'SPair71k' or name == 'WillowObject' or name == 'IMC_PT_SparseGM' or name == 'CUB2011', 'No match found for dataset {}'.format(name)
+        assert problem == '2GM' or problem == 'MGM' or problem == 'MGM3', 'No match found for problem {}'.format(problem)
         assert filter == 'intersection' or filter == 'inclusion' or filter == 'unfiltered', 'No match found for filter {}'.format(filter)
-        assert not(problem == 'MGM' and filter == 'inclusion'), 'The filter inclusion only matches 2GM'
+        assert not((problem == 'MGM' or problem == 'MGM3') and filter == 'inclusion'), 'The filter inclusion only matches 2GM'
 
         self.name = name
         self.problem = problem
@@ -51,7 +51,7 @@ class Benchmark:
 
     def get_data(self, ids, test=False, shuffle=True):
         """
-        Fetch a data pair(for 2GM) or pairs of data(for MGM) for training or test.
+        Fetch a data pair(for 2GM) or pairs of data(for MGM and MGM3) for training or test.
 
         :param ids: image id list, usually in 'train.json' or 'test.json'
         :param test: whether the fetched is used for test
@@ -61,7 +61,7 @@ class Benchmark:
                                 data pair (ids[0],ids[1])
                 id_combination: combination of image ids
         """
-        assert (self.problem == '2GM' and len(ids) == 2) or (self.problem == 'MGM' and len(ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
+        assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or problem == 'MGM3') and len(ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
 
         ids.sort()
         data_list = []
