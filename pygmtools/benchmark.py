@@ -61,7 +61,7 @@ class Benchmark:
                                 data pair (ids[0],ids[1])
                 id_combination: combination of image ids
         """
-        assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or problem == 'MGM3') and len(ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
+        assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or self.problem == 'MGM3') and len(ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
 
         ids.sort()
         data_list = []
@@ -305,14 +305,17 @@ class Benchmark:
         pred_cls_dict = dict()
         result = dict()
         id_cache = []
+        cls_precision = dict()
+        cls_recall = dict()
+        cls_f1 = dict()
 
         for cls in classes:
             cls_dict[cls] = 0
             pred_cls_dict[cls] = 0
             result[cls] = dict()
-            result[cls]['precision'] = 0
-            result[cls]['recall'] = 0
-            result[cls]['f1'] = 0
+            cls_precision[cls] = []
+            cls_recall[cls] = []
+            cls_f1[cls] = []
 
         for key, obj in self.data_dict.items():
             if key in data_id:
@@ -340,40 +343,48 @@ class Benchmark:
                 else:
                     f1_score = (2 * precision * recall) / (precision + recall)
 
-                result[pair_dict['cls']]['precision'] += precision
-                result[pair_dict['cls']]['recall'] += recall
-                result[pair_dict['cls']]['f1'] += f1_score
+                cls_precision[pair_dict['cls']].append(precision)
+                cls_recall[pair_dict['cls']].append(recall)
+                cls_f1[pair_dict['cls']].append(f1_score)
 
         p_sum = 0
         r_sum = 0
         f1_sum = 0
-        pred_sum = 0
-        total = 0
+        p_std_sum = 0
+        r_std_sum = 0
+        f1_std_sum = 0
+
         for cls in classes:
-            result[cls]['precision'] /= pred_cls_dict[cls]
-            result[cls]['recall'] /= pred_cls_dict[cls]
-            result[cls]['f1'] /= pred_cls_dict[cls]
+            result[cls]['precision'] = np.mean(cls_precision[cls])
+            result[cls]['recall'] = np.mean(cls_recall[cls])
+            result[cls]['f1'] = np.mean(cls_f1[cls])
+            result[cls]['precision_std'] = np.std(cls_precision[cls])
+            result[cls]['recall_std'] = np.std(cls_recall[cls])
+            result[cls]['f1_std'] = np.std(cls_f1[cls])
             result[cls]['coverage'] = 2 * pred_cls_dict[cls] / (cls_dict[cls] * (cls_dict[cls] - 1))
             p_sum += result[cls]['precision']
             r_sum += result[cls]['recall']
             f1_sum += result[cls]['f1']
-            pred_sum += pred_cls_dict[cls]
-            total += (cls_dict[cls] * (cls_dict[cls] - 1)) / 2
+            p_std_sum += result[cls]['precision_std']
+            r_std_sum += result[cls]['recall_std']
+            f1_std_sum += result[cls]['f1_std']
 
         result['mean'] = dict()
         result['mean']['precision'] = p_sum / len(classes)
         result['mean']['recall'] = r_sum / len(classes)
         result['mean']['f1'] = f1_sum / len(classes)
-        result['mean']['coverage'] = pred_sum / total
+        result['mean']['precision_std'] = p_std_sum / len(classes)
+        result['mean']['recall_std'] = r_std_sum / len(classes)
+        result['mean']['f1_std'] = f1_std_sum / len(classes)
 
         if verbose:
             print('Matching accuracy')
             for cls in classes:
-                print('{}: {}'.format(cls, 'p = {:.4f}, r = {:.4f}, f1 = {:.4f}, cvg = {:.4f}' \
-                    .format(result[cls]['precision'], result[cls]['recall'], result[cls]['f1'], result[cls]['coverage']
+                print('{}: {}'.format(cls, 'p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}, cvg = {:.4f}' \
+                    .format(result[cls]['precision'], result[cls]['precision_std'], result[cls]['recall'], result[cls]['recall_std'], result[cls]['f1'], result[cls]['f1_std'], result[cls]['coverage']
                             )))
-            print('average accuracy: {}'.format('p = {:.4f}, r = {:.4f}, f1 = {:.4f}, cvg = {:.4f}' \
-                    .format(result['mean']['precision'], result['mean']['recall'], result['mean']['f1'], result['mean']['coverage']
+            print('average accuracy: {}'.format('p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}' \
+                    .format(result['mean']['precision'], result['mean']['precision_std'], result['mean']['recall'], result['mean']['recall_std'], result['mean']['f1'], result['mean']['f1_std']
                             )))
         return result
 
@@ -389,6 +400,3 @@ class Benchmark:
 
             if not last_epoch:
                 os.mkdir(self.gt_cache_path)
-
-if __name__ == '__main__':
-    bm = Benchmark('PascalVOC', 'train')
