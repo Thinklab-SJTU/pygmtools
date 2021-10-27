@@ -318,7 +318,7 @@ class Benchmark:
             cls_f1[cls] = []
 
         for key, obj in self.data_dict.items():
-            if key in data_id:
+            if (key in data_id) and (obj['cls'] in classes):
                 cls_dict[obj['cls']] += 1
 
         for pair_dict in prediction:
