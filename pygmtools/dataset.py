@@ -1121,7 +1121,7 @@ class CUB2011:
         img_file = self.get_imgname(img_name)
         with Image.open(str(img_file)) as img:
             xmin, xmax = np.clip((xmin, xmin + w), 0, img.size[0])
-            ymin, ymax = np.clip((ymin, ymin + w), 0, img.size[1])
+            ymin, ymax = np.clip((ymin, ymin + h), 0, img.size[1])
 
         keypoint_list = []
         for keypt_idx in range(keypts.shape[1]):

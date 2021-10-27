@@ -17,7 +17,7 @@ DESCRIPTION = 'Preprocess dataset, fetch data and evaluate prediction result for
 URL = 'https://github.com/Thinklab-SJTU/pygmtools'
 EMAIL = '1115712590@sjtu.edu.cn'
 AUTHOR = 'Ziao Guo'
-VERSION = '0.1.5'
+VERSION = '0.1.6'
 
 REQUIRED = [
      'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7',
