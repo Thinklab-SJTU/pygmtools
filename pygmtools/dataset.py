@@ -590,7 +590,7 @@ class WillowObject:
         
         
 class SPair71k:
-    def __init__(self, sets, obj_resize, problem='2GM', TRAIN_DIFF_PARAMS={}, EVAL_DIFF_PARAMS={}, COMB_CLS=False, SIZE='large'):
+    def __init__(self, sets, obj_resize, problem='2GM', TRAIN_DIFF_PARAMS={}, EVAL_DIFF_PARAMS={}, COMB_CLS=False, SIZE='large', **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
@@ -849,7 +849,7 @@ class SPair71k:
 
 
 class IMC_PT_SparseGM:
-    def __init__(self, sets, obj_resize, TOTAL_KPT_NUM=50):
+    def __init__(self, sets, obj_resize, TOTAL_KPT_NUM=50, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
@@ -985,7 +985,7 @@ class IMC_PT_SparseGM:
 
 
 class CUB2011:
-    def __init__(self, sets, obj_resize, CLS_SPLIT='ori'):
+    def __init__(self, sets, obj_resize, CLS_SPLIT='ori', **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
