@@ -278,9 +278,10 @@ class Benchmark:
         """
         with open(self.data_list_path) as f1:
             data_id = json.load(f1)
+        num_list = []
         for clss in classes:
             cls_img_num = 0
-            num_list = []
+
             for id in data_id:
                 if self.data_dict[id]['cls'] == clss:
                     cls_img_num += 1

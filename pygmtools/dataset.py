@@ -84,7 +84,7 @@ VOC2011_KPT_NAMES = {
 
 
 class PascalVOC:
-    def __init__(self, sets, obj_resize):
+    def __init__(self, sets, obj_resize, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
@@ -359,7 +359,7 @@ class PascalVOC:
     
 
 class WillowObject:
-    def __init__(self, sets, obj_resize, TRAIN_NUM=20, SPLIT_OFFSET=0, TRAIN_SAME_AS_TEST=False, RAND_OUTLIER=0):
+    def __init__(self, sets, obj_resize, TRAIN_NUM=20, SPLIT_OFFSET=0, TRAIN_SAME_AS_TEST=False, RAND_OUTLIER=0, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
@@ -368,6 +368,15 @@ class WillowObject:
         :param TRAIN_SAME_AS_TEST: whether use same images for training and test
         :param RAND_OUTLIER: number of added outliers in one image
         """
+
+        if TRAIN_NUM is None:
+            TRAIN_NUM = dataset_cfg.WillowObject.TRAIN_NUM
+        if SPLIT_OFFSET is None:
+            SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
+        if TRAIN_SAME_AS_TEST is None:
+            TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
+        if RAND_OUTLIER is None:
+            RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
 
         self.dataset_dir = 'data/WillowObject'
         if not os.path.exists(self.dataset_dir):
@@ -487,40 +496,40 @@ class WillowObject:
                         cls_mat_list[self.split_offset % ori_len:]
                     )
 
-        if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
-            train_list = []
-            test_list = []
-            if self.sets == 'train':
-                for x in range(len(self.mat_list)):
-                    for name in self.mat_list[x]:
-                        tmp = str(name).split('/')
-                        objID = tmp[-1].split('.')[0]
-                        train_list.append(objID)
-                for x in range(len(mat_list_)):
-                    for name in mat_list_[x]:
-                        tmp = str(name).split('/')
-                        objID = tmp[-1].split('.')[0]
-                        test_list.append(objID)
-            else:
-                for x in range(len(self.mat_list)):
-                    for name in self.mat_list[x]:
-                        tmp = str(name).split('/')
-                        objID = tmp[-1].split('.')[0]
-                        test_list.append(objID)
-                for x in range(len(mat_list_)):
-                    for name in mat_list_[x]:
-                        tmp = str(name).split('/')
-                        objID = tmp[-1].split('.')[0]
-                        train_list.append(objID)
-            str1 = json.dumps(train_list)
-            f1 = open(train_file, 'w')
-            f1.write(str1)
-            f1.close()
-            str2 = json.dumps(test_list)
-            f2 = open(test_file, 'w')
-            f2.write(str2)
-            f2.close()
+        train_list = []
+        test_list = []
+        if self.sets == 'train':
+            for x in range(len(self.mat_list)):
+                for name in self.mat_list[x]:
+                    tmp = str(name).split('/')
+                    objID = tmp[-1].split('.')[0]
+                    train_list.append(objID)
+            for x in range(len(mat_list_)):
+                for name in mat_list_[x]:
+                    tmp = str(name).split('/')
+                    objID = tmp[-1].split('.')[0]
+                    test_list.append(objID)
+        else:
+            for x in range(len(self.mat_list)):
+                for name in self.mat_list[x]:
+                    tmp = str(name).split('/')
+                    objID = tmp[-1].split('.')[0]
+                    test_list.append(objID)
+            for x in range(len(mat_list_)):
+                for name in mat_list_[x]:
+                    tmp = str(name).split('/')
+                    objID = tmp[-1].split('.')[0]
+                    train_list.append(objID)
+        str1 = json.dumps(train_list)
+        f1 = open(train_file, 'w')
+        f1.write(str1)
+        f1.close()
+        str2 = json.dumps(test_list)
+        f2 = open(test_file, 'w')
+        f2.write(str2)
+        f2.close()
 
+        if not os.path.exists(img_file):
             data_dict = dict()
 
             for x in range(len(data_list)):
@@ -591,6 +600,15 @@ class SPair71k:
         :param COMB_CLS: whether combine images in different classes
         :param SIZE: 'large' or 'small'
         """
+        if TRAIN_DIFF_PARAMS is None:
+            TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
+        if EVAL_DIFF_PARAMS is None:
+            EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
+        if COMB_CLS is None:
+            COMB_CLS = dataset_cfg.SPair.COMB_CLS
+        if SIZE is None:
+            SIZE = dataset_cfg.SPair.size
+
         SPair71k_pair_ann_path = dataset_cfg.SPair.ROOT_DIR + "/PairAnnotation"
         SPair71k_image_path = dataset_cfg.SPair.ROOT_DIR + "/JPEGImages"
         SPair71k_image_annotation = dataset_cfg.SPair.ROOT_DIR + "/ImageAnnotation"
@@ -839,6 +857,9 @@ class IMC_PT_SparseGM:
         """
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
 
+        if TOTAL_KPT_NUM is None:
+            TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
+
         self.dataset_dir = 'data/IMC-PT-SparseGM'
         if not os.path.exists(self.dataset_dir):
             self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B')
@@ -970,6 +991,9 @@ class CUB2011:
         :param obj_resize: resized object size
         :param CLS_SPLIT: 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
         """
+        if CLS_SPLIT is None:
+            CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
+
         self.set_data = {'train': [], 'test': []}
         self.classes = []
 
