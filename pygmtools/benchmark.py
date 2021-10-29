@@ -389,6 +389,72 @@ class Benchmark:
                             )))
         return result
 
+    def eval_cls(self, prediction, cls, verbose=False):
+        """
+        Evaluate test results for one class. Compute matching accuracy and coverage.
+
+        :param prediction: prediction result.  [{'ids': (id1, id2), 'permmat': np.array or scipy.sparse},…]
+        :param cls: evaluated class
+        :param verbose: whether print the result
+        :return result: evaluation result
+        """
+
+        with open(self.data_list_path) as f1:
+            data_id = json.load(f1)
+
+        result = dict()
+        id_cache = []
+        cls_precision = []
+        cls_recall = []
+        cls_f1 = []
+
+        cls_dict = 0
+        pred_cls_dict = 0
+
+        for key, obj in self.data_dict.items():
+            if (key in data_id) and (obj['cls'] == cls):
+                cls_dict += 1
+
+        for pair_dict in prediction:
+            ids = (pair_dict['ids'][0], pair_dict['ids'][1])
+            if ids not in id_cache:
+                id_cache.append(ids)
+                pred_cls_dict += 1
+                perm_mat = pair_dict['perm_mat']
+                gt_path = os.path.join(self.gt_cache_path, str(ids) + '.npy')
+                gt = np.load(gt_path, allow_pickle=True).item()
+                gt_array = gt.toarray()
+                assert type(perm_mat) == type(gt_array)
+
+                if perm_mat.sum() == 0 or gt_array.sum() == 0:
+                    precision = 1
+                    recall = 1
+                else:
+                    precision = (perm_mat * gt_array).sum() / perm_mat.sum()
+                    recall = (perm_mat * gt_array).sum() / gt_array.sum()
+                if precision == 0 or recall == 0:
+                    f1_score = 0
+                else:
+                    f1_score = (2 * precision * recall) / (precision + recall)
+
+                cls_precision.append(precision)
+                cls_recall.append(recall)
+                cls_f1.append(f1_score)
+
+        result['precision'] = np.mean(cls_precision)
+        result['recall'] = np.mean(cls_recall)
+        result['f1'] = np.mean(cls_f1)
+        result['precision_std'] = np.std(cls_precision)
+        result['recall_std'] = np.std(cls_recall)
+        result['f1_std'] = np.std(cls_f1)
+        result['coverage'] = 2 * pred_cls_dict / (cls_dict * (cls_dict - 1))
+
+        if verbose:
+            print('Class {}: {}'.format(cls, 'p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}, cvg = {:.4f}' \
+                .format(result['precision'], result['precision_std'], result['recall'], result['recall_std'], result['f1'], result['f1_std'], result['coverage']
+                        )))
+        return result
+
     def rm_gt_cache(self, last_epoch=False):
         """
         Remove ground truth cache.
