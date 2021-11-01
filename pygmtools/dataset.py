@@ -359,23 +359,38 @@ class PascalVOC:
     
 
 class WillowObject:
-    def __init__(self, sets, obj_resize, TRAIN_NUM=20, SPLIT_OFFSET=0, TRAIN_SAME_AS_TEST=False, RAND_OUTLIER=0, **args):
+    def __init__(self, sets, obj_resize, ds_dict=None, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
-        :param TRAIN_NUM: number of images for train in each class
-        :param SPLIT_OFFSET: offset when split train and test set
-        :param TRAIN_SAME_AS_TEST: whether use same images for training and test
-        :param RAND_OUTLIER: number of added outliers in one image
+        :param ds_dict: settings of dataset, containing at most 4 params(keys) for WillowObject:
+            :param TRAIN_NUM: number of images for train in each class
+            :param SPLIT_OFFSET: offset when split train and test set
+            :param TRAIN_SAME_AS_TEST: whether use same images for training and test
+            :param RAND_OUTLIER: number of added outliers in one image
         """
-
-        if TRAIN_NUM is None:
+        
+        if ds_dict is not None:
+            if 'TRAIN_NUM' in ds_dict.keys():
+                TRAIN_NUM = ds_dict.TRAIN_NUM
+            else:
+                TRAIN_NUM = dataset_cfg.WillowObject.TRAIN_NUM
+            if 'SPLIT_OFFSET' in ds_dict.keys():
+                SPLIT_OFFSET = ds_dict.SPLIT_OFFSET
+            else:
+                SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
+            if 'TRAIN_SAME_AS_TEST' in ds_dict.keys():
+                TRAIN_SAME_AS_TEST = ds_dict.TRAIN_SAME_AS_TEST
+            else:
+                TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
+            if 'RAND_OUTLIER' in ds_dict.keys():
+                RAND_OUTLIER = ds_dict.RAND_OUTLIER
+            else:
+                RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
+        else:
             TRAIN_NUM = dataset_cfg.WillowObject.TRAIN_NUM
-        if SPLIT_OFFSET is None:
             SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
-        if TRAIN_SAME_AS_TEST is None:
             TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
-        if RAND_OUTLIER is None:
             RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
 
         self.dataset_dir = 'data/WillowObject'
@@ -590,23 +605,38 @@ class WillowObject:
         
         
 class SPair71k:
-    def __init__(self, sets, obj_resize, problem='2GM', TRAIN_DIFF_PARAMS={}, EVAL_DIFF_PARAMS={}, COMB_CLS=False, SIZE='large', **args):
+    def __init__(self, sets, obj_resize, problem='2GM', ds_dict=None, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
         :param problem: problem type, only '2GM' in SPair71k
-        :param TRAIN_DIFF_PARAMS: images that should be dumped in train set
-        :param EVAL_DIFF_PARAMS: images that should be dumped in test set
-        :param COMB_CLS: whether combine images in different classes
-        :param SIZE: 'large' or 'small'
+        :param ds_dict: settings of dataset, containing at most 4 params(keys) for SPair71k:
+            :param TRAIN_DIFF_PARAMS: images that should be dumped in train set
+            :param EVAL_DIFF_PARAMS: images that should be dumped in test set
+            :param COMB_CLS: whether combine images in different classes
+            :param SIZE: 'large' or 'small'
         """
-        if TRAIN_DIFF_PARAMS is None:
+        if ds_dict is not None:
+            if 'TRAIN_DIFF_PARAMS' in ds_dict.keys():
+                TRAIN_DIFF_PARAMS = ds_dict.TRAIN_DIFF_PARAMS
+            else:
+                TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
+            if 'EVAL_DIFF_PARAMS' in ds_dict.keys():
+                EVAL_DIFF_PARAMS = ds_dict.EVAL_DIFF_PARAMS
+            else:
+                EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
+            if 'COMB_CLS' in ds_dict.keys():
+                COMB_CLS = ds_dict.COMB_CLS
+            else:
+                COMB_CLS = dataset_cfg.SPair.COMB_CLS
+            if 'SIZE' in ds_dict.keys():
+                SIZE = ds_dict.SIZE
+            else:
+                SIZE = dataset_cfg.SPair.size
+        else:
             TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
-        if EVAL_DIFF_PARAMS is None:
             EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
-        if COMB_CLS is None:
             COMB_CLS = dataset_cfg.SPair.COMB_CLS
-        if SIZE is None:
             SIZE = dataset_cfg.SPair.size
 
         SPair71k_pair_ann_path = dataset_cfg.SPair.ROOT_DIR + "/PairAnnotation"
@@ -849,15 +879,21 @@ class SPair71k:
 
 
 class IMC_PT_SparseGM:
-    def __init__(self, sets, obj_resize, TOTAL_KPT_NUM=50, **args):
+    def __init__(self, sets, obj_resize, ds_dict=None, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
-        :param TOTAL_KPT_NUM: maximum kpt_num in an image
+        :param ds_dict: settings of dataset, containing at most 1 param(key) for IMC_PT_SparseGM:
+            :param TOTAL_KPT_NUM: maximum kpt_num in an image
         """
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
-
-        if TOTAL_KPT_NUM is None:
+        
+        if ds_dict is not None:
+            if 'TOTAL_KPT_NUM' in ds_dict.keys():
+                TOTAL_KPT_NUM = ds_dict.TOTAL_KPT_NUM
+            else:
+                TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
+        else:
             TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
 
         self.dataset_dir = 'data/IMC-PT-SparseGM'
@@ -985,13 +1021,19 @@ class IMC_PT_SparseGM:
 
 
 class CUB2011:
-    def __init__(self, sets, obj_resize, CLS_SPLIT='ori', **args):
+    def __init__(self, sets, obj_resize, ds_dict=None, **args):
         """
         :param sets: 'train' or 'test'
         :param obj_resize: resized object size
-        :param CLS_SPLIT: 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
+        :param ds_dict: settings of dataset, containing at most 1 param(key) for CUB2011:
+            :param CLS_SPLIT: 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
         """
-        if CLS_SPLIT is None:
+        if ds_dict is not None:
+            if 'CLS_SPLIT' in ds_dict.keys():
+                CLS_SPLIT = ds_dict.CLS_SPLIT
+            else:
+                CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
+        else:
             CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
 
         self.set_data = {'train': [], 'test': []}
