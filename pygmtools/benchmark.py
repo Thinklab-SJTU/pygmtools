@@ -155,9 +155,9 @@ class Benchmark:
 
         id_combination = list(itertools.combinations(ids, 2))
         if not test:
-            return data_list, perm_mat_dict, id_combination
+            return data_list, perm_mat_dict, ids
         else:
-            return data_list, id_combination
+            return data_list, ids
 
     def rand_get_data(self, cls=None, num=2, test=False, shuffle=True):
         """
