@@ -96,8 +96,12 @@ class PascalVOC:
 
         self.VOC2011_set_path = dataset_cfg.PascalVOC.SET_SPLIT
         self.dataset_dir = 'data/PascalVOC'
-        if not os.path.exists(self.dataset_dir):
+        data_dir = "data/PascalVOC/TrainVal/VOCdevkit/VOC2011"
+        anno_dir = "data/PascalVOC/annotations"
+        if not os.path.exists(data_dir):
             self.download(url='http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar', name='PascalVOC' )
+       
+        if not os.path.exists(anno_dir):
             self.download(url='https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz', name='PascalVOC_anno')
 
         self.sets = sets
