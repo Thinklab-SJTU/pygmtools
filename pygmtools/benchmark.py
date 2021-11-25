@@ -182,7 +182,7 @@ class Benchmark:
 
         data_list = []
         for id in data_id:
-            if self.data_dict[id]['cls'] == clss:
+            if self.data_dict[id[0]]['cls'] == clss:
                 data_list.append(id)
 
         ids = []
