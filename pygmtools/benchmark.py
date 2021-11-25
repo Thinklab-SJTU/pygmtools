@@ -216,21 +216,36 @@ class Benchmark:
         id_combination_list = []
         if clss != None:
             data_list = []
-            for id in data_id:
-                if self.data_dict[id]['cls'] == clss:
-                    data_list.append(id)
-            id_combination = list(itertools.combinations(data_list, num))
-            length = length + len(id_combination)
-            id_combination_list.append(id_combination)
-        else:
-            for clss in self.classes:
-                data_list = []
+            if self.name != "SPair71k":
                 for id in data_id:
                     if self.data_dict[id]['cls'] == clss:
                         data_list.append(id)
                 id_combination = list(itertools.combinations(data_list, num))
-                length = length + len(id_combination)
+                length += len(id_combination)
                 id_combination_list.append(id_combination)
+            else:
+                for id_pair in data_id:
+                    if self.data_dict[id_pair[0]]['cls'] == clss:
+                        data_list.append(id_pair)
+                length += len(data_list)
+                id_combination_list.append(data_list)
+        else:
+            for clss in self.classes:
+                data_list = []
+                if self.name != "SPair71k":
+                    for id in data_id:
+                        if self.data_dict[id]['cls'] == clss:
+                            data_list.append(id)
+                    id_combination = list(itertools.combinations(data_list, num))
+                    length += len(id_combination)
+                    id_combination_list.append(id_combination)
+                else:
+                    for id_pair in data_id:
+                        if self.data_dict[id_pair[0]]['cls'] == clss:
+                            data_list.append(id_pair)
+                    length += len(data_list)
+                    id_combination_list.append(data_list)
+
         return id_combination_list, length
 
     def compute_length(self, cls, num=2):
@@ -252,21 +267,31 @@ class Benchmark:
         length = 0
 
         if clss != None:
-            data_list = []
-            for id in data_id:
-                if self.data_dict[id]['cls'] == clss:
-                    data_list.append(id)
-            id_combination = list(itertools.combinations(data_list, num))
-            length = length + len(id_combination)
-
-        else:
-            for clss in self.classes:
+            if self.name != "SPair71k":
                 data_list = []
                 for id in data_id:
                     if self.data_dict[id]['cls'] == clss:
                         data_list.append(id)
                 id_combination = list(itertools.combinations(data_list, num))
-                length = length + len(id_combination)
+                length += len(id_combination)
+            else:
+                for id_pair in data_id:
+                    if self.data_dict[id_pair[0]]['cls'] == clss:
+                        length += 1
+
+        else:
+            for clss in self.classes:
+                if self.name != "SPair71k":
+                    data_list = []
+                    for id in data_id:
+                        if self.data_dict[id]['cls'] == clss:
+                            data_list.append(id)
+                    id_combination = list(itertools.combinations(data_list, num))
+                    length += len(id_combination)
+                else:
+                    for id_pair in data_id:
+                        if self.data_dict[id_pair[0]]['cls'] == clss:
+                            length += 1
         return length
 
     def compute_img_num(self, classes):
@@ -281,11 +306,22 @@ class Benchmark:
         num_list = []
         for clss in classes:
             cls_img_num = 0
-
-            for id in data_id:
-                if self.data_dict[id]['cls'] == clss:
-                    cls_img_num += 1
-            num_list.append(cls_img_num)
+            if self.name != "SPair71k":
+                for id in data_id:
+                    if self.data_dict[id]['cls'] == clss:
+                        cls_img_num += 1
+                num_list.append(cls_img_num)
+            else:
+                img_cache = []
+                for id_pair in data_id:
+                    if self.data_dict[id_pair[0]]['cls'] == clss:
+                        if id_pair[0] not in img_cache:
+                            img_cache.append(id_pair[0])
+                            cls_img_num += 1
+                        if id_pair[1] not in img_cache:
+                            img_cache.append(id_pair[1])
+                            cls_img_num += 1
+                num_list.append(cls_img_num)
 
         return num_list
 
