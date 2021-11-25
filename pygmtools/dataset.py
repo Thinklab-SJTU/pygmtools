@@ -811,6 +811,7 @@ class SPair71k:
         anno_dict['path'] = img_file
         anno_dict['cls'] = cls
         anno_dict['bounds'] = annotations['bndbox']
+        anno_dict['univ_size'] = len(VOC2011_KPT_NAMES[cls])
 
         return anno_dict
 

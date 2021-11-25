@@ -153,7 +153,6 @@ class Benchmark:
                 if not os.path.exists(gt_path):
                     np.save(gt_path, perm_mat_dict[pair])
 
-        id_combination = list(itertools.combinations(ids, 2))
         if not test:
             return data_list, perm_mat_dict, ids
         else:
