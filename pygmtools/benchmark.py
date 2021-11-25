@@ -20,10 +20,14 @@ class Benchmark:
         :param filter: 'intersection', 'inclusion' or 'unfiltered'
         :param args: specific settings for dataset
         """
-        assert name == 'PascalVOC' or name == 'SPair71k' or name == 'WillowObject' or name == 'IMC_PT_SparseGM' or name == 'CUB2011', 'No match found for dataset {}'.format(name)
-        assert problem == '2GM' or problem == 'MGM' or problem == 'MGM3', 'No match found for problem {}'.format(problem)
-        assert filter == 'intersection' or filter == 'inclusion' or filter == 'unfiltered', 'No match found for filter {}'.format(filter)
-        assert not((problem == 'MGM' or problem == 'MGM3') and filter == 'inclusion'), 'The filter inclusion only matches 2GM'
+        assert name == 'PascalVOC' or name == 'SPair71k' or name == 'WillowObject' or name == 'IMC_PT_SparseGM' or name == 'CUB2011', 'No match found for dataset {}'.format(
+            name)
+        assert problem == '2GM' or problem == 'MGM' or problem == 'MGM3', 'No match found for problem {}'.format(
+            problem)
+        assert filter == 'intersection' or filter == 'inclusion' or filter == 'unfiltered', 'No match found for filter {}'.format(
+            filter)
+        assert not ((
+                                problem == 'MGM' or problem == 'MGM3') and filter == 'inclusion'), 'The filter inclusion only matches 2GM'
 
         self.name = name
         self.problem = problem
@@ -61,7 +65,8 @@ class Benchmark:
                                 data pair (ids[0],ids[1])
                 id_combination: combination of image ids
         """
-        assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or self.problem == 'MGM3') and len(ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
+        assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or self.problem == 'MGM3') and len(
+            ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
 
         ids.sort()
         data_list = []
@@ -70,7 +75,8 @@ class Benchmark:
             boundbox = self.data_dict[keys]['bounds']
             img_file = self.data_dict[keys]['path']
             with Image.open(str(img_file)) as img:
-                obj = img.resize(self.obj_resize, resample=Image.BICUBIC, box=(boundbox[0], boundbox[1], boundbox[2], boundbox[3]))
+                obj = img.resize(self.obj_resize, resample=Image.BICUBIC,
+                                 box=(boundbox[0], boundbox[1], boundbox[2], boundbox[3]))
                 if self.name == 'CUB2011':
                     if not obj.mode == 'RGB':
                         obj = obj.convert('RGB')
@@ -88,7 +94,7 @@ class Benchmark:
             perm_mat = np.zeros([len(data_list[_]['kpts']) for _ in id_tuple], dtype=np.float32)
             row_list = []
             col_list = []
-             
+
             for i, keypoint in enumerate(data_list[id_tuple[0]]['kpts']):
                 for j, _keypoint in enumerate(data_list[id_tuple[1]]['kpts']):
                     if keypoint['labels'] == _keypoint['labels']:
@@ -107,7 +113,7 @@ class Benchmark:
             elif self.filter == 'inclusion':
                 perm_mat = perm_mat[row_list, :]
                 data_list[id_tuple[0]]['kpts'] = [data_list[id_tuple[0]]['kpts'][i] for i in row_list]
-            if not(len(ids) > 2 and self.filter == 'intersection'):
+            if not (len(ids) > 2 and self.filter == 'intersection'):
                 sparse_perm_mat = coo_matrix(perm_mat)
                 perm_mat_dict[id_tuple] = sparse_perm_mat
 
@@ -190,8 +196,8 @@ class Benchmark:
             for objID in random.sample(data_list, num):
                 ids.append(objID)
         else:
-            ids = random.sample(data_list, 1)
-        
+            ids = random.sample(data_list, 1)[0]
+
         return self.get_data(ids, test, shuffle)
 
     def get_id_combination(self, cls=None, num=2):
@@ -215,7 +221,7 @@ class Benchmark:
         id_combination_list = []
         if clss != None:
             data_list = []
-            if self.name != "SPair71k":
+            if self.name != 'SPair71k':
                 for id in data_id:
                     if self.data_dict[id]['cls'] == clss:
                         data_list.append(id)
@@ -231,7 +237,7 @@ class Benchmark:
         else:
             for clss in self.classes:
                 data_list = []
-                if self.name != "SPair71k":
+                if self.name != 'SPair71k':
                     for id in data_id:
                         if self.data_dict[id]['cls'] == clss:
                             data_list.append(id)
@@ -266,7 +272,7 @@ class Benchmark:
         length = 0
 
         if clss != None:
-            if self.name != "SPair71k":
+            if self.name != 'SPair71k':
                 data_list = []
                 for id in data_id:
                     if self.data_dict[id]['cls'] == clss:
@@ -280,7 +286,7 @@ class Benchmark:
 
         else:
             for clss in self.classes:
-                if self.name != "SPair71k":
+                if self.name != 'SPair71k':
                     data_list = []
                     for id in data_id:
                         if self.data_dict[id]['cls'] == clss:
@@ -305,7 +311,7 @@ class Benchmark:
         num_list = []
         for clss in classes:
             cls_img_num = 0
-            if self.name != "SPair71k":
+            if self.name != 'SPair71k':
                 for id in data_id:
                     if self.data_dict[id]['cls'] == clss:
                         cls_img_num += 1
@@ -417,11 +423,15 @@ class Benchmark:
             print('Matching accuracy')
             for cls in classes:
                 print('{}: {}'.format(cls, 'p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}, cvg = {:.4f}' \
-                    .format(result[cls]['precision'], result[cls]['precision_std'], result[cls]['recall'], result[cls]['recall_std'], result[cls]['f1'], result[cls]['f1_std'], result[cls]['coverage']
-                            )))
+                                      .format(result[cls]['precision'], result[cls]['precision_std'],
+                                              result[cls]['recall'], result[cls]['recall_std'], result[cls]['f1'],
+                                              result[cls]['f1_std'], result[cls]['coverage']
+                                              )))
             print('average accuracy: {}'.format('p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}' \
-                    .format(result['mean']['precision'], result['mean']['precision_std'], result['mean']['recall'], result['mean']['recall_std'], result['mean']['f1'], result['mean']['f1_std']
-                            )))
+                                                .format(result['mean']['precision'], result['mean']['precision_std'],
+                                                        result['mean']['recall'], result['mean']['recall_std'],
+                                                        result['mean']['f1'], result['mean']['f1_std']
+                                                        )))
         return result
 
     def eval_cls(self, prediction, cls, verbose=False):
@@ -486,8 +496,9 @@ class Benchmark:
 
         if verbose:
             print('Class {}: {}'.format(cls, 'p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}, cvg = {:.4f}' \
-                .format(result['precision'], result['precision_std'], result['recall'], result['recall_std'], result['f1'], result['f1_std'], result['coverage']
-                        )))
+                                        .format(result['precision'], result['precision_std'], result['recall'],
+                                                result['recall_std'], result['f1'], result['f1_std'], result['coverage']
+                                                )))
         return result
 
     def rm_gt_cache(self, last_epoch=False):
