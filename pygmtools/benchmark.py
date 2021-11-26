@@ -359,9 +359,13 @@ class Benchmark:
             cls_recall[cls] = []
             cls_f1[cls] = []
 
-        for key, obj in self.data_dict.items():
-            if (key in data_id) and (obj['cls'] in classes):
-                cls_dict[obj['cls']] += 1
+        if self.name != 'SPair71k':
+            for key, obj in self.data_dict.items():
+                if (key in data_id) and (obj['cls'] in classes):
+                    cls_dict[obj['cls']] += 1
+        else:
+            for cls in classes:
+                cls_dict[cls] = self.compute_img_num([cls])[0]
 
         for pair_dict in prediction:
             ids = (pair_dict['ids'][0], pair_dict['ids'][1])
@@ -456,9 +460,12 @@ class Benchmark:
         cls_dict = 0
         pred_cls_dict = 0
 
-        for key, obj in self.data_dict.items():
-            if (key in data_id) and (obj['cls'] == cls):
-                cls_dict += 1
+        if self.name != 'SPair71k':
+            for key, obj in self.data_dict.items():
+                if (key in data_id) and (obj['cls'] == cls):
+                    cls_dict += 1
+        else:
+            cls_dict = self.compute_img_num([cls])[0]
 
         for pair_dict in prediction:
             ids = (pair_dict['ids'][0], pair_dict['ids'][1])
