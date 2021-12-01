@@ -187,15 +187,18 @@ class Benchmark:
             data_id = json.load(f1)
 
         data_list = []
-        for id in data_id:
-            if self.data_dict[id[0]]['cls'] == clss:
-                data_list.append(id)
-
         ids = []
         if self.name != 'SPair71k':
+            for id in data_id:
+                if self.data_dict[id]['cls'] == clss:
+                    data_list.append(id)
+
             for objID in random.sample(data_list, num):
                 ids.append(objID)
         else:
+            for id in data_id:
+                if self.data_dict[id[0]]['cls'] == clss:
+                    data_list.append(id)
             ids = random.sample(data_list, 1)[0]
 
         return self.get_data(ids, test, shuffle)
