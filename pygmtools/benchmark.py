@@ -104,6 +104,7 @@ class Benchmark:
                 for j, _keypoint in enumerate(data_list[id_tuple[1]]['kpts']):
                     if keypoint['labels'] == _keypoint['labels']:           
                         row_list.append(i)
+                        break
             for i, keypoint in enumerate(data_list[id_tuple[1]]['kpts']):
                 for j, _keypoint in enumerate(data_list[id_tuple[0]]['kpts']):
                     if keypoint['labels'] == _keypoint['labels']:
