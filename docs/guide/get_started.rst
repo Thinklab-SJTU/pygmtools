@@ -11,7 +11,7 @@ ______________
         pip install pygmtools
 
 
-Now the pygmtools is available with the ``numpy`` backend. You may jump to `the examples <Example: Matching Isomorphism Graphs>`_
+Now the pygmtools is available with the ``numpy`` backend. You may jump to :ref:`Example: Matching Isomorphism Graphs`
 if you do not need other backends.
 
 The following packages are required, and shall be automatically downloaded by ``pip install``:
