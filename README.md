@@ -1,83 +1,44 @@
 # pygmtools
 
-### Overview
+[![PyPi version](https://badgen.net/pypi/v/pygmtools/)](https://pypi.org/pypi/pygmtools/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/pygmtools.svg)](https://pypi.python.org/pypi/pygmtools/)
+[![Documentation Status](https://readthedocs.org/projects/pygmtools/badge/?version=latest)](https://pygmtools.readthedocs.io/en/latest/?badge=latest)
+[![GitHub stars](https://img.shields.io/github/stars/Thinklab-SJTU/pygmtools.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/Thinklab-SJTU/pygmtools/stargazers/)
 
-The pygmtools package is developed to fairly compare existing deep graph matching algorithms under different datasets & experiment settings. The pygmtools package provides a unified data interface and an evaluating platform for different datasets. Currently, pygmtools supports 5 datasets, including PascalVOC, Willow-Object, SPair-71k, CUB2011 and IMC-PT-SparseGM.
+**pygmtools** provides graph matching solvers in Python and is easily accessible via the following command:
 
-
-
-### Files
-
-./
-
-- dataset.py: The file includes 5 dataset classes, used to automatically download dataset and process the dataset into a json file, and also save train set and test set.
-
-- benchmark.py: The file includes Benchmark class that can be used to fetch data from json file and evaluate prediction result.
-- dataset_config.py: Fixed dataset settings, mostly dataset path and classes.
-
-
-
-### Note
-
-- Our evaluation metrics include **matching_precision (p)**,  **matching_recall (r)** and **f1_score (f1)**. Also, to measure the reliability of the evaluation result, we define **coverage (cvg)** for each class in the dataset as *number of evaluated pairs in the class / number of all possible pairs in the class*. Therefore, larger coverage refers to higher reliability.
-
-- Dataset can be automatically downloaded and unzipped, but you can also download the dataset yourself, and make sure it in the right path. The expected dataset paths are listed as follows.
-
-```python
-# Pascal VOC 2011 dataset with keypoint annotations
-PascalVOC.ROOT_DIR = 'data/PascalVOC/TrainVal/VOCdevkit/VOC2011/'
-PascalVOC.KPT_ANNO_DIR = 'data/PascalVOC/annotations/'
-
-# Willow-Object Class dataset
-WillowObject.ROOT_DIR = 'data/WillowObject/WILLOW-ObjectClass'
-
-# CUB2011 dataset
-CUB2011.ROOT_PATH = 'data/CUB_200_2011/CUB_200_2011'
-
-# SWPair-71 Dataset
-SPair.ROOT_DIR = "data/SPair-71k"
-
-# IMC_PT_SparseGM dataset
-IMC_PT_SparseGM.ROOT_DIR_NPZ = 'data/IMC-PT-SparseGM/annotations'
-IMC_PT_SparseGM.ROOT_DIR_IMG = 'data/IMC-PT-SparseGM/images'
 ```
-
-​	Specifically, for PascalVOC, you should download the train/test split yourself, and make sure it looks like `data/PascalVOC/voc2011_pairs.npz`
-
-
-
-### Requirements
-
-- Python >= 3.5
-- requests >= 2.25.1
-- scipy >= 1.4.1
-- Pillow >= 7.2.0
-- numpy >= 1.18.5
-- easydict >= 1.7
-
-
-
-### Installation
-
-Simple installation via Pip
-
-```shell
 pip install pygmtools
 ```
 
+## Backends
 
+By default the solvers are executed on the ``numpy`` backend, and the required packages will be automatically
+downloaded.
 
-### Example
+For advanced and professional users, the ``pytorch`` backend is also available if you have installed and configured
+a pytorch runtime. The ``pytorch`` backend exploits the underlying GPU-acceleration feature, and also supports
+integrating graph matching modules into your deep learning pipeline.
 
-```python
-from pygmtools.benchmark import Benchmark
+## Features
 
-# Define Benchmark on PascalVOC.
-bm = Benchmark(name='PascalVOC', sets='train', 
-               obj_resize=(256, 256), problem='2GM',
-               filter='intersection')
+To highlight, **pygmtools** has the following features:
 
-# Random fetch data and ground truth.
-data_list, gt_dict, _ = bm.rand_get_data(cls=None, num=2)
-```
+* *Support various backends*, including ``numpy`` which is universally accessible, and the state-of-the-art
+  deep learning architecture ``pytorch`` with GPU-support. The support of the following backends are also planned:
+  ``tensorflow``, ``mindspore``, ``paddle``, ``jittor``;
+* *Support various solvers*, including traditional combinatorial solvers and novel deep learning-based solvers;
+* *Deep learning friendly*, the operations are designed to best preserve the gradient during computation and batched
+  operations support for the best performance.
+  
+## Benchmarks
+
+**pygmtools** is also featured with standard data interface of several graph matching benchmarks. We also maintain a
+repository containing non-trivial implementation of deep graph matching models, please check out
+`ThinkMatch <https://thinkmatch.readthedocs.io/>`_ if you are interested!
+
+## Developers and Maintainers
+
+**pygmtools** is currently developed and maintained by members from `ThinkLab <http://thinklab.sjtu.edu.cn>`_ at
+Shanghai Jiao Tong University.
 
