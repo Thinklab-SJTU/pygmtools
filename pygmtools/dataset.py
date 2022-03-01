@@ -84,11 +84,13 @@ VOC2011_KPT_NAMES = {
 
 
 class PascalVOC:
+    r"""
+    This class is defined to download and preprocess PascalVOC dataset.
+
+    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param obj_resize: tuple, resized image size
+    """
     def __init__(self, sets, obj_resize, **args):
-        """
-        :param sets: 'train' or 'test'
-        :param obj_resize: resized object size
-        """
         VOC2011_anno_path = dataset_cfg.PascalVOC.KPT_ANNO_DIR
         VOC2011_img_path = dataset_cfg.PascalVOC.ROOT_DIR + 'JPEGImages'
         VOC2011_ori_anno_path = dataset_cfg.PascalVOC.ROOT_DIR + 'Annotations'
@@ -130,7 +132,7 @@ class PascalVOC:
             with np.load(self.VOC2011_set_path, allow_pickle=True) as f:
                 self.xml_list = f[sets]
             before_filter = sum([len(k) for k in self.xml_list])
-            self.filter_list(self.xml_list)
+            self.__filter_list(self.xml_list)
             after_filter = sum([len(k) for k in self.xml_list])
             with self.cache_file.open(mode='wb') as f:
                 pickle.dump(self.xml_list, f)
@@ -139,8 +141,11 @@ class PascalVOC:
         self.process()
         
     def download(self, url=None, name=None):
-        """
-        Automatically download dataset.
+        r"""
+        Automatically download PascalVOC dataset.
+
+        :param url: str, web url of PascalVOC and PascalVOC annotation
+        :param name: str, "PascalVOC" to download PascalVOC and "PascalVOC_anno" to download PascalVOC annotation
         """
         dirs = 'data/'
         if not os.path.exists(dirs):
@@ -172,7 +177,7 @@ class PascalVOC:
             tar.close()
             os.remove(filename)
 
-    def filter_list(self, a_xml_list):
+    def __filter_list(self, a_xml_list):
         """
         Filter out 'truncated', 'occluded' and 'difficult' images following the practice of previous works.
         In addition, this dataset has uncleaned label (in person category). They are omitted as suggested by README.
@@ -217,8 +222,8 @@ class PascalVOC:
                 a_xml_list[cls_id].remove(x)
 
     def process(self):
-        """
-        Process the dataset and generate 'data.json', 'train.json', and 'test.json' files.
+        r"""
+        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
@@ -237,7 +242,7 @@ class PascalVOC:
                 if self.sets == 'train':
                     with np.load(self.VOC2011_set_path, allow_pickle=True) as f:
                         a_list = f['test']
-                    self.filter_list(a_list)
+                    self.__filter_list(a_list)
                     cache_name = 'voc_db_test.pkl'
                     cache_file = self.cache_path / cache_name
                     if not cache_file.exists():
@@ -261,7 +266,7 @@ class PascalVOC:
                 else:
                     with np.load(self.VOC2011_set_path, allow_pickle=True) as f:
                         a_list = f['train']
-                    self.filter_list(a_list)
+                    self.__filter_list(a_list)
                     cache_name = 'voc_db_train.pkl'
                     cache_file = self.cache_path / cache_name
                     if not cache_file.exists():
@@ -286,7 +291,7 @@ class PascalVOC:
                 if self.sets == 'train':
                     with np.load(self.VOC2011_set_path, allow_pickle=True) as f:
                         a_list = f['test']
-                    self.filter_list(a_list)
+                    self.__filter_list(a_list)
                     cache_name = 'voc_db_test.pkl'
                     cache_file = self.cache_path / cache_name
                     if not cache_file.exists():
@@ -296,7 +301,7 @@ class PascalVOC:
                 else:
                     with np.load(self.VOC2011_set_path, allow_pickle=True) as f:
                         a_list = f['train']
-                    self.filter_list(a_list)
+                    self.__filter_list(a_list)
                     cache_name = 'voc_db_train.pkl'
                     cache_file = self.cache_path / cache_name
                     if not cache_file.exists():
@@ -363,17 +368,22 @@ class PascalVOC:
     
 
 class WillowObject:
-    def __init__(self, sets, obj_resize, ds_dict=None, **args):
-        """
-        :param sets: 'train' or 'test'
-        :param obj_resize: resized object size
+    r"""
+        This class is defined to download and preprocess WillowObject dataset.
+
+        :param sets: str, problem set, 'train' for training set and 'test' for test set
+        :param obj_resize: tuple, resized image size
         :param ds_dict: settings of dataset, containing at most 4 params(keys) for WillowObject:
-            :param TRAIN_NUM: number of images for train in each class
-            :param SPLIT_OFFSET: offset when split train and test set
-            :param TRAIN_SAME_AS_TEST: whether use same images for training and test
-            :param RAND_OUTLIER: number of added outliers in one image
-        """
-        
+
+            TRAIN_NUM: int, number of images for train in each class
+
+            SPLIT_OFFSET: int, offset when split train and test set
+
+            TRAIN_SAME_AS_TEST: bool, whether to use same images for training and test
+
+            RAND_OUTLIER: int, number of added outliers in one image
+    """
+    def __init__(self, sets, obj_resize, ds_dict=None, **args):
         if ds_dict is not None:
             if 'TRAIN_NUM' in ds_dict.keys():
                 TRAIN_NUM = ds_dict.TRAIN_NUM
@@ -419,12 +429,13 @@ class WillowObject:
         self.mat_list = []
 
         self.process()
-    
-    
+
     def download(self, url=None):
-        """
-        Automatically download dataset.
-        """
+        r"""
+         Automatically download WillowObject dataset.
+
+         :param url: str, web url of WillowObject
+         """
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
@@ -440,8 +451,8 @@ class WillowObject:
         os.remove(filename)
         
     def process(self):
-        """
-        Process the dataset and generate 'data.json', 'train.json', and 'test.json' files.
+        r"""
+        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
@@ -609,17 +620,23 @@ class WillowObject:
         
         
 class SPair71k:
+    r"""
+    This class is defined to download and preprocess SPair71k dataset.
+
+    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param obj_resize: tuple, resized image size
+    :param problem: str, problem type, only '2GM' in SPair71k
+    :param ds_dict: settings of dataset, containing at most 4 params(keys) for SPair71k:
+
+        TRAIN_DIFF_PARAMS: list of images that should be dumped in train set
+
+        EVAL_DIFF_PARAMS: list of images that should be dumped in test set
+
+        COMB_CLS: bool, whether to combine images in different classes
+
+        SIZE: str, 'large' for SPair71k-large and 'small' for SPair71k-small
+    """
     def __init__(self, sets, obj_resize, problem='2GM', ds_dict=None, **args):
-        """
-        :param sets: 'train' or 'test'
-        :param obj_resize: resized object size
-        :param problem: problem type, only '2GM' in SPair71k
-        :param ds_dict: settings of dataset, containing at most 4 params(keys) for SPair71k:
-            :param TRAIN_DIFF_PARAMS: images that should be dumped in train set
-            :param EVAL_DIFF_PARAMS: images that should be dumped in test set
-            :param COMB_CLS: whether combine images in different classes
-            :param SIZE: 'large' or 'small'
-        """
         if ds_dict is not None:
             if 'TRAIN_DIFF_PARAMS' in ds_dict.keys():
                 TRAIN_DIFF_PARAMS = ds_dict.TRAIN_DIFF_PARAMS
@@ -670,7 +687,7 @@ class SPair71k:
         self.classes = list(map(lambda x: os.path.basename(x), glob.glob("%s/*" % SPair71k_image_path)))
         self.classes.sort()
         self.combine_classes = COMB_CLS
-        self.ann_files_filtered, self.ann_files_filtered_cls_dict, self.classes = self.filter_annotations(
+        self.ann_files_filtered, self.ann_files_filtered_cls_dict, self.classes = self.__filter_annotations(
             self.ann_files, self.difficulty_params
         )
         self.total_size = len(self.ann_files_filtered)
@@ -679,9 +696,11 @@ class SPair71k:
         self.process()
 
     def download(self, url=None):
-        """
-        Automatically download dataset.
-        """
+        r"""
+         Automatically download SPair71k dataset.
+
+         :param url: str, web url of SPair71k
+         """
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
@@ -698,8 +717,8 @@ class SPair71k:
         os.remove(filename)
 
     def process(self):
-        """
-        Process the dataset and generate 'data.json', 'train.json', and 'test.json' files.
+        r"""
+        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
@@ -719,7 +738,7 @@ class SPair71k:
                 ann_files_ = open(os.path.join(self.SPair71k_layout_path, self.SPair71k_dataset_size + "/test.txt"),
                                       "r").read().split("\n")
                 ann_files_ = ann_files_[: len(ann_files_) - 1]
-                ann_files_filtered_ = self.filter_annotations(ann_files_, self.difficulty_params)[0]
+                ann_files_filtered_ = self.__filter_annotations(ann_files_, self.difficulty_params)[0]
                 for x in ann_files_filtered_:
                     tmp = x.split('-')
                     tmp2 = tmp[2].split(':')
@@ -740,7 +759,7 @@ class SPair71k:
                 ann_files_ = open(os.path.join(self.SPair71k_layout_path, self.SPair71k_dataset_size + "/trn.txt"),
                                       "r").read().split("\n")
                 ann_files_ = ann_files_[: len(ann_files_) - 1]
-                ann_files_filtered_ = self.filter_annotations(ann_files_, self.difficulty_params)[0]
+                ann_files_filtered_ = self.__filter_annotations(ann_files_, self.difficulty_params)[0]
                 for x in ann_files_filtered_:
                     tmp = x.split('-')
                     tmp2 = tmp[2].split(':')
@@ -815,12 +834,12 @@ class SPair71k:
 
         return anno_dict
 
-    def filter_annotations(self, ann_files, difficulty_params):
+    def __filter_annotations(self, ann_files, difficulty_params):
         if len(difficulty_params) > 0:
             basepath = os.path.join(self.pair_ann_path, "pickled", self.sets)
             if not os.path.exists(basepath):
                 os.makedirs(basepath)
-            difficulty_paramas_str = self.diff_dict_to_str(difficulty_params)
+            difficulty_paramas_str = self.__diff_dict_to_str(difficulty_params)
             try:
                 filepath = os.path.join(basepath, difficulty_paramas_str + ".pickle")
                 ann_files_filtered = pickle.load(open(filepath, "rb"))
@@ -837,7 +856,7 @@ class SPair71k:
                     with open(os.path.join(self.pair_ann_path, self.sets, ann_file + ".json")) as f:
                         annotation = json.load(f)
                     diff = {key: annotation[key] for key in self.difficulty_params.keys()}
-                    diff_str = self.diff_dict_to_str(diff)
+                    diff_str = self.__diff_dict_to_str(diff)
                     if diff_str in ann_files_filtered_dict:
                         ann_files_filtered_dict[diff_str].append(ann_file)
                     else:
@@ -873,7 +892,7 @@ class SPair71k:
                     print(f"Excluding class {cls} from {self.sets}-set.")
         return ann_files_filtered, ann_files_filtered_cls_dict, filtered_classes
 
-    def diff_dict_to_str(self, diff):
+    def __diff_dict_to_str(self, diff):
         diff_str = ""
         keys = ["mirror", "viewpoint_variation", "scale_variation", "truncation", "occlusion"]
         for key in keys:
@@ -884,13 +903,16 @@ class SPair71k:
 
 
 class IMC_PT_SparseGM:
+    r"""
+    This class is defined to download and preprocess IMC_PT_SparseGM dataset.
+
+    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param obj_resize: tuple, resized image size
+    :param ds_dict: settings of dataset, containing at most 1 param(key) for IMC_PT_SparseGM:
+
+        TOTAL_KPT_NUM: int, maximum kpt_num in an image
+    """
     def __init__(self, sets, obj_resize, ds_dict=None, **args):
-        """
-        :param sets: 'train' or 'test'
-        :param obj_resize: resized object size
-        :param ds_dict: settings of dataset, containing at most 1 param(key) for IMC_PT_SparseGM:
-            :param TOTAL_KPT_NUM: maximum kpt_num in an image
-        """
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
         
         if ds_dict is not None:
@@ -919,9 +941,11 @@ class IMC_PT_SparseGM:
         self.process()
 
     def download(self, url=None):
-        """
-        Automatically download dataset.
-        """
+        r"""
+         Automatically download IMC_PT_SparseGM dataset.
+
+         :param url: str, web url of IMC_PT_SparseGM
+         """
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
@@ -938,8 +962,8 @@ class IMC_PT_SparseGM:
         os.remove(filename)
 
     def process(self):
-        """
-        Process the dataset and generate 'data.json', 'train.json', and 'test.json' files.
+        r"""
+        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
         img_file = os.path.join(self.dataset_dir, 'data.json')
@@ -1018,7 +1042,7 @@ class IMC_PT_SparseGM:
 
         return anno_dict
 
-    def len(self, cls):
+    def __len(self, cls):
         if type(cls) == int:
             cls = self.classes[cls]
         assert cls in self.classes
@@ -1026,13 +1050,16 @@ class IMC_PT_SparseGM:
 
 
 class CUB2011:
+    r"""
+    This class is defined to download and preprocess CUB2011 dataset.
+
+    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param obj_resize: tuple, resized image size
+    :param ds_dict: settings of dataset, containing at most 1 param(key) for CUB2011:
+
+        CLS_SPLIT: str, 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
+    """
     def __init__(self, sets, obj_resize, ds_dict=None, **args):
-        """
-        :param sets: 'train' or 'test'
-        :param obj_resize: resized object size
-        :param ds_dict: settings of dataset, containing at most 1 param(key) for CUB2011:
-            :param CLS_SPLIT: 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
-        """
         if ds_dict is not None:
             if 'CLS_SPLIT' in ds_dict.keys():
                 CLS_SPLIT = ds_dict.CLS_SPLIT
@@ -1063,11 +1090,11 @@ class CUB2011:
         with open(os.path.join(rootpath, 'image_class_labels.txt')) as f:
             img2class = [l.rstrip('\n').split() for l in f.readlines()]
             img_idxs, class_idxs = map(list, zip(*img2class))
-            class2img = lists2dict_for_cub(class_idxs, img_idxs)
+            class2img = self.__lists2dict_for_cub(class_idxs, img_idxs)
         with open(os.path.join(rootpath, 'parts', 'part_locs.txt')) as f:
             part_locs = [l.rstrip('\n').split() for l in f.readlines()]
             fi, pi, x, y, v = map(list, zip(*part_locs))
-            self.im2kpts = lists2dict_for_cub(fi, zip(pi, x, y, v))
+            self.im2kpts = self.__lists2dict_for_cub(fi, zip(pi, x, y, v))
         with open(os.path.join(rootpath, 'bounding_boxes.txt')) as f:
             bboxes = [l.rstrip('\n').split() for l in f.readlines()]
             ii, x, y, w, h = map(list, zip(*bboxes))
@@ -1123,9 +1150,11 @@ class CUB2011:
         self.process()
 
     def download(self, url=None):
-        """
-        Automatically download dataset.
-        """
+        r"""
+         Automatically download CUB2011 dataset.
+
+         :param url: str, web url of CUB2011
+         """
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
@@ -1142,8 +1171,8 @@ class CUB2011:
         os.remove(filename)
 
     def process(self):
-        """
-        Process the dataset and generate 'data.json', 'train.json', and 'test.json' files.
+        r"""
+        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
         img_file = os.path.join(self.dataset_dir, 'data.json')
@@ -1174,10 +1203,10 @@ class CUB2011:
             f2.write(str2)
             f2.close()
 
-    def get_imgname(self, data):
+    def __get_imgname(self, data):
         return os.path.join(dataset_cfg.CUB2011.ROOT_PATH, 'images', self.im2fn[data])
 
-    def get_meta(self, data):
+    def __get_meta(self, data):
         pi, x, y, v = map(list, zip(*self.im2kpts[data]))
         order = np.argsort(np.array(pi).astype(int))
         keypts = np.array([np.array(x).astype('float')[order],
@@ -1187,9 +1216,9 @@ class CUB2011:
         return keypts, visible, bbox
 
     def __get_anno_dict(self, img_name, cls):
-        keypts, visible, bbox = self.get_meta(img_name)
+        keypts, visible, bbox = self.__get_meta(img_name)
         xmin, ymin, w, h = bbox
-        img_file = self.get_imgname(img_name)
+        img_file = self.__get_imgname(img_name)
         with Image.open(str(img_file)) as img:
             xmin, xmax = np.clip((xmin, xmin + w), 0, img.size[0])
             ymin, ymax = np.clip((ymin, ymin + h), 0, img.size[1])
@@ -1212,12 +1241,11 @@ class CUB2011:
 
         return anno_dict
 
-
-def lists2dict_for_cub(keys, vals):
-    ans = {}
-    for idx, val_i in enumerate(vals):
-        if keys[idx] in ans:
-            ans[keys[idx]].append(val_i)
-        else:
-            ans[keys[idx]] = [val_i]
-    return ans
+    def __lists2dict_for_cub(keys, vals):
+        ans = {}
+        for idx, val_i in enumerate(vals):
+            if keys[idx] in ans:
+                ans[keys[idx]].append(val_i)
+            else:
+                ans[keys[idx]] = [val_i]
+        return ans
