@@ -11,15 +11,18 @@ from pygmtools.dataset import *
 
 
 class Benchmark:
+    r"""
+    The `Benchmark` module provides a unified data interface and an evaluating platform for different datasets.
+
+    :param name: str, dataset name, currently support 'PascalVOC', 'WillowObject', 'IMC_PT_SparseGM', 'CUB2011', 'SPair71k'
+    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param obj_resize: tuple, resized object size
+    :param problem: str, problem type, '2GM' for 2-graph matching and 'MGM' for multi-graph matching
+    :param filter: str, filter of nodes, 'intersection' refers to retaining only common nodes; 'inclusion' is only for 2GM and refers to filtering only one graph to make its nodes a subset of the other graph, and 'unfiltered' refers to retaining all nodes in all graphs
+    :param args: specific settings for dataset
+    """
+
     def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', **args):
-        """
-        :param name: dataset name, currently support 'PascalVOC', 'WillowObject', 'IMC_PT_SparseGM', 'CUB2011', 'SPair71k'
-        :param sets: 'train' or 'test'
-        :param obj_resize: resized object size
-        :param problem: '2GM' or 'MGM'
-        :param filter: 'intersection', 'inclusion' or 'unfiltered'
-        :param args: specific settings for dataset
-        """
         assert name == 'PascalVOC' or name == 'SPair71k' or name == 'WillowObject' or name == 'IMC_PT_SparseGM' or name == 'CUB2011', 'No match found for dataset {}'.format(
             name)
         assert problem == '2GM' or problem == 'MGM' or problem == 'MGM3', 'No match found for problem {}'.format(
@@ -27,7 +30,7 @@ class Benchmark:
         assert filter == 'intersection' or filter == 'inclusion' or filter == 'unfiltered', 'No match found for filter {}'.format(
             filter)
         assert not ((
-                                problem == 'MGM' or problem == 'MGM3') and filter == 'inclusion'), 'The filter inclusion only matches 2GM'
+                            problem == 'MGM' or problem == 'MGM3') and filter == 'inclusion'), 'The filter inclusion only matches 2GM'
 
         self.name = name
         self.problem = problem
@@ -54,16 +57,18 @@ class Benchmark:
                 print('gt perm mat cache built')
 
     def get_data(self, ids, test=False, shuffle=True):
-        """
-        Fetch a data pair(for 2GM) or pairs of data(for MGM and MGM3) for training or test.
+        r"""
+        Fetch a data pair or pairs of data by image ID for training or test.
 
-        :param ids: image id list, usually in 'train.json' or 'test.json'
-        :param test: whether the fetched is used for test
-        :param shuffle: whether shuffle keypoint order
-        :return data_list: list of data, like [{‘img’: np.array, ’kpts’: coordinate of kpts}, …]
-                perm_mat_dict: ground truth, like {(0,1):scipy.sparse, (0,2):scipy.sparse, …}, (0,1) refers to
-                                data pair (ids[0],ids[1])
-                id_combination: combination of image ids
+        :param ids: list of image ID, usually in 'train.json' or 'test.json'
+        :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
+        :param shuffle: bool, whether to shuffle the order of keypoints
+        :return:
+                    data_list: list of data, like ``[{‘img’: np.array, ’kpts’: coordinates of kpts}, …]``
+
+                    perm_mat_dict: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, …}``, `(0,1)` refers to data pair `(ids[0],ids[1])`
+
+                    ids: list of image ID
         """
         assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or self.problem == 'MGM3') and len(
             ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
@@ -102,7 +107,7 @@ class Benchmark:
                             perm_mat[i, j] = 1
             for i, keypoint in enumerate(data_list[id_tuple[0]]['kpts']):
                 for j, _keypoint in enumerate(data_list[id_tuple[1]]['kpts']):
-                    if keypoint['labels'] == _keypoint['labels']:           
+                    if keypoint['labels'] == _keypoint['labels']:
                         row_list.append(i)
                         break
             for i, keypoint in enumerate(data_list[id_tuple[1]]['kpts']):
@@ -172,17 +177,19 @@ class Benchmark:
             return data_list, ids
 
     def rand_get_data(self, cls=None, num=2, test=False, shuffle=True):
-        """
-        Randomly fetch data for training or test.
+        r"""
+        Randomly fetch data for training or test. Implemented by calling ``get_data`` function.
 
-        :param cls: class of fetched data
-        :param num: number of images in image id list
-        :param test: whether the fetched is used for test
-        :param shuffle: whether shuffle keypoint order
-        :return data_list: list of data, like [{‘img’: np.array, ’kpts’: coordinate of kpts}, …]
-        perm_mat_dict: ground truth, like {(0,1):scipy.sparse, (0,2):scipy.sparse, …}, (0,1) refers to
-                        data pair (ids[0],ids[1])
-        id_combination: combination of image ids
+        :param cls: int or str, class of expected data. None for random class
+        :param num: int, number of images; for example, 2 for 2GM
+        :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
+        :param shuffle: bool, whether to shuffle the order of keypoints
+        :return:
+                    data_list: list of data, like ``[{‘img’: np.array, ’kpts’: coordinates of kpts}, …]``
+
+                    perm_mat_dict: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, …}``, `(0,1)` refers to data pair `(ids[0],ids[1])`
+
+                    ids: list of image ID
         """
         if cls == None:
             cls = random.randrange(0, len(self.classes))
@@ -211,13 +218,15 @@ class Benchmark:
         return self.get_data(ids, test, shuffle)
 
     def get_id_combination(self, cls=None, num=2):
-        """
-        Get the combination of images and total length.
+        r"""
+        Get the combination of images and length of combinations in specified class.
 
-        :param cls: class of images
-        :param num: number of images in image id list
-        :return id_combination_list: list of combinations of image ids
-                length: total length of combinations
+        :param cls: int or str, class of expected data. None for all classes
+        :param num: int, number of images in each image ID list; for example, 2 for 2GM
+        :return:
+                id_combination_list: list of combinations of image ids
+
+                length: length of combinations
         """
         if cls == None:
             clss = None
@@ -263,13 +272,13 @@ class Benchmark:
 
         return id_combination_list, length
 
-    def compute_length(self, cls, num=2):
-        """
-        Compute the length of combination of images.
+    def compute_length(self, cls=None, num=2):
+        r"""
+        Compute the length of image combinations in specified class.
 
-        :param cls: class of images
-        :param num: number of images in image id list
-        :return length: length of the combination
+        :param cls: int or str, class of expected data. None for all classes
+        :param num: int, number of images in each image ID list; for example, 2 for 2GM
+        :return: length of combinations
         """
         if cls == None:
             clss = None
@@ -310,11 +319,11 @@ class Benchmark:
         return length
 
     def compute_img_num(self, classes):
-        """
-        Compute number of images in each class.
+        r"""
+        Compute number of images in specified classes.
 
         :param classes: list of dataset classes
-        :return: num_list: list of numbers of images in each class.
+        :return: list of numbers of images in each class
         """
         with open(self.data_list_path) as f1:
             data_id = json.load(f1)
@@ -341,13 +350,13 @@ class Benchmark:
         return num_list
 
     def eval(self, prediction, classes, verbose=False):
-        """
-        Evaluate test results. Compute matching accuracy and coverage.
+        r"""
+        Evaluate test results and compute matching accuracy and coverage.
 
-        :param prediction: prediction result.  [{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]
+        :param prediction: list, prediction result, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]``
         :param classes: list of evaluated classes
-        :param verbose: whether print the result
-        :return result: evaluation result
+        :param verbose: bool, whether to print the result
+        :return: evaluation result in each class and their averages, including p, r, f1 and their standard deviation and coverage
         """
 
         with open(self.data_list_path) as f1:
@@ -449,13 +458,13 @@ class Benchmark:
         return result
 
     def eval_cls(self, prediction, cls, verbose=False):
-        """
-        Evaluate test results for one class. Compute matching accuracy and coverage.
+        r"""
+        Evaluate test results and compute matching accuracy and coverage on one specified class.
 
-        :param prediction: prediction result.  [{'ids': (id1, id2), 'permmat': np.array or scipy.sparse},…]
-        :param cls: evaluated class
-        :param verbose: whether print the result
-        :return result: evaluation result
+        :param prediction: list, prediction result on one class, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]``
+        :param cls: str, evaluated class
+        :param verbose: bool, whether to print the result
+        :return: evaluation result on the specified class, including p, r, f1 and their standard deviation and coverage
         """
 
         with open(self.data_list_path) as f1:
@@ -519,10 +528,10 @@ class Benchmark:
         return result
 
     def rm_gt_cache(self, last_epoch=False):
-        """
+        r"""
         Remove ground truth cache.
 
-        :param last_epoch: whether this epoch is last epoch.
+        :param last_epoch: Boolean variable, whether this epoch is last epoch; if true, the directory of cache will also be removed.
         """
         if os.path.exists(self.gt_cache_path):
             shutil.rmtree(self.gt_cache_path)
