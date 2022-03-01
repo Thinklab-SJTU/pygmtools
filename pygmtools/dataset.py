@@ -1241,6 +1241,7 @@ class CUB2011:
 
         return anno_dict
 
+    @staticmethod
     def __lists2dict_for_cub(keys, vals):
         ans = {}
         for idx, val_i in enumerate(vals):
