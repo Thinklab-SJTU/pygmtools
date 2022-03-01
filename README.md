@@ -35,10 +35,10 @@ To highlight, **pygmtools** has the following features:
 
 **pygmtools** is also featured with standard data interface of several graph matching benchmarks. We also maintain a
 repository containing non-trivial implementation of deep graph matching models, please check out
-`ThinkMatch <https://thinkmatch.readthedocs.io/>`_ if you are interested!
+[ThinkMatch](https://thinkmatch.readthedocs.io/) if you are interested!
 
 ## Developers and Maintainers
 
-**pygmtools** is currently developed and maintained by members from `ThinkLab <http://thinklab.sjtu.edu.cn>`_ at
+**pygmtools** is currently developed and maintained by members from [ThinkLab](http://thinklab.sjtu.edu.cn) at
 Shanghai Jiao Tong University.
 
