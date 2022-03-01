@@ -2,7 +2,7 @@
 What is Graph Matching
 ===============================
 
-This page provides the required background information for graph matching.
+This page provides some background information for graph matching.
 
 Introduction
 ------------------
