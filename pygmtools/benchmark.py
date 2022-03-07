@@ -232,6 +232,8 @@ class Benchmark:
             clss = None
         elif type(cls) == str:
             clss = cls
+        else:
+            raise ValueError(f'Expect cls argument to be NoneType or str, got {type(cls)}!')
 
         with open(self.data_list_path) as f1:
             data_id = json.load(f1)
