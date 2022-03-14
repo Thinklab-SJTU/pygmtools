@@ -366,6 +366,44 @@ def dense_to_sparse(dense_adj, backend=None):
         return result
 
 
+def to_numpy(input, backend=None):
+    r"""
+    Convert a tensor to a numpy ndarray.
+    This is the helper function to convert tensors across different backends via numpy.
+
+    :param input: input tensor
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: numpy ndarray
+    """
+    args = (input,)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        return mod.to_numpy(*args)
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+
+def from_numpy(input, backend=None):
+    r"""
+    Convert a numpy ndarray to a tensor.
+    This is the helper function to convert tensors across different backends via numpy.
+
+    :param input: input ndarray
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: tensor for the backend
+    """
+    args = (input,)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        return mod.from_numpy(*args)
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+
 ###################################################
 #   Private Functions that Unseeable from Users   #
 ###################################################

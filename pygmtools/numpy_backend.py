@@ -301,6 +301,20 @@ def dense_to_sparse(dense_adj):
     return conn, edge_weight
 
 
+def to_numpy(input):
+    """
+    identity function
+    """
+    return input
+
+
+def from_numpy(input):
+    """
+    identity function
+    """
+    return input
+
+
 def _aff_mat_from_node_edge_aff(node_aff: np.ndarray, edge_aff: np.ndarray, connectivity1: np.ndarray, connectivity2: np.ndarray,
                                 n1, n2, ne1, ne2):
     """

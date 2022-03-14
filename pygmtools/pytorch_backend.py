@@ -296,6 +296,20 @@ def dense_to_sparse(dense_adj):
     return conn, edge_weight
 
 
+def to_numpy(input):
+    """
+    Pytorch function to_numpy
+    """
+    return input.detach().cpu().numpy()
+
+
+def from_numpy(input):
+    """
+    Pytorch function from_numpy
+    """
+    return torch.from_numpy(input)
+
+
 def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity1: Tensor, connectivity2: Tensor,
                                 n1, n2, ne1, ne2):
     """
