@@ -350,7 +350,7 @@ def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity
             conn2 = connectivity2[b][:ne2[b]]
             edge_indices = torch.cat([conn1.repeat_interleave(ne2[b], dim=0), conn2.repeat(ne1[b], 1)], dim=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
-            k[edge_indices] = edge_aff[b].reshape(-1)
+            k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape(-1)
         k = k.reshape(n2max * n1max, n2max * n1max)
         # node-wise affinity
         if node_aff is not None:
