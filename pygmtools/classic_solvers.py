@@ -245,6 +245,14 @@ def hungarian(s, n1=None, n2=None,
     :return: :math:`(b\times n_1 \times n_2)` optimal permutation matrix
 
     .. note::
+        The parallelization is based on multi-processing workers that run on multiple CPU cores.
+
+    .. note::
+        For all backends, ``scipy.optimize.linear_sum_assignment`` is called to solve the LAP, therefore the
+        computation is based on ``numpy`` and ``scipy``. The ``backend`` argument of this function only affects
+        the input-output data type.
+
+    .. note::
         We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
         the batched matrices are not padded.
