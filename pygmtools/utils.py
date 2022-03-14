@@ -59,19 +59,19 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
         >>> n1 = n2 = np.repeat([4], batch_size)
 
         # Build affinity matrix by the default inner-product function
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2)
 
         # Build affinity matrix by gaussian kernel
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
-        >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+        >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
 
         # Build affinity matrix based on node features
         >>> F1 = np.random.rand(batch_size, 4, 10)
         >>> F2 = np.random.rand(batch_size, 4, 10)
-        >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+        >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
 
         # The affinity matrices K, K2, K3 can be further processed by GM solvers
 
@@ -88,19 +88,19 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
         >>> n1 = n2 = torch.tensor([4] * batch_size)
 
         # Build affinity matrix by the default inner-product function
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2)
 
         # Build affinity matrix by gaussian kernel
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
-        >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+        >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
 
         # Build affinity matrix based on node features
         >>> F1 = torch.rand(batch_size, 4, 10)
         >>> F2 = torch.rand(batch_size, 4, 10)
-        >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+        >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
 
         # The affinity matrices K, K2, K3 can be further processed by GM solvers
     """
@@ -203,7 +203,7 @@ def gaussian_aff_fn(feat1, feat2, sigma=1., backend=None):
         )
 
 
-def build_batch(input, backend=None):
+def build_batch(input, return_ori_dim=False, backend=None):
     r"""
     Build a batched tensor from a list of tensors. If the list of tensors are with different sizes of dimensions, it
     will be padded to the largest dimension.
@@ -211,8 +211,9 @@ def build_batch(input, backend=None):
     The batched tensor and the number of original dimensions will be returned.
 
     :param input: list of input tensors
+    :param return_ori_dim: (default: False) return the original dimension
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :return: batched tensor, number of original dimensions...
+    :return: batched tensor, (if ``return_ori_dim=True``) number of original dimensions...
 
     Example for numpy backend::
 
@@ -224,7 +225,7 @@ def build_batch(input, backend=None):
         >>> A1 = np.random.rand(4, 4)
         >>> A2 = np.random.rand(5, 5)
         >>> A3 = np.random.rand(3, 3)
-        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3])
+        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
         >>> batched_A.shape
         (3, 5, 5)
         >>> n1
@@ -236,13 +237,9 @@ def build_batch(input, backend=None):
         >>> F1 = np.random.rand(4, 10)
         >>> F2 = np.random.rand(5, 10)
         >>> F3 = np.random.rand(3, 10)
-        >>> batched_F, n1, n2 = pygm.utils.build_batch([F1, F2, F3])
+        >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
         >>> batched_F.shape
         (3, 5, 10)
-        >>> n1
-        [4, 5, 3]
-        >>> n2
-        [10, 10, 10]
 
     Example for Pytorch backend::
 
@@ -254,7 +251,7 @@ def build_batch(input, backend=None):
         >>> A1 = torch.rand(4, 4)
         >>> A2 = torch.rand(5, 5)
         >>> A3 = torch.rand(3, 3)
-        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3])
+        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
         >>> batched_A.shape
         torch.Size([3, 5, 5])
         >>> n1
@@ -266,20 +263,16 @@ def build_batch(input, backend=None):
         >>> F1 = torch.rand(4, 10)
         >>> F2 = torch.rand(5, 10)
         >>> F3 = torch.rand(3, 10)
-        >>> batched_F, n1, n2 = pygm.utils.build_batch([F1, F2, F3])
+        >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
         >>> batched_F.shape
         torch.Size([3, 5, 10])
-        >>> n1
-        tensor([4, 5, 3])
-        >>> n2
-        tensor([10, 10, 10])
 
     """
     if backend is None:
         backend = pygmtools.BACKEND
     for item in input:
         _check_data_type(item, backend)
-    args = (input,)
+    args = (input, return_ori_dim)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         return mod.build_batch(*args)
@@ -296,7 +289,8 @@ def dense_to_sparse(dense_adj, backend=None):
     :param dense_adj: :math:`(b\times n\times n)` the dense adjacency matrix. This function also supports non-batched
                       input where the batch dimension ``b`` is ignored
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :return: :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor
+    :return: :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor,
+             :math:`(b)` number of edges
 
     Example for numpy backend::
 
@@ -311,12 +305,15 @@ def dense_to_sparse(dense_adj, backend=None):
         >>> A.shape
         (10, 4, 4)
 
-        >>> conn, edge = pygm.utils.dense_to_sparse(A)
+        >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
         >>> conn.shape # connectivity: (batch x num_edge x 2)
         (10, 12, 2)
 
         >>> edge.shape # edge feature (batch x num_edge x feature_dim)
         (10, 12, 1)
+
+        >>> ne
+        [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
 
     Example for Pytorch backend::
 
@@ -331,12 +328,15 @@ def dense_to_sparse(dense_adj, backend=None):
         >>> A.shape
         torch.Size([10, 4, 4])
 
-        >>> conn, edge = pygm.utils.dense_to_sparse(A)
+        >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
         >>> conn.shape # connectivity: (batch x num_edge x 2)
         torch.Size([10, 12, 2])
 
         >>> edge.shape # edge feature (batch x num_edge x feature_dim)
         torch.Size([10, 12, 1])
+
+        >>> ne
+        [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
 
     """
     if backend is None:
@@ -375,6 +375,8 @@ def to_numpy(input, backend=None):
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: numpy ndarray
     """
+    if backend is None:
+        backend = pygmtools.BACKEND
     args = (input,)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
@@ -394,6 +396,8 @@ def from_numpy(input, backend=None):
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: tensor for the backend
     """
+    if backend is None:
+        backend = pygmtools.BACKEND
     args = (input,)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')

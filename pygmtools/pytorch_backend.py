@@ -256,7 +256,7 @@ def gaussian_aff_fn(feat1, feat2, sigma):
     return torch.exp(-((feat1 - feat2) ** 2).sum(dim=-1) / sigma)
 
 
-def build_batch(input):
+def build_batch(input, return_ori_dim=True):
     """
     Pytorch implementation of building a batched tensor
     """
@@ -283,17 +283,20 @@ def build_batch(input):
         pad_pattern = tuple(pad_pattern.tolist())
         padded_ts.append(torch.nn.functional.pad(t, pad_pattern, 'constant', 0))
 
-    return torch.stack(padded_ts, dim=0), *[torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape]
-
+    if return_ori_dim:
+        return torch.stack(padded_ts, dim=0), *[torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape]
+    else:
+        return torch.stack(padded_ts, dim=0)
 
 def dense_to_sparse(dense_adj):
     """
     Pytorch implementation of converting a dense adjacency matrix to a sparse matrix
     """
     batch_size = dense_adj.shape[0]
-    conn = build_batch([torch.nonzero(a, as_tuple=False) for a in dense_adj])
-    edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)]).unsqueeze(-1)
-    return conn, edge_weight
+    conn_batch = build_batch([torch.nonzero(a, as_tuple=False) for a in dense_adj], return_ori_dim=True)
+    conn, nedges = conn_batch[0], conn_batch[1]
+    edge_weight_batch = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)], return_ori_dim=True)
+    return conn, edge_weight_batch[0].unsqueeze(-1), nedges
 
 
 def to_numpy(input):

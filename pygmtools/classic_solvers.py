@@ -428,8 +428,8 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         >>> n1 = n2 = np.repeat([4], batch_size)
 
         # Build affinity matrix
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
         >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
@@ -459,8 +459,8 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         >>> n1 = n2 = torch.tensor([4] * batch_size)
 
         # Build affinity matrix
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
         >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
@@ -568,8 +568,8 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         >>> n1 = n2 = np.repeat([4], batch_size)
 
         # Build affinity matrix
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
         >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
@@ -599,8 +599,8 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         >>> n1 = n2 = torch.tensor([4] * batch_size)
 
         # Build affinity matrix
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
         >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
@@ -694,8 +694,8 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         >>> n1 = n2 = np.repeat([4], batch_size)
 
         # Build affinity matrix
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
         >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
@@ -729,8 +729,8 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         >>> n2 = torch.tensor([4] * batch_size)
 
         # Build affinity matrix
-        >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
         >>> import functools
         >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
         >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)

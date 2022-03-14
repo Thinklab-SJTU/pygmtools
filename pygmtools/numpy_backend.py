@@ -263,7 +263,7 @@ def gaussian_aff_fn(feat1, feat2, sigma):
     return np.exp(-((feat1 - feat2) ** 2).sum(axis=-1) / sigma)
 
 
-def build_batch(input):
+def build_batch(input, return_ori_dim=True):
     """
     numpy implementation of building a batched np.ndarray
     """
@@ -288,7 +288,10 @@ def build_batch(input):
         pad_pattern[:, 1] = max_shape - np.array(t.shape)
         padded_ts.append(np.pad(t, pad_pattern, 'constant', constant_values=0))
 
-    return np.stack(padded_ts, axis=0), *ori_shape
+    if return_ori_dim:
+        return np.stack(padded_ts, axis=0), *ori_shape
+    else:
+        return np.stack(padded_ts, axis=0)
 
 
 def dense_to_sparse(dense_adj):
@@ -296,9 +299,10 @@ def dense_to_sparse(dense_adj):
     numpy implementation of converting a dense adjacency matrix to a sparse matrix
     """
     batch_size = dense_adj.shape[0]
-    conn = build_batch([np.stack(np.nonzero(a), axis=1) for a in dense_adj])
-    edge_weight = np.expand_dims(build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)]), axis=-1)
-    return conn, edge_weight
+    conn_batch = build_batch([np.stack(np.nonzero(a), axis=1) for a in dense_adj], return_ori_dim=True)
+    conn, nedges = conn_batch[0], conn_batch[1]
+    edge_weight_batch = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)], return_ori_dim=True)
+    return conn, np.expand_dims(edge_weight_batch[0], axis=-1), nedges
 
 
 def to_numpy(input):
