@@ -208,9 +208,11 @@ def build_batch(input, backend=None):
     Build a batched tensor from a list of tensors. If the list of tensors are with different sizes of dimensions, it
     will be padded to the largest dimension.
 
+    The batched tensor and the number of original dimensions will be returned.
+
     :param input: list of input tensors
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :return: batched tensor
+    :return: batched tensor, number of original dimensions...
 
     Example for numpy backend::
 
@@ -222,17 +224,25 @@ def build_batch(input, backend=None):
         >>> A1 = np.random.rand(4, 4)
         >>> A2 = np.random.rand(5, 5)
         >>> A3 = np.random.rand(3, 3)
-        >>> batched_A = pygm.utils.build_batch([A1, A2, A3])
+        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3])
         >>> batched_A.shape
         (3, 5, 5)
+        >>> n1
+        [4, 5, 3]
+        >>> n2
+        [4, 5, 3]
 
         # batched node features (feature dimension=10)
         >>> F1 = np.random.rand(4, 10)
         >>> F2 = np.random.rand(5, 10)
         >>> F3 = np.random.rand(3, 10)
-        >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
+        >>> batched_F, n1, n2 = pygm.utils.build_batch([F1, F2, F3])
         >>> batched_F.shape
         (3, 5, 10)
+        >>> n1
+        [4, 5, 3]
+        >>> n2
+        [10, 10, 10]
 
     Example for Pytorch backend::
 
@@ -244,17 +254,25 @@ def build_batch(input, backend=None):
         >>> A1 = torch.rand(4, 4)
         >>> A2 = torch.rand(5, 5)
         >>> A3 = torch.rand(3, 3)
-        >>> batched_A = pygm.utils.build_batch([A1, A2, A3])
+        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3])
         >>> batched_A.shape
         torch.Size([3, 5, 5])
+        >>> n1
+        tensor([4, 5, 3])
+        >>> n2
+        tensor([4, 5, 3])
 
         # batched node features (feature dimension=10)
         >>> F1 = torch.rand(4, 10)
         >>> F2 = torch.rand(5, 10)
         >>> F3 = torch.rand(3, 10)
-        >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
+        >>> batched_F, n1, n2 = pygm.utils.build_batch([F1, F2, F3])
         >>> batched_F.shape
         torch.Size([3, 5, 10])
+        >>> n1
+        tensor([4, 5, 3])
+        >>> n2
+        tensor([10, 10, 10])
 
     """
     if backend is None:

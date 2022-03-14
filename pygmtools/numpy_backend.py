@@ -271,11 +271,13 @@ def build_batch(input):
     it = iter(input)
     t = next(it)
     max_shape = list(t.shape)
+    ori_shape = [[_] for _ in max_shape]
     while True:
         try:
             t = next(it)
             for i in range(len(max_shape)):
                 max_shape[i] = int(max(max_shape[i], t.shape[i]))
+                ori_shape[i].append(t.shape[i])
         except StopIteration:
             break
     max_shape = np.array(max_shape)
@@ -286,7 +288,7 @@ def build_batch(input):
         pad_pattern[:, 1] = max_shape - np.array(t.shape)
         padded_ts.append(np.pad(t, pad_pattern, 'constant', constant_values=0))
 
-    return np.stack(padded_ts, axis=0)
+    return np.stack(padded_ts, axis=0), *ori_shape
 
 
 def dense_to_sparse(dense_adj):

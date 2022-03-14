@@ -261,14 +261,17 @@ def build_batch(input):
     Pytorch implementation of building a batched tensor
     """
     assert type(input[0]) == torch.Tensor
+    device = input[0].device
     it = iter(input)
     t = next(it)
     max_shape = list(t.shape)
+    ori_shape = [[_] for _ in max_shape]
     while True:
         try:
             t = next(it)
             for i in range(len(max_shape)):
                 max_shape[i] = int(max(max_shape[i], t.shape[i]))
+                ori_shape[i].append(t.shape[i])
         except StopIteration:
             break
     max_shape = np.array(max_shape)
@@ -280,7 +283,7 @@ def build_batch(input):
         pad_pattern = tuple(pad_pattern.tolist())
         padded_ts.append(torch.nn.functional.pad(t, pad_pattern, 'constant', 0))
 
-    return torch.stack(padded_ts, dim=0)
+    return torch.stack(padded_ts, dim=0), *[torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape]
 
 
 def dense_to_sparse(dense_adj):
