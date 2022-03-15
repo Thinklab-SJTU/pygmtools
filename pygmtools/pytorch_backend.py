@@ -256,7 +256,7 @@ def gaussian_aff_fn(feat1, feat2, sigma):
     return torch.exp(-((feat1 - feat2) ** 2).sum(dim=-1) / sigma)
 
 
-def build_batch(input, return_ori_dim=True):
+def build_batch(input, return_ori_dim=False):
     """
     Pytorch implementation of building a batched tensor
     """
@@ -284,7 +284,7 @@ def build_batch(input, return_ori_dim=True):
         padded_ts.append(torch.nn.functional.pad(t, pad_pattern, 'constant', 0))
 
     if return_ori_dim:
-        return torch.stack(padded_ts, dim=0), [torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape]
+        return torch.stack(padded_ts, dim=0), tuple([torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape])
     else:
         return torch.stack(padded_ts, dim=0)
 
@@ -296,7 +296,7 @@ def dense_to_sparse(dense_adj):
     conn, ori_shape = build_batch([torch.nonzero(a, as_tuple=False) for a in dense_adj], return_ori_dim=True)
     nedges = ori_shape[0]
     edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
-    return conn, edge_weight[0].unsqueeze(-1), nedges
+    return conn, edge_weight.unsqueeze(-1), nedges
 
 
 def to_numpy(input):

@@ -263,7 +263,7 @@ def gaussian_aff_fn(feat1, feat2, sigma):
     return np.exp(-((feat1 - feat2) ** 2).sum(axis=-1) / sigma)
 
 
-def build_batch(input, return_ori_dim=True):
+def build_batch(input, return_ori_dim=False):
     """
     numpy implementation of building a batched np.ndarray
     """
@@ -271,7 +271,7 @@ def build_batch(input, return_ori_dim=True):
     it = iter(input)
     t = next(it)
     max_shape = list(t.shape)
-    ori_shape = [[_] for _ in max_shape]
+    ori_shape = tuple([[_] for _ in max_shape])
     while True:
         try:
             t = next(it)

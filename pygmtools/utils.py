@@ -332,7 +332,7 @@ def dense_to_sparse(dense_adj, backend=None):
         torch.Size([10, 12, 1])
 
         >>> ne
-        [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+        tensor([12, 12, 12, 12, 12, 12, 12, 12, 12, 12])
 
     """
     if backend is None:
