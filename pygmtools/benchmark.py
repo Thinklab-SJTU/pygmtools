@@ -1,10 +1,5 @@
 import tempfile
-import os
 import shutil
-from PIL import Image
-import numpy as np
-import random
-import json
 import itertools
 from scipy.sparse import coo_matrix
 from pygmtools.dataset import *
