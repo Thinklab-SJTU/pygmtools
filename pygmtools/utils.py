@@ -213,7 +213,7 @@ def build_batch(input, return_ori_dim=False, backend=None):
     :param input: list of input tensors
     :param return_ori_dim: (default: False) return the original dimension
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :return: batched tensor, (if ``return_ori_dim=True``) number of original dimensions...
+    :return: batched tensor, (if ``return_ori_dim=True``) a list of the original dimensions
 
     Example for numpy backend::
 
@@ -225,13 +225,11 @@ def build_batch(input, return_ori_dim=False, backend=None):
         >>> A1 = np.random.rand(4, 4)
         >>> A2 = np.random.rand(5, 5)
         >>> A3 = np.random.rand(3, 3)
-        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
+        >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
         >>> batched_A.shape
         (3, 5, 5)
-        >>> n1
-        [4, 5, 3]
-        >>> n2
-        [4, 5, 3]
+        >>> ori_shape
+        ([4, 5, 3], [4, 5, 3])
 
         # batched node features (feature dimension=10)
         >>> F1 = np.random.rand(4, 10)
@@ -251,13 +249,11 @@ def build_batch(input, return_ori_dim=False, backend=None):
         >>> A1 = torch.rand(4, 4)
         >>> A2 = torch.rand(5, 5)
         >>> A3 = torch.rand(3, 3)
-        >>> batched_A, n1, n2 = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
+        >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
         >>> batched_A.shape
         torch.Size([3, 5, 5])
-        >>> n1
-        tensor([4, 5, 3])
-        >>> n2
-        tensor([4, 5, 3])
+        >>> ori_shape
+        (tensor([4, 5, 3]), tensor([4, 5, 3]))
 
         # batched node features (feature dimension=10)
         >>> F1 = torch.rand(4, 10)

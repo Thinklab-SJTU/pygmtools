@@ -284,7 +284,7 @@ def build_batch(input, return_ori_dim=True):
         padded_ts.append(torch.nn.functional.pad(t, pad_pattern, 'constant', 0))
 
     if return_ori_dim:
-        return torch.stack(padded_ts, dim=0), *[torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape]
+        return torch.stack(padded_ts, dim=0), [torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape]
     else:
         return torch.stack(padded_ts, dim=0)
 
@@ -293,10 +293,10 @@ def dense_to_sparse(dense_adj):
     Pytorch implementation of converting a dense adjacency matrix to a sparse matrix
     """
     batch_size = dense_adj.shape[0]
-    conn_batch = build_batch([torch.nonzero(a, as_tuple=False) for a in dense_adj], return_ori_dim=True)
-    conn, nedges = conn_batch[0], conn_batch[1]
-    edge_weight_batch = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)], return_ori_dim=True)
-    return conn, edge_weight_batch[0].unsqueeze(-1), nedges
+    conn, ori_shape = build_batch([torch.nonzero(a, as_tuple=False) for a in dense_adj], return_ori_dim=True)
+    nedges = ori_shape[0]
+    edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
+    return conn, edge_weight[0].unsqueeze(-1), nedges
 
 
 def to_numpy(input):

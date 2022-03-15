@@ -289,7 +289,7 @@ def build_batch(input, return_ori_dim=True):
         padded_ts.append(np.pad(t, pad_pattern, 'constant', constant_values=0))
 
     if return_ori_dim:
-        return np.stack(padded_ts, axis=0), *ori_shape
+        return np.stack(padded_ts, axis=0), ori_shape
     else:
         return np.stack(padded_ts, axis=0)
 
@@ -299,10 +299,10 @@ def dense_to_sparse(dense_adj):
     numpy implementation of converting a dense adjacency matrix to a sparse matrix
     """
     batch_size = dense_adj.shape[0]
-    conn_batch = build_batch([np.stack(np.nonzero(a), axis=1) for a in dense_adj], return_ori_dim=True)
-    conn, nedges = conn_batch[0], conn_batch[1]
-    edge_weight_batch = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)], return_ori_dim=True)
-    return conn, np.expand_dims(edge_weight_batch[0], axis=-1), nedges
+    conn, ori_dim = build_batch([np.stack(np.nonzero(a), axis=1) for a in dense_adj], return_ori_dim=True)
+    nedges = ori_dim[0]
+    edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
+    return conn, np.expand_dims(edge_weight, axis=-1), nedges
 
 
 def to_numpy(input):
