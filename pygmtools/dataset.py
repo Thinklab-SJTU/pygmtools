@@ -102,20 +102,20 @@ class PascalVOC:
         anno_dir = "data/PascalVOC/annotations"
         if not os.path.exists(data_dir):
             self.download(url='http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar', name='PascalVOC' )
-       
+
         if not os.path.exists(anno_dir):
             self.download(url='https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz', name='PascalVOC_anno')
 
         self.sets = sets
         self.obj_resize = obj_resize
-        
+
         self.classes = dataset_cfg.PascalVOC.CLASSES
         self.kpt_len = [len(VOC2011_KPT_NAMES[_]) for _ in dataset_cfg.PascalVOC.CLASSES]
         self.classes_kpts = {cls: len(VOC2011_KPT_NAMES[cls]) for cls in self.classes}
         self.anno_path = Path(VOC2011_anno_path)
         self.img_path = Path(VOC2011_img_path)
         self.ori_anno_path = Path(VOC2011_ori_anno_path)
-        
+
         assert sets == 'train' or sets == 'test', 'No match found for dataset {}'.format(sets)
         cache_name = 'voc_db_' + sets + '.pkl'
         self.cache_path = Path(VOC2011_cache_path)
@@ -139,7 +139,7 @@ class PascalVOC:
             print('Filtered {} images to {}. Annotation saved.'.format(before_filter, after_filter))
 
         self.process()
-        
+
     def download(self, url=None, name=None):
         r"""
         Automatically download PascalVOC dataset.
@@ -163,7 +163,7 @@ class PascalVOC:
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
             os.remove(filename)
-            
+
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
             filename = "data/PascalVOC.tar"
@@ -193,7 +193,7 @@ class PascalVOC:
                 tree = ET.parse(xml_file.open())
                 root = tree.getroot()
                 obj: Element = root.findall('object')[voc_idx - 1]
-    
+
                 difficult = obj.find('difficult')
                 if difficult is not None:
                     difficult = int(difficult.text)
@@ -206,18 +206,18 @@ class PascalVOC:
                 if difficult or occluded or truncated:
                     to_del.append(xml_name)
                     continue
-    
+
                     # Exclude uncleaned images
                 if self.classes[cls_id] == 'person' and int(xml_comps[0]) > 2008:
                     to_del.append(xml_name)
                     continue
-    
+
                     # Exclude overlapping images in Willow
                     # if self.sets == 'train' and (self.classes[cls_id] == 'motorbike' or self.classes[cls_id] == 'car') \
                     #        and int(xml_comps[0]) == 2007:
                     #    to_del.append(xml_name)
                     #    continue
-    
+
             for x in to_del:
                 a_xml_list[cls_id].remove(x)
 
@@ -365,7 +365,7 @@ class PascalVOC:
         anno_dict['univ_size'] = len(VOC2011_KPT_NAMES[cls])
 
         return anno_dict
-    
+
 
 class WillowObject:
     r"""
@@ -413,7 +413,7 @@ class WillowObject:
 
         self.sets = sets
         self.obj_resize = obj_resize
-        
+
         self.classes = dataset_cfg.WillowObject.CLASSES
         self.kpt_len = [dataset_cfg.WillowObject.KPT_LEN for _ in dataset_cfg.WillowObject.CLASSES]
 
@@ -449,7 +449,7 @@ class WillowObject:
         for file in fz.namelist():
             fz.extract(file, "data/WillowObject/")
         os.remove(filename)
-        
+
     def process(self):
         r"""
         Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
@@ -574,7 +574,7 @@ class WillowObject:
             f3 = open(img_file, 'w')
             f3.write(data_str)
             f3.close()
-    
+
     def __get_anno_dict(self, mat_file, cls):
         """
         Get an annotation dict from .mat annotation
@@ -617,8 +617,8 @@ class WillowObject:
         anno_dict['univ_size'] = 10
 
         return anno_dict
-        
-        
+
+
 class SPair71k:
     r"""
     This class is defined to download and preprocess SPair71k dataset.
@@ -914,7 +914,7 @@ class IMC_PT_SparseGM:
     """
     def __init__(self, sets, obj_resize, ds_dict=None, **args):
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
-        
+
         if ds_dict is not None:
             if 'TOTAL_KPT_NUM' in ds_dict.keys():
                 TOTAL_KPT_NUM = ds_dict.TOTAL_KPT_NUM
