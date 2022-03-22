@@ -159,7 +159,7 @@ def rrwm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
         n = np.linalg.norm(v, ord=1, axis=1, keepdims=True)
         v = np.matmul(v, 1 / n)
 
-        if np.linalg.norm((v - last_v).squeeze(), ord='fro') < 1e-5:
+        if np.linalg.norm((v - last_v).squeeze(axis=-1), ord='fro') < 1e-5:
             break
 
     return v.reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
