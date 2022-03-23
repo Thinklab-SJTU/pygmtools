@@ -398,3 +398,10 @@ def _unsqueeze(input: np.ndarray, dim):
     numpy implementation of _unsqueeze
     """
     return np.expand_dims(input, axis=dim)
+
+
+def _transpose(input: np.ndarray, dim1, dim2):
+    """
+    numpy implementation of _transpose
+    """
+    return np.swapaxes(input, dim1, dim2)

@@ -70,4 +70,5 @@ Shanghai Jiao Tong University.
    api/_autosummary/pygmtools.benchmark
    api/_autosummary/pygmtools.dataset
    api/_autosummary/pygmtools.classic_solvers
+   api/_autosummary/pygmtools.multi_graph_solvers
    api/_autosummary/pygmtools.utils

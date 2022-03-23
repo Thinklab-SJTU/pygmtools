@@ -4,8 +4,8 @@ import importlib
 import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
-    'The backend function for {} is not implemented. It will be truly appreciated if you could share your implementation ' \
-    'with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
+    'The backend function for {} is not implemented. It will be truly appreciated if you could develop and share your' \
+    ' implementation with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
 
 
 def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2, connectivity2,
@@ -168,11 +168,12 @@ def inner_prod_aff_fn(feat1, feat2, backend=None):
     args = (feat1, feat2)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.inner_prod_aff_fn(*args)
+        fn = mod.inner_prod_aff_fn
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def gaussian_aff_fn(feat1, feat2, sigma=1., backend=None):
@@ -196,11 +197,12 @@ def gaussian_aff_fn(feat1, feat2, sigma=1., backend=None):
     args = (feat1, feat2, sigma)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.gaussian_aff_fn(*args)
+        fn = mod.gaussian_aff_fn
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def build_batch(input, return_ori_dim=False, backend=None):
@@ -271,11 +273,12 @@ def build_batch(input, return_ori_dim=False, backend=None):
     args = (input, return_ori_dim)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.build_batch(*args)
+        fn = mod.build_batch
     except ImportError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def dense_to_sparse(dense_adj, backend=None):
@@ -344,20 +347,71 @@ def dense_to_sparse(dense_adj, backend=None):
     elif _check_shape(dense_adj, 3, backend):
         non_batched_input = False
     else:
-        raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
-                         f's:{len(_get_shape(dense_adj))}!')
+        raise ValueError(f'the input argument dense_adj is expected to be 2-dimensional or 3-dimensional, got '
+                         f'dense_adj:{len(_get_shape(dense_adj))}!')
 
     args = (dense_adj,)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        result = mod.dense_to_sparse(*args)
+        fn = mod.dense_to_sparse
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
 
+    result = fn(*args)
     if non_batched_input:
         return _squeeze(result[0], 0, backend), _squeeze(result[1], 0, backend)
+    else:
+        return result
+
+
+def compute_affinity_score(X, K, backend=None):
+    r"""
+    Compute the affinity score of graph matching. It is the objective score of the corresponding Quadratic Assignment
+    Problem.
+
+    .. math::
+
+        \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})
+
+    here :math:`\texttt{vec}` means column-wise vectorization.
+
+    :param X: :math:`(b\times n_1 \times n_2)` the permutation matrix that represents the matching result
+    :param K: :math:`(b\times n_1n_2 \times n_1n_2)` the affinity matrix
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: :math:`(b)` the objective score
+
+    .. note::
+
+       This function also supports non-batched input if the first dimension of ``X, K`` is removed.
+
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    _check_data_type(X, backend)
+    _check_data_type(K, backend)
+    if _check_shape(X, 2, backend) and _check_shape(K, 2, backend):
+        X = _unsqueeze(X, 0, backend)
+        K = _unsqueeze(K, 0, backend)
+        non_batched_input = True
+    elif _check_shape(X, 3, backend) and _check_shape(X, 3, backend):
+        non_batched_input = False
+    else:
+        raise ValueError(f'the input argument K, X are expected to have the same number of dimensions (=2 or 3), got'
+                         f'X:{len(_get_shape(X))} and K:{len(_get_shape(K))}!')
+    args = (X, K)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod.compute_affinity_score
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+    result = fn(*args)
+    if non_batched_input:
+        return _squeeze(result, 0, backend)
     else:
         return result
 
@@ -376,11 +430,12 @@ def to_numpy(input, backend=None):
     args = (input,)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.to_numpy(*args)
+        fn = mod.to_numpy
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def from_numpy(input, backend=None):
@@ -397,11 +452,100 @@ def from_numpy(input, backend=None):
     args = (input,)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.from_numpy(*args)
+        fn = mod.from_numpy
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
+
+
+def generate_isomorphic_graphs(node_num, graph_num=2, backend=None):
+    r"""
+    Generate a set of isomorphic graphs, for testing purposes and examples.
+
+    :param node_num: number of nodes in each graph
+    :param graph_num: (default: 2) number of graphs
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: if ``graph_num==2``, this function returns :math:`(m\times n \times n)` the adjacency matrix, and
+             :math:`(n \times n)` the permutation matrix;
+
+             else, this function returns :math:`(m\times n \times n)` the adjacency matrix, and
+             :math:`(m\times m\times n \times n)` the multi-matching permutation matrix
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    args = (node_num, graph_num)
+    assert node_num > 0 and graph_num >= 2, "input data not understood."
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod.generate_isomorphic_graphs
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+    As, X_gt = fn(*args)
+    if graph_num == 2:
+        return As, X_gt[0, 1]
+    else:
+        return As, X_gt
+
+
+class MultiMatchingResult:
+    r"""
+    A memory-efficient class for multi-graph matching results. The dense storage for :math:`m` graphs with :math:`n`
+    nodes requires a size of :math:`(m\times m \times n \times n)`, and this implementation requires
+    :math:`((m-1)\times m \times n \times n / 2)`.
+
+    Numpy Example:
+
+        >>> import numpy as np
+        >>> import pygmtools as pygm
+        >>> np.random.seed(0)
+
+        >>> X = pygm.utils.MultiMatchingResult(backend='numpy')
+        >>> X[0, 1] = np.zeros((4, 4))
+        >>> X[0, 1][np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
+        >>> X
+        MultiMatchingResult:
+        {'0,1': array([[0., 0., 1., 0.],
+               [0., 0., 0., 1.],
+               [0., 1., 0., 0.],
+               [1., 0., 0., 0.]])}
+        >>> X[1, 0]
+        array([[0., 0., 0., 1.],
+               [0., 0., 1., 0.],
+               [1., 0., 0., 0.],
+               [0., 1., 0., 0.]])
+    """
+    def __init__(self, backend=None):
+        self.result_dict = {}
+        if backend is None:
+            self.backend = pygmtools.BACKEND
+        else:
+            self.backend = backend
+
+    def __getitem__(self, item):
+        assert len(item) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
+        idx1, idx2 = item
+        if idx1 < idx2:
+            return self.result_dict[f'{idx1},{idx2}']
+        else:
+            return _transpose(self.result_dict[f'{idx2},{idx1}'], 0, 1, self.backend)
+
+    def __setitem__(self, key, value):
+        assert len(key) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
+        idx1, idx2 = key
+        if idx1 < idx2:
+            self.result_dict[f'{idx1},{idx2}'] = value
+        else:
+            self.result_dict[f'{idx2},{idx1}'] = _transpose(value, 0, 1, self.backend)
+
+    def __str__(self):
+        return 'MultiMatchingResult:\n' + self.result_dict.__str__()
+
+    def __repr__(self):
+        return 'MultiMatchingResult:\n' + self.result_dict.__repr__()
 
 
 ###################################################
@@ -434,11 +578,12 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     args = (node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod._aff_mat_from_node_edge_aff(*args)
+        fn = mod._aff_mat_from_node_edge_aff
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def _check_data_type(input, backend=None):
@@ -453,11 +598,12 @@ def _check_data_type(input, backend=None):
     args = (input, )
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod._check_data_type(*args)
+        fn = mod._check_data_type
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def _check_shape(input, num_dim, backend=None):
@@ -473,11 +619,13 @@ def _check_shape(input, num_dim, backend=None):
     args = (input, num_dim)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod._check_shape(*args)
+        fn = mod._check_shape
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
+
 
 def _get_shape(input, backend=None):
     r"""
@@ -491,11 +639,12 @@ def _get_shape(input, backend=None):
     args = (input,)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod._get_shape(*args)
+        fn = mod._get_shape
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def _squeeze(input, dim, backend=None):
@@ -511,11 +660,12 @@ def _squeeze(input, dim, backend=None):
     args = (input, dim)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod._squeeze(*args)
+        fn = mod._squeeze
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def _unsqueeze(input, dim, backend=None):
@@ -531,8 +681,31 @@ def _unsqueeze(input, dim, backend=None):
     args = (input, dim)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod._unsqueeze(*args)
+        fn = mod._unsqueeze
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
+
+
+def _transpose(input, dim1, dim2, backend=None):
+    r"""
+    Swap the dim1 and dim2 dimensions of the input tensor.
+
+    :param input: input tensor
+    :param dim1: swapped dimension 1
+    :param dim2: swapped dimension 2
+    :return: transposed tensor
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    args = (input, dim1, dim2)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod._transpose
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+    return fn(*args)

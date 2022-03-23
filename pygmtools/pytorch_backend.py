@@ -2,6 +2,8 @@ import torch
 import numpy as np
 from multiprocessing import Pool
 from torch import Tensor
+
+import pygmtools.utils
 from pygmtools.numpy_backend import _hung_kernel
 
 
@@ -215,9 +217,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = torch.full(batch_num, n1max, device=K.device)
+        n1 = torch.full((batch_num,), n1max, dtype=torch.int, device=K.device)
     if n2 is None:
-        n2 = torch.full(batch_num, n2max, device=K.device)
+        n2 = torch.full((batch_num,), n2max, dtype=torch.int, device=K.device)
     if n1max is None:
         n1max = torch.max(n1)
     if n2max is None:
@@ -233,6 +235,149 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     v0 = x0.transpose(1, 2).reshape(batch_num, n1n2, 1)
 
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
+
+
+############################################
+#      Multi-Graph Matching Solvers        #
+############################################
+
+
+def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
+    """
+    Pytorch implementation of CAO solver (mode="c")
+
+    :param K: affinity matrix, (m, m, n*n, n*n)
+    :param X, initial matching, (m, m, n, n)
+    :param num_graph: number of graphs, int
+    :param num_node: number of nodes, int
+    :return: X, (m, m, n, n)
+    """
+    m, n = num_graph, num_node
+    param_lambda = lambda_init
+    device = K.device
+
+    for iter in range(max_iter):
+        if iter >= iter_boost:
+            param_lambda = np.min([param_lambda * lambda_step, lambda_max])
+        # pair_con = get_batch_pc_opt(X)
+        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
+        norm = torch.max(pair_aff)
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                aff_ori = pygmtools.utils.compute_affinity_score(X[i, j], K[i, j], backend='pytorch') / norm
+                con_ori = _get_single_pc_opt(X, i, j)
+                # con_ori = torch.sqrt(pair_con[i, j])
+                if iter < iter_boost:
+                    score_ori = aff_ori
+                else:
+                    score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+                X_upt = X[i, j]
+                for k in range(m):
+                    X_combo = torch.matmul(X[i, k], X[k, j])
+                    aff_combo = pygmtools.utils.compute_affinity_score(X_combo, K[i, j], backend='pytorch') / norm
+                    con_combo = _get_single_pc_opt(X, i, j, X_combo)
+                    # con_combo = torch.sqrt(pair_con[i, k] * pair_con[k, j])
+                    if iter < iter_boost:
+                        score_combo = aff_combo
+                    else:
+                        score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+                    if score_combo > score_ori:
+                        X_upt = X_combo
+                X[i, j] = X_upt
+                X[j, i] = X_upt.transpose(0, 1)
+    return X
+
+
+def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
+    """
+    Pytorch implementation of CAO solver in fast config (mode="pc")
+
+    :param K: affinity matrix, (m, m, n*n, n*n)
+    :param X, initial matching, (m, m, n, n)
+    :param num_graph: number of graphs, int
+    :param num_node: number of nodes, int
+    :return: X, (m, m, n, n)
+    """
+    m, n = num_graph, num_node
+    param_lambda = lambda_init
+
+    device = K.device
+    mask1 = torch.arange(m).reshape(m, 1).repeat(1, m)
+    mask2 = torch.arange(m).reshape(1, m).repeat(m, 1)
+    mask = (mask1 < mask2).float().to(device)
+    X_mask = mask.reshape(m, m, 1, 1)
+
+    for iter in range(max_iter):
+        if iter >= iter_boost:
+            param_lambda = np.min([param_lambda * lambda_step, lambda_max])
+
+        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
+        norm = torch.max(pair_aff)
+
+        X_ori = X.reshape(m, m, 1, n, n).repeat(1, 1, m, 1, 1)
+        X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i,j,k] = X[i,k]
+        X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i,j,k] = X[k,j]
+        X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n)
+
+        K_repeat = K.reshape(m, m, 1, n * n, n * n).repeat(1, 1, m, 1, 1).reshape(-1, n * n, n * n)
+        aff_ori = (pygmtools.utils.compute_affinity_score(X_ori.reshape(-1, n, n), K_repeat, backend='pytorch') / norm).reshape(m, m, m)
+        aff_combo = (pygmtools.utils.compute_affinity_score(X_combo.reshape(-1, n, n), K_repeat, backend='pytorch') / norm).reshape(m, m, m)
+
+        pair_con = _get_batch_pc_opt(X)
+        con_ori = torch.sqrt(pair_con.reshape(m, m, 1).repeat(1, 1, m))
+        con1 = pair_con.reshape(m, 1, m).repeat(1, m, 1)  # con1[i,j,k] = pair_con[i,k]
+        con2 = pair_con.reshape(1, m, m).repeat(m, 1, 1).transpose(1, 2)  # con2[i,j,k] = pair_con[j,k]
+        con_combo = torch.sqrt(con1 * con2)
+
+        if iter < iter_boost:
+            score_ori = aff_ori
+            score_combo = aff_combo
+        else:
+            score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+            score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+        upt = (score_ori < score_combo).float()
+        upt = (upt * mask).reshape(m, m, 1, 1)
+        X = X * (1.0 - upt) + X_combo * upt
+        X = X * X_mask + X.transpose(0, 1).transpose(2, 3) * (1 - X_mask)
+    return X
+
+
+def _get_single_pc_opt(X, i, j, Xij=None):
+    """
+    CAO/Floyd helper function (compute consistency)
+    :param X: (m, m, n, n) all the matching results
+    :param i: index
+    :param j: index
+    :return: the consistency of X_ij
+    """
+    m, _, n, _ = X.size()
+    if Xij is None:
+        Xij = X[i, j]
+    X1 = X[i, :].reshape(-1, n, n)
+    X2 = X[:, j].reshape(-1, n, n)
+    X_combo = torch.bmm(X1, X2)
+    pair_con = 1 - torch.sum(torch.abs(Xij - X_combo)) / (2 * n * m)
+    return pair_con
+
+
+def _get_batch_pc_opt(X):
+    """
+    CAO/Floyd-fast helper function (compute consistency in batch)
+    :param X: (m, m, n, n) all the matching results
+    :return: (m, m) the consistency of X
+    """
+    m, _, n, _ = X.size()
+    X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i, j, k] = X[i, k]
+    X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i, j, k] = X[k, j]
+    X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n)
+    X_ori = X.reshape(m, m, 1, n, n).repeat(1, 1, m, 1, 1)
+    pair_con = 1 - torch.sum(torch.abs(X_combo - X_ori), dim=(2, 3, 4)) / (2 * n * m)
+    return pair_con
 
 
 #############################################
@@ -299,6 +444,17 @@ def dense_to_sparse(dense_adj):
     return conn, edge_weight.unsqueeze(-1), nedges
 
 
+def compute_affinity_score(X, K):
+    """
+    Pytorch implementation of computing affinity score
+    """
+    b, n, _ = X.size()
+    vx = X.transpose(1, 2).reshape(b, -1, 1)  # (b, n*n, 1)
+    vxt = vx.transpose(1, 2)  # (b, 1, n*n)
+    affinity = torch.bmm(torch.bmm(vxt, K), vx)
+    return affinity
+
+
 def to_numpy(input):
     """
     Pytorch function to_numpy
@@ -311,6 +467,27 @@ def from_numpy(input):
     Pytorch function from_numpy
     """
     return torch.from_numpy(input)
+
+
+def generate_isomorphic_graphs(node_num, graph_num):
+    """
+    Pytorch implementation of generate_isomorphic_graphs
+    """
+    X_gt = torch.zeros(graph_num, node_num, node_num)
+    X_gt[0, torch.arange(0, node_num, dtype=torch.int64), torch.arange(0, node_num, dtype=torch.int64)] = 1
+    for i in range(graph_num):
+        if i > 0:
+            X_gt[i, torch.arange(0, node_num, dtype=torch.int64), torch.randperm(node_num)] = 1
+    joint_X = X_gt.reshape(graph_num * node_num, node_num)
+    X_gt = torch.mm(joint_X, joint_X.t())
+    X_gt = X_gt.reshape(graph_num, node_num, graph_num, node_num).permute(0, 2, 1, 3)
+    A0 = torch.rand(node_num, node_num)
+    torch.diagonal(A0)[:] = 0
+    As = [A0]
+    for i in range(graph_num):
+        if i > 0:
+            As.append(torch.mm(torch.mm(X_gt[i, 0], A0), X_gt[0, i]))
+    return torch.stack(As, dim=0), X_gt
 
 
 def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity1: Tensor, connectivity2: Tensor,
@@ -395,3 +572,10 @@ def _unsqueeze(input, dim):
     Pytorch implementation of _unsqueeze
     """
     return input.unsqueeze(dim)
+
+
+def _transpose(input, dim1, dim2):
+    """
+    Pytorch implementaiton of _transpose
+    """
+    return input.transpose(dim1, dim2)

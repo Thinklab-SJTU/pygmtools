@@ -218,12 +218,13 @@ def sinkhorn(s, n1=None, n2=None,
     args = (s, n1, n2, dummy_row, max_iter, tau, batched_operation)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        result = mod.sinkhorn(*args)
+        fn = mod.sinkhorn
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
 
+    result = fn(*args)
     if non_batched_input:
         return _squeeze(result, 0, backend)
     else:
@@ -382,12 +383,13 @@ def hungarian(s, n1=None, n2=None,
     args = (s, n1, n2, nproc)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        result = mod.hungarian(*args)
+        fn = mod.hungarian
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
 
+    result = fn(*args)
     if non_batched_input:
         return _squeeze(result, 0, backend)
     else:
@@ -510,11 +512,12 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     args = (K, n1, n2, n1max, n2max, x0, max_iter)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.sm(*args)
+        fn = mod.sm
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
@@ -653,11 +656,12 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     args = (K, n1, n2, n1max, n2max, x0, max_iter, sk_iter, alpha, beta)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.rrwm(*args)
+        fn = mod.rrwm
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
@@ -776,11 +780,12 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     args = (K, n1, n2, n1max, n2max, x0, max_iter)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        return mod.ipfp(*args)
+        fn = mod.ipfp
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
+    return fn(*args)
 
 
 def __check_gm_arguments(n1, n2, n1max, n2max):
