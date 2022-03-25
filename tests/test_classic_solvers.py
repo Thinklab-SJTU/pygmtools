@@ -2,26 +2,12 @@ import sys
 sys.path.insert(0, '.')
 
 import numpy as np
-import pygmtools as pygm
 import torch
 import functools
 import itertools
 from tqdm import tqdm
 
-# Some test utils functions
-def data_from_numpy(*data):
-    return_list = []
-    for d in data:
-        return_list.append(pygm.utils.from_numpy(d))
-    return return_list
-
-
-def data_to_numpy(*data):
-    return_list = []
-    for d in data:
-        return_list.append(pygm.utils.to_numpy(d))
-    return return_list
-
+from tests.test_utils import *
 
 # The testing function
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
@@ -34,20 +20,17 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
 
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
-    X_gt = torch.zeros(batch_size, max(graph_num_nodes), max(graph_num_nodes))
-    A1 = torch.zeros(batch_size, max(graph_num_nodes), max(graph_num_nodes))
-    A2 = torch.zeros(batch_size, max(graph_num_nodes), max(graph_num_nodes))
-    F1 = torch.rand(batch_size, max(graph_num_nodes), node_feat_dim)
-    F2 = torch.rand(batch_size, max(graph_num_nodes), node_feat_dim)
+    X_gt, A1, A2, F1, F2 = [], [], [], [], []
     for b, num_node in enumerate(graph_num_nodes):
-        X_gt[b, torch.arange(0, num_node, dtype=torch.int64), torch.randperm(num_node)] = 1
-        A1[b, :num_node, :num_node] = torch.rand(num_node, num_node)
-        torch.diagonal(A1[b])[:] = 0
-        A2[b] = torch.mm(torch.mm(X_gt[b].t(), A1[b]), X_gt[b])
-        F2[b] = torch.mm(X_gt[b].t(), F1[b])
+        As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(num_node, node_feat_dim=node_feat_dim)
+        X_gt.append(X_gt_b)
+        A1.append(As_b[0])
+        A2.append(As_b[1])
+        F1.append(Fs_b[0])
+        F2.append(Fs_b[1])
     n1 = torch.tensor(graph_num_nodes, dtype=torch.int)
     n2 = torch.tensor(graph_num_nodes, dtype=torch.int)
-
+    A1, A2, F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, X_gt))
     A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
 
     # call the solver

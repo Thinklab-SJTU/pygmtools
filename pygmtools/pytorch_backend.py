@@ -583,7 +583,7 @@ def from_numpy(input):
     return torch.from_numpy(input)
 
 
-def generate_isomorphic_graphs(node_num, graph_num):
+def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
     """
     Pytorch implementation of generate_isomorphic_graphs
     """
@@ -601,7 +601,15 @@ def generate_isomorphic_graphs(node_num, graph_num):
     for i in range(graph_num):
         if i > 0:
             As.append(torch.mm(torch.mm(X_gt[i, 0], A0), X_gt[0, i]))
-    return torch.stack(As, dim=0), X_gt
+    if node_feat_dim > 0:
+        F0 = torch.rand(node_num, node_feat_dim)
+        Fs = [F0]
+        for i in range(graph_num):
+            if i > 0:
+                Fs.append(torch.mm(X_gt[i, 0], F0))
+        return torch.stack(As, dim=0), X_gt, torch.stack(Fs, dim=0)
+    else:
+        return torch.stack(As, dim=0), X_gt
 
 
 def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity1: Tensor, connectivity2: Tensor,

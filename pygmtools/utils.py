@@ -460,12 +460,13 @@ def from_numpy(input, backend=None):
     return fn(*args)
 
 
-def generate_isomorphic_graphs(node_num, graph_num=2, backend=None):
+def generate_isomorphic_graphs(node_num, graph_num=2, node_feat_dim=0, backend=None):
     r"""
     Generate a set of isomorphic graphs, for testing purposes and examples.
 
     :param node_num: number of nodes in each graph
     :param graph_num: (default: 2) number of graphs
+    :param node_feat_dim: (default: 0) number of node feature dimensions
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: if ``graph_num==2``, this function returns :math:`(m\times n \times n)` the adjacency matrix, and
              :math:`(n \times n)` the permutation matrix;
@@ -475,7 +476,7 @@ def generate_isomorphic_graphs(node_num, graph_num=2, backend=None):
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (node_num, graph_num)
+    args = (node_num, graph_num, node_feat_dim)
     assert node_num > 0 and graph_num >= 2, "input data not understood."
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
@@ -484,11 +485,18 @@ def generate_isomorphic_graphs(node_num, graph_num=2, backend=None):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
-    As, X_gt = fn(*args)
-    if graph_num == 2:
-        return As, X_gt[0, 1]
+    if node_feat_dim > 0:
+        As, X_gt, Fs = fn(*args)
+        if graph_num == 2:
+            return As, X_gt[0, 1], Fs
+        else:
+            return As, X_gt, Fs
     else:
-        return As, X_gt
+        As, X_gt = fn(*args)
+        if graph_num == 2:
+            return As, X_gt[0, 1]
+        else:
+            return As, X_gt
 
 
 class MultiMatchingResult:
