@@ -101,9 +101,8 @@ def test_cao():
     num_nodes = 5
     num_graphs = 10
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.cao, {
-        #'mode': ['fast', 'accu', 'pc', 'c'],
+        'mode': ['fast', 'accu', 'pc', 'c'],
         'x0': [None, 0.2, 0.5],
-        'mode': ['accu'],
         'lambda_init': [0.1, 0.3],
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],

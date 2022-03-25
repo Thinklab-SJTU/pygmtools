@@ -25,7 +25,7 @@ def cao(K, x0=None, qap_solver=None,
     terms are balanced by :math:`\lambda`, and :math:`\lambda` starts from a smaller number and gradually grows.
 
     :param K: :math:`(m\times m \times n^2 \times n^2)` the input affinity matrix, where ``K[i,j]`` is the affinity
-              matrix of graph ``i`` and graph ``j``
+              matrix of graph ``i`` and graph ``j`` (:math:`m`: number of nodes)
     :param x0: (optional) :math:`(m\times m \times n \times n)` the initial two-graph matching result, where ``X[i,j]``
                is the matching matrix result of graph ``i`` and graph ``j``. If this argument is not given,
                ``qap_solver`` will be used to compute the two-graph matching result.
@@ -95,6 +95,7 @@ def cao(K, x0=None, qap_solver=None,
         # Run the faster version of CAO algorithm
         >>> X = pygm.cao(K, mode='fast')
         >>> (X * X_gt).sum() / X_gt.sum()
+        tensor(1.)
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -176,7 +177,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     terms are balanced by :math:`\lambda`.
 
     :param K: :math:`(m\times m \times n^2 \times n^2)` the input affinity matrix, where ``K[i,j]`` is the affinity
-              matrix of graph ``i`` and graph ``j``
+              matrix of graph ``i`` and graph ``j`` (:math:`m`: number of nodes)
     :param x0: (optional) :math:`(m\times m \times n \times n)` the initial two-graph matching result, where ``X[i,j]``
                is the matching matrix result of graph ``i`` and graph ``j``. If this argument is not given,
                ``qap_solver`` will be used to compute the two-graph matching result.

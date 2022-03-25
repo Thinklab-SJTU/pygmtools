@@ -305,9 +305,9 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
     param_lambda = lambda_init
 
     device = K.device
-    mask1 = torch.arange(m).reshape(m, 1).repeat(1, m)
-    mask2 = torch.arange(m).reshape(1, m).repeat(m, 1)
-    mask = (mask1 < mask2).float().to(device)
+    mask1 = torch.arange(m).reshape(m, 1).repeat(1, m).to(device)
+    mask2 = torch.arange(m).reshape(1, m).repeat(m, 1).to(device)
+    mask = (mask1 < mask2).float()
     X_mask = mask.reshape(m, m, 1, 1)
 
     for iter in range(max_iter):
@@ -318,17 +318,16 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
 
-        X_ori = X.reshape(m, m, 1, n, n).repeat(1, 1, m, 1, 1)
         X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i,j,k] = X[i,k]
         X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i,j,k] = X[k,j]
-        X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n)
+        X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n) # X_combo[i,j,k] = X[i, k] * X[k, j]
+
+        aff_ori = (pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        pair_con = _get_batch_pc_opt(X)
+        con_ori = torch.sqrt(pair_con)
 
         K_repeat = K.reshape(m, m, 1, n * n, n * n).repeat(1, 1, m, 1, 1).reshape(-1, n * n, n * n)
-        aff_ori = (pygmtools.utils.compute_affinity_score(X_ori.reshape(-1, n, n), K_repeat, backend='pytorch') / norm).reshape(m, m, m)
-        aff_combo = (pygmtools.utils.compute_affinity_score(X_combo.reshape(-1, n, n), K_repeat, backend='pytorch') / norm).reshape(m, m, m)
-
-        pair_con = _get_batch_pc_opt(X)
-        con_ori = torch.sqrt(pair_con.reshape(m, m, 1).repeat(1, 1, m))
+        aff_combo = (pygmtools.utils.compute_affinity_score(X_combo.reshape(-1, n, n), K_repeat) / norm).reshape(m, m, m)
         con1 = pair_con.reshape(m, 1, m).repeat(1, m, 1)  # con1[i,j,k] = pair_con[i,k]
         con2 = pair_con.reshape(1, m, m).repeat(m, 1, 1).transpose(1, 2)  # con2[i,j,k] = pair_con[j,k]
         con_combo = torch.sqrt(con1 * con2)
@@ -340,10 +339,12 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
             score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
             score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
 
-        upt = (score_ori < score_combo).float()
-        upt = (upt * mask).reshape(m, m, 1, 1)
-        X = X * (1.0 - upt) + X_combo * upt
-        X = X * X_mask + X.transpose(0, 1).transpose(2, 3) * (1 - X_mask)
+        score_combo, idx = torch.max(score_combo, dim=-1)
+
+        assert torch.all(score_combo >= score_ori), torch.min(score_combo - score_ori)
+        X_upt = X_combo[mask1, mask2, idx, :, :]
+        X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (1 - X_mask - X_mask.transpose(0, 1))
+        assert torch.all(X.transpose(0, 1).transpose(2, 3) == X)
     return X
 
 
