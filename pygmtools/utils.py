@@ -4,7 +4,9 @@ import importlib
 import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
-    'The backend function for {} is not implemented. It will be truly appreciated if you could develop and share your' \
+    'The backend function for {} is not implemented. ' \
+    'If you are a user, please use other backends as workarounds.' \
+    'If you are a developer, it will be truly appreciated if you could develop and share your' \
     ' implementation with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
 
 
