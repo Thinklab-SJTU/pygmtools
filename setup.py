@@ -15,7 +15,7 @@ from setuptools import find_packages, setup, Command
 NAME = 'pygmtools'
 DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and supports numpy and pytorch backends. ' \
               'pygmtools also provides dataset API for standard graph matching benchmarks.'
-URL = 'https://github.com/Thinklab-SJTU/pygmtools'
+URL = 'https://pygmtools.readthedocs.io/'
 EMAIL = '1115712590@sjtu.edu.cn'
 AUTHOR = 'Ziao Guo'
 VERSION = '0.2.1'
