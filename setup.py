@@ -18,7 +18,7 @@ DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and suppo
 URL = 'https://pygmtools.readthedocs.io/'
 EMAIL = '1115712590@sjtu.edu.cn'
 AUTHOR = 'Ziao Guo'
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 REQUIRED = [
      'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7',
