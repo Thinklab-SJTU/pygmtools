@@ -1,3 +1,4 @@
+import itertools
 import torch
 import numpy as np
 from multiprocessing import Pool
@@ -243,11 +244,11 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
 
 def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
-    """
+    r"""
     Pytorch implementation of CAO solver (mode="c")
 
     :param K: affinity matrix, (m, m, n*n, n*n)
-    :param X, initial matching, (m, m, n, n)
+    :param X: initial matching, (m, m, n, n)
     :param num_graph: number of graphs, int
     :param num_node: number of nodes, int
     :return: X, (m, m, n, n)
@@ -292,11 +293,11 @@ def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, la
 
 
 def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
-    """
+    r"""
     Pytorch implementation of CAO solver in fast config (mode="pc")
 
     :param K: affinity matrix, (m, m, n*n, n*n)
-    :param X, initial matching, (m, m, n, n)
+    :param X: initial matching, (m, m, n, n)
     :param num_graph: number of graphs, int
     :param num_node: number of nodes, int
     :return: X, (m, m, n, n)
@@ -493,6 +494,138 @@ def _get_batch_pc_opt(X):
     X_ori = X.reshape(m, m, 1, n, n).repeat(1, 1, m, 1, 1)
     pair_con = 1 - torch.sum(torch.abs(X_combo - X_ori), dim=(2, 3, 4)) / (2 * n * m)
     return pair_con
+
+
+def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, quad_weight, verbose,
+          cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
+          ):
+    """
+    Pytorch implementation of Graduated Assignment for Multi-Graph Matching (with compatibility for 2GM and clustering)
+    """
+    num_graphs = A.shape[0]
+    if ns is None:
+        ns = torch.full((num_graphs,), A.shape[1], dtype=torch.int)
+    n_indices = torch.cumsum(ns, dim=0)
+
+    # build a super adjacency matrix A
+    supA = torch.zeros(n_indices[-1], n_indices[-1], device=A.device)
+    for i in range(num_graphs):
+        start_n = n_indices[i] - ns[i]
+        end_n = n_indices[i]
+        supA[start_n:end_n, start_n:end_n] = A[i, :ns[i], :ns[i]]
+
+    # handle the type of n_univ
+    if type(n_univ) is torch.Tensor:
+        n_univ = n_univ.item()
+
+    # randomly init U
+    if U0 is None:
+        U0 = torch.full((n_indices[-1], n_univ), 1 / n_univ, device=A.device)
+        U0 += torch.randn_like(U0) / 1000
+
+    # init cluster_M if not given
+    if cluster_M is None:
+        cluster_M = torch.ones(num_graphs, num_graphs, device=A.device)
+
+    # reshape W into supW
+    supW = torch.zeros(n_indices[-1], n_indices[-1], device=A.device)
+    for i, j in itertools.product(range(num_graphs), repeat=2):
+        start_x = n_indices[i] - ns[i]
+        end_x = n_indices[i]
+        start_y = n_indices[j] - ns[j]
+        end_y = n_indices[j]
+        supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i], :ns[j]]
+
+    U = U0
+    sinkhorn_tau = init_tau
+    iter_flag = True
+
+    while iter_flag:
+        for i in range(max_iter):
+            # compact matrix form update of V
+            UUt = torch.mm(U, U.t())
+            lastUUt = UUt
+            cluster_weight = torch.repeat_interleave(cluster_M, ns.to(dtype=torch.long), dim=0)
+            cluster_weight = torch.repeat_interleave(cluster_weight, ns.to(dtype=torch.long), dim=1)
+            V = torch.chain_matmul(supA, UUt * cluster_weight, supA, U) * quad_weight * 2 + torch.mm(supW * cluster_weight, U)
+            V /= num_graphs
+
+            U_list = []
+            if projector == 'hungarian':
+                n_start = 0
+                for n_end in n_indices:
+                    U_list.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='pytorch'))
+                    n_start = n_end
+            elif projector == 'sinkhorn':
+                if torch.all(ns == ns[0]):
+                    if ns[0] <= n_univ:
+                        U_list.append(
+                            sinkhorn(
+                                V.reshape(num_graphs, -1, n_univ),
+                                max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True
+                            ).reshape(-1, n_univ))
+                    else:
+                        U_list.append(
+                            sinkhorn(
+                                V.reshape(num_graphs, -1, n_univ).transpose(1, 2),
+                                max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True
+                            ).transpose(1, 2).reshape(-1, n_univ))
+                else:
+                    V_list = []
+                    n1 = []
+                    n_start = 0
+                    for n_end in n_indices:
+                        V_list.append(V[n_start:n_end, :n_univ])
+                        n1.append(n_end - n_start)
+                        n_start = n_end
+                    n1 = torch.tensor(n1)
+                    U = sinkhorn(build_batch(V_list), n1,
+                                 max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
+                    n_start = 0
+                    for idx, n_end in enumerate(n_indices):
+                        U_list.append(U[idx, :n_end - n_start, :])
+                        n_start = n_end
+            else:
+                raise NameError('Unknown projecter name: {}'.format(projector))
+
+            U = torch.cat(U_list, dim=0)
+            if num_graphs == 2:
+                U[:ns[0], :] = torch.eye(ns[0], n_univ, device=U.device)
+
+            if torch.norm(torch.mm(U, U.t()) - lastUUt) < 1e-5:
+                break
+
+        if i == max_iter - 1: # not converged
+            if hung_iter:
+                pass
+            else:
+                U_list = [pygmtools.hungarian(_, backend='pytorch') for _ in U_list]
+                U = torch.cat(U_list, dim=0)
+                if verbose: print(i, 'max_iter')
+                break
+
+        # projection control
+        if projector == 'hungarian':
+            if verbose: print(i, 'hungarian')
+            break
+        elif sinkhorn_tau > min_tau:
+            if verbose: print(i, 'tau=', sinkhorn_tau)
+            sinkhorn_tau *= sk_gamma
+        else:
+            if hung_iter:
+                projector = 'hungarian'
+            else:
+                U_list = [pygmtools.hungarian(_, backend='pytorch') for _ in U_list]
+                U = torch.cat(U_list, dim=0)
+                break
+
+    # return result
+    result = pygmtools.utils.MultiMatchingResult(True, 'pytorch')
+    for i in range(num_graphs):
+        start_n = n_indices[i] - ns[i]
+        end_n = n_indices[i]
+        result[i] = U[start_n:end_n]
+    return result
 
 
 #############################################
@@ -702,3 +835,10 @@ def _transpose(input, dim1, dim2):
     Pytorch implementaiton of _transpose
     """
     return input.transpose(dim1, dim2)
+
+
+def _mm(input1, input2):
+    """
+    Pytorch implementation of _mm
+    """
+    return torch.mm(input1, input2)

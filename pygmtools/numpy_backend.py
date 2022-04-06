@@ -405,3 +405,9 @@ def _transpose(input: np.ndarray, dim1, dim2):
     numpy implementation of _transpose
     """
     return np.swapaxes(input, dim1, dim2)
+
+def _mm(input1: np.ndarray, input2: np.ndarray):
+    """
+    numpy implementation of _mm
+    """
+    return np.matmul(input1, input2)

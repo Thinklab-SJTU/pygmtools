@@ -1,5 +1,6 @@
 import functools
 import importlib
+import copy
 
 import pygmtools
 
@@ -423,20 +424,25 @@ def to_numpy(input, backend=None):
     Convert a tensor to a numpy ndarray.
     This is the helper function to convert tensors across different backends via numpy.
 
-    :param input: input tensor
+    :param input: input tensor/:mod:`~pygmtools.utils.MultiMatchingResult`
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: numpy ndarray
     """
     if backend is None:
         backend = pygmtools.BACKEND
     args = (input,)
-    try:
-        mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        fn = mod.to_numpy
-    except ModuleNotFoundError and AttributeError:
-        raise NotImplementedError(
-            NOT_IMPLEMENTED_MSG.format(backend)
-        )
+    # pygmtools built-in types
+    if type(input) is MultiMatchingResult:
+        fn = MultiMatchingResult.to_numpy
+    # tf/torch/.. tensor types
+    else:
+        try:
+            mod = importlib.import_module(f'pygmtools.{backend}_backend')
+            fn = mod.to_numpy
+        except ModuleNotFoundError and AttributeError:
+            raise NotImplementedError(
+                NOT_IMPLEMENTED_MSG.format(backend)
+            )
     return fn(*args)
 
 
@@ -445,20 +451,25 @@ def from_numpy(input, backend=None):
     Convert a numpy ndarray to a tensor.
     This is the helper function to convert tensors across different backends via numpy.
 
-    :param input: input ndarray
+    :param input: input ndarray/:mod:`~pygmtools.utils.MultiMatchingResult`
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: tensor for the backend
     """
     if backend is None:
         backend = pygmtools.BACKEND
     args = (input,)
-    try:
-        mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        fn = mod.from_numpy
-    except ModuleNotFoundError and AttributeError:
-        raise NotImplementedError(
-            NOT_IMPLEMENTED_MSG.format(backend)
-        )
+    # pygmtools built-in types
+    if type(input) is MultiMatchingResult:
+        fn = functools.partial(MultiMatchingResult.from_numpy, new_backend=backend)
+    # tf/torch/.. tensor types
+    else:
+        try:
+            mod = importlib.import_module(f'pygmtools.{backend}_backend')
+            fn = mod.from_numpy
+        except ModuleNotFoundError and AttributeError:
+            raise NotImplementedError(
+                NOT_IMPLEMENTED_MSG.format(backend)
+            )
     return fn(*args)
 
 
@@ -503,9 +514,10 @@ def generate_isomorphic_graphs(node_num, graph_num=2, node_feat_dim=0, backend=N
 
 class MultiMatchingResult:
     r"""
-    A memory-efficient class for multi-graph matching results. The dense storage for :math:`m` graphs with :math:`n`
-    nodes requires a size of :math:`(m\times m \times n \times n)`, and this implementation requires
-    :math:`((m-1)\times m \times n \times n / 2)`.
+    A memory-efficient class for multi-graph matching results. For non-cycle consistent results, the dense storage
+    for :math:`m` graphs with :math:`n` nodes requires a size of :math:`(m\times m \times n \times n)`, and this
+    implementation requires :math:`((m-1)\times m \times n \times n / 2)`. For cycle consistent result, this
+    implementation requires only :math:`(m\times n\times n)`.
 
     Numpy Example:
 
@@ -528,8 +540,9 @@ class MultiMatchingResult:
                [1., 0., 0., 0.],
                [0., 1., 0., 0.]])
     """
-    def __init__(self, backend=None):
-        self.result_dict = {}
+    def __init__(self, cycle_consistent=False, backend=None):
+        self.match_dict = {}
+        self._cycle_consistent = cycle_consistent
         if backend is None:
             self.backend = pygmtools.BACKEND
         else:
@@ -538,24 +551,74 @@ class MultiMatchingResult:
     def __getitem__(self, item):
         assert len(item) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
         idx1, idx2 = item
-        if idx1 < idx2:
-            return self.result_dict[f'{idx1},{idx2}']
+        if self._cycle_consistent:
+            return _mm(self.match_dict[idx1], _transpose(self.match_dict[idx2], 0, 1, self.backend), self.backend)
         else:
-            return _transpose(self.result_dict[f'{idx2},{idx1}'], 0, 1, self.backend)
+            if idx1 < idx2:
+                return self.match_dict[f'{idx1},{idx2}']
+            else:
+                return _transpose(self.match_dict[f'{idx2},{idx1}'], 0, 1, self.backend)
 
     def __setitem__(self, key, value):
-        assert len(key) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
-        idx1, idx2 = key
-        if idx1 < idx2:
-            self.result_dict[f'{idx1},{idx2}'] = value
+        if self._cycle_consistent:
+            assert type(key) is int, "key should be the index of one graph, and value should be the matching to universe"
+            self.match_dict[key] = value
         else:
-            self.result_dict[f'{idx2},{idx1}'] = _transpose(value, 0, 1, self.backend)
+            assert len(key) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
+            idx1, idx2 = key
+            if idx1 < idx2:
+                self.match_dict[f'{idx1},{idx2}'] = value
+            else:
+                self.match_dict[f'{idx2},{idx1}'] = _transpose(value, 0, 1, self.backend)
 
     def __str__(self):
-        return 'MultiMatchingResult:\n' + self.result_dict.__str__()
+        return 'MultiMatchingResult:\n' + self.match_dict.__str__()
 
     def __repr__(self):
-        return 'MultiMatchingResult:\n' + self.result_dict.__repr__()
+        return 'MultiMatchingResult:\n' + self.match_dict.__repr__()
+
+    @staticmethod
+    def from_numpy(data, new_backend):
+        r"""
+        Convert a numpy-backend MultiMatchingResult data to another backend.
+
+        :param data: the numpy-backend data
+        :param new_backend: the target backend
+        :return: a new MultiMatchingResult instance for ``new_backend``
+        """
+        new_data = copy.deepcopy(data)
+        new_data.from_numpy_(new_backend)
+        return new_data
+
+    @staticmethod
+    def to_numpy(data):
+        r"""
+        Convert an any-type MultiMatchingResult to numpy backend.
+
+        :param data: the any-type data
+        :return: a new MultiMatchingResult instance for numpy
+        """
+        new_data = copy.deepcopy(data)
+        new_data.to_numpy_()
+        return new_data
+
+    def from_numpy_(self, new_backend):
+        """
+        In-place operation for :func:`~pygmtools.utils.MultiMatchingResult.from_numpy`.
+        """
+        if self.backend != 'numpy':
+            raise ValueError('Attempting to convert from non-numpy data.')
+        self.backend = new_backend
+        for k, v in self.match_dict.items():
+            self.match_dict[k] = from_numpy(v, self.backend)
+    
+    def to_numpy_(self):
+        """
+        In-place operation for :func:`~pygmtools.utils.MultiMatchingResult.to_numpy`.
+        """
+        self.backend = 'numpy'
+        for k, v in self.match_dict.items():
+            self.match_dict[k] = to_numpy(v, self.backend)
 
 
 ###################################################
@@ -714,6 +777,26 @@ def _transpose(input, dim1, dim2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._transpose
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+    return fn(*args)
+
+def _mm(input1, input2, backend=None):
+    r"""
+    Matrix multiplication.
+
+    :param input1: input tensor 1
+    :param input2: input tensor 2
+    :return: multiplication result
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    args = (input1, input2)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod._mm
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)

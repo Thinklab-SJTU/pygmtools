@@ -292,3 +292,164 @@ def mgm_floyd(K, x0=None, qap_solver=None,
         )
 
     return fn(*args)
+
+
+def gamgm(A, W,
+          ns=None, n_univ=None, U0=None,
+          sk_init_tau=0.5, sk_min_tau=0.1, sk_gamma=0.8, sk_iter=20, max_iter=100, param_lambda=1., verbose=False,
+          backend=None):
+    r"""
+    Graduated Assignment-based multi-graph matching solver. Graduated assignment is a classic approach for hard
+    assignment problems like graph matching, based on graduated annealing of Sinkhorn's temperature :math:`\tau` to
+    enforce the matching constraint.
+
+    The objective score is described as
+
+    .. math::
+
+        \max_{\mathbf{X}_{i,j}, i,j\in [m]} \ \sum_{i,j\in [m]} \left( \lambda \ \mathrm{tr}(\mathbf{X}_{ij}^\top \mathbf{A}_{i} \mathbf{X}_{ij} \mathbf{A}_{j}) + \mathrm{tr}(\mathbf{X}_{ij}^\top \mathbf{W}_{ij})\right)
+
+    Once the algorithm converges at a fixed :math:`\tau` value, :math:`\tau` shrinks as:
+
+    .. math::
+
+        \tau = \tau \times \gamma
+
+    and the iteration continues. At last, Hungarian algorithm is applied to ensure the result is a permutation matrix.
+
+    .. note::
+
+        This algorithm is based on the Koopmans-Beckmann's QAP formulation and you should input the adjacency matrices
+        ``A`` and node-wise similarity matrices ``W`` instead of the affinity matrices.
+
+    :param A: :math:`(m\times n \times n)` the adjacency matrix (:math:`m`: number of nodes).
+              The graphs may have different number of nodes (specified by the ``ns`` argument).
+    :param W: :math:`(m\times m \times n \times n)` the node-wise similarity matrix, where ``W[i,j]`` is the similarity
+              matrix
+    :param ns: (optional) :math:`(m)` the number of nodes. If not given, it will be inferred based on the size of ``A``.
+    :param n_univ: (optional) the size of the universe node set. If not given, it will be the largest number of nodes.
+    :param U0: (optional) the initial multi-graph matching result. If not given, it will be randomly initialized.
+    :param sk_init_tau: (default: 0.05) initial value of :math:`\tau` for Sinkhorn algorithm
+    :param sk_min_tau: (default: 1.0e-3) minimal value of :math:`\tau` for Sinkhorn algorithm
+    :param sk_gamma: (default: 0.8) the shrinking parameter of :math:`\tau`: :math:`\tau = \tau \times \gamma`
+    :param sk_iter: (default: 200) max number of iterations for Sinkhorn algorithm
+    :param max_iter: (default: 1000) max number of iterations for graduated assignment
+    :param param_lambda: (default: 1) the weight :math:`\lambda` of the quadratic term
+    :param verbose: (default: False) print verbose information for parameter tuning
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the multi-graph matching result (a :mod:`~pygmtools.utils.MultiMatchingResult` object)
+
+    .. note::
+
+        Set ``verbose=True`` may help you tune the parameters.
+
+    Example for Pytorch backend::
+
+        >>> import torch
+        >>> import pygmtools as pygm
+        >>> import itertools
+        >>> import time
+        >>> pygm.BACKEND = 'pytorch'
+        >>> _ = torch.manual_seed(1)
+
+        # Generate 10 isomorphic graphs
+        >>> graph_num = 10
+        >>> As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
+
+        # Compute node-wise similarity by inner-product and Sinkhorn
+        >>> W = torch.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
+        >>> W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
+
+        # Solve the multi-matching problem
+        >>> X = pygm.gamgm(As, W)
+        >>> matched = 0
+        >>> for i, j in itertools.product(range(graph_num), repeat=2):
+        ...     matched += (X[i,j] * X_gt[i,j]).sum()
+        >>> matched / X_gt.sum()
+        tensor(1.)
+
+        # This function supports graphs with different nodes (also known as partial matching)
+        # In the following we ignore the last node from the last 5 graphs
+        >>> ns = torch.tensor([4, 4, 4, 4, 4, 3, 3, 3, 3, 3], dtype=torch.int)
+        >>> for i in range(graph_num):
+        ...     As[i, ns[i]:, :] = 0
+        ...     As[i, :, ns[i]:] = 0
+        >>> for i, j in itertools.product(range(graph_num), repeat=2):
+        ...     X_gt[i, j, ns[i]:, :] = 0
+        ...     X_gt[i, j, :, ns[j]:] = 0
+        ...     W[i, j, ns[i]:, :] = 0
+        ...     W[i, j, :, ns[j]:] = 0
+
+        # Partial matching is challenging and the following parameters are carefully tuned
+        >>> X = pygm.gamgm(As, W, ns, n_univ=4, sk_init_tau=.1, sk_min_tau=0.01, param_lambda=0.3)
+
+        # Check the partial matching result
+        >>> matched = 0
+        >>> for i, j in itertools.product(range(graph_num), repeat=2):
+        ...     matched += (X[i,j] * X_gt[i, j, :ns[i], :ns[j]]).sum()
+        >>> matched / X_gt.sum()
+        tensor(1.)
+
+    .. note::
+
+        If you find this graph matching solver useful in your research, please cite:
+
+        ::
+
+            @article{gamgm1,
+              title={Graduated assignment algorithm for multiple graph matching based on a common labeling},
+              author={Sol{\'e}-Ribalta, Albert and Serratosa, Francesc},
+              journal={International Journal of Pattern Recognition and Artificial Intelligence},
+              volume={27},
+              number={01},
+              pages={1350001},
+              year={2013},
+              publisher={World Scientific}
+            }
+
+            @article{gamgm2,
+              title={Graduated assignment for joint multi-graph matching and clustering with application to unsupervised graph matching network learning},
+              author={Wang, Runzhong and Yan, Junchi and Yang, Xiaokang},
+              journal={Advances in Neural Information Processing Systems},
+              volume={33},
+              pages={19908--19919},
+              year={2020}
+            }
+
+        This algorithm is originally proposed by paper ``gamgm1``, and further improved by paper ``gamgm2`` to fit
+        modern computing architectures like GPU.
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    # check the correctness of input
+    _check_data_type(A, backend)
+    A_shape = _get_shape(A, backend)
+    if not (len(A_shape) == 3 and A_shape[1] == A_shape[2]):
+        raise ValueError(f"Unsupported input data shape: got A {A_shape}")
+    num_graph, max_node = A_shape[0], A_shape[1]
+    _check_data_type(W, backend)
+    W_shape = _get_shape(W, backend)
+    if not (len(W_shape) == 4 and W_shape[0] == W_shape[1] == num_graph and W_shape[2] == W_shape[3] == max_node):
+        raise ValueError(f"Unsupported input data shape: got A {A_shape}, W {W_shape}")
+    if ns is not None:
+        _check_data_type(ns, backend)
+        ns_shape = _get_shape(ns, backend)
+        if not (len(ns_shape) == 1 and ns_shape[0] == num_graph):
+            raise ValueError(f"The size of ns mismatches the sizes of A and W: got ns {ns_shape}, A {A_shape}, W {W_shape}")
+    if n_univ is None:
+        n_univ = max_node
+    if U0 is not None:
+        _check_data_type(U0, backend)
+    if not sk_init_tau > 0: raise ValueError(f"sk_init_tau must be >0, got sk_init_tau={sk_init_tau}")
+    if not sk_min_tau > 0: raise ValueError(f"sk_min_tau must be >0, got sk_min_tau={sk_min_tau}")
+    if not 0 < sk_gamma < 1: raise ValueError(f"sk_gamma must be in (0, 1), got sk_gamma={sk_gamma}")
+    args = (A, W, ns, n_univ, U0, sk_init_tau, sk_min_tau, sk_gamma, sk_iter, max_iter, param_lambda, verbose)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod.gamgm
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+    return fn(*args)
