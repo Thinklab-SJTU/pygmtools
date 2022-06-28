@@ -7,7 +7,7 @@ import functools
 import itertools
 from tqdm import tqdm
 
-from tests.test_utils import *
+from test_utils import *
 
 # The testing function
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):

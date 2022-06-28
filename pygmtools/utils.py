@@ -446,18 +446,19 @@ def to_numpy(input, backend=None):
     return fn(*args)
 
 
-def from_numpy(input, backend=None):
+def from_numpy(input, device=None, backend=None):
     r"""
     Convert a numpy ndarray to a tensor.
     This is the helper function to convert tensors across different backends via numpy.
 
     :param input: input ndarray/:mod:`~pygmtools.utils.MultiMatchingResult`
+    :param device: (default: None) the target device
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: tensor for the backend
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input,)
+    args = (input, device)
     # pygmtools built-in types
     if type(input) is MultiMatchingResult:
         fn = functools.partial(MultiMatchingResult.from_numpy, new_backend=backend)

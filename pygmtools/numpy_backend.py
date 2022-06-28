@@ -312,7 +312,7 @@ def to_numpy(input):
     return input
 
 
-def from_numpy(input):
+def from_numpy(input, device):
     """
     identity function
     """

@@ -504,7 +504,7 @@ def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, 
     """
     num_graphs = A.shape[0]
     if ns is None:
-        ns = torch.full((num_graphs,), A.shape[1], dtype=torch.int)
+        ns = torch.full((num_graphs,), A.shape[1], dtype=torch.int, device=A.device)
     n_indices = torch.cumsum(ns, dim=0)
 
     # build a super adjacency matrix A
@@ -710,11 +710,14 @@ def to_numpy(input):
     return input.detach().cpu().numpy()
 
 
-def from_numpy(input):
+def from_numpy(input, device):
     """
     Pytorch function from_numpy
     """
-    return torch.from_numpy(input)
+    if device is None:
+        return torch.from_numpy(input)
+    else:
+        return torch.from_numpy(input).to(device)
 
 
 def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):

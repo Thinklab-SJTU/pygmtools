@@ -10,7 +10,7 @@ import functools
 import itertools
 from tqdm import tqdm
 
-from tests.test_utils import *
+from test_utils import *
 
 # The testing function
 def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, solver_func, mode, matrix_params, backends):
@@ -120,7 +120,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
 
                 matched = 0
                 for i, j in itertools.product(range(num_graph), repeat=2):
-                    matched += (_X[i, j] * X_gt[i, j]).sum()
+                    matched += (pygm.utils.to_numpy(_X[i, j]) * X_gt[i, j]).sum()
                 accuracy = matched / X_gt.sum()
                 assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy}, " \
                                       f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
