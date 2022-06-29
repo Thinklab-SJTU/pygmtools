@@ -579,16 +579,17 @@ class MultiMatchingResult:
         return 'MultiMatchingResult:\n' + self.match_dict.__repr__()
 
     @staticmethod
-    def from_numpy(data, new_backend):
+    def from_numpy(data, device=None, new_backend=None):
         r"""
         Convert a numpy-backend MultiMatchingResult data to another backend.
 
         :param data: the numpy-backend data
-        :param new_backend: the target backend
-        :return: a new MultiMatchingResult instance for ``new_backend``
+        :param device: (default: None) the target device
+        :param new_backend: (default: ``pygmtools.BACKEND`` variable) the target backend
+        :return: a new MultiMatchingResult instance for ``new_backend`` on ``device``
         """
         new_data = copy.deepcopy(data)
-        new_data.from_numpy_(new_backend)
+        new_data.from_numpy_(device, new_backend)
         return new_data
 
     @staticmethod
@@ -603,23 +604,25 @@ class MultiMatchingResult:
         new_data.to_numpy_()
         return new_data
 
-    def from_numpy_(self, new_backend):
+    def from_numpy_(self, device=None, new_backend=None):
         """
         In-place operation for :func:`~pygmtools.utils.MultiMatchingResult.from_numpy`.
         """
         if self.backend != 'numpy':
             raise ValueError('Attempting to convert from non-numpy data.')
+        if new_backend is None:
+            new_backend = pygmtools.BACKEND
         self.backend = new_backend
         for k, v in self.match_dict.items():
-            self.match_dict[k] = from_numpy(v, self.backend)
+            self.match_dict[k] = from_numpy(v, device, self.backend)
     
     def to_numpy_(self):
         """
         In-place operation for :func:`~pygmtools.utils.MultiMatchingResult.to_numpy`.
         """
-        self.backend = 'numpy'
         for k, v in self.match_dict.items():
             self.match_dict[k] = to_numpy(v, self.backend)
+        self.backend = 'numpy'
 
 
 ###################################################
