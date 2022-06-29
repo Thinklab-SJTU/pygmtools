@@ -3,6 +3,6 @@ scipy>=1.4.1
 Pillow>=7.2.0
 numpy>=1.18.5
 easydict>=1.7
-paddle>=2.0
+paddle
 torch
 tqdm

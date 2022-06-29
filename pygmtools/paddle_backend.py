@@ -461,5 +461,3 @@ def _mm(input1, input2):
     Paddle implementation of _mm
     """
     return paddle.mm(input1, input2)
-
-print(paddle.__version__)
