@@ -1,4 +1,6 @@
 import sys
+
+import paddle
 sys.path.insert(0, '.')
 
 import numpy as np
@@ -84,7 +86,7 @@ def test_rrwm():
         'max_iter': [20, 50],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy'])
+    }, ['pytorch', 'numpy', 'paddle'])
 
 
 def test_sm():
@@ -92,7 +94,7 @@ def test_sm():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy'])
+    }, ['pytorch', 'numpy', 'paddle'])
 
 
 def test_ipfp():
@@ -100,7 +102,7 @@ def test_ipfp():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy'])
+    }, ['pytorch', 'numpy', 'paddle'])
 
 
 if __name__ == '__main__':
