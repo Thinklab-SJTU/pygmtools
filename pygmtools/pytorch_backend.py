@@ -94,6 +94,9 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
             for b in range(batch_size):
                 log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
+        if transposed:
+            log_s = log_s.transpose(1, 2)
+
         return torch.exp(log_s)
     else:
         ret_log_s = torch.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), device=s.device, dtype=s.dtype)
