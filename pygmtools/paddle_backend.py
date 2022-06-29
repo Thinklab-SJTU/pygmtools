@@ -1,4 +1,5 @@
 import itertools
+from matplotlib.pyplot import axis
 import paddle
 import numpy as np
 from multiprocessing import Pool
@@ -239,3 +240,226 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     v0 = paddle.reshape(paddle.transpose(x0, perm=(0, 2, 1)), (batch_num, n1n2, 1))
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
+
+
+
+#############################################
+#              Utils Functions              #
+#############################################
+
+
+def inner_prod_aff_fn(feat1, feat2):
+    """
+    Paddle implementation of inner product affinity function
+    """
+    return paddle.matmul(feat1, feat2.transpose((0, 2, 1)))
+
+
+def gaussian_aff_fn(feat1, feat2, sigma):
+    """
+    Paddle implementation of Gaussian affinity function
+    """
+    feat1 = feat1.unsqueeze(2)
+    feat2 = feat2.unsqueeze(1)
+    return paddle.exp(-((feat1 - feat2) ** 2).sum(axis=-1) / sigma)
+
+
+def build_batch(input, return_ori_dim=False):
+    """
+    Paddle implementation of building a batched tensor
+    """
+    assert type(input[0]) == paddle.Tensor
+    device = input[0].place
+    it = iter(input)
+    t = next(it)
+    max_shape = list(t.shape)
+    ori_shape = [[_] for _ in max_shape]
+    while True:
+        try:
+            t = next(it)
+            for i in range(len(max_shape)):
+                max_shape[i] = int(max(max_shape[i], t.shape[i]))
+                ori_shape[i].append(t.shape[i])
+        except StopIteration:
+            break
+    max_shape = np.array(max_shape)
+
+    padded_ts = []
+    for t in input:
+        pad_pattern = np.zeros(2 * len(max_shape), dtype=np.int64)
+        pad_pattern[::-2] = max_shape - np.array(t.shape)
+        pad_pattern = tuple(pad_pattern.tolist())
+        padded_ts.append(paddle.nn.functional.pad(t, pad_pattern, 'constant', 0))
+
+    if return_ori_dim:
+        return paddle.stack(padded_ts, axis=0), tuple([paddle.to_tensor(_, dtype=paddle.int64, place=device) for _ in ori_shape])
+    else:
+        return paddle.stack(padded_ts, axis=0)
+
+
+def dense_to_sparse(dense_adj):
+    """
+    Paddle implementation of converting a dense adjacency matrix to a sparse matrix
+    """
+    batch_size = dense_adj.shape[0]
+    conn, ori_shape = build_batch([paddle.nonzero(a, as_tuple=False) for a in dense_adj], return_ori_dim=True)
+    nedges = ori_shape[0]
+    edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
+    return conn, edge_weight.unsqueeze(-1), nedges
+
+
+def compute_affinity_score(X, K):
+    """
+    Paddle implementation of computing affinity score
+    """
+    b, n, _ = X.shape
+    vx = paddle.reshape(X.transpose((0, 2, 1)),(b, -1, 1)) # (b, n*n, 1)
+    vxt = vx.transpose((0, 2, 1))  # (b, 1, n*n)
+    affinity = paddle.bmm(paddle.bmm(vxt, K), vx)
+    return affinity
+
+
+def to_numpy(input):
+    """
+    Paddle function to_numpy
+    """
+    return input.detach().cpu().numpy()
+
+
+def from_numpy(input, device):
+    """
+    Paddle function from_numpy
+    """
+    if device is None:
+        return paddle.to_tensor(input)
+    else:
+        return paddle.to_tensor(input, place=device)
+
+
+def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
+    """
+    Paddle implementation of generate_isomorphic_graphs
+    """
+    X_gt = paddle.zeros((graph_num, node_num, node_num))
+    X_gt[0, paddle.arange(0, node_num, dtype=paddle.int64), paddle.arange(0, node_num, dtype=paddle.int64)] = 1
+    for i in range(graph_num):
+        if i > 0:
+            X_gt[i, paddle.arange(0, node_num, dtype=paddle.int64), paddle.randperm(node_num)] = 1
+    joint_X = paddle.reshape(X_gt, (graph_num * node_num, node_num))
+    X_gt = paddle.mm(joint_X, paddle.t(joint_X))
+    X_gt = paddle.transpose(paddle.reshape(X_gt, (graph_num, node_num, graph_num, node_num)), perm=(0, 2, 1, 3))
+    A0 = paddle.rand((node_num, node_num))
+    paddle.diagonal(A0)[:] = 0
+    As = [A0]
+    for i in range(graph_num):
+        if i > 0:
+            As.append(paddle.mm(paddle.mm(X_gt[i, 0], A0), X_gt[0, i]))
+    if node_feat_dim > 0:
+        F0 = paddle.rand((node_num, node_feat_dim))
+        Fs = [F0]
+        for i in range(graph_num):
+            if i > 0:
+                Fs.append(paddle.mm(X_gt[i, 0], F0))
+        return paddle.stack(As, axis=0), X_gt, paddle.stack(Fs, axis=0)
+    else:
+        return paddle.stack(As, axis=0), X_gt
+
+
+def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor, connectivity1: paddle.Tensor, connectivity2: paddle.Tensor,
+                                n1, n2, ne1, ne2):
+    """
+    Pytorch implementation of _aff_mat_from_node_edge_aff
+    """
+    if edge_aff is not None:
+        device = edge_aff.place
+        dtype = edge_aff.place
+        batch_size = edge_aff.shape[0]
+        if n1 is None:
+            n1 = paddle.max(paddle.max(connectivity1, axis=-1), aixs=-1) + 1
+        if n2 is None:
+            n2 = paddle.max(paddle.max(connectivity2, axis=-1), axis=-1) + 1
+        if ne1 is None:
+            ne1 = [edge_aff.shape[1]] * batch_size
+        if ne2 is None:
+            ne2 = [edge_aff.shape[1]] * batch_size
+    else:
+        device = node_aff.place
+        dtype = node_aff.dtype
+        batch_size = node_aff.shape[0]
+        if n1 is None:
+            n1 = [node_aff.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [node_aff.shape[2]] * batch_size
+
+    n1max = max(n1)
+    n2max = max(n2)
+    ks = []
+    for b in range(batch_size):
+        k = paddle.to_tensor(paddle.zeros((n2max, n1max, n2max, n1max), dtype=dtype), place=device)
+        # edge-wise affinity
+        if edge_aff is not None:
+            conn1 = connectivity1[b][:ne1[b]]
+            conn2 = connectivity2[b][:ne2[b]]
+            edge_indices = paddle.cat([conn1.repeat_interleave(ne2[b], axis=0), conn2.repeat(ne1[b], 1)], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
+            edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
+            k[edge_indices] = paddle.reshape(edge_aff[b, :ne1[b], :ne2[b]], -1)
+        k = paddle.reshape(k, (n2max * n1max, n2max * n1max))
+        # node-wise affinity
+        if node_aff is not None:
+            k_diag = paddle.diagonal(k)
+            k_diag[:] = paddle.reshape(node_aff[b].transpose((1, 0)), -1)
+        ks.append(k)
+
+    return paddle.stack(ks, dim=0)
+
+
+def _check_data_type(input: paddle.Tensor):
+    """
+    Paddle implementation of _check_data_type
+    """
+    if type(input) is not paddle.Tensor:
+        raise ValueError(f'Expected Paddle Tensor, but got {type(input)}. Perhaps the wrong backend?')
+
+
+def _check_shape(input, dim_num):
+    """
+    Paddle implementation of _check_shape
+    """
+    return len(input.shape) == dim_num
+
+
+def _get_shape(input):
+    """
+    Paddle implementation of _get_shape
+    """
+    return input.shape
+
+
+def _squeeze(input, dim):
+    """
+    Paddle implementation of _squeeze
+    """
+    return input.squeeze(dim)
+
+
+def _unsqueeze(input, dim):
+    """
+    Paddle implementation of _unsqueeze
+    """
+    return input.unsqueeze(dim)
+
+
+def _transpose(input, dim1, dim2):
+    """
+    Paddle implementaiton of _transpose
+    """
+    return input.transpose((dim1, dim2))
+
+
+def _mm(input1, input2):
+    """
+    Paddle implementation of _mm
+    """
+    return paddle.mm(input1, input2)
+
+print(paddle.__version__)
