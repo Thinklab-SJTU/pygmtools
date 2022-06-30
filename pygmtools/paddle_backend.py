@@ -1,5 +1,4 @@
 import itertools
-from matplotlib.pyplot import axis
 import paddle
 import numpy as np
 from multiprocessing import Pool
