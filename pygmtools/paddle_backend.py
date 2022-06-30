@@ -95,7 +95,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
 
         if transposed:
             log_s = paddle.transpose(log_s, perm=(0, 2, 1))
-            log_s = log_s.transpose(1, 2)
+            log_s = paddle.transpose(log_s, perm=(0, 2, 1))
 
         return paddle.exp(log_s)
     else:
@@ -152,9 +152,9 @@ def rrwm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         v = v / n
 
         # reweighted jump
-        s = paddle.reshape(v, (batch_num, n2max, n1max)).transpose([0, 2, 1])
+        s = paddle.reshape(v, (batch_num, n2max, n1max)).transpose((0, 2, 1))
         s = beta * s / s.max(axis=1, keepdim=True).max(axis=2, keepdim=True)
-        v = paddle.reshape(alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose([0, 2, 1]),(batch_num, n1n2, 1)) + \
+        v = paddle.reshape(alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose((0, 2, 1)),(batch_num, n1n2, 1)) + \
             (1 - alpha) * v
         n = paddle.norm(v, p=1, axis=1, keepdim=True)
         v = paddle.matmul(v, 1 / n)
@@ -162,7 +162,7 @@ def rrwm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         if paddle.norm(v - last_v) < 1e-5:
             break
 
-    return v.view(batch_num, n2max, n1max).transpose(1, 2)
+    return v.reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
 
 
 def sm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x0: paddle.Tensor,
@@ -239,6 +239,7 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
             x0[b, 0:n1[b], 0:n2[b]] = paddle.to_tensor(1.) / (n1[b] * n2[b])
 
     v0 = paddle.reshape(paddle.transpose(x0, perm=(0, 2, 1)), (batch_num, n1n2, 1))
+
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
 
 
@@ -286,15 +287,14 @@ def build_batch(input, return_ori_dim=False):
 
     padded_ts = []
     for t in input:
-        pad_pattern = np.zeros(2 * len(max_shape), dtype=np.int64)
-        pad_pattern[::-2] = max_shape - np.array(t.shape)
-        pad_pattern = tuple(pad_pattern.tolist())
-        padded_ts.append(paddle.nn.functional.pad(t, pad_pattern, 'constant', 0))
+        pad_pattern = np.zeros((len(max_shape), 2), dtype=np.int64)
+        pad_pattern[:, 1] = max_shape - np.array(t.shape)
+        padded_ts.append(np.pad(t, pad_pattern, 'constant', constant_values=0))
 
     if return_ori_dim:
-        return paddle.stack(padded_ts, axis=0), tuple([paddle.to_tensor(_, dtype=paddle.int64, place=device) for _ in ori_shape])
+        return paddle.to_tensor(np.stack(padded_ts, axis=0)), tuple([paddle.to_tensor(_, dtype=paddle.int64, place=device) for _ in ori_shape])
     else:
-        return paddle.stack(padded_ts, axis=0)
+        return paddle.to_tensor(np.stack(padded_ts, axis=0))
 
 
 def dense_to_sparse(dense_adj):
@@ -305,7 +305,7 @@ def dense_to_sparse(dense_adj):
     conn, ori_shape = build_batch([paddle.nonzero(a, as_tuple=False) for a in dense_adj], return_ori_dim=True)
     nedges = ori_shape[0]
     edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
-    return conn, edge_weight.unsqueeze(-1), nedges
+    return conn, paddle.unsqueeze(edge_weight, axis=-1), nedges
 
 
 def compute_affinity_score(X, K):
@@ -372,10 +372,10 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     """
     if edge_aff is not None:
         device = edge_aff.place
-        dtype = edge_aff.place
+        dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = paddle.max(paddle.max(connectivity1, axis=-1), aixs=-1) + 1
+            n1 = paddle.max(paddle.max(connectivity1, axis=-1), axis=-1) + 1
         if n2 is None:
             n2 = paddle.max(paddle.max(connectivity2, axis=-1), axis=-1) + 1
         if ne1 is None:
@@ -398,19 +398,19 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
         k = paddle.to_tensor(paddle.zeros((n2max, n1max, n2max, n1max), dtype=dtype), place=device)
         # edge-wise affinity
         if edge_aff is not None:
-            conn1 = connectivity1[b][:ne1[b]]
-            conn2 = connectivity2[b][:ne2[b]]
-            edge_indices = paddle.cat([conn1.repeat_interleave(ne2[b], axis=0), conn2.repeat(ne1[b], 1)], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
+            conn1 = connectivity1[b][:ne1[b]].numpy()
+            conn2 = connectivity2[b][:ne2[b]].numpy()
+            edge_indices = paddle.to_tensor(np.concatenate([conn1.repeat(ne2[b], axis=0), np.tile(conn2, (ne1[b], 1))], axis=1)) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
-            k[edge_indices] = paddle.reshape(edge_aff[b, :ne1[b], :ne2[b]], -1)
+            k[edge_indices] = paddle.reshape(edge_aff[b, :ne1[b], :ne2[b]], (-1, ))
         k = paddle.reshape(k, (n2max * n1max, n2max * n1max))
         # node-wise affinity
         if node_aff is not None:
             k_diag = paddle.diagonal(k)
-            k_diag[:] = paddle.reshape(node_aff[b].transpose((1, 0)), -1)
+            k_diag[:] = paddle.reshape(node_aff[b].transpose((1, 0)), (-1, ))
         ks.append(k)
 
-    return paddle.stack(ks, dim=0)
+    return paddle.stack(ks, axis=0)
 
 
 def _check_data_type(input: paddle.Tensor):
@@ -439,21 +439,21 @@ def _squeeze(input, dim):
     """
     Paddle implementation of _squeeze
     """
-    return input.squeeze(dim)
+    return paddle.squeeze(input, aixs=dim)
 
 
 def _unsqueeze(input, dim):
     """
     Paddle implementation of _unsqueeze
     """
-    return input.unsqueeze(dim)
+    return paddle.unsqueeze(input, axis=dim)
 
 
 def _transpose(input, dim1, dim2):
     """
     Paddle implementaiton of _transpose
     """
-    return input.transpose((dim1, dim2))
+    return paddle.transpose(input, (dim2, dim1))
 
 
 def _mm(input1, input2):
