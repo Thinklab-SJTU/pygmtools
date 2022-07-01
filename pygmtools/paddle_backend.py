@@ -1,5 +1,6 @@
 import itertools
 from platform import node
+from matplotlib.pyplot import axis
 import paddle
 import numpy as np
 from multiprocessing import Pool
@@ -370,19 +371,59 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     """
     Paddle implementation of _aff_mat_from_node_edge_aff
     """
-    node_aff, edge_aff = node_aff.numpy(), edge_aff.numpy()
+    # node_aff, edge_aff = node_aff.numpy(), edge_aff.numpy()
+    # if edge_aff is not None:
+    #     dtype = edge_aff.dtype
+    #     batch_size = edge_aff.shape[0]
+    #     if n1 is None:
+    #         n1 = paddle.to_tensor(np.amax(connectivity1.numpy(), axis=(1, 2)).copy() + 1)
+    #     if n2 is None:
+    #         n2 = paddle.to_tensor(np.amax(connectivity2.numpy(), axis=(1, 2)).copy() + 1)
+    #     if ne1 is None:
+    #         ne1 = [edge_aff.shape[1]] * batch_size
+    #     if ne2 is None:
+    #         ne2 = [edge_aff.shape[1]] * batch_size
+    # else:
+    #     dtype = node_aff.dtype
+    #     batch_size = node_aff.shape[0]
+    #     if n1 is None:
+    #         n1 = [node_aff.shape[1]] * batch_size
+    #     if n2 is None:
+    #         n2 = [node_aff.shape[2]] * batch_size
+
+    # n1max = max(n1)
+    # n2max = max(n2)
+    # ks = []
+    # for b in range(batch_size):
+    #     k = np.zeros((n2max, n1max, n2max, n1max), dtype=dtype)
+    #     # edge-wise affinity
+    #     if edge_aff is not None:
+    #         conn1 = connectivity1[b][:ne1[b]].numpy()
+    #         conn2 = connectivity2[b][:ne2[b]].numpy()
+    #         edge_indices = np.concatenate([conn1.repeat(ne2[b], axis=0), np.tile(conn2, (ne1[b], 1))], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
+    #         edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
+    #         k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape(-1)
+    #     k = k.reshape((n2max * n1max, n2max * n1max))
+    #     # node-wise affinity
+    #     if node_aff is not None:
+    #         k[np.arange(n2max * n1max), np.arange(n2max * n1max)] = node_aff[b].T.reshape(-1)
+    #     ks.append(k)
+
+    # return paddle.to_tensor(np.stack(ks, axis=0))
     if edge_aff is not None:
+        device = edge_aff.place
         dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = paddle.to_tensor(np.amax(connectivity1.numpy(), axis=(1, 2)).copy() + 1)
+            n1 = paddle.max(connectivity1, axis=(1, 2)) + 1
         if n2 is None:
-            n2 = paddle.to_tensor(np.amax(connectivity2.numpy(), axis=(1, 2)).copy() + 1)
+            n2 = paddle.max(connectivity2, aixs=(1, 2)) + 1
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
             ne2 = [edge_aff.shape[1]] * batch_size
     else:
+        device = node_aff.place
         dtype = node_aff.dtype
         batch_size = node_aff.shape[0]
         if n1 is None:
@@ -394,21 +435,22 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     n2max = max(n2)
     ks = []
     for b in range(batch_size):
-        k = np.zeros((n2max, n1max, n2max, n1max), dtype=dtype)
+        k = paddle.to_tensor(paddle.zeros((n2max, n1max, n2max, n1max), dtype=dtype), place=device)
         # edge-wise affinity
         if edge_aff is not None:
-            conn1 = connectivity1[b][:ne1[b]].numpy()
-            conn2 = connectivity2[b][:ne2[b]].numpy()
-            edge_indices = np.concatenate([conn1.repeat(ne2[b], axis=0), np.tile(conn2, (ne1[b], 1))], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
+            conn1 = connectivity1[b][:ne1[b]]
+            conn2 = connectivity2[b][:ne2[b]]
+            edge_indices = paddle.concat([paddle.repeat_interleave(conn1, repeats=ne2[b].item(), axis=0), paddle.tile(conn2, (ne1[b], 1))], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
-            k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape(-1)
+            k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape((-1,))
         k = k.reshape((n2max * n1max, n2max * n1max))
         # node-wise affinity
         if node_aff is not None:
-            k[np.arange(n2max * n1max), np.arange(n2max * n1max)] = node_aff[b].T.reshape(-1)
+            k_diag = paddle.diagonal(k)
+            k_diag[:] = node_aff[b].transpose((1, 0)).reshape((-1,))
         ks.append(k)
 
-    return paddle.to_tensor(np.stack(ks, axis=0))
+    return paddle.stack(ks, axis=0)
 
 
 def _check_data_type(input: paddle.Tensor):
