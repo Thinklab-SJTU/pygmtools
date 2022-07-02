@@ -324,7 +324,7 @@ def to_numpy(input):
     """
     Paddle function to_numpy
     """
-    return input.detach().numpy()
+    return input.detach().cpu().numpy()
 
 
 def from_numpy(input, device):
@@ -440,7 +440,7 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
         if edge_aff is not None:
             conn1 = connectivity1[b][:ne1[b]]
             conn2 = connectivity2[b][:ne2[b]]
-            edge_indices = paddle.concat([paddle.repeat_interleave(conn1, repeats=ne2[b].item(), axis=0), paddle.tile(conn2, (ne1[b], 1))], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
+            edge_indices = paddle.concat([paddle.repeat_interleave(conn1, repeats=paddle.broadcast_to(ne2[b], shape=(conn1.shape[0],)), axis=0), paddle.tile(conn2, (ne1[b], 1))], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
             k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape((-1,))
         k = k.reshape((n2max * n1max, n2max * n1max))
