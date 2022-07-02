@@ -4,5 +4,6 @@ Pillow>=7.2.0
 numpy>=1.18.5
 easydict>=1.7
 paddlepaddle
+protobuf<=3.20.1
 torch
 tqdm
