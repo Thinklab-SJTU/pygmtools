@@ -445,7 +445,7 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
         if node_aff is not None:
             # k_diag = paddle.diagonal(k)
             # k_diag[:] = node_aff[b].transpose((1, 0)).reshape((-1,))
-            k[paddle.arange(n2max * n1max), paddle.arange(n2max * n1max)] = node_aff[b].transpose((1, 0)).reshape((-1, ))
+            k[np.arange(n2max * n1max), np.arange(n2max * n1max)] = node_aff[b].transpose((1, 0)).reshape((-1, ))
         ks.append(k)
 
     return paddle.stack(ks, axis=0)
