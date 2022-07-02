@@ -2,8 +2,6 @@ import paddle
 import numpy as np
 from multiprocessing import Pool
 
-from zmq import device
-
 import pygmtools.utils
 from pygmtools.numpy_backend import _hung_kernel
 
@@ -395,18 +393,18 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     n2max = max(n2)
     ks = []
     for b in range(batch_size):
-        k = paddle.to_tensor(np.zeros((n2max, n1max, n2max, n1max), dtype=dtype), place=device)
+        k = paddle.to_tensor(np.zeros((n2max, n1max, n2max, n1max)), dtype=dtype, place=device)
         # edge-wise affinity
         if edge_aff is not None:
             conn1 = connectivity1[b][:ne1[b]].numpy()
             conn2 = connectivity2[b][:ne2[b]].numpy()
             edge_indices = np.concatenate([conn1.repeat(ne2[b], axis=0), np.tile(conn2, (ne1[b], 1))], axis=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
-            k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape(-1)
+            k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape([-1])
         k = k.reshape((n2max * n1max, n2max * n1max))
         # node-wise affinity
         if node_aff is not None:
-            k[np.arange(n2max * n1max), np.arange(n2max * n1max)] = node_aff[b].T.reshape(-1)
+            k[np.arange(n2max * n1max), np.arange(n2max * n1max)] = node_aff[b].transpose((1, 0)).reshape([-1])
         ks.append(k)
     return paddle.stack(ks, axis=0)
 
