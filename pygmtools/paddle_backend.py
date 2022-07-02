@@ -412,9 +412,9 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
         dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = paddle.max(connectivity1, axis=(1, 2)) + 1
+            n1 = paddle.max(paddle.max(connectivity1, axis=-1), axis=-1) + 1
         if n2 is None:
-            n2 = paddle.max(connectivity2, aixs=(1, 2)) + 1
+            n2 = paddle.max(paddle.max(connectivity2, axis=-1), axis=-1) + 1
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
@@ -443,8 +443,9 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
         k = k.reshape((n2max * n1max, n2max * n1max))
         # node-wise affinity
         if node_aff is not None:
-            k_diag = paddle.diagonal(k)
-            k_diag[:] = node_aff[b].transpose((1, 0)).reshape((-1,))
+            # k_diag = paddle.diagonal(k)
+            # k_diag[:] = node_aff[b].transpose((1, 0)).reshape((-1,))
+            k[paddle.arange(n2max * n1max), paddle.arange(n2max * n1max)] = node_aff[b].transpose((1, 0)).reshape((-1, ))
         ks.append(k)
 
     return paddle.stack(ks, axis=0)
