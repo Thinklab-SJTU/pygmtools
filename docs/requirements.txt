@@ -3,6 +3,7 @@ torchvision==0.7.0
 m2r2
 easydict
 pyyaml
-sphinx==4.1.1
+sphinx==4.5.0
+sphinx-design==0.0.13
 sphinx_rtd_theme==0.5.2
 pygmtools

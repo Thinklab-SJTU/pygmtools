@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosectionlabel',
+    "sphinx_design",
     'm2r2']
 
 autodoc_mock_imports = ['scipy', 'matplotlib', 'torch_geometric', 'pynvml']
