@@ -296,7 +296,8 @@ def mgm_floyd(K, x0=None, qap_solver=None,
 
 def gamgm(A, W,
           ns=None, n_univ=None, U0=None,
-          sk_init_tau=0.5, sk_min_tau=0.1, sk_gamma=0.8, sk_iter=20, max_iter=100, param_lambda=1., verbose=False,
+          sk_init_tau=0.5, sk_min_tau=0.1, sk_gamma=0.8, sk_iter=20, max_iter=100, param_lambda=1., converge_thresh=1e-5,
+          verbose=False,
           backend=None):
     r"""
     Graduated Assignment-based multi-graph matching solver. Graduated assignment is a classic approach for hard
@@ -335,6 +336,8 @@ def gamgm(A, W,
     :param sk_iter: (default: 200) max number of iterations for Sinkhorn algorithm
     :param max_iter: (default: 1000) max number of iterations for graduated assignment
     :param param_lambda: (default: 1) the weight :math:`\lambda` of the quadratic term
+    :param converge_thresh: (default: 1e-5) if the Frobenius norm of the change of U is smaller than this, the iteration
+                            is stopped.
     :param verbose: (default: False) print verbose information for parameter tuning
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: the multi-graph matching result (a :mod:`~pygmtools.utils.MultiMatchingResult` object)
@@ -443,7 +446,8 @@ def gamgm(A, W,
     if not sk_init_tau > 0: raise ValueError(f"sk_init_tau must be >0, got sk_init_tau={sk_init_tau}")
     if not sk_min_tau > 0: raise ValueError(f"sk_min_tau must be >0, got sk_min_tau={sk_min_tau}")
     if not 0 < sk_gamma < 1: raise ValueError(f"sk_gamma must be in (0, 1), got sk_gamma={sk_gamma}")
-    args = (A, W, ns, n_univ, U0, sk_init_tau, sk_min_tau, sk_gamma, sk_iter, max_iter, param_lambda, verbose)
+    args = (A, W, ns, n_univ, U0, sk_init_tau, sk_min_tau, sk_gamma, sk_iter, max_iter, param_lambda, converge_thresh,
+            verbose)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gamgm

@@ -499,7 +499,7 @@ def _get_batch_pc_opt(X):
     return pair_con
 
 
-def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, quad_weight, verbose,
+def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, quad_weight, converge_thresh, verbose,
           cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
           ):
     """
@@ -595,7 +595,7 @@ def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, 
             if num_graphs == 2:
                 U[:ns[0], :] = torch.eye(ns[0], n_univ, device=U.device)
 
-            if torch.norm(torch.mm(U, U.t()) - lastUUt) < 1e-5:
+            if torch.norm(torch.mm(U, U.t()) - lastUUt) < converge_thresh:
                 break
 
         if i == max_iter - 1: # not converged
