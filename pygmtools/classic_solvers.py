@@ -57,134 +57,138 @@ def sinkhorn(s, n1=None, n2=None,
         matched have different number of nodes, it is a common practice to add dummy rows to construct a square
         matrix. After the row and column normalizations, the padded rows are discarded.
 
-    Example for numpy backend::
+    .. dropdown:: Numpy Example
 
-        >>> import numpy as np
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'numpy'
-        >>> np.random.seed(0)
+        ::
 
-        # 2-dimensional (non-batched) input
-        >>> s_2d = np.random.rand(5, 5)
-        >>> s_2d
-        array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318, 0.4236548 ],
-               [0.64589411, 0.43758721, 0.891773  , 0.96366276, 0.38344152],
-               [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
-               [0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215],
-               [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
-        >>> x = pygm.sinkhorn(s_2d)
-        >>> x
-        array([[0.18880224, 0.24990915, 0.19202217, 0.16034278, 0.20892366],
-               [0.18945066, 0.17240445, 0.23345011, 0.22194762, 0.18274716],
-               [0.23713583, 0.204348  , 0.18271243, 0.23114583, 0.1446579 ],
-               [0.11731039, 0.1229692 , 0.23823909, 0.19961588, 0.32186549],
-               [0.26730088, 0.2503692 , 0.15357619, 0.18694789, 0.1418058 ]])
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(0)
 
-        # 3-dimensional (batched) input
-        >>> s_3d = np.random.rand(3, 5, 5)
-        >>> x = pygm.sinkhorn(s_3d)
-        >>> print('row_sum:', x.sum(2))
-        row_sum: [[1.         1.         1.         1.         1.        ]
-         [0.99999998 1.00000002 0.99999999 1.00000003 0.99999999]
-         [1.         1.         1.         1.         1.        ]]
-        >>> print('col_sum:', x.sum(1))
-        col_sum: [[1. 1. 1. 1. 1.]
-         [1. 1. 1. 1. 1.]
-         [1. 1. 1. 1. 1.]]
+            # 2-dimensional (non-batched) input
+            >>> s_2d = np.random.rand(5, 5)
+            >>> s_2d
+            array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318, 0.4236548 ],
+                   [0.64589411, 0.43758721, 0.891773  , 0.96366276, 0.38344152],
+                   [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
+                   [0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215],
+                   [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
+            >>> x = pygm.sinkhorn(s_2d)
+            >>> x
+            array([[0.18880224, 0.24990915, 0.19202217, 0.16034278, 0.20892366],
+                   [0.18945066, 0.17240445, 0.23345011, 0.22194762, 0.18274716],
+                   [0.23713583, 0.204348  , 0.18271243, 0.23114583, 0.1446579 ],
+                   [0.11731039, 0.1229692 , 0.23823909, 0.19961588, 0.32186549],
+                   [0.26730088, 0.2503692 , 0.15357619, 0.18694789, 0.1418058 ]])
 
-         # If the 3-d tensor are with different number of nodes
-        >>> n1 = np.array([3, 4, 5])
-        >>> n2 = np.array([3, 4, 5])
-        >>> x = pygm.sinkhorn(s_3d, n1, n2)
-        >>> x[0] # non-zero size: 3x3
-        array([[0.36665934, 0.21498158, 0.41835906, 0.        , 0.        ],
-               [0.27603621, 0.44270207, 0.28126175, 0.        , 0.        ],
-               [0.35730445, 0.34231636, 0.3003792 , 0.        , 0.        ],
-               [0.        , 0.        , 0.        , 0.        , 0.        ],
-               [0.        , 0.        , 0.        , 0.        , 0.        ]])
-        >>> x[1] # non-zero size: 4x4
-        array([[0.28847831, 0.20583051, 0.34242091, 0.16327021, 0.        ],
-               [0.22656752, 0.30153021, 0.19407969, 0.27782262, 0.        ],
-               [0.25346378, 0.19649853, 0.32565049, 0.22438715, 0.        ],
-               [0.23149039, 0.29614075, 0.13784891, 0.33452002, 0.        ],
-               [0.        , 0.        , 0.        , 0.        , 0.        ]])
-        >>> x[2] # non-zero size: 5x5
-        array([[0.20147352, 0.19541986, 0.24942798, 0.17346397, 0.18021467],
-               [0.21050732, 0.17620948, 0.18645469, 0.20384684, 0.22298167],
-               [0.18319623, 0.18024007, 0.17619871, 0.1664133 , 0.29395169],
-               [0.20754376, 0.2236443 , 0.19658101, 0.20570847, 0.16652246],
-               [0.19727917, 0.22448629, 0.19133762, 0.25056742, 0.13632951]])
+            # 3-dimensional (batched) input
+            >>> s_3d = np.random.rand(3, 5, 5)
+            >>> x = pygm.sinkhorn(s_3d)
+            >>> print('row_sum:', x.sum(2))
+            row_sum: [[1.         1.         1.         1.         1.        ]
+             [0.99999998 1.00000002 0.99999999 1.00000003 0.99999999]
+             [1.         1.         1.         1.         1.        ]]
+            >>> print('col_sum:', x.sum(1))
+            col_sum: [[1. 1. 1. 1. 1.]
+             [1. 1. 1. 1. 1.]
+             [1. 1. 1. 1. 1.]]
 
-        # non-squared input
-        >>> s_non_square = np.random.rand(4, 5)
-        >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
-        >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
-        row_sum: [1. 1. 1. 1.] col_sum: [0.78239609 0.80485526 0.80165627 0.80004254 0.81104984]
+             # If the 3-d tensor are with different number of nodes
+            >>> n1 = np.array([3, 4, 5])
+            >>> n2 = np.array([3, 4, 5])
+            >>> x = pygm.sinkhorn(s_3d, n1, n2)
+            >>> x[0] # non-zero size: 3x3
+            array([[0.36665934, 0.21498158, 0.41835906, 0.        , 0.        ],
+                   [0.27603621, 0.44270207, 0.28126175, 0.        , 0.        ],
+                   [0.35730445, 0.34231636, 0.3003792 , 0.        , 0.        ],
+                   [0.        , 0.        , 0.        , 0.        , 0.        ],
+                   [0.        , 0.        , 0.        , 0.        , 0.        ]])
+            >>> x[1] # non-zero size: 4x4
+            array([[0.28847831, 0.20583051, 0.34242091, 0.16327021, 0.        ],
+                   [0.22656752, 0.30153021, 0.19407969, 0.27782262, 0.        ],
+                   [0.25346378, 0.19649853, 0.32565049, 0.22438715, 0.        ],
+                   [0.23149039, 0.29614075, 0.13784891, 0.33452002, 0.        ],
+                   [0.        , 0.        , 0.        , 0.        , 0.        ]])
+            >>> x[2] # non-zero size: 5x5
+            array([[0.20147352, 0.19541986, 0.24942798, 0.17346397, 0.18021467],
+                   [0.21050732, 0.17620948, 0.18645469, 0.20384684, 0.22298167],
+                   [0.18319623, 0.18024007, 0.17619871, 0.1664133 , 0.29395169],
+                   [0.20754376, 0.2236443 , 0.19658101, 0.20570847, 0.16652246],
+                   [0.19727917, 0.22448629, 0.19133762, 0.25056742, 0.13632951]])
 
-    Example for Pytorch backend::
+            # non-squared input
+            >>> s_non_square = np.random.rand(4, 5)
+            >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: [1. 1. 1. 1.] col_sum: [0.78239609 0.80485526 0.80165627 0.80004254 0.81104984]
 
-        >>> import torch
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'pytorch'
+    .. dropdown:: Pytorch Example
 
-        # 2-dimensional (non-batched) input
-        >>> s_2d = torch.from_numpy(s_2d)
-        >>> s_2d
-        tensor([[0.5488, 0.7152, 0.6028, 0.5449, 0.4237],
-                [0.6459, 0.4376, 0.8918, 0.9637, 0.3834],
-                [0.7917, 0.5289, 0.5680, 0.9256, 0.0710],
-                [0.0871, 0.0202, 0.8326, 0.7782, 0.8700],
-                [0.9786, 0.7992, 0.4615, 0.7805, 0.1183]], dtype=torch.float64)
-        >>> x = pygm.sinkhorn(s_2d)
-        >>> x
-        tensor([[0.1888, 0.2499, 0.1920, 0.1603, 0.2089],
-                [0.1895, 0.1724, 0.2335, 0.2219, 0.1827],
-                [0.2371, 0.2043, 0.1827, 0.2311, 0.1447],
-                [0.1173, 0.1230, 0.2382, 0.1996, 0.3219],
-                [0.2673, 0.2504, 0.1536, 0.1869, 0.1418]], dtype=torch.float64)
-        >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
-        row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
+        ::
 
-        # 3-dimensional (batched) input
-        >>> s_3d = torch.from_numpy(s_3d)
-        >>> x = pygm.sinkhorn(s_3d)
-        >>> print('row_sum:', x.sum(2))
-        row_sum: tensor([[1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
-                [1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
-                [1.0000, 1.0000, 1.0000, 1.0000, 1.0000]], dtype=torch.float64)
-        >>> print('col_sum:', x.sum(1))
-        col_sum: tensor([[1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
-                [1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
-                [1.0000, 1.0000, 1.0000, 1.0000, 1.0000]], dtype=torch.float64)
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
 
-        # If the 3-d tensor are with different number of nodes
-        >>> n1 = torch.tensor([3, 4, 5])
-        >>> n2 = torch.tensor([3, 4, 5])
-        >>> x = pygm.sinkhorn(s_3d, n1, n2)
-        >>> x[0] # non-zero size: 3x3
-        tensor([[0.3667, 0.2150, 0.4184, 0.0000, 0.0000],
-                [0.2760, 0.4427, 0.2813, 0.0000, 0.0000],
-                [0.3573, 0.3423, 0.3004, 0.0000, 0.0000],
-                [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
-                [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]], dtype=torch.float64)
-        >>> x[1] # non-zero size: 4x4
-        tensor([[0.2885, 0.2058, 0.3424, 0.1633, 0.0000],
-                [0.2266, 0.3015, 0.1941, 0.2778, 0.0000],
-                [0.2535, 0.1965, 0.3257, 0.2244, 0.0000],
-                [0.2315, 0.2961, 0.1378, 0.3345, 0.0000],
-                [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]], dtype=torch.float64)
-        >>> x[2] # non-zero size: 5x5
-        tensor([[0.2015, 0.1954, 0.2494, 0.1735, 0.1802],
-                [0.2105, 0.1762, 0.1865, 0.2038, 0.2230],
-                [0.1832, 0.1802, 0.1762, 0.1664, 0.2940],
-                [0.2075, 0.2236, 0.1966, 0.2057, 0.1665],
-                [0.1973, 0.2245, 0.1913, 0.2506, 0.1363]], dtype=torch.float64)
+            # 2-dimensional (non-batched) input
+            >>> s_2d = torch.from_numpy(s_2d)
+            >>> s_2d
+            tensor([[0.5488, 0.7152, 0.6028, 0.5449, 0.4237],
+                    [0.6459, 0.4376, 0.8918, 0.9637, 0.3834],
+                    [0.7917, 0.5289, 0.5680, 0.9256, 0.0710],
+                    [0.0871, 0.0202, 0.8326, 0.7782, 0.8700],
+                    [0.9786, 0.7992, 0.4615, 0.7805, 0.1183]], dtype=torch.float64)
+            >>> x = pygm.sinkhorn(s_2d)
+            >>> x
+            tensor([[0.1888, 0.2499, 0.1920, 0.1603, 0.2089],
+                    [0.1895, 0.1724, 0.2335, 0.2219, 0.1827],
+                    [0.2371, 0.2043, 0.1827, 0.2311, 0.1447],
+                    [0.1173, 0.1230, 0.2382, 0.1996, 0.3219],
+                    [0.2673, 0.2504, 0.1536, 0.1869, 0.1418]], dtype=torch.float64)
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
 
-        # non-squared input
-        >>> s_non_square = torch.from_numpy(s_non_square)
-        >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
-        >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
-        row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([0.7824, 0.8049, 0.8017, 0.8000, 0.8110], dtype=torch.float64)
+            # 3-dimensional (batched) input
+            >>> s_3d = torch.from_numpy(s_3d)
+            >>> x = pygm.sinkhorn(s_3d)
+            >>> print('row_sum:', x.sum(2))
+            row_sum: tensor([[1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
+                    [1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
+                    [1.0000, 1.0000, 1.0000, 1.0000, 1.0000]], dtype=torch.float64)
+            >>> print('col_sum:', x.sum(1))
+            col_sum: tensor([[1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
+                    [1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
+                    [1.0000, 1.0000, 1.0000, 1.0000, 1.0000]], dtype=torch.float64)
+
+            # If the 3-d tensor are with different number of nodes
+            >>> n1 = torch.tensor([3, 4, 5])
+            >>> n2 = torch.tensor([3, 4, 5])
+            >>> x = pygm.sinkhorn(s_3d, n1, n2)
+            >>> x[0] # non-zero size: 3x3
+            tensor([[0.3667, 0.2150, 0.4184, 0.0000, 0.0000],
+                    [0.2760, 0.4427, 0.2813, 0.0000, 0.0000],
+                    [0.3573, 0.3423, 0.3004, 0.0000, 0.0000],
+                    [0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+                    [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]], dtype=torch.float64)
+            >>> x[1] # non-zero size: 4x4
+            tensor([[0.2885, 0.2058, 0.3424, 0.1633, 0.0000],
+                    [0.2266, 0.3015, 0.1941, 0.2778, 0.0000],
+                    [0.2535, 0.1965, 0.3257, 0.2244, 0.0000],
+                    [0.2315, 0.2961, 0.1378, 0.3345, 0.0000],
+                    [0.0000, 0.0000, 0.0000, 0.0000, 0.0000]], dtype=torch.float64)
+            >>> x[2] # non-zero size: 5x5
+            tensor([[0.2015, 0.1954, 0.2494, 0.1735, 0.1802],
+                    [0.2105, 0.1762, 0.1865, 0.2038, 0.2230],
+                    [0.1832, 0.1802, 0.1762, 0.1664, 0.2940],
+                    [0.2075, 0.2236, 0.1966, 0.2057, 0.1665],
+                    [0.1973, 0.2245, 0.1913, 0.2506, 0.1363]], dtype=torch.float64)
+
+            # non-squared input
+            >>> s_non_square = torch.from_numpy(s_non_square)
+            >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([0.7824, 0.8049, 0.8017, 0.8000, 0.8110], dtype=torch.float64)
 
     .. note::
 
@@ -258,97 +262,101 @@ def hungarian(s, n1=None, n2=None,
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
         the batched matrices are not padded.
 
-    Example for numpy backend::
+    .. dropdown:: Numpy Example
 
-        >>> import numpy as np
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'numpy'
-        >>> np.random.seed(0)
+        ::
 
-        # 2-dimensional (non-batched) input
-        >>> s_2d = np.random.rand(5, 5)
-        >>> s_2d
-        array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318, 0.4236548 ],
-               [0.64589411, 0.43758721, 0.891773  , 0.96366276, 0.38344152],
-               [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
-               [0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215],
-               [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(0)
+    
+            # 2-dimensional (non-batched) input
+            >>> s_2d = np.random.rand(5, 5)
+            >>> s_2d
+            array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318, 0.4236548 ],
+                   [0.64589411, 0.43758721, 0.891773  , 0.96366276, 0.38344152],
+                   [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
+                   [0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215],
+                   [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
+    
+            >>> x = pygm.hungarian(s_2d)
+            >>> x
+            array([[0., 1., 0., 0., 0.],
+                   [0., 0., 1., 0., 0.],
+                   [0., 0., 0., 1., 0.],
+                   [0., 0., 0., 0., 1.],
+                   [1., 0., 0., 0., 0.]])
+    
+            # 3-dimensional (batched) input
+            >>> s_3d = np.random.rand(3, 5, 5)
+            >>> n1 = n2 = np.array([3, 4, 5])
+            >>> x = pygm.hungarian(s_3d, n1, n2)
+            >>> x
+            array([[[0., 0., 1., 0., 0.],
+                    [0., 1., 0., 0., 0.],
+                    [1., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 0.]],
+            <BLANKLINE>
+                   [[1., 0., 0., 0., 0.],
+                    [0., 1., 0., 0., 0.],
+                    [0., 0., 1., 0., 0.],
+                    [0., 0., 0., 1., 0.],
+                    [0., 0., 0., 0., 0.]],
+            <BLANKLINE>
+                   [[0., 0., 1., 0., 0.],
+                    [1., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 1.],
+                    [0., 1., 0., 0., 0.],
+                    [0., 0., 0., 1., 0.]]])
 
-        >>> x = pygm.hungarian(s_2d)
-        >>> x
-        array([[0., 1., 0., 0., 0.],
-               [0., 0., 1., 0., 0.],
-               [0., 0., 0., 1., 0.],
-               [0., 0., 0., 0., 1.],
-               [1., 0., 0., 0., 0.]])
+    .. dropdown:: Pytorch Example
 
-        # 3-dimensional (batched) input
-        >>> s_3d = np.random.rand(3, 5, 5)
-        >>> n1 = n2 = np.array([3, 4, 5])
-        >>> x = pygm.hungarian(s_3d, n1, n2)
-        >>> x
-        array([[[0., 0., 1., 0., 0.],
-                [0., 1., 0., 0., 0.],
-                [1., 0., 0., 0., 0.],
-                [0., 0., 0., 0., 0.],
-                [0., 0., 0., 0., 0.]],
-        <BLANKLINE>
-               [[1., 0., 0., 0., 0.],
-                [0., 1., 0., 0., 0.],
-                [0., 0., 1., 0., 0.],
-                [0., 0., 0., 1., 0.],
-                [0., 0., 0., 0., 0.]],
-        <BLANKLINE>
-               [[0., 0., 1., 0., 0.],
-                [1., 0., 0., 0., 0.],
-                [0., 0., 0., 0., 1.],
-                [0., 1., 0., 0., 0.],
-                [0., 0., 0., 1., 0.]]])
+        ::
 
-    Example for Pytorch backend::
-
-        >>> import torch
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'pytorch'
-
-        # 2-dimensional (non-batched) input
-        >>> s_2d = torch.from_numpy(s_2d)
-        >>> s_2d
-        tensor([[0.5488, 0.7152, 0.6028, 0.5449, 0.4237],
-                [0.6459, 0.4376, 0.8918, 0.9637, 0.3834],
-                [0.7917, 0.5289, 0.5680, 0.9256, 0.0710],
-                [0.0871, 0.0202, 0.8326, 0.7782, 0.8700],
-                [0.9786, 0.7992, 0.4615, 0.7805, 0.1183]], dtype=torch.float64)
-        >>> x = pygm.hungarian(s_2d)
-        >>> x
-        tensor([[0., 1., 0., 0., 0.],
-                [0., 0., 1., 0., 0.],
-                [0., 0., 0., 1., 0.],
-                [0., 0., 0., 0., 1.],
-                [1., 0., 0., 0., 0.]], dtype=torch.float64)
-
-        # 3-dimensional (batched) input
-        >>> s_3d = torch.from_numpy(s_3d)
-        >>> n1 = n2 = torch.tensor([3, 4, 5])
-        >>> x = pygm.hungarian(s_3d, n1, n2)
-        >>> x
-        tensor([[[0., 0., 1., 0., 0.],
-                 [0., 1., 0., 0., 0.],
-                 [1., 0., 0., 0., 0.],
-                 [0., 0., 0., 0., 0.],
-                 [0., 0., 0., 0., 0.]],
-        <BLANKLINE>
-                [[1., 0., 0., 0., 0.],
-                 [0., 1., 0., 0., 0.],
-                 [0., 0., 1., 0., 0.],
-                 [0., 0., 0., 1., 0.],
-                 [0., 0., 0., 0., 0.]],
-        <BLANKLINE>
-                [[0., 0., 1., 0., 0.],
-                 [1., 0., 0., 0., 0.],
-                 [0., 0., 0., 0., 1.],
-                 [0., 1., 0., 0., 0.],
-                 [0., 0., 0., 1., 0.]]], dtype=torch.float64)
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
+    
+            # 2-dimensional (non-batched) input
+            >>> s_2d = torch.from_numpy(s_2d)
+            >>> s_2d
+            tensor([[0.5488, 0.7152, 0.6028, 0.5449, 0.4237],
+                    [0.6459, 0.4376, 0.8918, 0.9637, 0.3834],
+                    [0.7917, 0.5289, 0.5680, 0.9256, 0.0710],
+                    [0.0871, 0.0202, 0.8326, 0.7782, 0.8700],
+                    [0.9786, 0.7992, 0.4615, 0.7805, 0.1183]], dtype=torch.float64)
+            >>> x = pygm.hungarian(s_2d)
+            >>> x
+            tensor([[0., 1., 0., 0., 0.],
+                    [0., 0., 1., 0., 0.],
+                    [0., 0., 0., 1., 0.],
+                    [0., 0., 0., 0., 1.],
+                    [1., 0., 0., 0., 0.]], dtype=torch.float64)
+    
+            # 3-dimensional (batched) input
+            >>> s_3d = torch.from_numpy(s_3d)
+            >>> n1 = n2 = torch.tensor([3, 4, 5])
+            >>> x = pygm.hungarian(s_3d, n1, n2)
+            >>> x
+            tensor([[[0., 0., 1., 0., 0.],
+                     [0., 1., 0., 0., 0.],
+                     [1., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0.]],
+            <BLANKLINE>
+                    [[1., 0., 0., 0., 0.],
+                     [0., 1., 0., 0., 0.],
+                     [0., 0., 1., 0., 0.],
+                     [0., 0., 0., 1., 0.],
+                     [0., 0., 0., 0., 0.]],
+            <BLANKLINE>
+                    [[0., 0., 1., 0., 0.],
+                     [1., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 1.],
+                     [0., 1., 0., 0., 0.],
+                     [0., 0., 0., 1., 0.]]], dtype=torch.float64)
 
     .. note::
 
@@ -422,74 +430,78 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` the solved doubly-stochastic matrix
 
-    Example for numpy backend::
+    .. dropdown:: Numpy Example
 
-        >>> import numpy as np
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'numpy'
-        >>> np.random.seed(1)
+        ::
+        
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+    
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
+            >>> A1 = np.random.rand(batch_size, 4, 4)
+            >>> A2 = np.matmul(np.matmul(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> n1 = n2 = np.repeat([4], batch_size)
+    
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    
+            # Solve by SM. Note that X is normalized with a squared sum of 1
+            >>> X = pygm.sm(K, n1, n2)
+            >>> (X ** 2).sum(axis=(1, 2))
+            array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
+    
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
 
-        # Generate a batch of isomorphic graphs
-        >>> batch_size = 10
-        >>> X_gt = np.zeros((batch_size, 4, 4))
-        >>> X_gt[:, np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
-        >>> A1 = np.random.rand(batch_size, 4, 4)
-        >>> A2 = np.matmul(np.matmul(X_gt.transpose((0, 2, 1)), A1), X_gt)
-        >>> n1 = n2 = np.repeat([4], batch_size)
+    .. dropdown:: Pytorch Example
 
-        # Build affinity matrix
-        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-        >>> import functools
-        >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+        ::
 
-        # Solve by SM. Note that X is normalized with a squared sum of 1
-        >>> X = pygm.sm(K, n1, n2)
-        >>> (X ** 2).sum(axis=(1, 2))
-        array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
-
-        # Accuracy
-        >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-        1.0
-
-    Example for Pytorch backend::
-
-        >>> import torch
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'pytorch'
-        >>> _ = torch.manual_seed(1)
-
-        # Generate a batch of isomorphic graphs
-        >>> batch_size = 10
-        >>> X_gt = torch.zeros(batch_size, 4, 4)
-        >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
-        >>> A1 = torch.rand(batch_size, 4, 4)
-        >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
-        >>> n1 = n2 = torch.tensor([4] * batch_size)
-
-        # Build affinity matrix
-        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-        >>> import functools
-        >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
-
-        # Solve by SM. Note that X is normalized with a squared sum of 1
-        >>> X = pygm.sm(K, n1, n2)
-        >>> (X ** 2).sum(dim=(1, 2))
-        tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000,
-                1.0000])
-
-        # Accuracy
-        >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-        tensor(1.)
-
-        # This solver supports gradient back-propogation
-        >>> K = K.requires_grad_(True)
-        >>> pygm.sm(K, n1, n2).sum().backward()
-        >>> len(torch.nonzero(K.grad))
-        2560
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
+            >>> _ = torch.manual_seed(1)
+    
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = torch.zeros(batch_size, 4, 4)
+            >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
+            >>> A1 = torch.rand(batch_size, 4, 4)
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = n2 = torch.tensor([4] * batch_size)
+    
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    
+            # Solve by SM. Note that X is normalized with a squared sum of 1
+            >>> X = pygm.sm(K, n1, n2)
+            >>> (X ** 2).sum(dim=(1, 2))
+            tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000,
+                    1.0000])
+    
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            tensor(1.)
+    
+            # This solver supports gradient back-propogation
+            >>> K = K.requires_grad_(True)
+            >>> pygm.sm(K, n1, n2).sum().backward()
+            >>> len(torch.nonzero(K.grad))
+            2560
 
     .. note::
         If you find this graph matching solver useful for your research, please cite:
@@ -563,74 +575,78 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         permutation matrix is required, please call :func:`~pygmtools.classic_solvers.hungarian`. Note that the
         Hungarian algorithm will truncate the gradient.
 
-    Example for numpy backend::
+    .. dropdown:: Numpy Example
 
-        >>> import numpy as np
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'numpy'
-        >>> np.random.seed(1)
+        ::
 
-        # Generate a batch of isomorphic graphs
-        >>> batch_size = 10
-        >>> X_gt = np.zeros((batch_size, 4, 4))
-        >>> X_gt[:, np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
-        >>> A1 = np.random.rand(batch_size, 4, 4)
-        >>> A2 = np.matmul(np.matmul(X_gt.transpose((0, 2, 1)), A1), X_gt)
-        >>> n1 = n2 = np.repeat([4], batch_size)
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+    
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
+            >>> A1 = np.random.rand(batch_size, 4, 4)
+            >>> A2 = np.matmul(np.matmul(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> n1 = n2 = np.repeat([4], batch_size)
+    
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    
+            # Solve by RRWM. Note that X is normalized with a sum of 1
+            >>> X = pygm.rrwm(K, n1, n2, beta=100)
+            >>> X.sum(axis=(1, 2))
+            array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
+    
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
 
-        # Build affinity matrix
-        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-        >>> import functools
-        >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    .. dropdown:: Pytorch Example
 
-        # Solve by RRWM. Note that X is normalized with a sum of 1
-        >>> X = pygm.rrwm(K, n1, n2, beta=100)
-        >>> X.sum(axis=(1, 2))
-        array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1.])
+        ::
 
-        # Accuracy
-        >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-        1.0
-
-    Example for Pytorch backend::
-
-        >>> import torch
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'pytorch'
-        >>> _ = torch.manual_seed(1)
-
-        # Generate a batch of isomorphic graphs
-        >>> batch_size = 10
-        >>> X_gt = torch.zeros(batch_size, 4, 4)
-        >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
-        >>> A1 = torch.rand(batch_size, 4, 4)
-        >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
-        >>> n1 = n2 = torch.tensor([4] * batch_size)
-
-        # Build affinity matrix
-        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-        >>> import functools
-        >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
-
-        # Solve by RRWM. Note that X is normalized with a sum of 1
-        >>> X = pygm.rrwm(K, n1, n2, beta=100)
-        >>> X.sum(dim=(1, 2))
-        tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000,
-                1.0000])
-
-        # Accuracy
-        >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-        tensor(1.)
-
-        # This solver supports gradient back-propogation
-        >>> K = K.requires_grad_(True)
-        >>> pygm.rrwm(K, n1, n2, beta=100).sum().backward()
-        >>> len(torch.nonzero(K.grad))
-        272
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
+            >>> _ = torch.manual_seed(1)
+    
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = torch.zeros(batch_size, 4, 4)
+            >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
+            >>> A1 = torch.rand(batch_size, 4, 4)
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = n2 = torch.tensor([4] * batch_size)
+    
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    
+            # Solve by RRWM. Note that X is normalized with a sum of 1
+            >>> X = pygm.rrwm(K, n1, n2, beta=100)
+            >>> X.sum(dim=(1, 2))
+            tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000,
+                    1.0000])
+    
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            tensor(1.)
+    
+            # This solver supports gradient back-propogation
+            >>> K = K.requires_grad_(True)
+            >>> pygm.rrwm(K, n1, n2, beta=100).sum().backward()
+            >>> len(torch.nonzero(K.grad))
+            272
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -690,74 +706,78 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     .. note::
         This solver is non-differentiable. The output is a discrete matching matrix (i.e. permutation matrix).
 
-    Example for numpy backend::
+    .. dropdown:: Numpy Example
 
-        >>> import numpy as np
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'numpy'
-        >>> np.random.seed(1)
+        ::
 
-        # Generate a batch of isomorphic graphs
-        >>> batch_size = 10
-        >>> X_gt = np.zeros((batch_size, 4, 4))
-        >>> X_gt[:, np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
-        >>> A1 = np.random.rand(batch_size, 4, 4)
-        >>> A2 = np.matmul(np.matmul(X_gt.transpose((0, 2, 1)), A1), X_gt)
-        >>> n1 = n2 = np.repeat([4], batch_size)
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+    
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
+            >>> A1 = np.random.rand(batch_size, 4, 4)
+            >>> A2 = np.matmul(np.matmul(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> n1 = n2 = np.repeat([4], batch_size)
+    
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    
+            # Solve by IPFP
+            >>> X = pygm.ipfp(K, n1, n2)
+            >>> X[0]
+            array([[0., 0., 0., 1.],
+                   [0., 0., 1., 0.],
+                   [1., 0., 0., 0.],
+                   [0., 1., 0., 0.]])
+    
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
 
-        # Build affinity matrix
-        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-        >>> import functools
-        >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    .. dropdown:: Pytorch Example
 
-        # Solve by IPFP
-        >>> X = pygm.ipfp(K, n1, n2)
-        >>> X[0]
-        array([[0., 0., 0., 1.],
-               [0., 0., 1., 0.],
-               [1., 0., 0., 0.],
-               [0., 1., 0., 0.]])
+        ::
 
-        # Accuracy
-        >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-        1.0
-
-    Example for Pytorch backend::
-
-        >>> import torch
-        >>> import pygmtools as pygm
-        >>> pygm.BACKEND = 'pytorch'
-        >>> _ = torch.manual_seed(1)
-
-        # Generate a batch of isomorphic graphs
-        >>> batch_size = 10
-        >>> X_gt = torch.zeros(batch_size, 4, 4)
-        >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
-        >>> A1 = torch.rand(batch_size, 4, 4)
-        >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
-        >>> n1 = torch.tensor([4] * batch_size)
-        >>> n2 = torch.tensor([4] * batch_size)
-
-        # Build affinity matrix
-        >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-        >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-        >>> import functools
-        >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
-        >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
-
-        # Solve by IPFP
-        >>> X = pygm.ipfp(K, n1, n2)
-        >>> X[0]
-        tensor([[0., 1., 0., 0.],
-                [0., 0., 0., 1.],
-                [0., 0., 1., 0.],
-                [1., 0., 0., 0.]])
-
-        # Accuracy
-        >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-        tensor(1.)
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
+            >>> _ = torch.manual_seed(1)
+    
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = torch.zeros(batch_size, 4, 4)
+            >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
+            >>> A1 = torch.rand(batch_size, 4, 4)
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = torch.tensor([4] * batch_size)
+            >>> n2 = torch.tensor([4] * batch_size)
+    
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+    
+            # Solve by IPFP
+            >>> X = pygm.ipfp(K, n1, n2)
+            >>> X[0]
+            tensor([[0., 1., 0., 0.],
+                    [0., 0., 0., 1.],
+                    [0., 0., 1., 0.],
+                    [1., 0., 0., 0.]])
+    
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            tensor(1.)
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
