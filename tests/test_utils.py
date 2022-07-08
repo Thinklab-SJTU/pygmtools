@@ -4,7 +4,7 @@ import pygmtools as pygm
 def data_from_numpy(*data, device=None):
     return_list = []
     for d in data:
-        return_list.append(pygm.utils.from_numpy(d, device))
+        return_list.append(pygm.utils.from_numpy(d))
     if len(return_list) > 1:
         return return_list
     else:
