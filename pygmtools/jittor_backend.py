@@ -408,15 +408,12 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         if edge_aff is not None:
             conn1 = connectivity1[b][:int(ne1[b])]
             conn2 = connectivity2[b][:int(ne2[b])]
-            # print(conn1, ne2[b])
             edge_indices = jt.concat([conn1.repeat_interleave(int(ne2[b]), dim=0), conn2.repeat(int(ne1[b]), 1)], dim=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
             k[edge_indices] = edge_aff[b, :int(ne1[b]), :int(ne2[b])].reshape(-1)
         k = k.reshape(n2max * n1max, n2max * n1max)
         # node-wise affinity
         if node_aff is not None:
-            # k_diag = jt.diag(k)
-            # k_diag[:] = node_aff[b].transpose(0, 1).reshape(-1)
             k[jt.arange(n2max * n1max), jt.arange(n2max * n1max)] = node_aff[b].transpose(0, 1).reshape(-1)
         ks.append(k)
 
