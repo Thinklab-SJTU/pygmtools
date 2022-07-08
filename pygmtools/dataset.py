@@ -223,11 +223,11 @@ class PascalVOC:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
-        img_file = os.path.join(self.dataset_dir, 'data.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
         if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
             if not (os.path.exists(train_file) and os.path.exists(test_file)):
                 list1 = []
@@ -452,11 +452,11 @@ class WillowObject:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
-        img_file = os.path.join(self.dataset_dir, 'data.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
 
         data_list = []
         mat_list_ = []
@@ -718,11 +718,11 @@ class SPair71k:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
-        img_file = os.path.join(self.dataset_dir, 'data.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
         if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
             train_list = []
             test_list = []
@@ -963,10 +963,10 @@ class IMC_PT_SparseGM:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
-        img_file = os.path.join(self.dataset_dir, 'data.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
 
         if not os.path.exists(set_file):
             set_list = []
@@ -1172,10 +1172,10 @@ class CUB2011:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data.json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
-        img_file = os.path.join(self.dataset_dir, 'data.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
 
         if not os.path.exists(set_file):
             set_list = []
