@@ -5,3 +5,4 @@ numpy>=1.18.5
 easydict>=1.7
 torch
 tqdm
+jittor
