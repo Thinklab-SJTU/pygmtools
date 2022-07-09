@@ -291,7 +291,7 @@ def to_numpy(input):
     """
     return input.detach().numpy()
 
-def from_numpy(input):
+def from_numpy(input, device=None):
     """
     Jittor function from_numpy
     """
