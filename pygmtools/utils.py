@@ -450,7 +450,7 @@ def to_numpy(input, backend=None):
     return fn(*args)
 
 
-def from_numpy(input, device=None, backend=None):
+def from_numpy(input, backend=None):
     r"""
     Convert a numpy ndarray to a tensor.
     This is the helper function to convert tensors across different backends via numpy.
