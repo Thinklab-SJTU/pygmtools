@@ -462,7 +462,7 @@ def from_numpy(input, device=None, backend=None):
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input, device)
+    args = (input,) # device)
     # pygmtools built-in types
     if type(input) is MultiMatchingResult:
         fn = functools.partial(MultiMatchingResult.from_numpy, new_backend=backend)
