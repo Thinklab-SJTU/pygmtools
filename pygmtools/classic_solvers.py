@@ -257,7 +257,6 @@ def sinkhorn(s, n1=None, n2=None,
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000], dtype=paddle.float64) col_sum: tensor([0.7824, 0.8049, 0.8017, 0.8000, 0.8110], dtype=paddle.float64)
 
-
     .. note::
 
         If you find this graph matching solver useful for your research, please cite:
