@@ -130,6 +130,7 @@ def sinkhorn(s, n1=None, n2=None,
             >>> import torch
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'pytorch'
+            >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
             >>> s_2d = torch.from_numpy(np.random.rand(5, 5))
@@ -185,41 +186,42 @@ def sinkhorn(s, n1=None, n2=None,
                     [0.1973, 0.2245, 0.1913, 0.2506, 0.1363]], dtype=torch.float64)
 
             # non-squared input
-            >>> s_non_square = torch.from_numpy(s_non_square)
+            >>> s_non_square = torch.from_numpy(np.random.rand(4, 5))
             >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([0.7824, 0.8049, 0.8017, 0.8000, 0.8110], dtype=torch.float64)
 
-     .. dropdown:: Paddle Example
+    .. dropdown:: Paddle Example
 
         ::
 
             >>> import paddle
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'paddle'
+            >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
             >>> s_2d = paddle.to_tensor(np.random.rand(5, 5))
             >>> s_2d
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0.54881350, 0.71518937, 0.60276338, 0.54488318, 0.42365480],
-                     [0.64589411, 0.43758721, 0.89177300, 0.96366276, 0.38344152],
-                     [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
-                     [0.08712930, 0.02021840, 0.83261985, 0.77815675, 0.87001215],
-                     [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
+                   [[0.54881350, 0.71518937, 0.60276338, 0.54488318, 0.42365480],
+                    [0.64589411, 0.43758721, 0.89177300, 0.96366276, 0.38344152],
+                    [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
+                    [0.08712930, 0.02021840, 0.83261985, 0.77815675, 0.87001215],
+                    [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
             >>> x = pygm.sinkhorn(s_2d)
             >>> x
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0.18880224, 0.24990915, 0.19202217, 0.16034278, 0.20892366],
-                     [0.18945066, 0.17240445, 0.23345011, 0.22194762, 0.18274716],
-                     [0.23713583, 0.20434800, 0.18271243, 0.23114583, 0.14465790],
-                     [0.11731039, 0.12296920, 0.23823909, 0.19961588, 0.32186549],
-                     [0.26730088, 0.25036920, 0.15357619, 0.18694789, 0.14180580]])
+                   [[0.18880224, 0.24990915, 0.19202217, 0.16034278, 0.20892366],
+                    [0.18945066, 0.17240445, 0.23345011, 0.22194762, 0.18274716],
+                    [0.23713583, 0.20434800, 0.18271243, 0.23114583, 0.14465790],
+                    [0.11731039, 0.12296920, 0.23823909, 0.19961588, 0.32186549],
+                    [0.26730088, 0.25036920, 0.15357619, 0.18694789, 0.14180580]])
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
-       [1.00000000, 1.00000001, 0.99999998, 1.00000005, 0.99999997]) 
+                            [1.00000000, 1.00000001, 0.99999998, 1.00000005, 0.99999997])
             col_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
-       [1.00000000, 1.00000000, 1.00000000, 1.        , 1.00000000])
+                            [1.00000000, 1.00000000, 1.00000000, 1.        , 1.00000000])
 
             # 3-dimensional (batched) input
             >>> s_3d = paddle.to_tensor(np.random.rand(3, 5, 5))
@@ -241,28 +243,28 @@ def sinkhorn(s, n1=None, n2=None,
             >>> x = pygm.sinkhorn(s_3d, n1, n2)
             >>> x[0] # non-zero size: 3x3
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0.36665934, 0.21498158, 0.41835906, 0.00000000, 0.00000000],
-                     [0.27603621, 0.44270207, 0.28126175, 0.00000000, 0.00000000],
-                     [0.35730445, 0.34231636, 0.30037920, 0.00000000, 0.00000000],
-                     [0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000],
-                     [0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000]])
+                   [[0.36665934, 0.21498158, 0.41835906, 0.00000000, 0.00000000],
+                    [0.27603621, 0.44270207, 0.28126175, 0.00000000, 0.00000000],
+                    [0.35730445, 0.34231636, 0.30037920, 0.00000000, 0.00000000],
+                    [0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000],
+                    [0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000]])
             >>> x[1] # non-zero size: 4x4
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0.28847831, 0.20583051, 0.34242091, 0.16327021, 0.00000000],
-                     [0.22656752, 0.30153021, 0.19407969, 0.27782262, 0.00000000],
-                     [0.25346378, 0.19649853, 0.32565049, 0.22438715, 0.00000000],
-                     [0.23149039, 0.29614075, 0.13784891, 0.33452002, 0.00000000],
-                     [0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000]])
+                   [[0.28847831, 0.20583051, 0.34242091, 0.16327021, 0.00000000],
+                    [0.22656752, 0.30153021, 0.19407969, 0.27782262, 0.00000000],
+                    [0.25346378, 0.19649853, 0.32565049, 0.22438715, 0.00000000],
+                    [0.23149039, 0.29614075, 0.13784891, 0.33452002, 0.00000000],
+                    [0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.00000000]])
             >>> x[2] # non-zero size: 5x5
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0.20147352, 0.19541986, 0.24942798, 0.17346397, 0.18021467],
-                     [0.21050732, 0.17620948, 0.18645469, 0.20384684, 0.22298167],
-                     [0.18319623, 0.18024007, 0.17619871, 0.16641330, 0.29395169],
-                     [0.20754376, 0.22364430, 0.19658101, 0.20570847, 0.16652246],
-                     [0.19727917, 0.22448629, 0.19133762, 0.25056742, 0.13632951]])
+                   [[0.20147352, 0.19541986, 0.24942798, 0.17346397, 0.18021467],
+                    [0.21050732, 0.17620948, 0.18645469, 0.20384684, 0.22298167],
+                    [0.18319623, 0.18024007, 0.17619871, 0.16641330, 0.29395169],
+                    [0.20754376, 0.22364430, 0.19658101, 0.20570847, 0.16652246],
+                    [0.19727917, 0.22448629, 0.19133762, 0.25056742, 0.13632951]])
 
             # non-squared input
-            >>> s_non_square = paddle.to_tensor(s_non_square)
+            >>> s_non_square = paddle.to_tensor(np.random.rand(4, 5))
             >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: Tensor(shape=[4], dtype=float64, place=Place(cpu), stop_gradient=True,
@@ -398,7 +400,8 @@ def hungarian(s, n1=None, n2=None,
             >>> import torch
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'pytorch'
-    
+            >>> np.random.seed(0)
+
             # 2-dimensional (non-batched) input
             >>> s_2d = torch.from_numpy(np.random.rand(5, 5))
             >>> s_2d
@@ -438,31 +441,32 @@ def hungarian(s, n1=None, n2=None,
                      [0., 1., 0., 0., 0.],
                      [0., 0., 0., 1., 0.]]], dtype=torch.float64)
 
-     .. dropdown:: Paddle Example
+    .. dropdown:: Paddle Example
 
         ::
 
             >>> import paddle
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'paddle'
+            >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
             >>> s_2d = paddle.to_tensor(np.random.rand(5, 5))
             >>> s_2d
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0.54881350, 0.71518937, 0.60276338, 0.54488318, 0.42365480],
-                     [0.64589411, 0.43758721, 0.89177300, 0.96366276, 0.38344152],
-                     [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
-                     [0.08712930, 0.02021840, 0.83261985, 0.77815675, 0.87001215],
-                     [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
+                   [[0.54881350, 0.71518937, 0.60276338, 0.54488318, 0.42365480],
+                    [0.64589411, 0.43758721, 0.89177300, 0.96366276, 0.38344152],
+                    [0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606],
+                    [0.08712930, 0.02021840, 0.83261985, 0.77815675, 0.87001215],
+                    [0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443]])
             >>> x = pygm.hungarian(s_2d)
             >>> x
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[0., 1., 0., 0., 0.],
-                     [0., 0., 1., 0., 0.],
-                     [0., 0., 0., 1., 0.],
-                     [0., 0., 0., 0., 1.],
-                     [1., 0., 0., 0., 0.]])
+                   [[0., 1., 0., 0., 0.],
+                    [0., 0., 1., 0., 0.],
+                    [0., 0., 0., 1., 0.],
+                    [0., 0., 0., 0., 1.],
+                    [1., 0., 0., 0., 0.]])
 
             # 3-dimensional (batched) input
             >>> s_3d = paddle.to_tensor(np.random.rand(3, 5, 5))
@@ -470,23 +474,23 @@ def hungarian(s, n1=None, n2=None,
             >>> x = pygm.hungarian(s_3d, n1, n2)
             >>> x
             Tensor(shape=[3, 5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
-                    [[[0., 0., 1., 0., 0.],
-                      [0., 1., 0., 0., 0.],
-                      [1., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0.]],
+                   [[[0., 0., 1., 0., 0.],
+                     [0., 1., 0., 0., 0.],
+                     [1., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 0.]],
             <BLANKLINE>
-                     [[1., 0., 0., 0., 0.],
-                      [0., 1., 0., 0., 0.],
-                      [0., 0., 1., 0., 0.],
-                      [0., 0., 0., 1., 0.],
-                      [0., 0., 0., 0., 0.]],
+                    [[1., 0., 0., 0., 0.],
+                     [0., 1., 0., 0., 0.],
+                     [0., 0., 1., 0., 0.],
+                     [0., 0., 0., 1., 0.],
+                     [0., 0., 0., 0., 0.]],
             <BLANKLINE>
-                      [[0., 0., 1., 0., 0.],
-                       [1., 0., 0., 0., 0.],
-                       [0., 0., 0., 0., 1.],
-                       [0., 1., 0., 0., 0.],
-                       [0., 0., 0., 1., 0.]]])
+                    [[0., 0., 1., 0., 0.],
+                     [1., 0., 0., 0., 0.],
+                     [0., 0., 0., 0., 1.],
+                     [0., 1., 0., 0., 0.],
+                     [0., 0., 0., 1., 0.]]])
 
     .. note::
 
@@ -633,14 +637,14 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(torch.nonzero(K.grad))
             2560
 
-     .. dropdown:: Paddle Example
+    .. dropdown:: Paddle Example
 
         ::
 
             >>> import paddle
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'paddle'
-            >>> paddle.seed(1)
+            >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -819,14 +823,14 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(torch.nonzero(K.grad))
             272
 
-     .. dropdown:: Paddle Example
+    .. dropdown:: Paddle Example
 
         ::
 
             >>> import paddle
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'paddle'
-            >>> paddle.seed(1)
+            >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -998,7 +1002,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import paddle
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'paddle'
-            >>> paddle.seed(1)
+            >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -1020,10 +1024,10 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> X = pygm.ipfp(K, n1, n2)
             >>> X[0]
             Tensor(shape=[4, 4], dtype=float32, place=Place(cpu), stop_gradient=True,
-                    [[0., 0., 0., 1.],
-                     [0., 1., 0., 0.],
-                     [0., 0., 1., 0.],
-                     [1., 0., 0., 0.]])
+                   [[0., 1., 0., 0.],
+                    [0., 0., 0., 1.],
+                    [0., 0., 1., 0.],
+                    [1., 0., 0., 0.]])
 
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
