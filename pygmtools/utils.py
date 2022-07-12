@@ -110,37 +110,6 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
             >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
 
             # The affinity matrices K, K2, K3 can be further processed by GM solvers
-    
-    .. dropdown:: Paddle Example
-
-        ::
-            >>> import paddle
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
-
-            # Generate a batch of graphs
-            >>> batch_size = 10
-            >>> A1 = paddle.rand((batch_size, 4, 4))
-            >>> A2 = paddle.rand((batch_size, 4, 4))
-            >>> n1 = n2 = paddle.t0_tensor([4] * batch_size)
-
-            # Build affinity matrix by the default inner-product function
-            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
-            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
-            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2)
-
-            # Build affinity matrix by gaussian kernel
-            >>> import functools
-            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
-            >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
-
-            # Build affinity matrix based on node features
-            >>> F1 = paddle.rand((batch_size, 4, 10))
-            >>> F2 = paddle.rand((batch_size, 4, 10))
-            >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
-
-            # The affinity matrices K, K2, K3 can be further processed by GM solvers
-
     """
     if backend is None:
         backend = pygmtools.BACKEND
@@ -255,84 +224,53 @@ def build_batch(input, return_ori_dim=False, backend=None):
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: batched tensor, (if ``return_ori_dim=True``) a list of the original dimensions
 
-    .. dropdown:: Numpy Example
+    Example for numpy backend::
 
-        ::
+        >>> import numpy as np
+        >>> import pygmtools as pygm
+        >>> pygm.BACKEND = 'numpy'
 
-            >>> import numpy as np
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+        # batched adjacency matrices
+        >>> A1 = np.random.rand(4, 4)
+        >>> A2 = np.random.rand(5, 5)
+        >>> A3 = np.random.rand(3, 3)
+        >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
+        >>> batched_A.shape
+        (3, 5, 5)
+        >>> ori_shape
+        ([4, 5, 3], [4, 5, 3])
 
-            # batched adjacency matrices
-            >>> A1 = np.random.rand(4, 4)
-            >>> A2 = np.random.rand(5, 5)
-            >>> A3 = np.random.rand(3, 3)
-            >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
-            >>> batched_A.shape
-            (3, 5, 5)
-            >>> ori_shape
-            ([4, 5, 3], [4, 5, 3])
+        # batched node features (feature dimension=10)
+        >>> F1 = np.random.rand(4, 10)
+        >>> F2 = np.random.rand(5, 10)
+        >>> F3 = np.random.rand(3, 10)
+        >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
+        >>> batched_F.shape
+        (3, 5, 10)
 
-            # batched node features (feature dimension=10)
-            >>> F1 = np.random.rand(4, 10)
-            >>> F2 = np.random.rand(5, 10)
-            >>> F3 = np.random.rand(3, 10)
-            >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
-            >>> batched_F.shape
-            (3, 5, 10)
+    Example for Pytorch backend::
 
-    .. dropdown:: Pytorch Example
+        >>> import torch
+        >>> import pygmtools as pygm
+        >>> pygm.BACKEND = 'pytorch'
 
-        ::
+        # batched adjacency matrices
+        >>> A1 = torch.rand(4, 4)
+        >>> A2 = torch.rand(5, 5)
+        >>> A3 = torch.rand(3, 3)
+        >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
+        >>> batched_A.shape
+        torch.Size([3, 5, 5])
+        >>> ori_shape
+        (tensor([4, 5, 3]), tensor([4, 5, 3]))
 
-            >>> import torch
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
-
-            # batched adjacency matrices
-            >>> A1 = torch.rand(4, 4)
-            >>> A2 = torch.rand(5, 5)
-            >>> A3 = torch.rand(3, 3)
-            >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
-            >>> batched_A.shape
-            torch.Size([3, 5, 5])
-            >>> ori_shape
-            (tensor([4, 5, 3]), tensor([4, 5, 3]))
-
-            # batched node features (feature dimension=10)
-            >>> F1 = torch.rand(4, 10)
-            >>> F2 = torch.rand(5, 10)
-            >>> F3 = torch.rand(3, 10)
-            >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
-            >>> batched_F.shape
-            torch.Size([3, 5, 10])
-
-    .. dropdown:: Paddle Example
-
-        ::
-
-            >>> import paddle
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
-
-            # batched adjacency matrices
-            >>> A1 = paddle.rand((4, 4))
-            >>> A2 = paddle.rand((5, 5))
-            >>> A3 = paddle.rand((3, 3))
-            >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
-            >>> batched_A.shape
-            [3, 5, 5]
-            >>> ori_shape
-            (Tensor(shape=[3], dtype=int64, place=Place(cpu), stop_gradient=True, [4, 5, 3]),
-             Tensor(shape=[3], dtype=int64, place=Place(cpu), stop_gradient=True, [4, 5, 3]))
-
-            # batched node features (feature dimension=10)
-            >>> F1 = paddle.rand((4, 10))
-            >>> F2 = paddle.rand((5, 10))
-            >>> F3 = paddle.rand((3, 10))
-            >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
-            >>> batched_F.shape
-            [3, 5, 10]
+        # batched node features (feature dimension=10)
+        >>> F1 = torch.rand(4, 10)
+        >>> F2 = torch.rand(5, 10)
+        >>> F3 = torch.rand(3, 10)
+        >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
+        >>> batched_F.shape
+        torch.Size([3, 5, 10])
 
     """
     if backend is None:
@@ -360,81 +298,51 @@ def dense_to_sparse(dense_adj, backend=None):
     :return: :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor,
              :math:`(b)` number of edges
 
-    .. dropdown:: Numpy Example
+    Example for numpy backend::
 
-        ::
+        >>> import numpy as np
+        >>> import pygmtools as pygm
+        >>> pygm.BACKEND = 'numpy'
+        >>> np.random.seed(0)
 
-            >>> import numpy as np
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
-            >>> np.random.seed(0)
+        >>> batch_size = 10
+        >>> A = np.random.rand(batch_size, 4, 4)
+        >>> A[:, np.arange(4), np.arange(4)] = 0 # remove the diagonal elements
+        >>> A.shape
+        (10, 4, 4)
 
-            >>> batch_size = 10
-            >>> A = np.random.rand(batch_size, 4, 4)
-            >>> A[:, np.arange(4), np.arange(4)] = 0 # remove the diagonal elements
-            >>> A.shape
-            (10, 4, 4)
+        >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
+        >>> conn.shape # connectivity: (batch x num_edge x 2)
+        (10, 12, 2)
 
-            >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
-            >>> conn.shape # connectivity: (batch x num_edge x 2)
-            (10, 12, 2)
+        >>> edge.shape # edge feature (batch x num_edge x feature_dim)
+        (10, 12, 1)
 
-            >>> edge.shape # edge feature (batch x num_edge x feature_dim)
-            (10, 12, 1)
+        >>> ne
+        [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
 
-            >>> ne
-            [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+    Example for Pytorch backend::
 
-    .. dropdown:: Pytorch Example
+        >>> import torch
+        >>> import pygmtools as pygm
+        >>> pygm.BACKEND = 'pytorch'
+        >>> _ = torch.manual_seed(0)
 
-        ::
+        >>> batch_size = 10
+        >>> A = torch.rand(batch_size, 4, 4)
+        >>> torch.diagonal(A, dim1=1, dim2=2)[:] = 0 # remove the diagonal elements
+        >>> A.shape
+        torch.Size([10, 4, 4])
 
-            >>> import torch
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
-            >>> _ = torch.manual_seed(0)
+        >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
+        >>> conn.shape # connectivity: (batch x num_edge x 2)
+        torch.Size([10, 12, 2])
 
-            >>> batch_size = 10
-            >>> A = torch.rand(batch_size, 4, 4)
-            >>> torch.diagonal(A, dim1=1, dim2=2)[:] = 0 # remove the diagonal elements
-            >>> A.shape
-            torch.Size([10, 4, 4])
+        >>> edge.shape # edge feature (batch x num_edge x feature_dim)
+        torch.Size([10, 12, 1])
 
-            >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
-            >>> conn.shape # connectivity: (batch x num_edge x 2)
-            torch.Size([10, 12, 2])
-
-            >>> edge.shape # edge feature (batch x num_edge x feature_dim)
-            torch.Size([10, 12, 1])
-
-            >>> ne
-            tensor([12, 12, 12, 12, 12, 12, 12, 12, 12, 12])
-
-    .. dropdown:: Paddle Example
-
-        ::
-
-            >>> import paddle
-            >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
-            >>> paddle.seed(0)
-
-            >>> batch_size = 10
-            >>> A = paddle.rand((batch_size, 4, 4))
-            >>> paddle.diagonal(A, axis1=1, axis2=2)[:] = 0 # remove the diagonal elements
-            >>> A.shape
-            [10, 4, 4]
-
-            >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
-            >>> conn.shape # connectivity: (batch x num_edge x 2)
-            torch.Size([10, 16, 2])
-
-            >>> edge.shape # edge feature (batch x num_edge x feature_dim)
-            torch.Size([10, 16, 1])
-
-            >>> ne
-            Tensor(shape=[10], dtype=int64, place=Place(cpu), stop_gradient=True,
-                    [16, 16, 16, 16, 16, 16, 16, 16, 16, 16])
+        >>> ne
+        tensor([12, 12, 12, 12, 12, 12, 12, 12, 12, 12])
 
     """
     if backend is None:
@@ -616,28 +524,26 @@ class MultiMatchingResult:
     implementation requires :math:`((m-1)\times m \times n \times n / 2)`. For cycle consistent result, this
     implementation requires only :math:`(m\times n\times n)`.
 
-    .. dropdown:: Numpy Example
+    Numpy Example:
 
-        ::
+        >>> import numpy as np
+        >>> import pygmtools as pygm
+        >>> np.random.seed(0)
 
-            >>> import numpy as np
-            >>> import pygmtools as pygm
-            >>> np.random.seed(0)
-
-            >>> X = pygm.utils.MultiMatchingResult(backend='numpy')
-            >>> X[0, 1] = np.zeros((4, 4))
-            >>> X[0, 1][np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
-            >>> X
-            MultiMatchingResult:
-            {'0,1': array([[0., 0., 1., 0.],
-                [0., 0., 0., 1.],
-                [0., 1., 0., 0.],
-                [1., 0., 0., 0.]])}
-            >>> X[1, 0]
-            array([[0., 0., 0., 1.],
-                [0., 0., 1., 0.],
-                [1., 0., 0., 0.],
-                [0., 1., 0., 0.]])
+        >>> X = pygm.utils.MultiMatchingResult(backend='numpy')
+        >>> X[0, 1] = np.zeros((4, 4))
+        >>> X[0, 1][np.arange(0, 4, dtype=np.int64), np.random.permutation(4)] = 1
+        >>> X
+        MultiMatchingResult:
+        {'0,1': array([[0., 0., 1., 0.],
+               [0., 0., 0., 1.],
+               [0., 1., 0., 0.],
+               [1., 0., 0., 0.]])}
+        >>> X[1, 0]
+        array([[0., 0., 0., 1.],
+               [0., 0., 1., 0.],
+               [1., 0., 0., 0.],
+               [0., 1., 0., 0.]])
     """
     def __init__(self, cycle_consistent=False, backend=None):
         self.match_dict = {}
