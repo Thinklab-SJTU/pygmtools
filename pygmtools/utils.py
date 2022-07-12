@@ -616,7 +616,7 @@ class MultiMatchingResult:
     implementation requires :math:`((m-1)\times m \times n \times n / 2)`. For cycle consistent result, this
     implementation requires only :math:`(m\times n\times n)`.
 
-    .. dropdown:: Paddle Example
+    .. dropdown:: Numpy Example
 
         ::
 
