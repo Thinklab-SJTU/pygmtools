@@ -132,7 +132,7 @@ def sinkhorn(s, n1=None, n2=None,
             >>> pygm.BACKEND = 'pytorch'
 
             # 2-dimensional (non-batched) input
-            >>> s_2d = torch.from_numpy(s_2d)
+            >>> s_2d = torch.from_numpy(np.random.rand(5, 5))
             >>> s_2d
             tensor([[0.5488, 0.7152, 0.6028, 0.5449, 0.4237],
                     [0.6459, 0.4376, 0.8918, 0.9637, 0.3834],
@@ -150,7 +150,7 @@ def sinkhorn(s, n1=None, n2=None,
             row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
 
             # 3-dimensional (batched) input
-            >>> s_3d = torch.from_numpy(s_3d)
+            >>> s_3d = torch.from_numpy(np.random.rand(3, 5, 5))
             >>> x = pygm.sinkhorn(s_3d)
             >>> print('row_sum:', x.sum(2))
             row_sum: tensor([[1.0000, 1.0000, 1.0000, 1.0000, 1.0000],
@@ -199,7 +199,7 @@ def sinkhorn(s, n1=None, n2=None,
             >>> pygm.BACKEND = 'paddle'
 
             # 2-dimensional (non-batched) input
-            >>> s_2d = paddle.to_tensor(s_2d)
+            >>> s_2d = paddle.to_tensor(np.random.rand(5, 5))
             >>> s_2d
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
                     [[0.54881350, 0.71518937, 0.60276338, 0.54488318, 0.42365480],
@@ -222,7 +222,7 @@ def sinkhorn(s, n1=None, n2=None,
        [1.00000000, 1.00000000, 1.00000000, 1.        , 1.00000000])
 
             # 3-dimensional (batched) input
-            >>> s_3d = paddle.to_tensor(s_3d)
+            >>> s_3d = paddle.to_tensor(np.random.rand(3, 5, 5))
             >>> x = pygm.sinkhorn(s_3d)
             >>> print('row_sum:', x.sum(2))
             row_sum: Tensor(shape=[3, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
@@ -400,7 +400,7 @@ def hungarian(s, n1=None, n2=None,
             >>> pygm.BACKEND = 'pytorch'
     
             # 2-dimensional (non-batched) input
-            >>> s_2d = torch.from_numpy(s_2d)
+            >>> s_2d = torch.from_numpy(np.random.rand(5, 5))
             >>> s_2d
             tensor([[0.5488, 0.7152, 0.6028, 0.5449, 0.4237],
                     [0.6459, 0.4376, 0.8918, 0.9637, 0.3834],
@@ -416,7 +416,7 @@ def hungarian(s, n1=None, n2=None,
                     [1., 0., 0., 0., 0.]], dtype=torch.float64)
     
             # 3-dimensional (batched) input
-            >>> s_3d = torch.from_numpy(s_3d)
+            >>> s_3d = torch.from_numpy(np.random.rand(3, 5, 5))
             >>> n1 = n2 = torch.tensor([3, 4, 5])
             >>> x = pygm.hungarian(s_3d, n1, n2)
             >>> x
@@ -447,7 +447,7 @@ def hungarian(s, n1=None, n2=None,
             >>> pygm.BACKEND = 'paddle'
 
             # 2-dimensional (non-batched) input
-            >>> s_2d = paddle.to_tensor(s_2d)
+            >>> s_2d = paddle.to_tensor(np.random.rand(5, 5))
             >>> s_2d
             Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
                     [[0.54881350, 0.71518937, 0.60276338, 0.54488318, 0.42365480],
@@ -465,7 +465,7 @@ def hungarian(s, n1=None, n2=None,
                      [1., 0., 0., 0., 0.]])
 
             # 3-dimensional (batched) input
-            >>> s_3d = paddle.to_tensor(s_3d)
+            >>> s_3d = paddle.to_tensor(np.random.rand(3, 5, 5))
             >>> n1 = n2 = paddle.to_tensor([3, 4, 5])
             >>> x = pygm.hungarian(s_3d, n1, n2)
             >>> x
@@ -858,7 +858,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> K.stop_gradient = False
             >>> pygm.rrwm(K, n1, n2, beta=100).sum().backward()
             >>> len(paddle.nonzero(K.grad))
-            272
+            544
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -1006,8 +1006,8 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> X_gt[:, paddle.arange(0, 4, dtype=paddle.int64), paddle.randperm(4)] = 1
             >>> A1 = paddle.rand((batch_size, 4, 4))
             >>> A2 = paddle.bmm(paddle.bmm(X_gt.transpose((0, 2, 1)), A1), X_gt)
-            >>> n1 = paddle.tensor([4] * batch_size)
-            >>> n2 = paddle.tensor([4] * batch_size)
+            >>> n1 = paddle.to_tensor([4] * batch_size)
+            >>> n2 = paddle.to_tensor([4] * batch_size)
 
             # Build affinity matrix
             >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
