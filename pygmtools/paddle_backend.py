@@ -67,7 +67,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         dummy_shape[1] = s.shape[2] - s.shape[1]
         ori_nrows = nrows
         nrows = ncols
-        s = paddle.cat((s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf')), place = s.place)), dim=1)
+        s = paddle.concat((s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf'), dtype=s.dtype), place = s.place)), axis=1)
         for b in range(batch_size):
             s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
             s[b, nrows[b]:, :] = -float('inf')
@@ -152,7 +152,7 @@ def rrwm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         # reweighted jump
         s = paddle.reshape(v, (batch_num, n2max, n1max)).transpose((0, 2, 1))
         s = beta * s / s.max(axis=1, keepdim=True).max(axis=2, keepdim=True)
-        v = paddle.reshape(alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose((0, 2, 1)),(batch_num, n1n2, 1)) + \
+        v = alpha * paddle.reshape(sinkhorn(s, n1, n2, max_iter=sk_iter).transpose((0, 2, 1)),(batch_num, n1n2, 1)) + \
             (1 - alpha) * v
         n = paddle.norm(v, p=1, axis=1, keepdim=True)
         v = paddle.matmul(v, 1 / n)
@@ -435,7 +435,7 @@ def _squeeze(input, dim):
     """
     Paddle implementation of _squeeze
     """
-    return paddle.squeeze(input, aixs=dim)
+    return paddle.squeeze(input, axis=dim)
 
 
 def _unsqueeze(input, dim):
