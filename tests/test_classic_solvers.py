@@ -131,7 +131,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             _X = solver_func(linear_sim, _n1, _n2, **solver_param_dict)
 
             if last_X is not None:
-                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 1e-4, \
+                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 5e-4, \
                     f"Incorrect GM solution for {working_backend} " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
             last_X = pygm.utils.to_numpy(_X)
