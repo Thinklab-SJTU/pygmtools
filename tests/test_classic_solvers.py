@@ -96,6 +96,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
 
         # Generate random node features
         pygm.BACKEND = 'pytorch'
+        torch.manual_seed(3)
         X_gt, F1, F2 = [], [], []
         for b, (num_node1, num_node2) in enumerate(zip(num_nodes1, num_nodes2)):
             outlier_num = prob_param_dict['outlier_num'] if 'outlier_num' in prob_param_dict else 0
@@ -131,28 +132,40 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
 
             if last_X is not None:
                 assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 1e-4, \
-                    f"Incorrect GM solution for {working_backend}, " \
+                    f"Incorrect GM solution for {working_backend} " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
             last_X = pygm.utils.to_numpy(_X)
 
             accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
             assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
-                                  f"params: {';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+                                  f"params: {';'.join([k + '=' + str(v) for k, v in prob_param_dict.items()])};" \
+                                  f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
 
 def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
-        'nproc': [1, 2, 4]
+        'nproc': [1, 2, 4],
     }, ['pytorch', 'numpy'])
 
 
 def test_sinkhorn():
-    _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
+    # test non-symmetric matching
+    args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
             'tau': [0.1, 0.01],
             'max_iter': [10, 20, 50],
             'batched_operation': [True, False],
             'dummy_row': [True, ],
         }, ['pytorch', 'numpy'])
+    # test symmetric matching
+    args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
+        'tau': [0.1, 0.01],
+        'max_iter': [10, 20, 50],
+        'batched_operation': [True, False],
+        'dummy_row': [True, False],
+    }, ['pytorch', 'numpy'])
+
+    _test_classic_solver_on_linear_assignment(*args1)
+    _test_classic_solver_on_linear_assignment(*args2)
 
 
 def test_rrwm():
