@@ -272,6 +272,77 @@ def sinkhorn(s, n1=None, n2=None,
             col_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
             [0.78239609, 0.80485526, 0.80165627, 0.80004254, 0.81104984])
 
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> np.random.seed(0)
+
+            # 2-dimensional (non-batched) input
+            >>> s_2d = pygm.utils.from_numpy(np.random.rand(5, 5))
+            >>> s_2d
+            jt.Var([[0.5488135  0.71518934 0.60276335 0.5448832  0.4236548 ]
+                    [0.6458941  0.4375872  0.891773   0.96366274 0.3834415 ]
+                    [0.79172504 0.5288949  0.56804454 0.92559665 0.07103606]
+                    [0.0871293  0.0202184  0.83261985 0.77815676 0.87001216]
+                    [0.9786183  0.7991586  0.46147937 0.7805292  0.11827443]], dtype=float32)
+            >>> x = pygm.sinkhorn(s_2d)
+            >>> x
+            jt.Var([[0.18880227 0.24990915 0.19202219 0.1603428  0.20892365]
+                    [0.18945065 0.17240447 0.23345011 0.22194763 0.18274714]
+                    [0.23713583 0.20434798 0.18271242 0.23114584 0.1446579 ]
+                    [0.11731039 0.1229692  0.23823905 0.19961584 0.3218654 ]
+                    [0.2673009  0.2503692  0.1535762  0.1869479  0.1418058 ]], dtype=float32)
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: jt.Var([1.0000001  0.99999994 1.        0.9999999  1.       ], dtype=float32) 
+            col_sum: jt.Var([1.         1.         1.        1.         0.9999999], dtype=float32)
+
+            # 3-dimensional (batched) input
+            >>> s_3d = pygm.utils.from_numpy(np.random.rand(3, 5, 5))
+            >>> x = pygm.sinkhorn(s_3d)
+            >>> print('row_sum:', x.sum(2))
+            row_sum: jt.Var([[1.0000001  0.9999999  0.99999994 1.         0.99999994]
+                            [1.         1.0000001  1.         0.99999994 1.        ]
+                            [1.         1.         0.99999994 0.99999994 1.        ]], dtype=float32)
+            >>> print('col_sum:', x.sum(1))
+            col_sum: jt.Var([[1.         0.99999994 1.         0.99999994 1.        ]
+                            [1.         1.         1.0000001  1.         0.9999999 ]
+                            [0.99999994 1.0000001  0.9999999  1.         1.        ]], dtype=float32)
+
+            # If the 3-d tensor are with different number of nodes
+            >>> n1 = jt.Var([3, 4, 5])
+            >>> n2 = jt.Var([3, 4, 5])
+            >>> x = pygm.sinkhorn(s_3d, n1, n2)
+            >>> x[0] # non-zero size: 3x3
+            jt.Var([[0.3666593  0.21498157 0.41835907 0.         0.        ]
+                    [0.2760362  0.44270205 0.28126174 0.         0.        ]
+                    [0.35730445 0.34231633 0.30037922 0.         0.        ]
+                    [0.         0.         0.         0.         0.        ]
+                    [0.         0.         0.         0.         0.        ]], dtype=float32)
+            >>> x[1] # non-zero size: 4x4
+            jt.Var([[0.28847834 0.20583051 0.34242094 0.16327024 0.        ]
+                    [0.22656752 0.3015302  0.1940797  0.2778226  0.        ]
+                    [0.2534638  0.1964985  0.32565048 0.22438715 0.        ]
+                    [0.23149039 0.2961407  0.13784888 0.33452    0.        ]
+                    [0.         0.         0.         0.         0.        ]], dtype=float32)
+            >>> x[2] # non-zero size: 5x5
+            jt.Var([[0.20147353 0.19541988 0.24942797 0.17346397 0.18021466]
+                    [0.21050733 0.1762095  0.18645467 0.20384683 0.22298168]
+                    [0.18319622 0.18024008 0.17619869 0.16641329 0.2939517 ]
+                    [0.20754376 0.2236443  0.19658099 0.20570846 0.16652244]
+                    [0.19727917 0.2244863  0.1913376  0.25056744 0.13632952]], dtype=float32)
+
+            # non-squared input
+            >>> s_non_square = pygm.utils.from_numpy(np.random.rand(4, 5))
+            >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: jt.Var([1.         1.         1.         0.99999994], dtype=float32) 
+            col_sum: jt.Var([0.78239614 0.8048552  0.80165625 0.8000425  0.8110498], dtype=float32)
+
+
     .. note::
 
         If you find this graph matching solver useful for your research, please cite:
@@ -492,6 +563,54 @@ def hungarian(s, n1=None, n2=None,
                      [0., 1., 0., 0., 0.],
                      [0., 0., 0., 1., 0.]]])
 
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> np.random.seed(0)
+
+            # 2-dimensional (non-batched) input
+            >>> s_2d = pygm.utils.from_numpy(np.random.rand(5, 5))
+            >>> s_2d
+            jt.Var([[0.5488135  0.71518934 0.60276335 0.5448832  0.4236548 ]
+                    [0.6458941  0.4375872  0.891773   0.96366274 0.3834415 ]
+                    [0.79172504 0.5288949  0.56804454 0.92559665 0.07103606]
+                    [0.0871293  0.0202184  0.83261985 0.77815676 0.87001216]
+                    [0.9786183  0.7991586  0.46147937 0.7805292  0.11827443]], dtype=float32)
+            >>> x = pygm.hungarian(s_2d)
+            >>> x
+            jt.Var([[0. 1. 0. 0. 0.]
+                    [0. 0. 1. 0. 0.]
+                    [0. 0. 0. 1. 0.]
+                    [0. 0. 0. 0. 1.]
+                    [1. 0. 0. 0. 0.]], dtype=float32)
+                
+            # 3-dimensional (batched) input
+            >>> s_3d = pygm.utils.from_numpy(np.random.rand(3, 5, 5))
+            >>> n1 = n2 = jt.Var([3, 4, 5])
+            >>> x = pygm.hungarian(s_3d, n1, n2)
+            >>> x
+            jt.Var([[[0. 0. 1. 0. 0.]
+                    [0. 1. 0. 0. 0.]
+                    [1. 0. 0. 0. 0.]
+                    [0. 0. 0. 0. 0.]
+                    [0. 0. 0. 0. 0.]]
+            <BLANKLINE>
+                    [[1. 0. 0. 0. 0.]
+                    [0. 1. 0. 0. 0.]
+                    [0. 0. 1. 0. 0.]
+                    [0. 0. 0. 1. 0.]
+                    [0. 0. 0. 0. 0.]]
+            <BLANKLINE>
+                    [[0. 0. 1. 0. 0.]
+                    [1. 0. 0. 0. 0.]
+                    [0. 0. 0. 0. 1.]
+                    [0. 1. 0. 0. 0.]
+                    [0. 0. 0. 1. 0.]]], dtype=float32)
+
     .. note::
 
         If you find this graph matching solver useful for your research, please cite:
@@ -677,6 +796,39 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> pygm.sm(K, n1, n2).sum().backward()
             >>> len(paddle.nonzero(K.grad))
             2560
+
+    .. dropdown:: Jittor Example
+
+        ::
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = jt.rand(batch_size, 4, 4)
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = n2 = jt.Var([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by SM. Note that X is normalized with a squared sum of 1
+            >>> X = pygm.sm(K, n1, n2)
+            >>> (X ** 2).sum(dim=1).sum(dim=1)
+            jt.Var([0.9999998  1.         0.9999999  1.0000001  1.         1.
+                    0.9999999  0.99999994 1.0000001  1.        ], dtype=float32)
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
 
     .. note::
         If you find this graph matching solver useful for your research, please cite:
@@ -864,6 +1016,41 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(paddle.nonzero(K.grad))
             544
 
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = jt.rand(batch_size, 4, 4)
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = n2 = jt.Var([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by RRWM. Note that X is normalized with a sum of 1
+            >>> X = pygm.rrwm(K, n1, n2, beta=100)
+            >>> X.sum(dims=(1, 2))
+            jt.Var([1.         1.0000001  1.         0.99999976 1.         
+                    1.         1.         1.0000001  0.99999994 1.        ], dtype=float32)
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
     .. note::
         If you find this graph matching solver useful in your research, please cite:
 
@@ -1032,6 +1219,43 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = jt.rand(batch_size, 4, 4)
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = jt.Var([4] * batch_size)
+            >>> n2 = jt.Var([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by IPFP
+            >>> X = pygm.ipfp(K, n1, n2)
+            >>> X[0]
+            jt.Var([[1. 0. 0. 0.]
+                    [0. 0. 1. 0.]
+                    [0. 0. 0. 1.]
+                    [0. 1. 0. 0.]], dtype=float32)
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
