@@ -198,7 +198,7 @@ def sm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x0:
 def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x0: paddle.Tensor,
          max_iter) -> paddle.Tensor:
     """
-    Pytorch implementation of IPFP algorithm
+    Paddle implementation of IPFP algorithm
     """
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = v0
@@ -211,7 +211,7 @@ def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         cost = paddle.reshape(paddle.bmm(K, v),(batch_num, n2max, n1max)).transpose((0, 2, 1))
         binary_sol = hungarian(cost, n1, n2)
         binary_v = paddle.reshape(binary_sol.transpose((0, 2, 1)),(batch_num, -1, 1))
-        alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        alpha = comp_obj_score(v, K, binary_v - v)  
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
         t0 = alpha / beta
         v = paddle.where(paddle.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
