@@ -147,7 +147,6 @@ def test_hungarian():
         'nproc': [1, 2, 4],
     }, ['pytorch', 'numpy', 'jittor'])
 
-
 def test_sinkhorn():
     # test non-symmetric matching
     args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
@@ -156,6 +155,7 @@ def test_sinkhorn():
             'batched_operation': [True, False],
             'dummy_row': [True, ],
         }, ['pytorch', 'numpy', 'jittor'])
+
     # test symmetric matching
     args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
         'tau': [0.1, 0.01],

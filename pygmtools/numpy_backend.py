@@ -23,6 +23,7 @@ def hungarian(s: np.ndarray, n1: np.ndarray=None, n2: np.ndarray=None, nproc: in
 
     if nproc > 1:
         with Pool(processes=nproc) as pool:
+            perm_mat = [_ for _ in perm_mat]
             mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2))
             perm_mat = np.stack(mapresult.get())
     else:
@@ -60,9 +61,23 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
         transposed = True
 
     if nrows is None:
-        nrows = [s.shape[1] for _ in range(batch_size)]
+        nrows = np.array([s.shape[1] for _ in range(batch_size)], dtype=np.int)
     if ncols is None:
-        ncols = [s.shape[2] for _ in range(batch_size)]
+        ncols = np.array([s.shape[2] for _ in range(batch_size)], dtype=np.int)
+
+    # ensure that in each dimension we have nrow < ncol
+    transposed_batch = nrows > ncols
+    if np.any(transposed_batch):
+        s_t = s.transpose((0, 2, 1))
+        s_t = np.concatenate((
+            s_t[:, :s.shape[1], :],
+            np.full((batch_size, s.shape[1], s.shape[2]-s.shape[1]), -float('inf'))), axis=2)
+        s = np.where(transposed_batch.reshape(batch_size, 1, 1), s_t, s)
+
+        new_nrows = np.where(transposed_batch, ncols, nrows)
+        new_ncols = np.where(transposed_batch, nrows, ncols)
+        nrows = new_nrows
+        ncols = new_ncols
 
     # operations are performed on log_s
     s = s / tau
@@ -92,12 +107,7 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
                 log_s = log_s - log_sum
                 log_s[np.isnan(log_s)] = -float('inf')
 
-        if dummy_row and dummy_shape[1] > 0:
-            log_s = log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
-
-        return np.exp(log_s)
+        ret_log_s = log_s
     else:
         ret_log_s = np.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype)
 
@@ -116,16 +126,23 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
 
             ret_log_s[b, row_slice, col_slice] = log_s
 
-        if dummy_row:
-            if dummy_shape[1] > 0:
-                ret_log_s = ret_log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
+    if dummy_row:
+        if dummy_shape[1] > 0:
+            ret_log_s = ret_log_s[:, :-dummy_shape[1]]
+        for b in range(batch_size):
+            ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
-        if transposed:
-            ret_log_s = ret_log_s.transpose((0, 2, 1))
+    if np.any(transposed_batch):
+        s_t = ret_log_s.transpose((0, 2, 1))
+        s_t = np.concatenate((
+            s_t[:, :ret_log_s.shape[1], :],
+            np.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf'))), axis=2)
+        ret_log_s = np.where(transposed_batch.reshape(batch_size, 1, 1), s_t, ret_log_s)
 
-        return np.exp(ret_log_s)
+    if transposed:
+        ret_log_s = ret_log_s.transpose((0, 2, 1))
+
+    return np.exp(ret_log_s)
 
 
 #############################################
@@ -200,7 +217,7 @@ def ipfp(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
         cost = np.matmul(K, v).reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
         binary_sol = hungarian(cost, n1, n2)
         binary_v = binary_sol.transpose((0, 2, 1)).reshape((batch_num, -1, 1))
-        alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
         t0 = alpha / beta
         v = np.where(np.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
