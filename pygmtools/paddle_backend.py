@@ -54,9 +54,24 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         transposed = True
 
     if nrows is None:
-        nrows = [s.shape[1] for _ in range(batch_size)]
+        nrows = paddle.to_tensor([s.shape[1] for _ in range(batch_size)], place=s.place)
     if ncols is None:
-        ncols = [s.shape[2] for _ in range(batch_size)]
+        ncols = paddle.to_tensor([s.shape[2] for _ in range(batch_size)], place=s.place)
+
+    # ensure that in each dimension we have nrow < ncol
+    transposed_batch = nrows > ncols
+    if torch.any(transposed_batch):
+        s_t = s.transpose((0, 2, 1))
+        s_t = paddle.concat((
+            s_t[:, :s.shape[1], :],
+            paddle.to_tensor(paddle.full((batch_size, s.shape[1], s.shape[2]-s.shape[1]), -float('inf')), place=s.place)), axis=2)
+        s = paddle.where(transposed_batch.reshape((batch_size, 1, 1)), s_t, s)
+
+        new_nrows = paddle.where(transposed_batch, ncols, nrows)
+        new_ncols = paddle.where(transposed_batch, nrows, ncols)
+        nrows = new_nrows
+        ncols = new_ncols
+
 
     # operations are performed on log_s
     s = s / tau
@@ -86,16 +101,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
                 log_s = log_s - log_sum
                 log_s[paddle.isnan(log_s)] = -float('inf')
 
-        if dummy_row and dummy_shape[1] > 0:
-            log_s = log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
-
-        if transposed:
-            log_s = paddle.transpose(log_s, perm=(0, 2, 1))
-            log_s = paddle.transpose(log_s, perm=(0, 2, 1))
-
-        return paddle.exp(log_s)
+        ret_log_s = log_s
     else:
         ret_log_s = paddle.to_tensor(paddle.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype), place=s.place)
 
@@ -114,16 +120,23 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
 
             ret_log_s[b, row_slice, col_slice] = log_s
 
-        if dummy_row:
-            if dummy_shape[1] > 0:
-                ret_log_s = ret_log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
+    if dummy_row:
+        if dummy_shape[1] > 0:
+            ret_log_s = ret_log_s[:, :-dummy_shape[1]]
+        for b in range(batch_size):
+            ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
-        if transposed:
-            ret_log_s = paddle.transpose(ret_log_s, perm=(0, 2, 1))
+    if torch.any(transposed_batch):
+        s_t = s.transpose((0, 2, 1))
+        s_t = paddle.concat((
+            s_t[:, :s.shape[1], :],
+            paddle.to_tensor(paddle.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf')), place=s.place)), axis=2)
+        s = paddle.where(transposed_batch.reshape(batch_size, 1, 1), s_t, s)
 
-        return paddle.exp(ret_log_s)
+    if transposed:
+        ret_log_s = paddle.transpose(ret_log_s, perm=(0, 2, 1))
+
+    return paddle.exp(ret_log_s)
 
 
 #############################################
