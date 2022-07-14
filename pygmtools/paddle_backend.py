@@ -94,14 +94,14 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
             if i % 2 == 0:
                 log_sum = paddle.logsumexp(log_s, 2, keepdim=True)
                 log_s = log_s - log_sum
-                nan_indices = paddle.nonzero(paddle.isnan(log_s))
-                if nan_indices.size > 0:
+                nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
+                if nan_indices.size[0] > 0:
                     log_s[nan_indices] = -float('inf')
             else:
                 log_sum = paddle.logsumexp(log_s, 1, keepdim=True)
                 log_s = log_s - log_sum
-                nan_indices = paddle.nonzero(paddle.isnan(log_s))
-                if nan_indices.size > 0:
+                nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
+                if nan_indices.size[0] > 0:
                     log_s[nan_indices] = -float('inf')
 
         ret_log_s = log_s
