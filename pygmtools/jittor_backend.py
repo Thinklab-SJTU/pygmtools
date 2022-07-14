@@ -13,6 +13,7 @@ def hungarian(s: Var, n1: Var=None, n2: Var=None, nproc: int=1) -> Var:
     """
     Jittor implementation of Hungarian algorithm
     """
+    # device = s.device
     batch_num = s.shape[0]
 
     perm_mat = s.detach().numpy() * -1
@@ -51,9 +52,28 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         transposed = True
 
     if nrows is None:
-        nrows = [s.shape[1] for _ in range(batch_size)]
+        # nrows = [s.shape[1] for _ in range(batch_size)]
+        nrows = jt.Var([s.shape[1] for _ in range(batch_size)])
     if ncols is None:
         ncols = [s.shape[2] for _ in range(batch_size)]
+        ncols = jt.Var([s.shape[2] for _ in range(batch_size)], device=s.device)
+
+    # ensure that in each dimension we have nrow < ncol
+    transposed_batch = nrows > ncols
+    if jt.any(transposed_batch):
+        s_t = s.transpose(1, 2)
+        s_t = jt.concat((
+            s_t[:, :s.shape[1], :],
+            jt.full((batch_size, s.shape[1], s.shape[2]-s.shape[1]), -float('inf'))), dim=2)
+        cond = transposed_batch.view(batch_size, 1, 1)
+        if cond.shape != s.shape:
+            cond = cond.expand(s.shape)
+        s = jt.where(cond, s_t, s)
+
+        new_nrows = jt.where(transposed_batch, ncols, nrows)
+        new_ncols = jt.where(transposed_batch, nrows, ncols)
+        nrows = new_nrows
+        ncols = new_ncols
 
     # operations are performed on log_s
     s = s / tau
@@ -66,9 +86,9 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         nrows = ncols
         s = jt.concat((s, jt.full(dummy_shape, -float('inf'))), dim=1)
         for b in range(batch_size):
-            s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
-            s[b, nrows[b]:, :] = -float('inf')
-            s[b, :, ncols[b]:] = -float('inf')
+            s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
+            s[b, int(nrows[b]):, :] = -float('inf')
+            s[b, :, int(ncols[b]):] = -float('inf')
 
     if batched_operation:
         log_s = s
@@ -85,12 +105,7 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
                 log_s = log_s - log_sum
                 log_s[jt.isnan(log_s)] = -float('inf')
 
-        if dummy_row and dummy_shape[1] > 0:
-            log_s = log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
-
-        return jt.exp(log_s)
+        ret_log_s = log_s
     else:
         ret_log_s = jt.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype)
         
@@ -111,17 +126,27 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
                     log_sum = jt.nn.logsumexp(log_s - m, 0, keepdim=True) + m
                     log_s = log_s - log_sum
             ret_log_s[b, 0:r, 0:c] = log_s
-            
-        if dummy_row:
-            if dummy_shape[1] > 0:
-                ret_log_s = ret_log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
-        if transposed:
-            ret_log_s = ret_log_s.transpose(1, 2)
+    if dummy_row:
+        if dummy_shape[1] > 0:
+            ret_log_s = ret_log_s[:, :-dummy_shape[1]]
+        for b in range(batch_size):
+            ret_log_s[int(b), int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -float('inf')
 
-        return jt.exp(ret_log_s)
+    if jt.any(transposed_batch):
+        s_t = ret_log_s.transpose(1, 2)
+        s_t = jt.concat((
+            s_t[:, :ret_log_s.shape[1], :],
+            jt.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf'))), dim=2)
+        cond = transposed_batch.view(batch_size, 1, 1)
+        if cond.shape != s_t.shape:
+            cond = cond.expand(s_t.shape)
+        ret_log_s = jt.where(cond, s_t, ret_log_s)    
+
+    if transposed:
+        ret_log_s = ret_log_s.transpose(1, 2)
+
+    return jt.exp(ret_log_s)
 
 #############################################
 #    Quadratic Assignment Problem Solvers   #
@@ -168,7 +193,8 @@ def sm(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
         v = jt.bmm(K, v)
         n = jt.norm(v, p=2, dim=1)
         v = jt.matmul(v, (1 / n).reshape(batch_num, 1, 1))
-
+        # if jt.norm(v - vlast) < 1e-5: # Wrong with norm: lack of Frobenius norm 
+        #     break
         if (v - vlast).sum().sqrt() < 1e-5:
             break        
         vlast = v
@@ -289,6 +315,8 @@ def to_numpy(input):
     """
     Jittor function to_numpy
     """
+    # return input.detach().cpu().numpy()
+    # return input.detach().numpy()
     return input.detach().numpy()
 
 def from_numpy(input, device=None):
@@ -340,9 +368,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = jt.full((batch_num,), n1max, dtype=jt.int) #, device=K.device)
+        n1 = jt.full((batch_num,), n1max, dtype=jt.int, device=K.device)
     if n2 is None:
-        n2 = jt.full((batch_num,), n2max, dtype=jt.int) #, device=K.device)
+        n2 = jt.full((batch_num,), n2max, dtype=jt.int, device=K.device)
     if n1max is None:
         n1max = jt.max(n1).item()
     if n2max is None:
@@ -399,6 +427,7 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         if n2 is None:
             n2 = [node_aff.shape[2]] * batch_size
 
+    # print(n1.max(),type(n1))
     n1max = int(max(n1).item())
     n2max = int(max(n2).item())
     ks = []
@@ -408,12 +437,15 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         if edge_aff is not None:
             conn1 = connectivity1[b][:int(ne1[b])]
             conn2 = connectivity2[b][:int(ne2[b])]
+            # print(conn1, ne2[b])
             edge_indices = jt.concat([conn1.repeat_interleave(int(ne2[b]), dim=0), conn2.repeat(int(ne1[b]), 1)], dim=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
             k[edge_indices] = edge_aff[b, :int(ne1[b]), :int(ne2[b])].reshape(-1)
         k = k.reshape(n2max * n1max, n2max * n1max)
         # node-wise affinity
         if node_aff is not None:
+            # k_diag = jt.diag(k)
+            # k_diag[:] = node_aff[b].transpose(0, 1).reshape(-1)
             k[jt.arange(n2max * n1max), jt.arange(n2max * n1max)] = node_aff[b].transpose(0, 1).reshape(-1)
         ks.append(k)
 
@@ -430,3 +462,15 @@ def _unsqueeze(input, dim):
     Jittor implementation of _unsqueeze
     """
     return input.unsqueeze(dim)
+
+def _transpose(input, dim1, dim2):
+    """
+    Jittor implementaiton of _transpose
+    """
+    return input.transpose(dim1, dim2)
+
+def _mm(input1, input2):
+    """
+    Jittor implementation of _mm
+    """
+    return jt.matmul(input1, input2)
