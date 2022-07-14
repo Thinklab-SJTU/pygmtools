@@ -60,7 +60,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
-    if np.any(transposed_batch.numpy()):
+    if paddle.any(transposed_batch):
         s_t = s.transpose((0, 2, 1))
         s_t = paddle.concat((
             s_t[:, :s.shape[1], :],
@@ -125,7 +125,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         for b in range(batch_size):
             ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
-    if np.any(transposed_batch.numpy()):
+    if paddle.any(transposed_batch):
         s_t = ret_log_s.transpose((0, 2, 1))
         s_t = paddle.concat((
             s_t[:, :ret_log_s.shape[1], :],
