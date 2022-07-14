@@ -606,7 +606,7 @@ def gamgm(A, W, ns, n_univ, U0,
                         V_list.append(V[n_start:n_end, :n_univ])
                         n1.append(n_end - n_start)
                         n_start = n_end
-                    n1 = torch.tensor(n1)
+                    n1 = torch.tensor(n1, device=U.device)
                     U = sinkhorn(build_batch(V_list), n1,
                                  max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
                     n_start = 0
@@ -800,6 +800,37 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
         return torch.stack(As, dim=0), X_gt, torch.stack(Fs, dim=0)
     else:
         return torch.stack(As, dim=0), X_gt
+
+
+def permutation_loss(pred_dsmat: Tensor, gt_perm: Tensor, n1: Tensor, n2: Tensor) -> Tensor:
+    """
+    Pytorch implementation of permutation_loss
+    """
+    batch_num = pred_dsmat.shape[0]
+
+    pred_dsmat = pred_dsmat.to(dtype=torch.float32)
+
+    if not torch.all((pred_dsmat >= 0) * (pred_dsmat <= 1)):
+        raise ValueError("pred_dsmat contains invalid numerical entries.")
+    if not torch.all((gt_perm >= 0) * (gt_perm <= 1)):
+        raise ValueError("gt_perm contains invalid numerical entries.")
+
+    if n1 is None:
+        n1 = torch.tensor([pred_dsmat.shape[1] for _ in range(batch_num)])
+    if n2 is None:
+        n2 = torch.tensor([pred_dsmat.shape[2] for _ in range(batch_num)])
+
+    loss = torch.tensor(0.).to(pred_dsmat.device)
+    n_sum = torch.zeros_like(loss)
+    for b in range(batch_num):
+        batch_slice = [b, slice(n1[b]), slice(n2[b])]
+        loss += torch.nn.functional.binary_cross_entropy(
+            pred_dsmat[batch_slice],
+            gt_perm[batch_slice],
+            reduction='sum')
+        n_sum += n1[b].to(n_sum.dtype).to(pred_dsmat.device)
+
+    return loss / n_sum
 
 
 def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity1: Tensor, connectivity2: Tensor,
