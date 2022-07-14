@@ -606,8 +606,9 @@ def gamgm(A, W, ns, n_univ, U0,
                         V_list.append(V[n_start:n_end, :n_univ])
                         n1.append(n_end - n_start)
                         n_start = n_end
-                    n1 = torch.tensor(n1, device=U.device)
-                    U = sinkhorn(build_batch(V_list), n1,
+                    V_batch = build_batch(V_list)
+                    n1 = torch.tensor(n1, device=V_batch.device)
+                    U = sinkhorn(V_batch, n1,
                                  max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
                     n_start = 0
                     for idx, n_end in enumerate(n_indices):
