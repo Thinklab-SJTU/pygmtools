@@ -1,4 +1,5 @@
 import sys
+
 sys.path.insert(0, '.')
 
 import numpy as np
@@ -9,12 +10,7 @@ from tqdm import tqdm
 
 from test_utils import *
 
-if sys.version_info.minor >= 7:
-    test_backends = ['pytorch', 'numpy', 'jittor']
-else:
-    test_backends = ['pytorch', 'numpy']
-
-# The testing function
+# The testing function for quadratic assignment
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
@@ -76,9 +72,100 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
             last_X = pygm.utils.to_numpy(_X)
 
             accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
-            assert accuracy == 1, f"GM is inaccurate for {working_backend}, " \
+            assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
                                   f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                                   f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+
+
+# The testing function for linear assignment
+def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params, backends):
+    batch_size = len(num_nodes1)
+
+    # iterate over matrix parameters
+    total = 1
+    for val in matrix_params.values():
+        total *= len(val)
+    for values in tqdm(itertools.product(*matrix_params.values()), total=total):
+        prob_param_dict = {}
+        solver_param_dict = {}
+        for k, v in zip(matrix_params.keys(), values):
+            if k in ['outlier_num']:
+                prob_param_dict[k] = v
+            else:
+                solver_param_dict[k] = v
+
+        # Generate random node features
+        pygm.BACKEND = 'pytorch'
+        torch.manual_seed(3)
+        X_gt, F1, F2 = [], [], []
+        for b, (num_node1, num_node2) in enumerate(zip(num_nodes1, num_nodes2)):
+            outlier_num = prob_param_dict['outlier_num'] if 'outlier_num' in prob_param_dict else 0
+            max_inlier_index = max(num_node1, num_node2)
+            As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(max_inlier_index + outlier_num * 2, node_feat_dim=node_feat_dim)
+            Fs_b = Fs_b / torch.norm(Fs_b, dim=-1, p='fro', keepdim=True) # normalize features
+            outlier_indices_1 = list(range(max_inlier_index, max_inlier_index + outlier_num))
+            outlier_indices_2 = list(range(max_inlier_index + outlier_num, max_inlier_index + outlier_num * 2))
+            idx1 = list(set(list(range(num_node1)) + outlier_indices_1))
+            idx2 = list(set(list(range(num_node2)) + outlier_indices_2))
+            idx2 = X_gt_b.nonzero(as_tuple=False)[:, 1][idx2].numpy().tolist()  # permute idx2 according to X_gt_b
+            idx2.sort()
+            F1.append(Fs_b[0][idx1])
+            F2.append(Fs_b[1][idx2])
+            X_gt.append(X_gt_b[idx1, :][:, idx2])
+        n1 = torch.tensor(num_nodes1, dtype=torch.int)
+        n2 = torch.tensor(num_nodes2, dtype=torch.int)
+        F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (F1, F2, X_gt))
+        F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
+
+        last_X = None
+        for working_backend in backends:
+            pygm.BACKEND = working_backend
+            _F1, _F2, _n1, _n2 = data_from_numpy(F1, F2, n1, n2)
+
+            linear_sim = []
+            for b in range(batch_size):
+                linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
+            linear_sim = pygm.utils.build_batch(linear_sim)
+
+            # call the solver
+            _X = solver_func(linear_sim, _n1, _n2, **solver_param_dict)
+
+            if last_X is not None:
+                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 5e-4, \
+                    f"Incorrect GM solution for {working_backend} " \
+                    f"params: {';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+            last_X = pygm.utils.to_numpy(_X)
+
+            accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
+            assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
+                                  f"params: {';'.join([k + '=' + str(v) for k, v in prob_param_dict.items()])};" \
+                                  f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+
+
+def test_hungarian():
+    _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
+        'nproc': [1, 2, 4],
+    }, ['pytorch', 'numpy', 'jittor'])
+
+
+def test_sinkhorn():
+    # test non-symmetric matching
+    args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
+            'tau': [0.1, 0.01],
+            'max_iter': [10, 20, 50],
+            'batched_operation': [True, False],
+            'dummy_row': [True, ],
+        }, ['pytorch', 'numpy', 'jittor'])
+    # test symmetric matching
+    args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
+        'tau': [0.1, 0.01],
+        'max_iter': [10, 20, 50],
+        'batched_operation': [True, False],
+        'dummy_row': [True, False],
+    }, ['pytorch', 'numpy', 'jittor'])
+
+    _test_classic_solver_on_linear_assignment(*args1)
+    _test_classic_solver_on_linear_assignment(*args2)
 
 
 def test_rrwm():
@@ -89,7 +176,7 @@ def test_rrwm():
         'max_iter': [20, 50],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, backends=test_backends)
+    }, ['pytorch', 'numpy', 'jittor'])
 
 
 def test_sm():
@@ -97,7 +184,7 @@ def test_sm():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, backends=test_backends)
+    }, ['pytorch', 'numpy', 'jittor'])
 
 
 def test_ipfp():
@@ -105,10 +192,12 @@ def test_ipfp():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, backends=test_backends)
+    }, ['pytorch', 'numpy', 'jittor'])
 
 
 if __name__ == '__main__':
+    test_hungarian()
+    test_sinkhorn()
     test_rrwm()
     test_sm()
     test_ipfp()
