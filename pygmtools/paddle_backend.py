@@ -95,13 +95,13 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
                 log_sum = paddle.logsumexp(log_s, 2, keepdim=True)
                 log_s = log_s - log_sum
                 nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
-                if nan_indices.size[0] > 0:
+                if nan_indices[0].size > 0:
                     log_s[nan_indices] = -float('inf')
             else:
                 log_sum = paddle.logsumexp(log_s, 1, keepdim=True)
                 log_s = log_s - log_sum
                 nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
-                if nan_indices.size[0] > 0:
+                if nan_indices[0].size > 0:
                     log_s[nan_indices] = -float('inf')
 
         ret_log_s = log_s
@@ -409,7 +409,7 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     n2max = max(n2)
     ks = []
     for b in range(batch_size):
-        k = paddle.zeros((n2max, n1max, n2max, n1max), dtype=dtype, place=device)
+        k = paddle.to_tensor(paddle.zeros((n2max, n1max, n2max, n1max), dtype=dtype), place=device)
         # edge-wise affinity
         if edge_aff is not None:
             conn1 = connectivity1[b][:ne1[b]].numpy()
