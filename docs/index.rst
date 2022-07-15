@@ -14,7 +14,7 @@ Welcome to pygmtools documentation!
   :target: https://GitHub.com/Thinklab-SJTU/pygmtools/
   :alt: GitHub stars
 
-**pygmtools** provides graph matching solvers in Python and is easily accessible via the following command:
+**pygmtools** provides graph matching solvers in Python and is easily accessible via:
 
 ::
 
@@ -26,8 +26,8 @@ Backends
 By default the solvers are executed on the ``numpy`` backend, and the required packages will be automatically
 downloaded.
 
-For advanced and professional users, the ``pytorch`` backend is also available if you have installed and configured
-a pytorch runtime. The ``pytorch`` backend exploits the underlying GPU-acceleration feature, and also supports
+For advanced and professional users, ``pytorch`` and ``paddle`` backends are also available if you have installed and configured
+the corresponding runtime. The ``pytorch`` and ``paddle`` backends exploits the underlying GPU-acceleration feature, and also supports
 integrating graph matching modules into your deep learning pipeline.
 
 Features
@@ -36,8 +36,8 @@ Features
 To highlight, **pygmtools** has the following features:
 
 * *Support various backends*, including ``numpy`` which is universally accessible, and the state-of-the-art
-  deep learning architecture ``pytorch`` with GPU-support. The support of the following backends are also planned:
-  ``tensorflow``, ``mindspore``, ``paddle``, ``jittor``;
+  deep learning architecture ``pytorch`` and ``paddle`` with GPU-support. The support of the following backends are also planned:
+  ``tensorflow``, ``mindspore``, ``jittor``;
 * *Support various solvers*, including traditional combinatorial solvers and novel deep learning-based solvers;
 * *Deep learning friendly*, the operations are designed to best preserve the gradient during computation and batched
   operations support for the best performance.

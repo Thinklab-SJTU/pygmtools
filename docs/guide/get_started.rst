@@ -5,13 +5,13 @@ Get Started
 Basic Install
 ______________
 
-``pygmtools`` can be installed by the ``pip install`` command:
-    ::
+Install ``pygmtools`` is easy:
+::
 
-        pip install pygmtools
+    pip install pygmtools
 
 
-Now the pygmtools is available with the ``numpy`` backend. You may jump to :ref:`Example: Matching Isomorphism Graphs`
+Now the pygmtools is available with the ``numpy`` backend. You may jump to :ref:`Example: Matching Isomorphic Graphs`
 if you do not need other backends.
 
 The following packages are required, and shall be automatically downloaded by ``pip install``:
@@ -27,24 +27,24 @@ The following packages are required, and shall be automatically downloaded by ``
 Install Other Backends
 _________________________
 
-Currently, we also support the state-of-the-art architecture ``pytorch`` which is GPU-friendly and deep learning-friendly.
-The support of the following backends are also planned: ``tensorflow``, ``mindspore``, ``paddle``, ``jittor``.
+Currently, we also support deep learning architectures ``pytorch`` and ``paddle`` which are GPU-friendly and deep learning-friendly.
+The support of the following backends are also planned: ``tensorflow``, ``mindspore``, ``jittor``.
 
 Please follow the install instructions on your backend.
 
-Set the backend globally by the following command:
+Once the backend is ready, you may switch to the backend globally by the following command:
 
 ::
 
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'pytorch'  # you may replace 'pytorch' by other backend names
+    >>> pygm.BACKEND = 'pytorch'  # replace 'pytorch' by other backend names
 
 
-Example: Matching Isomorphism Graphs
+Example: Matching Isomorphic Graphs
 ______________________________________
 
-Here we provide a basic example of matching two isomorphism graphs (i.e. two graphs that are the same, but the node
-permutations are unknown).
+Here we provide a basic example of matching two isomorphic graphs (i.e. two graphs have the same nodes and edges, but
+the node permutations are unknown).
 
 Step 0: Import packages and set backend
 
