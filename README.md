@@ -11,7 +11,7 @@
 pip install pygmtools
 ```
 
-Please see the [official documentation](https://readthedocs.org/projects/pygmtools/badge/?version=latest) for details.
+Please see the [official documentation](https://pygmtools.readthedocs.io/en/latest) for details.
 
 ## Developers and Maintainers
 
