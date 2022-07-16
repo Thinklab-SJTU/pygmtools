@@ -145,7 +145,8 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
 def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle' ,'jittor'])
+
 
 def test_sinkhorn():
     # test non-symmetric matching
@@ -154,7 +155,7 @@ def test_sinkhorn():
             'max_iter': [10, 20, 50],
             'batched_operation': [True, False],
             'dummy_row': [True, ],
-        }, ['pytorch', 'numpy', 'jittor'])
+        }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
     # test symmetric matching
     args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -162,7 +163,8 @@ def test_sinkhorn():
         'max_iter': [10, 20, 50],
         'batched_operation': [True, False],
         'dummy_row': [True, False],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+
 
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
@@ -176,7 +178,7 @@ def test_rrwm():
         'max_iter': [20, 50],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
 
 def test_sm():
@@ -184,7 +186,7 @@ def test_sm():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
 
 def test_ipfp():
@@ -192,7 +194,7 @@ def test_ipfp():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
 
 if __name__ == '__main__':

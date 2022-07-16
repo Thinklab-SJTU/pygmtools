@@ -370,7 +370,7 @@ def sinkhorn(s, n1=None, n2=None,
         non_batched_input = False
     else:
         raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
-                         f's:{len(_get_shape(s))}!')
+                         f's:{len(_get_shape(s))}dims!')
 
     args = (s, n1, n2, dummy_row, max_iter, tau, batched_operation)
     try:
@@ -639,7 +639,7 @@ def hungarian(s, n1=None, n2=None,
         non_batched_input = False
     else:
         raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
-                         f's:{len(_get_shape(s))}!')
+                         f's:{len(_get_shape(s))}dims!')
 
     args = (s, n1, n2, nproc)
     try:

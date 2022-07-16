@@ -49,14 +49,28 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
     if s.shape[2] >= s.shape[1]:
         transposed = False
     else:
-        s = paddle.transpose(s, perm=(0, 2, 1))
+        s = s.transpose((0, 2, 1))
         nrows, ncols = ncols, nrows
         transposed = True
 
     if nrows is None:
-        nrows = [s.shape[1] for _ in range(batch_size)]
+        nrows = paddle.to_tensor([s.shape[1] for _ in range(batch_size)], place=s.place, dtype=paddle.int)
     if ncols is None:
-        ncols = [s.shape[2] for _ in range(batch_size)]
+        ncols = paddle.to_tensor([s.shape[2] for _ in range(batch_size)], place=s.place, dtype=paddle.int)
+
+    # ensure that in each dimension we have nrow < ncol
+    transposed_batch = nrows > ncols
+    if paddle.any(transposed_batch):
+        s_t = s.transpose((0, 2, 1))
+        s_t = paddle.concat((
+            s_t[:, :s.shape[1], :],
+            paddle.to_tensor(paddle.full((batch_size, s.shape[1], s.shape[2]-s.shape[1]), -float('inf')), place=s.place)), axis=2)
+        s = paddle.where(transposed_batch.reshape((batch_size, 1, 1)), s_t, s)
+
+        new_nrows = paddle.where(transposed_batch, ncols, nrows)
+        new_ncols = paddle.where(transposed_batch, nrows, ncols)
+        nrows = new_nrows
+        ncols = new_ncols
 
     # operations are performed on log_s
     s = s / tau
@@ -67,7 +81,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         dummy_shape[1] = s.shape[2] - s.shape[1]
         ori_nrows = nrows
         nrows = ncols
-        s = paddle.concat((s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf'), dtype=s.dtype), place = s.place)), axis=1)
+        s = paddle.concat((s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf')), place=s.place)), axis=1)
         for b in range(batch_size):
             s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
             s[b, nrows[b]:, :] = -float('inf')
@@ -80,24 +94,19 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
             if i % 2 == 0:
                 log_sum = paddle.logsumexp(log_s, 2, keepdim=True)
                 log_s = log_s - log_sum
-                log_s[paddle.isnan(log_s)] = -float('inf')
+                nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
+                if nan_indices[0].size > 0:
+                    log_s[nan_indices] = -float('inf')
             else:
                 log_sum = paddle.logsumexp(log_s, 1, keepdim=True)
                 log_s = log_s - log_sum
-                log_s[paddle.isnan(log_s)] = -float('inf')
+                nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
+                if nan_indices[0].size > 0:
+                    log_s[nan_indices] = -float('inf')
 
-        if dummy_row and dummy_shape[1] > 0:
-            log_s = log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
-
-        if transposed:
-            log_s = paddle.transpose(log_s, perm=(0, 2, 1))
-            log_s = paddle.transpose(log_s, perm=(0, 2, 1))
-
-        return paddle.exp(log_s)
+        ret_log_s = log_s
     else:
-        ret_log_s = paddle.to_tensor(paddle.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype), place=s.place)
+        ret_log_s = paddle.to_tensor(paddle.full((batch_size, s.shape[1], s.shape[2]), -float('inf')), place=s.place, dtype=s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
@@ -114,16 +123,23 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
 
             ret_log_s[b, row_slice, col_slice] = log_s
 
-        if dummy_row:
-            if dummy_shape[1] > 0:
-                ret_log_s = ret_log_s[:, :-dummy_shape[1]]
-            for b in range(batch_size):
-                ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
+    if dummy_row:
+        if dummy_shape[1] > 0:
+            ret_log_s = ret_log_s[:, :-dummy_shape[1]]
+        for b in range(batch_size):
+            ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
-        if transposed:
-            ret_log_s = paddle.transpose(ret_log_s, perm=(0, 2, 1))
+    if paddle.any(transposed_batch):
+        s_t = ret_log_s.transpose((0, 2, 1))
+        s_t = paddle.concat((
+            s_t[:, :ret_log_s.shape[1], :],
+            paddle.to_tensor(paddle.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf')), place=s.place)), axis=2)
+        ret_log_s = paddle.where(transposed_batch.reshape((batch_size, 1, 1)), s_t, ret_log_s)
 
-        return paddle.exp(ret_log_s)
+    if transposed:
+        ret_log_s = ret_log_s.transpose((0, 2, 1))
+
+    return paddle.exp(ret_log_s)
 
 
 #############################################
@@ -185,7 +201,7 @@ def sm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x0:
 def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x0: paddle.Tensor,
          max_iter) -> paddle.Tensor:
     """
-    Pytorch implementation of IPFP algorithm
+    Paddle implementation of IPFP algorithm
     """
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = v0
@@ -198,7 +214,7 @@ def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         cost = paddle.reshape(paddle.bmm(K, v),(batch_num, n2max, n1max)).transpose((0, 2, 1))
         binary_sol = hungarian(cost, n1, n2)
         binary_v = paddle.reshape(binary_sol.transpose((0, 2, 1)),(batch_num, -1, 1))
-        alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        alpha = comp_obj_score(v, K, binary_v - v)  
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
         t0 = alpha / beta
         v = paddle.where(paddle.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
@@ -393,7 +409,7 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     n2max = max(n2)
     ks = []
     for b in range(batch_size):
-        k = paddle.to_tensor(np.zeros((n2max, n1max, n2max, n1max)), dtype=dtype, place=device)
+        k = paddle.to_tensor(paddle.zeros((n2max, n1max, n2max, n1max), dtype=dtype), place=device)
         # edge-wise affinity
         if edge_aff is not None:
             conn1 = connectivity1[b][:ne1[b]].numpy()

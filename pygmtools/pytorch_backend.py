@@ -512,7 +512,11 @@ def _get_batch_pc_opt(X):
     return pair_con
 
 
-def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, quad_weight, converge_thresh, verbose,
+def gamgm(A, W, ns, n_univ, U0,
+          init_tau, min_tau, sk_gamma,
+          sk_iter, max_iter, quad_weight,
+          converge_thresh, outlier_thresh,
+          verbose,
           cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
           ):
     """
@@ -563,8 +567,16 @@ def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, 
             lastUUt = UUt
             cluster_weight = torch.repeat_interleave(cluster_M, ns.to(dtype=torch.long), dim=0)
             cluster_weight = torch.repeat_interleave(cluster_weight, ns.to(dtype=torch.long), dim=1)
-            V = torch.chain_matmul(supA, UUt * cluster_weight, supA, U) * quad_weight * 2 + torch.mm(supW * cluster_weight, U)
-            V /= num_graphs
+            quad = torch.chain_matmul(supA, UUt * cluster_weight, supA, U) * quad_weight * 2
+            unary = torch.mm(supW * cluster_weight, U)
+            if verbose:
+                if projector == 'sinkhorn':
+                    print_str = f'tau={sinkhorn_tau:.3e}'
+                else:
+                    print_str = 'hungarian'
+                print(print_str + f' #iter={i}/{max_iter} '
+                      f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
+            V = (quad + unary) / num_graphs
 
             U_list = []
             if projector == 'hungarian':
@@ -594,8 +606,9 @@ def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, 
                         V_list.append(V[n_start:n_end, :n_univ])
                         n1.append(n_end - n_start)
                         n_start = n_end
-                    n1 = torch.tensor(n1)
-                    U = sinkhorn(build_batch(V_list), n1,
+                    V_batch = build_batch(V_list)
+                    n1 = torch.tensor(n1, device=V_batch.device)
+                    U = sinkhorn(V_batch, n1,
                                  max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
                     n_start = 0
                     for idx, n_end in enumerate(n_indices):
@@ -608,8 +621,36 @@ def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, 
             if num_graphs == 2:
                 U[:ns[0], :] = torch.eye(ns[0], n_univ, device=U.device)
 
+            # calculate gap to discrete
+            if projector == 'sinkhorn' and verbose:
+                U_list_hung = []
+                n_start = 0
+                for n_end in n_indices:
+                    U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='pytorch'))
+                    n_start = n_end
+                U_hung = torch.cat(U_list_hung, dim=0)
+                diff = torch.norm(torch.mm(U, U.t()) - lastUUt)
+                print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
+                      f'gap to discrete: {torch.mean(torch.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+
+            if projector == 'hungarian' and outlier_thresh > 0:
+                U_hung = U
+                UUt = torch.mm(U_hung, U_hung.t())
+                cluster_weight = torch.repeat_interleave(cluster_M, ns.to(dtype=torch.long), dim=0)
+                cluster_weight = torch.repeat_interleave(cluster_weight, ns.to(dtype=torch.long), dim=1)
+                quad = torch.chain_matmul(supA, UUt * cluster_weight, supA, U_hung) * quad_weight * 2
+                unary = torch.mm(supW * cluster_weight, U_hung)
+                max_vals = (unary + quad).max(dim=1).values
+                U = U * (unary + quad > outlier_thresh)
+                if verbose:
+                    print(f'hungarian #iter={i}/{max_iter} '
+                          f'unary+quad score thresh={outlier_thresh:.3f}, #>thresh={torch.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]}'
+                          f' min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, median:{max_vals.median():.4f}, max:{max_vals.max():.4f}')
+
             if torch.norm(torch.mm(U, U.t()) - lastUUt) < converge_thresh:
                 break
+
+        if verbose: print('-' * 20)
 
         if i == max_iter - 1: # not converged
             if hung_iter:
@@ -617,15 +658,12 @@ def gamgm(A, W, ns, n_univ, U0, init_tau, min_tau, sk_gamma, sk_iter, max_iter, 
             else:
                 U_list = [pygmtools.hungarian(_, backend='pytorch') for _ in U_list]
                 U = torch.cat(U_list, dim=0)
-                if verbose: print(i, 'max_iter')
                 break
 
         # projection control
         if projector == 'hungarian':
-            if verbose: print(i, 'hungarian')
             break
         elif sinkhorn_tau > min_tau:
-            if verbose: print(i, 'tau=', sinkhorn_tau)
             sinkhorn_tau *= sk_gamma
         else:
             if hung_iter:
@@ -763,6 +801,37 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
         return torch.stack(As, dim=0), X_gt, torch.stack(Fs, dim=0)
     else:
         return torch.stack(As, dim=0), X_gt
+
+
+def permutation_loss(pred_dsmat: Tensor, gt_perm: Tensor, n1: Tensor, n2: Tensor) -> Tensor:
+    """
+    Pytorch implementation of permutation_loss
+    """
+    batch_num = pred_dsmat.shape[0]
+
+    pred_dsmat = pred_dsmat.to(dtype=torch.float32)
+
+    if not torch.all((pred_dsmat >= 0) * (pred_dsmat <= 1)):
+        raise ValueError("pred_dsmat contains invalid numerical entries.")
+    if not torch.all((gt_perm >= 0) * (gt_perm <= 1)):
+        raise ValueError("gt_perm contains invalid numerical entries.")
+
+    if n1 is None:
+        n1 = torch.tensor([pred_dsmat.shape[1] for _ in range(batch_num)])
+    if n2 is None:
+        n2 = torch.tensor([pred_dsmat.shape[2] for _ in range(batch_num)])
+
+    loss = torch.tensor(0.).to(pred_dsmat.device)
+    n_sum = torch.zeros_like(loss)
+    for b in range(batch_num):
+        batch_slice = [b, slice(n1[b]), slice(n2[b])]
+        loss += torch.nn.functional.binary_cross_entropy(
+            pred_dsmat[batch_slice],
+            gt_perm[batch_slice],
+            reduction='sum')
+        n_sum += n1[b].to(n_sum.dtype).to(pred_dsmat.device)
+
+    return loss / n_sum
 
 
 def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity1: Tensor, connectivity2: Tensor,
