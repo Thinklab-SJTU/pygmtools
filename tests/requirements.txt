@@ -7,3 +7,4 @@ paddlepaddle
 protobuf==3.19.4
 torch
 tqdm
+jittor
