@@ -27,8 +27,8 @@ The following packages are required, and shall be automatically downloaded by ``
 Install Other Backends
 _________________________
 
-Currently, we also support deep learning architectures ``pytorch`` and ``paddle`` which are GPU-friendly and deep learning-friendly.
-The support of the following backends are also planned: ``tensorflow``, ``mindspore``, ``jittor``.
+Currently, we also support deep learning architectures ``pytorch/paddle/jittor`` which are GPU-friendly and deep learning-friendly.
+The support of the following backends are also planned: ``tensorflow``, ``mindspore``.
 
 Please follow the install instructions on your backend.
 

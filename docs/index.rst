@@ -26,8 +26,8 @@ Backends
 By default the solvers are executed on the ``numpy`` backend, and the required packages will be automatically
 downloaded.
 
-For advanced and professional users, ``pytorch`` and ``paddle`` backends are also available if you have installed and configured
-the corresponding runtime. The ``pytorch`` and ``paddle`` backends exploits the underlying GPU-acceleration feature, and also supports
+For advanced and professional users, ``pytorch/paddle/jittor`` backends are also available if you have installed and configured
+the corresponding runtime. The ``pytorch/paddle/jittor`` backends exploits the underlying GPU-acceleration feature, and also supports
 integrating graph matching modules into your deep learning pipeline.
 
 Features
@@ -35,9 +35,9 @@ Features
 
 To highlight, **pygmtools** has the following features:
 
-* *Support various backends*, including ``numpy`` which is universally accessible, and the state-of-the-art
-  deep learning architecture ``pytorch`` and ``paddle`` with GPU-support. The support of the following backends are also planned:
-  ``tensorflow``, ``mindspore``, ``jittor``;
+* *Support various backends*, including ``numpy`` which is universally accessible, and some state-of-the-art
+  deep learning architectures with GPU-support: ``pytorch/paddle/jittor``. The support of the following backends are also planned:
+  ``tensorflow``, ``mindspore``;
 * *Support various solvers*, including traditional combinatorial solvers and novel deep learning-based solvers;
 * *Deep learning friendly*, the operations are designed to best preserve the gradient during computation and batched
   operations support for the best performance.
