@@ -196,6 +196,7 @@ def sm(K: Tensor, n1: Tensor, n2: Tensor, n1max, n2max, x0: Tensor,
     x = v.view(batch_num, n2max, n1max).transpose(1, 2)
     return x
 
+
 def ipfp(K: Tensor, n1: Tensor, n2: Tensor, n1max, n2max, x0: Tensor,
          max_iter) -> Tensor:
     """
@@ -512,13 +513,14 @@ def _get_batch_pc_opt(X):
     return pair_con
 
 
-def gamgm(A, W, ns, n_univ, U0,
-          init_tau, min_tau, sk_gamma,
-          sk_iter, max_iter, quad_weight,
-          converge_thresh, outlier_thresh,
-          verbose,
-          cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
-          ):
+def gamgm(
+        A, W, ns, n_univ, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh, bb_smooth,
+        verbose,
+        cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
+):
     """
     Pytorch implementation of Graduated Assignment for Multi-Graph Matching (with compatibility for 2GM and clustering)
     """
@@ -556,6 +558,87 @@ def gamgm(A, W, ns, n_univ, U0,
         end_y = n_indices[j]
         supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i], :ns[j]]
 
+    U = GAMGMTorchFunc.apply(
+        bb_smooth,
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh,
+        verbose,
+        cluster_M, projector, hung_iter
+    )
+
+    # build MultiMatchingResult
+    result = pygmtools.utils.MultiMatchingResult(True, 'pytorch')
+
+    for i in range(num_graphs):
+        start_n = n_indices[i] - ns[i]
+        end_n = n_indices[i]
+        result[i] = U[start_n:end_n]
+
+    return result
+
+
+class GAMGMTorchFunc(torch.autograd.Function):
+    """
+    Torch wrapper to support forward and backward pass (by black-box differentiation)
+    """
+    @staticmethod
+    def forward(ctx, bb_smooth, supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args):
+        # save parameters
+        ctx.bb_smooth = bb_smooth
+        ctx.named_args = supA, supW, ns, n_indices, n_univ, num_graphs, U0
+        ctx.list_args = args
+
+        # real solver function
+        U = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
+
+        # save result
+        ctx.U = U
+        return U
+
+    @staticmethod
+    def backward(ctx, dU):
+        epsilon = 1e-8
+        bb_smooth = ctx.bb_smooth
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0 = ctx.named_args
+        args = ctx.list_args
+        U = ctx.U
+
+        for i, j in itertools.product(range(num_graphs), repeat=2):
+            start_x = n_indices[i] - ns[i]
+            end_x = n_indices[i]
+            start_y = n_indices[j] - ns[j]
+            end_y = n_indices[j]
+            supW[start_x:end_x, start_y:end_y] += bb_smooth * torch.mm(dU[start_x:end_x], dU[start_y:end_y].transpose(0, 1))
+
+        U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
+
+        grad_supW = torch.zeros(n_indices[-1], n_indices[-1], device=supW.device)
+        for i, j in itertools.product(range(num_graphs), repeat=2):
+            start_x = n_indices[i] - ns[i]
+            end_x = n_indices[i]
+            start_y = n_indices[j] - ns[j]
+            end_y = n_indices[j]
+            X = torch.mm(U[start_x:end_x], U[start_y:end_y].transpose(0, 1))
+            X_prime = torch.mm(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose(0, 1))
+            grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
+
+        return_list = [None, None, grad_supW] + [None] * (len(ctx.needs_input_grad) - 3)
+        return tuple(return_list)
+
+
+def gamgm_real(
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh,
+        verbose,
+        cluster_M, projector, hung_iter # these arguments are reserved for clustering
+        ):
+    """
+    The real forward function of GAMGM
+    """
     U = U0
     sinkhorn_tau = init_tau
     iter_flag = True
@@ -673,13 +756,7 @@ def gamgm(A, W, ns, n_univ, U0,
                 U = torch.cat(U_list, dim=0)
                 break
 
-    # return result
-    result = pygmtools.utils.MultiMatchingResult(True, 'pytorch')
-    for i in range(num_graphs):
-        start_n = n_indices[i] - ns[i]
-        end_n = n_indices[i]
-        result[i] = U[start_n:end_n]
-    return result
+    return U
 
 
 #############################################

@@ -301,7 +301,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
 def gamgm(A, W,
           ns=None, n_univ=None, U0=None,
           sk_init_tau=0.5, sk_min_tau=0.1, sk_gamma=0.8, sk_iter=20, max_iter=100, param_lambda=1.,
-          converge_thresh=1e-5, outlier_thresh=-1,
+          converge_thresh=1e-5, outlier_thresh=-1, bb_smooth=0.1,
           verbose=False,
           backend=None):
     r"""
@@ -345,9 +345,18 @@ def gamgm(A, W,
                             is stopped.
     :param outlier_thresh: (default: -1) if > 0, pairs with node+edge similarity score smaller than this threshold will
                            be discarded. This threshold is designed to handle outliers.
+    :param bb_smooth: (default: 0.1) the black-box differentiation smoothing parameter.
     :param verbose: (default: False) print verbose information for parameter tuning
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: the multi-graph matching result (a :mod:`~pygmtools.utils.MultiMatchingResult` object)
+
+    .. note::
+
+        This function is differentiable through the black-box trick. See the following paper for details:
+
+        ::
+
+            Vlastelica M, Paulus A., Differentiation of Blackbox Combinatorial Solvers, ICLR 2020
 
     .. note::
 
@@ -371,14 +380,21 @@ def gamgm(A, W,
             # Compute node-wise similarity by inner-product and Sinkhorn
             >>> W = torch.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
             >>> W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
+            >>> W.requires_grad_(True) # this function is differentiable by the black-box trick
 
             # Solve the multi-matching problem
             >>> X = pygm.gamgm(As, W)
             >>> matched = 0
             >>> for i, j in itertools.product(range(graph_num), repeat=2):
             ...     matched += (X[i,j] * X_gt[i,j]).sum()
-            >>> matched / X_gt.sum()
-            tensor(1.)
+            >>> acc = matched / X_gt.sum()
+            >>> acc
+            tensor(1., grad_fn=<DivBackward0>)
+
+            # Backward pass via black-box trick
+            >>> acc.backward()
+            >>> torch.sum(W.grad != 0)
+            tensor(128)
 
             # This function supports graphs with different nodes (also known as partial matching)
             # In the following we ignore the last node from the last 5 graphs
@@ -391,6 +407,7 @@ def gamgm(A, W,
             ...     X_gt[i, j, :, ns[j]:] = 0
             ...     W[i, j, ns[i]:, :] = 0
             ...     W[i, j, :, ns[j]:] = 0
+            >>> W = W.detach() # detach tensor if gradient is not needed
 
             # Partial matching is challenging and the following parameters are carefully tuned
             >>> X = pygm.gamgm(As, W, ns, n_univ=4, sk_init_tau=.1, sk_min_tau=0.01, param_lambda=0.3)
@@ -455,8 +472,10 @@ def gamgm(A, W,
     if not sk_init_tau > 0: raise ValueError(f"sk_init_tau must be >0, got sk_init_tau={sk_init_tau}")
     if not sk_min_tau > 0: raise ValueError(f"sk_min_tau must be >0, got sk_min_tau={sk_min_tau}")
     if not 0 < sk_gamma < 1: raise ValueError(f"sk_gamma must be in (0, 1), got sk_gamma={sk_gamma}")
+    if not 0 < bb_smooth < 1: raise ValueError(f"bb_smooth must be in (0, 1), got bb_smooth={bb_smooth}")
+
     args = (A, W, ns, n_univ, U0, sk_init_tau, sk_min_tau, sk_gamma, sk_iter, max_iter, param_lambda,
-            converge_thresh, outlier_thresh, verbose)
+            converge_thresh, outlier_thresh, bb_smooth, verbose)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gamgm
