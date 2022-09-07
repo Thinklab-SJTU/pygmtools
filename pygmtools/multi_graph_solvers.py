@@ -358,6 +358,9 @@ def gamgm(A, W,
 
             Vlastelica M, Paulus A., Differentiation of Blackbox Combinatorial Solvers, ICLR 2020
 
+        If you want to disable this differentiable feature, please detach the input tensors from the computational
+        graph.
+
     .. note::
 
         Set ``verbose=True`` may help you tune the parameters.
@@ -380,7 +383,6 @@ def gamgm(A, W,
             # Compute node-wise similarity by inner-product and Sinkhorn
             >>> W = torch.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
             >>> W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
-            >>> W.requires_grad_(True) # this function is differentiable by the black-box trick
 
             # Solve the multi-matching problem
             >>> X = pygm.gamgm(As, W)
@@ -389,7 +391,15 @@ def gamgm(A, W,
             ...     matched += (X[i,j] * X_gt[i,j]).sum()
             >>> acc = matched / X_gt.sum()
             >>> acc
-            tensor(1., grad_fn=<DivBackward0>)
+            tensor(1.)
+
+            # This function is differentiable by the black-box trick
+            >>> W.requires_grad_(True)  # tell PyTorch to track the gradients
+            >>> X = pygm.gamgm(As, W)
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
 
             # Backward pass via black-box trick
             >>> acc.backward()
