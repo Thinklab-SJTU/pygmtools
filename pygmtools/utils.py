@@ -49,6 +49,9 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1n_2 \times n_1n_2)` the affinity matrix
 
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
     .. dropdown:: Numpy Example
 
         ::
@@ -144,35 +147,52 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     """
     if backend is None:
         backend = pygmtools.BACKEND
+    __get_shape = functools.partial(_get_shape, backend=backend)
 
     # check the correctness of input
     batch_size = None
+    non_batched_input = False
     if node_feat1 is not None or node_feat2 is not None:
         assert all([_ is not None for _ in (node_feat1, node_feat2)]), \
             'The following arguments must all be given if you want to compute node-wise affinity: ' \
             'node_feat1, node_feat2'
         _check_data_type(node_feat1, backend)
         _check_data_type(node_feat2, backend)
-        assert all([_check_shape(_, 3, backend) for _ in (node_feat1, node_feat2)]), \
-            f'The shape of the following tensors are illegal, expected 3-dimensional, ' \
-            f'got node_feat1={len(_get_shape(node_feat1))}d; node_feat2={len(_get_shape(node_feat2))}d!'
+        if all([_check_shape(_, 2, backend) for _ in (node_feat1, node_feat2)]):
+            non_batched_input = True
+            node_feat1, node_feat2 = [_unsqueeze(_, 0, backend) for _ in (node_feat1, node_feat2)]
+        elif all([_check_shape(_, 3, backend) for _ in (node_feat1, node_feat2)]):
+            pass
+        else:
+            raise ValueError(
+                f'The shape of the following tensors are illegal, expected 3-dimensional, '
+                f'got node_feat1={len(__get_shape(node_feat1))}d; node_feat2={len(__get_shape(node_feat2))}d!'
+            )
         if batch_size is None:
-            batch_size = _get_shape(node_feat1)[0]
-        assert _get_shape(node_feat1)[0] == _get_shape(node_feat2)[0] == batch_size, 'batch size mismatch'
+            batch_size = __get_shape(node_feat1)[0]
+        assert __get_shape(node_feat1)[0] == __get_shape(node_feat2)[0] == batch_size, 'batch size mismatch'
     if edge_feat1 is not None or edge_feat2 is not None:
         assert all([_ is not None for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]), \
             'The following arguments must all be given if you want to compute edge-wise affinity: ' \
             'edge_feat1, edge_feat2, connectivity1, connectivity2'
-        assert all([_check_shape(_, 3, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]), \
-            f'The shape of the following tensors are illegal, expected 3-dimensional, ' \
-            f'got edge_feat1:{len(_get_shape(edge_feat1))}d; edge_feat2:{len(_get_shape(edge_feat2))}d; ' \
-            f'connectivity1:{len(_get_shape(connectivity1))}d; connectivity2:{len(_get_shape(connectivity2))}d!'
-        assert _get_shape(connectivity1)[2] == _get_shape(connectivity1)[2] == 2, \
-            'the 3rd dimension of connectivity1, connectivity2 must be 2-dimensional'
+        if all([_check_shape(_, 2, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]):
+            non_batched_input = True
+            edge_feat1, edge_feat2, connectivity1, connectivity2 = \
+                [_unsqueeze(_, 0, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]
+        elif all([_check_shape(_, 3, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]):
+            pass
+        else:
+            raise ValueError(
+                f'The shape of the following tensors are illegal, expected 3-dimensional, '
+                f'got edge_feat1:{len(__get_shape(edge_feat1))}d; edge_feat2:{len(__get_shape(edge_feat2))}d; '
+                f'connectivity1:{len(__get_shape(connectivity1))}d; connectivity2:{len(__get_shape(connectivity2))}d!'
+            )
+        assert __get_shape(connectivity1)[2] == __get_shape(connectivity1)[2] == 2, \
+            'the last dimension of connectivity1, connectivity2 must be 2-dimensional'
         if batch_size is None:
-            batch_size = _get_shape(edge_feat1)[0]
-        assert _get_shape(edge_feat1)[0] == _get_shape(edge_feat2)[0] == _get_shape(connectivity1)[0] == \
-               _get_shape(connectivity2)[0] == batch_size, 'batch size mismatch'
+            batch_size = __get_shape(edge_feat1)[0]
+        assert __get_shape(edge_feat1)[0] == __get_shape(edge_feat2)[0] == __get_shape(connectivity1)[0] == \
+               __get_shape(connectivity2)[0] == batch_size, 'batch size mismatch'
 
     # assign the default affinity functions if not given
     if node_aff_fn is None:
@@ -183,7 +203,11 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     node_aff = node_aff_fn(node_feat1, node_feat2) if node_feat1 is not None else None
     edge_aff = edge_aff_fn(edge_feat1, edge_feat2) if edge_feat1 is not None else None
 
-    return _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    if non_batched_input:
+        return _squeeze(result, 0, backend)
+    else:
+        return result
 
 
 def inner_prod_aff_fn(feat1, feat2, backend=None):
@@ -357,8 +381,12 @@ def dense_to_sparse(dense_adj, backend=None):
     :param dense_adj: :math:`(b\times n\times n)` the dense adjacency matrix. This function also supports non-batched
                       input where the batch dimension ``b`` is ignored
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :return: :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor,
+    :return: if batched input:
+             :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor,
              :math:`(b)` number of edges
+
+             if non-batched input:
+             :math:`(ne\times 2)` sparse connectivity matrix, :math:`(ne\times 1)` edge weight tensor,
 
     .. dropdown:: Numpy Example
 
@@ -483,7 +511,30 @@ def compute_affinity_score(X, K, backend=None):
 
     .. note::
 
-       This function also supports non-batched input if the first dimension of ``X, K`` is removed.
+       This function also supports non-batched input if the batch dimension of ``X, K`` is ignored.
+
+    .. dropdown:: Pytorch Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> import torch
+            >>> pygm.BACKEND = 'pytorch'
+
+            # Generate a graph matching problem
+            >>> X_gt = torch.zeros(4, 4)
+            >>> X_gt[torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] =1
+            >>> A1 = torch.rand(4, 4)
+            >>> A2 = torch.mm(torch.mm(X_gt.transpose(0,1), A1), X_gt)
+            >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+
+            # Compute the objective score of ground truth matching
+            >>> pygm.utils.compute_affinity_score(X_gt, K)
+            tensor(16.)
 
     """
     if backend is None:

@@ -1,16 +1,18 @@
 import itertools
+import functools
 import torch
 import numpy as np
 from multiprocessing import Pool
 from torch import Tensor
 
 import pygmtools.utils
-from pygmtools.numpy_backend import _hung_kernel
 
 
 #############################################
 #     Linear Assignment Problem Solvers     #
 #############################################
+
+from pygmtools.numpy_backend import _hung_kernel
 
 
 def hungarian(s: Tensor, n1: Tensor=None, n2: Tensor=None, nproc: int=1) -> Tensor:
@@ -274,18 +276,21 @@ def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, la
     param_lambda = lambda_init
     device = K.device
 
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='pytorch').unsqueeze(-1).unsqueeze(-1)
+
     for iter in range(max_iter):
         if iter >= iter_boost:
             param_lambda = np.min([param_lambda * lambda_step, lambda_max])
         # pair_con = get_batch_pc_opt(X)
-        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
         for i in range(m):
             for j in range(m):
                 if i >= j:
                     continue
-                aff_ori = pygmtools.utils.compute_affinity_score(X[i, j], K[i, j], backend='pytorch') / norm
+                aff_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
                 con_ori = _get_single_pc_opt(X, i, j)
                 # con_ori = torch.sqrt(pair_con[i, j])
                 if iter < iter_boost:
@@ -295,7 +300,7 @@ def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, la
                 X_upt = X[i, j]
                 for k in range(m):
                     X_combo = torch.matmul(X[i, k], X[k, j])
-                    aff_combo = pygmtools.utils.compute_affinity_score(X_combo, K[i, j], backend='pytorch') / norm
+                    aff_combo = _comp_aff_score(X_combo, K[i, j]) / norm
                     con_combo = _get_single_pc_opt(X, i, j, X_combo)
                     # con_combo = torch.sqrt(pair_con[i, k] * pair_con[k, j])
                     if iter < iter_boost:
@@ -322,6 +327,9 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
     m, n = num_graph, num_node
     param_lambda = lambda_init
 
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='pytorch').unsqueeze(-1).unsqueeze(-1)
+
     device = K.device
     mask1 = torch.arange(m).reshape(m, 1).repeat(1, m).to(device)
     mask2 = torch.arange(m).reshape(1, m).repeat(m, 1).to(device)
@@ -332,7 +340,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         if iter >= iter_boost:
             param_lambda = np.min([param_lambda * lambda_step, lambda_max])
 
-        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
 
@@ -340,12 +348,12 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i,j,k] = X[k,j]
         X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n) # X_combo[i,j,k] = X[i, k] * X[k, j]
 
-        aff_ori = (pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
         pair_con = _get_batch_pc_opt(X)
         con_ori = torch.sqrt(pair_con)
 
         K_repeat = K.reshape(m, m, 1, n * n, n * n).repeat(1, 1, m, 1, 1).reshape(-1, n * n, n * n)
-        aff_combo = (pygmtools.utils.compute_affinity_score(X_combo.reshape(-1, n, n), K_repeat) / norm).reshape(m, m, m)
+        aff_combo = (_comp_aff_score(X_combo.reshape(-1, n, n), K_repeat) / norm).reshape(m, m, m)
         con1 = pair_con.reshape(m, 1, m).repeat(1, m, 1)  # con1[i,j,k] = pair_con[i,k]
         con2 = pair_con.reshape(1, m, m).repeat(m, 1, 1).transpose(1, 2)  # con2[i,j,k] = pair_con[j,k]
         con_combo = torch.sqrt(con1 * con2)
@@ -370,8 +378,11 @@ def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
     m, n = num_graph, num_node
     device = K.device
 
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='pytorch').unsqueeze(-1).unsqueeze(-1)
+
     for k in range(m):
-        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
 
@@ -383,16 +394,16 @@ def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
             for j in range(m):
                 if i >= j:
                     continue
-                score_ori = pygmtools.utils.compute_affinity_score(X[i, j], K[i, j], backend='pytorch') / norm
+                score_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
                 X_combo = torch.matmul(X[i, k], X[k, j])
-                score_combo = pygmtools.utils.compute_affinity_score(X_combo, K[i, j], backend='pytorch') / norm
+                score_combo = _comp_aff_score(X_combo, K[i, j]) / norm
 
                 if score_combo > score_ori:
                     X[i, j] = X_combo
                     X[j, i] = X_combo.transpose(0, 1)
 
     for k in range(m):
-        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
 
@@ -401,13 +412,13 @@ def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
             for j in range(m):
                 if i >= j:
                     continue
-                aff_ori = pygmtools.utils.compute_affinity_score(X[i, j], K[i, j], backend='pytorch') / norm
+                aff_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
                 con_ori = _get_single_pc_opt(X, i, j)
                 # con_ori = torch.sqrt(pair_con[i, j])
                 score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
 
                 X_combo = torch.matmul(X[i, k], X[k, j])
-                aff_combo = pygmtools.utils.compute_affinity_score(X_combo, K[i, j], backend='pytorch') / norm
+                aff_combo = _comp_aff_score(X_combo, K[i, j]) / norm
                 con_combo = _get_single_pc_opt(X, i, j, X_combo)
                 # con_combo = torch.sqrt(pair_con[i, k] * pair_con[k, j])
                 score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
@@ -422,13 +433,16 @@ def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
     m, n = num_graph, num_node
     device = K.device
 
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='pytorch').unsqueeze(-1).unsqueeze(-1)
+
     mask1 = torch.arange(m).reshape(m, 1).repeat(1, m)
     mask2 = torch.arange(m).reshape(1, m).repeat(m, 1)
     mask = (mask1 < mask2).float().to(device)
     X_mask = mask.reshape(m, m, 1, 1)
 
     for k in range(m):
-        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
 
@@ -440,8 +454,8 @@ def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
         X2 = X[k, :].reshape(1, m, n, n).repeat(m, 1, 1, 1).reshape(-1, n, n)  # X[i, j] = X[j, k]
         X_combo = torch.bmm(X1, X2).reshape(m, m, n, n)
 
-        aff_ori = (pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch') / norm).reshape(m, m)
-        aff_combo = (pygmtools.utils.compute_affinity_score(X_combo.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch') / norm).reshape(m, m)
+        aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        aff_combo = (_comp_aff_score(X_combo.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
 
         score_ori = aff_ori
         score_combo = aff_combo
@@ -452,7 +466,7 @@ def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
         X = X * X_mask + X.transpose(0, 1).transpose(2, 3) * (1 - X_mask)
 
     for k in range(m):
-        pair_aff = pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch').reshape(m, m)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
         pair_aff = pair_aff - torch.eye(m, device=device) * pair_aff
         norm = torch.max(pair_aff)
 
@@ -462,8 +476,8 @@ def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
         X2 = X[k, :].reshape(1, m, n, n).repeat(m, 1, 1, 1).reshape(-1, n, n)  # X[i, j] = X[j, k]
         X_combo = torch.bmm(X1, X2).reshape(m, m, n, n)
 
-        aff_ori = (pygmtools.utils.compute_affinity_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch') / norm).reshape(m, m)
-        aff_combo = (pygmtools.utils.compute_affinity_score(X_combo.reshape(-1, n, n), K.reshape(-1, n * n, n * n), backend='pytorch') / norm).reshape(m, m)
+        aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        aff_combo = (_comp_aff_score(X_combo.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
 
         con_ori = torch.sqrt(pair_con)
         con1 = pair_con[:, k].reshape(m, 1).repeat(1, m)
@@ -830,7 +844,7 @@ def compute_affinity_score(X, K):
     b, n, _ = X.size()
     vx = X.transpose(1, 2).reshape(b, -1, 1)  # (b, n*n, 1)
     vxt = vx.transpose(1, 2)  # (b, 1, n*n)
-    affinity = torch.bmm(torch.bmm(vxt, K), vx)
+    affinity = torch.bmm(torch.bmm(vxt, K), vx).squeeze(-1).squeeze(-1)
     return affinity
 
 

@@ -16,7 +16,6 @@ NAME = 'pygmtools'
 DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and supports numpy and pytorch backends. ' \
               'pygmtools also provides dataset API for standard graph matching benchmarks.'
 URL = 'https://pygmtools.readthedocs.io/'
-EMAIL = '1115712590@sjtu.edu.cn'
 AUTHOR = 'ThinkLab at SJTU'
 VERSION = '0.2.5'
 
@@ -90,7 +89,6 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     author=AUTHOR,
-    author_email=EMAIL,
     url=URL,
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     install_requires=REQUIRED,

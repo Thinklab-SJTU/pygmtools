@@ -27,7 +27,7 @@ By default the solvers are executed on the ``numpy`` backend, and the required p
 downloaded.
 
 For advanced and professional users, ``pytorch/paddle/jittor`` backends are also available if you have installed and configured
-the corresponding runtime. The ``pytorch/paddle/jittor`` backends exploits the underlying GPU-acceleration feature, and also supports
+the corresponding runtime. The ``pytorch/paddle/jittor`` backends exploit the underlying GPU-acceleration feature, and also support
 integrating graph matching modules into your deep learning pipeline.
 
 Features

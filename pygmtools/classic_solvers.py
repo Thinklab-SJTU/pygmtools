@@ -36,26 +36,26 @@ def sinkhorn(s, n1=None, n2=None,
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` the computed doubly-stochastic matrix
 
-    .. note::
-        ``tau`` is an important hyper parameter to be set for Sinkhorn algorithm. ``tau`` controls the distance between
-        the predicted doubly-stochastic matrix, and the discrete permutation matrix computed by Hungarian algorithm (see
-        :func:`~pygmtools.classic_solvers.hungarian`). Given a small ``tau``, Sinkhorn performs more closely to
-        Hungarian, at the cost of slower convergence speed and reduced numerical stability.
-
-    .. note::
-        Setting ``batched_operation=True`` may be preferred when you are doing inference with this module and do not
-        need the gradient. It is assumed that ``row number <= column number``. If not, the input matrix will be
-        transposed.
+    You need not dive too deep into the math details if you are simply using Sinkhorn. However, you should
+    be aware of one important hyper parameter. ``tau`` controls the distance between the predicted doubly-
+    stochastic matrix, and the discrete permutation matrix computed by Hungarian algorithm (see
+    :func:`~pygmtools.classic_solvers.hungarian`). Given a small ``tau``, Sinkhorn performs more closely to
+    Hungarian, at the cost of slower convergence speed and reduced numerical stability.
 
     .. note::
         We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
-        the batched matrices are not padded.
+        the batched matrices are not padded and all elements in ``n1`` are equal, all in ``n2`` are equal.
 
     .. note::
         The original Sinkhorn algorithm only works for square matrices. To handle cases where the graphs to be
         matched have different number of nodes, it is a common practice to add dummy rows to construct a square
         matrix. After the row and column normalizations, the padded rows are discarded.
+
+    .. note::
+        Setting ``batched_operation=True`` may be preferred when you are doing inference with this module and do not
+        need the gradient. It is assumed that ``row number <= column number``. If not, the input matrix will be
+        transposed.
 
     .. dropdown:: Numpy Example
 
@@ -370,7 +370,7 @@ def sinkhorn(s, n1=None, n2=None,
         non_batched_input = False
     else:
         raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
-                         f's:{len(_get_shape(s))}dims!')
+                         f's:{len(_get_shape(s, backend))}dims!')
 
     args = (s, n1, n2, dummy_row, max_iter, tau, batched_operation)
     try:
@@ -413,7 +413,7 @@ def hungarian(s, n1=None, n2=None,
     .. note::
         We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
-        the batched matrices are not padded.
+        the batched matrices are not padded and all elements in ``n1`` are equal, all in ``n2`` are equal.
 
     .. dropdown:: Numpy Example
 
@@ -639,7 +639,7 @@ def hungarian(s, n1=None, n2=None,
         non_batched_input = False
     else:
         raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
-                         f's:{len(_get_shape(s))}dims!')
+                         f's:{len(_get_shape(s, backend))}dims!')
 
     args = (s, n1, n2, nproc)
     try:
@@ -682,6 +682,27 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
                      at the cost of increased inference time.
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` the solved doubly-stochastic matrix
+
+    .. note::
+        Either ``n1`` or ``n1max`` should be specified because it cannot be inferred from the input tensor size.
+        Same for ``n2`` or ``n2max``.
+
+    .. note::
+        We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
+        required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
+        the batched matrices are not padded and all elements in ``n1`` are equal, all in ``n2`` are equal.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. note::
+        This solver is differentiable and supports gradient back-propagation.
+
+    .. warning::
+        The solver's output is normalized with a squared sum of 1, which is in line with the original implementation. If
+        a doubly-stochastic matrix is required, please call :func:`~pygmtools.classic_solvers.sinkhorn` after this. If a
+        discrete permutation matrix is required, please call :func:`~pygmtools.classic_solvers.hungarian`. Note that the
+        Hungarian algorithm will truncate the gradient and the Sinkhorn algorithm will not.
 
     .. dropdown:: Numpy Example
 
@@ -800,6 +821,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     .. dropdown:: Jittor Example
 
         ::
+
             >>> import jittor as jt
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'jittor'
@@ -847,6 +869,20 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     if backend is None:
         backend = pygmtools.BACKEND
     _check_data_type(K, backend)
+    if _check_shape(K, 2, backend):
+        K = _unsqueeze(K, 0, backend)
+        non_batched_input = True
+        if type(n1) is int and n1max is None:
+            n1max = n1
+            n1 = None
+        if type(n2) is int and n2max is None:
+            n2max = n2
+            n2 = None
+    elif _check_shape(K, 3, backend):
+        non_batched_input = False
+    else:
+        raise ValueError(f'the input argument K is expected to be 2-dimensional or 3-dimensional, got '
+                         f'K:{len(_get_shape(K, backend))}dims!')
     __check_gm_arguments(n1, n2, n1max, n2max)
     args = (K, n1, n2, n1max, n2max, x0, max_iter)
     try:
@@ -856,7 +892,11 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
-    return fn(*args)
+    result = fn(*args)
+    if non_batched_input:
+        return _squeeze(result, 0, backend)
+    else:
+        return result
 
 
 def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
@@ -889,9 +929,16 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     :return: :math:`(b\times n_1 \times n_2)` the solved matching matrix
 
     .. note::
+        Either ``n1`` or ``n1max`` should be specified because it cannot be inferred from the input tensor size.
+        Same for ``n2`` or ``n2max``.
+
+    .. note::
         We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
-        the batched matrices are not padded.
+        the batched matrices are not padded and all elements in ``n1`` are equal, all in ``n2`` are equal.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. note::
         This solver is differentiable and supports gradient back-propagation.
@@ -900,7 +947,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         The solver's output is normalized with a sum of 1, which is in line with the original implementation. If a doubly-
         stochastic matrix is required, please call :func:`~pygmtools.classic_solvers.sinkhorn` after this. If a discrete
         permutation matrix is required, please call :func:`~pygmtools.classic_solvers.hungarian`. Note that the
-        Hungarian algorithm will truncate the gradient.
+        Hungarian algorithm will truncate the gradient and the Sinkhorn algorithm will not.
 
     .. dropdown:: Numpy Example
 
@@ -1068,6 +1115,20 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     if backend is None:
         backend = pygmtools.BACKEND
     _check_data_type(K, backend)
+    if _check_shape(K, 2, backend):
+        K = _unsqueeze(K, 0, backend)
+        non_batched_input = True
+        if type(n1) is int and n1max is None:
+            n1max = n1
+            n1 = None
+        if type(n2) is int and n2max is None:
+            n2max = n2
+            n2 = None
+    elif _check_shape(K, 3, backend):
+        non_batched_input = False
+    else:
+        raise ValueError(f'the input argument K is expected to be 2-dimensional or 3-dimensional, got '
+                         f'K:{len(_get_shape(K, backend))}dims!')
     __check_gm_arguments(n1, n2, n1max, n2max)
     assert 0 <= alpha <= 1, f'illegal value of alpha, it should lie between 0 and 1, got alpha={alpha}!.'
     assert beta > 0, f'illegal value of beta, it should be larger than 0, got beta={beta}!'
@@ -1080,7 +1141,11 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
-    return fn(*args)
+    result = fn(*args)
+    if non_batched_input:
+        return _squeeze(result, 0, backend)
+    else:
+        return result
 
 
 def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
@@ -1102,9 +1167,16 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     :return: :math:`(b\times n_1 \times n_2)` the solved matching matrix
 
     .. note::
+        Either ``n1`` or ``n1max`` should be specified because it cannot be inferred from the input tensor size.
+        Same for ``n2`` or ``n2max``.
+
+    .. note::
         We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
-        the batched matrices are not padded.
+        the batched matrices are not padded and all elements in ``n1`` are equal, all in ``n2`` are equal.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. note::
         This solver is non-differentiable. The output is a discrete matching matrix (i.e. permutation matrix).
@@ -1273,6 +1345,20 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     if backend is None:
         backend = pygmtools.BACKEND
     _check_data_type(K, backend)
+    if _check_shape(K, 2, backend):
+        K = _unsqueeze(K, 0, backend)
+        non_batched_input = True
+        if type(n1) is int and n1max is None:
+            n1max = n1
+            n1 = None
+        if type(n2) is int and n2max is None:
+            n2max = n2
+            n2 = None
+    elif _check_shape(K, 3, backend):
+        non_batched_input = False
+    else:
+        raise ValueError(f'the input argument K is expected to be 2-dimensional or 3-dimensional, got '
+                         f'K:{len(_get_shape(K, backend))}dims!')
     __check_gm_arguments(n1, n2, n1max, n2max)
 
     args = (K, n1, n2, n1max, n2max, x0, max_iter)
@@ -1283,9 +1369,15 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
-    return fn(*args)
+    result = fn(*args)
+    if non_batched_input:
+        return _squeeze(result, 0, backend)
+    else:
+        return result
 
 
 def __check_gm_arguments(n1, n2, n1max, n2max):
-    assert n1 is not None or n1max is not None, 'at least one of the following arguments are required: n1 and n1max.'
-    assert n2 is not None or n2max is not None, 'at least one of the following arguments are required: n2 and n2max.'
+    if n1 is None and n1max is None:
+        raise ValueError('at least one of the following arguments are required: n1 and n1max.')
+    if n2 is None and n2max is None:
+        raise ValueError('at least one of the following arguments are required: n2 and n2max.')
