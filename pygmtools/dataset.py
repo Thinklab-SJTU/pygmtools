@@ -6,6 +6,9 @@ from pygmtools.dataset_config import dataset_cfg
 from pathlib import Path
 from xml.etree.ElementTree import Element
 from PIL import Image
+from tqdm.auto import tqdm
+from time import sleep
+import shutil
 import numpy as np
 import xml.etree.ElementTree as ET
 import pickle
@@ -154,12 +157,16 @@ class PascalVOC:
         if name == "PascalVOC_anno":
             print('Downloading dataset annotation...')
             filename = "data/PascalVOC.tgz"
-            down_res = requests.get(url)
-            with open(filename, 'wb') as file:
-                file.write(down_res.content)
+            down_res = requests.get(url, stream=True)
+            file_size = int(down_res.headers.get('Content-Length', 0))
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                        shutil.copyfileobj(content, file)
             tar = tarfile.open(filename, "r")
             file_names = tar.getnames()
-            for file_name in file_names:
+            print('Unzipping files...')
+            sleep(0.5)
+            for file_name in tqdm(file_names):
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
             os.remove(filename)
@@ -167,12 +174,16 @@ class PascalVOC:
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
             filename = "data/PascalVOC.tar"
-            down_res = requests.get(url)
-            with open(filename, 'wb') as file:
-                file.write(down_res.content)
+            down_res = requests.get(url, stream=True)
+            file_size = int(down_res.headers.get('Content-Length', 0))
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                        shutil.copyfileobj(content, file)
             tar = tarfile.open(filename, "r")
             file_names = tar.getnames()
-            for file_name in file_names:
+            print('Unzipping files...')
+            sleep(0.5)
+            for file_name in tqdm(file_names):
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
             os.remove(filename)
@@ -442,11 +453,15 @@ class WillowObject:
 
         print('Downloading dataset WillowObject...')
         filename = "data/WILLOW.zip"
-        down_res = requests.get(url)
-        with open(filename, 'wb') as file:
-            file.write(down_res.content)
+        down_res = requests.get(url, stream=True)
+        file_size = 68635332
+        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+            with open(filename, 'wb') as file:
+                shutil.copyfileobj(content, file)
         fz = zipfile.ZipFile(filename, "r")
-        for file in fz.namelist():
+        print('Unzipping files...')
+        sleep(0.5)
+        for file in tqdm(fz.namelist()):
             fz.extract(file, "data/WillowObject/")
         os.remove(filename)
 
@@ -706,12 +721,16 @@ class SPair71k:
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
         filename = "data/SPair-71k.tgz"
-        down_res = requests.get(url)
-        with open(filename, 'wb') as file:
-            file.write(down_res.content)
+        down_res = requests.get(url, stream=True)
+        file_size = int(down_res.headers.get('Content-Length', 0))
+        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+            with open(filename, 'wb') as file:
+                shutil.copyfileobj(content, file)
         tar = tarfile.open(filename, "r")
         file_names = tar.getnames()
-        for file_name in file_names:
+        print('Unzipping files...')
+        sleep(0.5)
+        for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
         os.remove(filename)
@@ -951,12 +970,16 @@ class IMC_PT_SparseGM:
             os.makedirs(dirs)
         print('Downloading dataset IMC-PT-SparseGM...')
         filename = 'data/IMC-PT-SparseGM.tar.gz'
-        down_res = requests.get(url)
-        with open(filename, 'wb') as file:
-            file.write(down_res.content)
+        down_res = requests.get(url, stream=True)
+        file_size = int(down_res.headers.get('Content-Length', 0))
+        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+            with open(filename, 'wb') as file:
+                shutil.copyfileobj(content, file)
         tar = tarfile.open(filename, "r")
         file_names = tar.getnames()
-        for file_name in file_names:
+        print('Unzipping files...')
+        sleep(0.5)
+        for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
         os.remove(filename)
@@ -1160,12 +1183,16 @@ class CUB2011:
             os.makedirs(dirs)
         print('Downloading dataset CUB2011...')
         filename = 'data/CUB_200_2011.tgz'
-        down_res = requests.get(url)
-        with open(filename, 'wb') as file:
-            file.write(down_res.content)
+        down_res = requests.get(url, stream=True)
+        file_size = int(down_res.headers.get('Content-Length', 0))
+        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+            with open(filename, 'wb') as file:
+                shutil.copyfileobj(content, file)
         tar = tarfile.open(filename, "r")
         file_names = tar.getnames()
-        for file_name in file_names:
+        print('Unzipping files...')
+        sleep(0.5)
+        for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
         os.remove(filename)
