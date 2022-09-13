@@ -1,6 +1,13 @@
+import time
 import functools
 import importlib
 import copy
+import requests
+import os
+from appdirs import user_cache_dir
+import hashlib
+import shutil
+from tqdm.auto import tqdm
 
 import pygmtools
 
@@ -936,6 +943,7 @@ def _transpose(input, dim1, dim2, backend=None):
         )
     return fn(*args)
 
+
 def _mm(input1, input2, backend=None):
     r"""
     Matrix multiplication.
@@ -955,3 +963,48 @@ def _mm(input1, input2, backend=None):
             NOT_IMPLEMENTED_MSG.format(backend)
         )
     return fn(*args)
+
+
+def download(filename, url, md5=None, retries=5):
+    r"""
+    Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
+    depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
+
+    :param filename: the destination file name
+    :param url: the url
+    :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
+    :param retries: (default: 5) max number of retries
+    :return: the full path to the file: ``<user cache path>/pygmtools/<filename>``
+    """
+    if retries <= 0:
+        raise RuntimeError('Max Retries exceeded!')
+
+    dirs = user_cache_dir("pygmtools")
+    if not os.path.exists(dirs):
+        os.makedirs(dirs)
+    filename = os.path.join(dirs, filename)
+    if not os.path.exists(filename):
+        print(f'Downloading to {filename}...')
+        down_res = requests.get(url, stream=True)
+        file_size = int(down_res.headers.get('Content-Length', 0))
+        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+            with open(filename, 'wb') as file:
+                shutil.copyfileobj(content, file)
+
+    if md5 is not None:
+        hash_md5 = hashlib.md5()
+        chunk = 8192
+        with open(filename, 'rb') as file_to_check:
+            while True:
+                buffer = file_to_check.read(chunk)
+                if not buffer:
+                    break
+                hash_md5.update(buffer)
+            md5_returned = hash_md5.hexdigest()
+        if md5 != md5_returned:
+            print('Warning: MD5 check failed for the downloaded content. Retrying...')
+            os.remove(filename)
+            time.sleep(1)
+            return download(filename, url, md5, retries - 1)
+
+    return filename

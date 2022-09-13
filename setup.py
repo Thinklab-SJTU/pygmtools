@@ -20,7 +20,7 @@ AUTHOR = 'ThinkLab at SJTU'
 VERSION = '0.2.8'
 
 REQUIRED = [
-     'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7',
+     'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1'
 ]
 
 EXTRAS = {}
