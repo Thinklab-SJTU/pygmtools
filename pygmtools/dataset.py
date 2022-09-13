@@ -478,6 +478,7 @@ class WillowObject:
         for cls_name in self.classes:
             assert type(cls_name) is str
             cls_mat_list = [p for p in (self.root_path / cls_name).glob('*.mat')]
+            cls_mat_list.sort()
             if cls_name == 'Face':
                 cls_mat_list.remove(self.root_path / cls_name / 'image_0160.mat')
                 assert not self.root_path / cls_name / 'image_0160.mat' in cls_mat_list
