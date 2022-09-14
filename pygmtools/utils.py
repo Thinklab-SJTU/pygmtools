@@ -8,6 +8,7 @@ from appdirs import user_cache_dir
 import hashlib
 import shutil
 from tqdm.auto import tqdm
+import inspect
 
 import pygmtools
 
@@ -779,6 +780,116 @@ class MultiMatchingResult:
         for k, v in self.match_dict.items():
             self.match_dict[k] = to_numpy(v, self.backend)
         self.backend = 'numpy'
+
+
+def get_network(nn_solver_func, **params):
+    r"""
+    Get the network object of a neural network solver.
+
+    :param nn_solver_func: the neural network solver function, for example ``pygm.pca_gm``
+    :param params: keyword parameters to define the neural network
+    :return: the network object
+
+    .. dropdown:: Pytorch Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> import torch
+            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.utils.get_network(pygm.pca_gm, pretrain='willow')
+            PCA_GM_Net(
+              (gnn_layer_0): Siamese_Gconv(
+                (gconv): Gconv(
+                  (a_fc): Linear(in_features=1024, out_features=2048, bias=True)
+                  (u_fc): Linear(in_features=1024, out_features=2048, bias=True)
+                )
+              )
+              (cross_graph_0): Linear(in_features=4096, out_features=2048, bias=True)
+              (affinity_0): WeightedInnerProdAffinity()
+              (affinity_1): WeightedInnerProdAffinity()
+              (gnn_layer_1): Siamese_Gconv(
+                (gconv): Gconv(
+                  (a_fc): Linear(in_features=2048, out_features=2048, bias=True)
+                  (u_fc): Linear(in_features=2048, out_features=2048, bias=True)
+                )
+              )
+            )
+
+            # the neural network can be integrated into a deep learning pipeline
+            >>> net = pygm.utils.get_network(pygm.pca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+
+    """
+    if 'return_network' in params:
+        params.pop('return_network')
+    # count parameters w/o default value
+    sig = inspect.signature(nn_solver_func)
+    required_params = 0
+    for p in sig.parameters.items():
+        if p[1].default is inspect._empty:
+            required_params += 1
+    _, net = nn_solver_func(*[None] * required_params, # fill the required parameters by None
+                            return_network=True, **params)
+    return net
+
+
+def permutation_loss(pred_dsmat, gt_perm, n1=None, n2=None, backend=None):
+    r"""
+    Binary cross entropy loss between two permutations, also known as "permutation loss".
+    Proposed by `"Wang et al. Learning Combinatorial Embedding Networks for Deep Graph Matching. ICCV 2019."
+    <http://openaccess.thecvf.com/content_ICCV_2019/papers/Wang_Learning_Combinatorial_Embedding_Networks_for_Deep_Graph_Matching_ICCV_2019_paper.pdf>`_
+
+    .. math::
+        L_{perm} =- \sum_{i \in \mathcal{V}_1, j \in \mathcal{V}_2}
+        \left(\mathbf{X}^{gt}_{i,j} \log \mathbf{S}_{i,j} + (1-\mathbf{X}^{gt}_{i,j}) \log (1-\mathbf{S}_{i,j}) \right)
+
+    where :math:`\mathcal{V}_1, \mathcal{V}_2` are vertex sets for two graphs.
+
+    :param pred_dsmat: :math:`(b\times n_1 \times n_2)` predicted doubly-stochastic matrix :math:`(\mathbf{S})`
+    :param gt_perm: :math:`(b\times n_1 \times n_2)` ground truth permutation matrix :math:`(\mathbf{X}^{gt})`
+    :param n1: (optional) :math:`(b)` number of exact pairs in the first graph.
+    :param n2: (optional) :math:`(b)` number of exact pairs in the second graph.
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: :math:`(1)` averaged permutation loss
+
+    .. note::
+        We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
+        required if you want to specify the exact number of nodes of each instance in the batch.
+
+    .. note::
+        For batched input, this loss function computes the averaged loss among all instances in the batch. This function
+        also supports non-batched input if the batch dimension (:math:`b`) is ignored.
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    _check_data_type(pred_dsmat, backend)
+    _check_data_type(gt_perm, backend)
+    dsmat_shape = _get_shape(pred_dsmat, backend)
+    perm_shape = _get_shape(gt_perm, backend)
+    if len(dsmat_shape) == len(perm_shape) == 2:
+        pred_dsmat = _unsqueeze(pred_dsmat, 0, backend)
+        gt_perm = _unsqueeze(gt_perm, 0, backend)
+    elif len(dsmat_shape) == len(perm_shape) == 3:
+        pass
+    else:
+        raise ValueError(f'the input arguments pred_dsmat and gt_perm are expected to be 2-dimensional or 3-dimensional,'
+                         f' got pred_dsmat:{len(dsmat_shape)}, gt_perm:{len(perm_shape)}!')
+
+    for d1, d2 in zip(dsmat_shape, perm_shape):
+        if d1 != d2:
+            raise ValueError(f'dimension mismatch for pred_dsmat and gt_perm, got pred_dsmat:{dsmat_shape}, gt_perm:{gt_perm}!')
+
+    args = (pred_dsmat, gt_perm, n1, n2)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod.permutation_loss
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+    return fn(*args)
 
 
 ###################################################

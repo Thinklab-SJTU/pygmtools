@@ -773,6 +773,339 @@ def gamgm_real(
     return U
 
 
+############################################
+#          Neural Network Solvers          #
+############################################
+
+from pygmtools.pytorch_modules import *
+
+
+class PCA_GM_Net(torch.nn.Module):
+    """
+    Pytorch implementation of PCA-GM and IPCA-GM network
+    """
+    def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
+        super(PCA_GM_Net, self).__init__()
+        self.gnn_layer = num_layers
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_Gconv(in_channel, hidden_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_Gconv(hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_Gconv(hidden_channel, out_channel)
+                self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(out_channel))
+            self.add_module('gnn_layer_{}'.format(i), gnn_layer)
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.add_module('cross_graph_{}'.format(i), torch.nn.Linear(hidden_channel * 2, hidden_channel))
+                if cross_iter_num <= 0:
+                 self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
+
+
+    def forward(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat1, feat2
+        if cross_iter_num <= 0:
+            # Vanilla PCA-GM
+            for i in range(self.gnn_layer):
+                gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+
+                if i == self.gnn_layer - 2:
+                    affinity = getattr(self, 'affinity_{}'.format(i))
+                    s = affinity(emb1, emb2)
+                    s = _sinkhorn_func(s, n1, n2)
+
+                    cross_graph = getattr(self, 'cross_graph_{}'.format(i))
+                    new_emb1 = cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
+                    new_emb2 = cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                    emb1 = new_emb1
+                    emb2 = new_emb2
+
+            affinity = getattr(self, 'affinity_{}'.format(self.gnn_layer - 1))
+            s = affinity(emb1, emb2)
+            s = _sinkhorn_func(s, n1, n2)
+
+        else:
+            # IPCA-GM
+            for i in range(self.gnn_layer - 1):
+                gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+
+            emb1_0, emb2_0 = emb1, emb2
+            s = torch.zeros(emb1.shape[0], emb1.shape[1], emb2.shape[1], device=emb1.device)
+
+            for x in range(cross_iter_num):
+                # cross-graph convolution in second last layer
+                i = self.gnn_layer - 2
+                cross_graph = getattr(self, 'cross_graph_{}'.format(i))
+                emb1 = cross_graph(torch.cat((emb1_0, torch.bmm(s, emb2_0)), dim=-1))
+                emb2 = cross_graph(torch.cat((emb2_0, torch.bmm(s.transpose(1, 2), emb1_0)), dim=-1))
+
+                # last layer
+                i = self.gnn_layer - 1
+                gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+                affinity = getattr(self, 'affinity_{}'.format(i))
+                s = affinity(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+        return s
+
+
+pca_gm_pretrain_path = {
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
+            '05924bffc97c9773fda233317c8169d7'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
+               'db4fe01e9ba1911c1e22f034e2087b7a'),
+    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
+                '0491f3064e2b841099e5ee12fac6c7a2')
+}
+
+
+def pca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Pytorch implementation of PCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+        device = torch.device('cpu')
+    else:
+        forward_pass = True
+        device = feat1.device
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in pca_gm_pretrain_path:
+                url, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_pytorch.pt', url, md5)
+                _load_model(network, filename, device)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = [feat1.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [feat2.shape[1]] * batch_size
+        result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+ipca_gm_pretrain_path = {
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
+            '572da07231ea436ba174fde332f2ae6c'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
+               'd9febe4f567bf5a93430b42b11ebd302'),
+}
+
+
+def ipca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Pytorch implementation of IPCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+        device = torch.device('cpu')
+    else:
+        forward_pass = True
+        device = feat1.device
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in ipca_gm_pretrain_path:
+                url, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_pytorch.pt', url, md5)
+                _load_model(network, filename, device)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
+    batch_size = feat1.shape[0]
+    if forward_pass:
+        if n1 is None:
+            n1 = [feat1.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [feat2.shape[1]] * batch_size
+        result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+class CIE_Net(torch.nn.Module):
+    """
+    Pytorch implementation of CIE graph matching network
+    """
+    def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
+        super(CIE_Net, self).__init__()
+        self.gnn_layer = num_layers
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_ChannelIndependentConv(in_node_channel, hidden_channel, in_edge_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, out_channel, hidden_channel)
+                self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(out_channel))
+            self.add_module('gnn_layer_{}'.format(i), gnn_layer)
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.add_module('cross_graph_{}'.format(i), torch.nn.Linear(hidden_channel * 2, hidden_channel))
+                self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
+
+    def forward(self, feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat_node1, feat_node2
+        emb_edge1, emb_edge2 = feat_edge1, feat_edge2
+        for i in range(self.gnn_layer):
+            gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+            # during forward process, the network structure will not change
+            emb1, emb2, emb_edge1, emb_edge2 = gnn_layer([A1, emb1, emb_edge1], [A2, emb2, emb_edge2])
+
+            if i == self.gnn_layer - 2:
+                affinity = getattr(self, 'affinity_{}'.format(i))
+                s = affinity(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+                cross_graph = getattr(self, 'cross_graph_{}'.format(i))
+                new_emb1 = cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
+                new_emb2 = cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                emb1 = new_emb1
+                emb2 = new_emb2
+
+        affinity = getattr(self, 'affinity_{}'.format(self.gnn_layer - 1))
+        s = affinity(emb1, emb2)
+        s = _sinkhorn_func(s, n1, n2)
+        return s
+
+
+cie_pretrain_path = {
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
+            '187916041d9454aecedfd1d09c197f29'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
+               '47cf8f5176a3d17faed96f30fa14ecf4'),
+}
+
+
+def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
+        in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+        network, pretrain):
+    """
+    Pytorch implementation of CIE
+    """
+    if feat_node1 is None:
+        forward_pass = False
+        device = torch.device('cpu')
+    else:
+        forward_pass = True
+        device = feat_node1.device
+    if network is None:
+        network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in cie_pretrain_path:
+                url, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_pytorch.pt', url, md5)
+                _load_model(network, filename, device)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_size = feat_node1.shape[0]
+        if n1 is None:
+            n1 = [feat_node1.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [feat_node1.shape[1]] * batch_size
+        result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+class NGM_Net(torch.nn.Module):
+    """
+    Pytorch implementation of NGM network
+    """
+    def __init__(self, gnn_channels, sk_emb):
+        super(NGM_Net, self).__init__()
+        self.gnn_layer = len(gnn_channels)
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = NGMConvLayer(1, 1,
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb, edge_emb=False)
+            else:
+                gnn_layer = NGMConvLayer(gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb, edge_emb=False)
+            self.add_module('gnn_layer_{}'.format(i), gnn_layer)
+        self.classifier = nn.Linear(gnn_channels[-1] + sk_emb, 1)
+
+    def forward(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb = v0
+        A = (K != 0).to(K.dtype)
+        emb_K = K.unsqueeze(-1)
+
+        # NGM qap solver
+        for i in range(self.gnn_layer):
+            gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+            emb_K, emb = gnn_layer(A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
+
+        v = self.classifier(emb)
+        s = v.view(v.shape[0], n2max, -1).transpose(1, 2)
+
+        return _sinkhorn_func(s, n1, n2, dummy_row=True)
+
+
+ngm_pretrain_path = {
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK',
+            '60dbc7cc882fd88de4fc9596b7fb0f4a'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL',
+               'dd13498bb385df07ac8530da87b14cd6'),
+}
+
+
+def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
+    """
+    Pytorch implementation of NGM
+    """
+    if K is None:
+        forward_pass = False
+        device = torch.device('cpu')
+    else:
+        forward_pass = True
+        device = K.device
+    if network is None:
+        network = NGM_Net(gnn_channels, sk_emb)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in ngm_pretrain_path:
+                url, md5 = ngm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ngm_{pretrain}_pytorch.pt', url, md5)
+                _load_model(network, filename, device)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+        v0 = v0 / torch.mean(v0)
+        result = network(K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
 #############################################
 #              Utils Functions              #
 #############################################
@@ -825,6 +1158,7 @@ def build_batch(input, return_ori_dim=False):
         return torch.stack(padded_ts, dim=0), tuple([torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape])
     else:
         return torch.stack(padded_ts, dim=0)
+
 
 def dense_to_sparse(dense_adj):
     """
@@ -1021,3 +1355,30 @@ def _mm(input1, input2):
     Pytorch implementation of _mm
     """
     return torch.mm(input1, input2)
+
+
+def _save_model(model, path):
+    """
+    Save PyTorch model to a given path
+    """
+    if isinstance(model, torch.nn.DataParallel):
+        model = model.module
+
+    torch.save(model.state_dict(), path)
+
+
+def _load_model(model, path, device, strict=True):
+    """
+    Load PyTorch model from a given path. strict=True means all keys must be matched
+    """
+    if isinstance(model, torch.nn.DataParallel):
+        module = model.module
+    else:
+        module = model
+    missing_keys, unexpected_keys = module.load_state_dict(torch.load(path, map_location=device), strict=strict)
+    if len(unexpected_keys) > 0:
+        print('Warning: Unexpected key(s) in state_dict: {}. '.format(
+            ', '.join('"{}"'.format(k) for k in unexpected_keys)))
+    if len(missing_keys) > 0:
+        print('Warning: Missing key(s) in state_dict: {}. '.format(
+            ', '.join('"{}"'.format(k) for k in missing_keys)))
