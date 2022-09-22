@@ -833,12 +833,13 @@ class SPair71k:
 
         h = float(annotations['image_height'])
         w = float(annotations['image_width'])
+        boundbox = annotations['bndbox']
 
         keypoint_list = []
         for key, value in annotations['kps'].items():
             if not value == None:
-                x = value[0] * self.obj_resize[0] / w
-                y = value[1] * self.obj_resize[1] / h
+                x = (value[0] - boundbox[0]) * self.obj_resize[0] / (boundbox[2] - boundbox[0])
+                y = (value[1] - boundbox[1]) * self.obj_resize[1] / (boundbox[3] - boundbox[1])
                 kpts_anno = dict()
                 kpts_anno['labels'] = key
                 kpts_anno['x'] = x
@@ -849,7 +850,7 @@ class SPair71k:
         anno_dict['kpts'] = keypoint_list
         anno_dict['path'] = img_file
         anno_dict['cls'] = cls
-        anno_dict['bounds'] = annotations['bndbox']
+        anno_dict['bounds'] = boundbox
         anno_dict['univ_size'] = len(VOC2011_KPT_NAMES[cls])
 
         return anno_dict
