@@ -20,8 +20,12 @@ or get the latest version by running:
 
 
 
-Now the pygmtools is available with the ``numpy`` backend. You may jump to :ref:`Example: Matching Isomorphic Graphs`
-if you do not need other backends.
+Now the pygmtools is available with the ``numpy`` backend:
+
+.. image:: ../images/numpy_logo.png
+    :width: 200
+
+You may jump to :ref:`Example: Matching Isomorphic Graphs` if you do not need other backends.
 
 The following packages are required, and shall be automatically installed by ``pip``:
 

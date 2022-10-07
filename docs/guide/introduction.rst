@@ -103,8 +103,8 @@ The notations are explained as follows:
   * The off-diagonal element :math:`\mathbf{K}_{i + a\times n_1, j + b\times n_1}` means the edge-wise affinity of
     edge :math:`ij` in graph 1 and edge :math:`ab` in graph 2.
 
-The Best Practice
---------------------
+Graph Matching Best Practice
+-----------------------------
 
 We need to understand the advantages and limitations of graph matching solvers. As discussed above, the major advantage
 of graph matching solvers is that they are more robust to noises and outliers. Graph matching also utilizes edge
