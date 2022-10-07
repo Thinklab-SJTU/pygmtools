@@ -57,7 +57,7 @@ PyTorch Backend
 ^^^^^^^^^^^^^^^^
 
 .. image:: ../images/pytorch_logo.png
-    :width: 350
+    :width: 250
 
 PyTorch is an open-source machine learning framework developed and maintained by Meta Inc./Linux Foundation.
 PyTorch is popular, especially among the deep learning research community.
@@ -79,7 +79,7 @@ Paddle Backend
 ^^^^^^^^^^^^^^^^
 
 .. image:: ../images/paddle_logo.png
-    :width: 400
+    :width: 300
 
 PaddlePaddle is an open-source deep learning platform originated from industrial practice, which is developed and
 maintained by Baidu Inc.
@@ -101,7 +101,7 @@ Jittor Backend
 ^^^^^^^^^^^^^^^^
 
 .. image:: ../images/jittor_logo.png
-    :width: 400
+    :width: 300
 
 Jittor is an open-source deep learning platform based on just-in-time (JIT) for high performance, which is developed
 and maintained by the `CSCG group <https://cg.cs.tsinghua.edu.cn/>`_ from Tsinghua University.
