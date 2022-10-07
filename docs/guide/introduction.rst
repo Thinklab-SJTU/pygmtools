@@ -117,6 +117,17 @@ and memory cost according to his/her application.
 
     Anyway, it does no harm to try graph matching first!
 
+When to use pygmtools
+^^^^^^^^^^^^^^^^^^^^^^
+
+``pygmtools`` is recommended for the following cases, and you could benefit from the friendly API:
+
+* If you want to integrate graph matching as a step of your pipeline (either learning or non-learning).
+
+* If you want quick benchmarking and evaluation of the graph matching solvers available in ``pygmtools``.
+
+* If you do not want to dive too deep into the algorithm details and do not need to modify the algorithm.
+
 We offer the following guidelines for your reference:
 
 * If you want to integrate graph matching solvers into your end-to-end supervised deep learning pipeline, try
@@ -127,3 +138,11 @@ We offer the following guidelines for your reference:
 * If there are multiple graphs to be jointly matched, try :mod:`~pygmtools.multi_graph_solvers`.
 
 * If time and memory cost of the above methods are unacceptable for your task, try :mod:`~pygmtools.linear_solvers`.
+
+When not to use pygmtools
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As a highly packed toolkit, ``pygmtools`` lacks some flexibilities in the implementation details, especially for
+experts in graph matching. If you are researching new graph matching algorithms or developing next-generation deep
+graph matching neural networks, ``pygmtools`` may not be suitable. We recommend
+`ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_ as the protocol for academic research.
