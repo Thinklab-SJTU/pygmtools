@@ -8,3 +8,4 @@ protobuf==3.19.4
 torch
 tqdm
 jittor
+appdirs>=1.4.4
