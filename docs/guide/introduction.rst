@@ -124,7 +124,7 @@ When to use pygmtools
 
 * If you want to integrate graph matching as a step of your pipeline (either learning or non-learning).
 
-* If you want quick benchmarking and evaluation of the graph matching solvers available in ``pygmtools``.
+* If you want a quick benchmarking and profiling of the graph matching solvers available in ``pygmtools``.
 
 * If you do not want to dive too deep into the algorithm details and do not need to modify the algorithm.
 
