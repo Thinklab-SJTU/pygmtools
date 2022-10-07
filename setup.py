@@ -8,16 +8,22 @@ import io
 import os
 import sys
 from shutil import rmtree
+import re
 
 from setuptools import find_packages, setup, Command
+
+def get_property(prop, project):
+    result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
+    return result.group(1)
+
 
 # Package meta-data.
 NAME = 'pygmtools'
 DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and supports numpy and pytorch backends. ' \
               'pygmtools also provides dataset API for standard graph matching benchmarks.'
 URL = 'https://pygmtools.readthedocs.io/'
-AUTHOR = 'ThinkLab at SJTU'
-VERSION = '0.2.8'
+AUTHOR = get_property('__version__', NAME)
+VERSION = get_property('__version__', NAME)
 
 REQUIRED = [
      'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1'

@@ -1,3 +1,15 @@
+r"""
+Classic (learning-free) **two-graph matching** solvers. These two-graph matching solvers are recommended to solve
+matching problems with two explicit graphs, or problems formulated as Quadratic Assignment Problem (QAP).
+
+The two-graph matching problem considers both nodes and edges, formulated as a QAP:
+
+.. math::
+
+    &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
+    s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+"""
+
 import importlib
 import pygmtools
 from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type

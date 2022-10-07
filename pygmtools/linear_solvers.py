@@ -52,7 +52,7 @@ def sinkhorn(s, n1=None, n2=None,
     You need not dive too deep into the math details if you are simply using Sinkhorn. However, you should
     be aware of one important hyper parameter. ``tau`` controls the distance between the predicted doubly-
     stochastic matrix, and the discrete permutation matrix computed by Hungarian algorithm (see
-    :func:`~pygmtools.classic_solvers.hungarian`). Given a small ``tau``, Sinkhorn performs more closely to
+    :func:`~pygmtools.linear_solvers.hungarian`). Given a small ``tau``, Sinkhorn performs more closely to
     Hungarian, at the cost of slower convergence speed and reduced numerical stability.
 
     .. note::

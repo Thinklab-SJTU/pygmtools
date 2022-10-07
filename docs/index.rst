@@ -11,3 +11,4 @@ Contents of Official Documentation
    guide/get_started
    guide/benchmark
    api/pygmtools
+   guide/contributing

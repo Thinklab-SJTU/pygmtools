@@ -1,3 +1,9 @@
+"""
+The Benchmark module with a unified data interface to evaluate graph matching methods.
+
+If you are interested in the performance and the deep learning framework, please refer to our `ThinkMatch project <https://github.com/Thinklab-SJTU/ThinkMatch>`_.
+"""
+
 import tempfile
 import shutil
 import itertools
@@ -9,12 +15,14 @@ class Benchmark:
     r"""
     The `Benchmark` module provides a unified data interface and an evaluating platform for different datasets.
 
-    :param name: str, dataset name, currently support 'PascalVOC', 'WillowObject', 'IMC_PT_SparseGM', 'CUB2011', 'SPair71k'
-    :param sets: str, problem set, 'train' for training set and 'test' for test set
-    :param obj_resize: tuple, resized object size
-    :param problem: str, problem type, '2GM' for 2-graph matching and 'MGM' for multi-graph matching
-    :param filter: str, filter of nodes, 'intersection' refers to retaining only common nodes; 'inclusion' is only for 2GM and refers to filtering only one graph to make its nodes a subset of the other graph, and 'unfiltered' refers to retaining all nodes in all graphs
-    :param args: specific settings for dataset
+    :param name: str, dataset name, currently support ``'PascalVOC'``, ``'WillowObject'``, ``'IMC_PT_SparseGM'``, ``'CUB2011'``, ``'SPair71k'``
+    :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for test set
+    :param obj_resize: tuple, (default: ``(256, 256)``) resized object size
+    :param problem: str, (default: ``'2GM'``) problem type, ``'2GM'`` for 2-graph matching and ``'MGM'`` for multi-graph matching
+    :param filter: str, (default: ``'intersection'``) filter of nodes, ``'intersection'`` refers to retaining only common nodes;
+       ``'inclusion'`` is only for 2GM and refers to filtering only one graph to make its nodes a subset of the other graph,
+       and ``'unfiltered'`` refers to retaining all nodes in all graphs
+    :param args: keyword settings for specific dataset
     """
 
     def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', **args):
@@ -55,15 +63,15 @@ class Benchmark:
         r"""
         Fetch a data pair or pairs of data by image ID for training or test.
 
-        :param ids: list of image ID, usually in 'train.json' or 'test.json'
+        :param ids: list of image ID, usually in ``train.json`` or ``test.json``
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
         :param shuffle: bool, whether to shuffle the order of keypoints
         :return:
-                    data_list: list of data, like ``[{‘img’: np.array, ’kpts’: coordinates of kpts}, …]``
+                    **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
-                    perm_mat_dict: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, …}``, `(0,1)` refers to data pair `(ids[0],ids[1])`
+                    **perm_mat_dict**: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, ...}``, ``(0,1)`` refers to data pair ``(ids[0],ids[1])``
 
-                    ids: list of image ID
+                    **ids**: list of image ID
         """
         assert (self.problem == '2GM' and len(ids) == 2) or ((self.problem == 'MGM' or self.problem == 'MGM3') and len(
             ids) > 2), '{} problem cannot get {} data'.format(self.problem, len(ids))
@@ -180,11 +188,11 @@ class Benchmark:
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
         :param shuffle: bool, whether to shuffle the order of keypoints
         :return:
-                    data_list: list of data, like ``[{‘img’: np.array, ’kpts’: coordinates of kpts}, …]``
+                    **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
-                    perm_mat_dict: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, …}``, `(0,1)` refers to data pair `(ids[0],ids[1])`
+                    **perm_mat_dict**: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, ...}``, ``(0,1)`` refers to data pair ``(ids[0],ids[1])``
 
-                    ids: list of image ID
+                    **ids**: list of image ID
         """
         if cls == None:
             cls = random.randrange(0, len(self.classes))
@@ -219,9 +227,9 @@ class Benchmark:
         :param cls: int or str, class of expected data. None for all classes
         :param num: int, number of images in each image ID list; for example, 2 for 2GM
         :return:
-                id_combination_list: list of combinations of image ids
+                **id_combination_list**: list of combinations of image ids
 
-                length: length of combinations
+                **length**: length of combinations
         """
         if cls == None:
             clss = None
@@ -274,7 +282,7 @@ class Benchmark:
         Compute the length of image combinations in specified class.
 
         :param cls: int or str, class of expected data. None for all classes
-        :param num: int, number of images in each image ID list; for example, 2 for 2GM
+        :param num: int, number of images in each image ID list; for example, 2 for two-graph matching problem
         :return: length of combinations
         """
         if cls == None:
@@ -350,7 +358,7 @@ class Benchmark:
         r"""
         Evaluate test results and compute matching accuracy and coverage.
 
-        :param prediction: list, prediction result, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]``
+        :param prediction: list, prediction result, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse}, ...]``
         :param classes: list of evaluated classes
         :param verbose: bool, whether to print the result
         :return: evaluation result in each class and their averages, including p, r, f1 and their standard deviation and coverage
@@ -458,7 +466,7 @@ class Benchmark:
         r"""
         Evaluate test results and compute matching accuracy and coverage on one specified class.
 
-        :param prediction: list, prediction result on one class, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]``
+        :param prediction: list, prediction result on one class, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse}, ...]``
         :param cls: str, evaluated class
         :param verbose: bool, whether to print the result
         :return: evaluation result on the specified class, including p, r, f1 and their standard deviation and coverage

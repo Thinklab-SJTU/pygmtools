@@ -1,3 +1,8 @@
+r"""
+Classic (learning-free) **multi-graph matching** solvers. These multi-graph matching solvers are recommended to solve
+the joint matching problem of multiple graphs.
+"""
+
 import functools
 import importlib
 import pygmtools
@@ -352,7 +357,8 @@ def gamgm(A, W,
 
     .. note::
 
-        This function is differentiable through the black-box trick. See the following paper for details:
+        In PyTorch backend, this function is differentiable through the black-box trick. See the following paper for
+        details:
 
         ::
 
@@ -363,7 +369,7 @@ def gamgm(A, W,
 
     .. note::
 
-        Set ``verbose=True`` may help you tune the parameters.
+        Setting ``verbose=True`` may help you tune the parameters.
 
     .. dropdown:: Pytorch Example
 

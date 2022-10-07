@@ -19,6 +19,7 @@
 #
 import os
 import sys
+import datetime
 sys.path.insert(0, os.path.abspath('..'))
 
 os.environ['SPHINX'] = '1'
@@ -61,7 +62,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'pygmtools'
-copyright = '2022, ThinkLab@SJTU'
+copyright = datetime.datetime.now().strftime('%Y') + ', ThinkLab@SJTU'
 author = 'Runzhong Wang, Ziao Guo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -154,7 +155,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'pygmtools.tex', 'pygmtools Documentation',
-     'Runzhong Wang', 'manual'),
+     author, 'manual'),
 ]
 
 

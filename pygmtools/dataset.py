@@ -1,3 +1,7 @@
+r"""
+The implementations of data loading and data processing.
+"""
+
 import requests
 import os
 import zipfile
@@ -88,9 +92,9 @@ VOC2011_KPT_NAMES = {
 
 class PascalVOC:
     r"""
-    This class is defined to download and preprocess PascalVOC dataset.
+    Download and preprocess **PascalVOC Keypoint** dataset.
 
-    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
     """
     def __init__(self, sets, obj_resize, **args):
@@ -148,7 +152,7 @@ class PascalVOC:
         Automatically download PascalVOC dataset.
 
         :param url: str, web url of PascalVOC and PascalVOC annotation
-        :param name: str, "PascalVOC" to download PascalVOC and "PascalVOC_anno" to download PascalVOC annotation
+        :param name: str, ``"PascalVOC"`` to download PascalVOC and ``"PascalVOC_anno"`` to download PascalVOC annotation
         """
         dirs = 'data/'
         if not os.path.exists(dirs):
@@ -190,7 +194,7 @@ class PascalVOC:
 
     def __filter_list(self, a_xml_list):
         """
-        Filter out 'truncated', 'occluded' and 'difficult' images following the practice of previous works.
+        Filter out ``'truncated'``, ``'occluded'`` and ``'difficult'`` images following the practice of previous works.
         In addition, this dataset has uncleaned label (in person category). They are omitted as suggested by README.
         """
         for cls_id in range(len(self.classes)):
@@ -234,7 +238,8 @@ class PascalVOC:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
+        training set, and ``test.json`` for testing set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
@@ -380,19 +385,19 @@ class PascalVOC:
 
 class WillowObject:
     r"""
-        This class is defined to download and preprocess WillowObject dataset.
+        Download and preprocess **Willow Object Class** dataset.
 
-        :param sets: str, problem set, 'train' for training set and 'test' for test set
+        :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
         :param obj_resize: tuple, resized image size
         :param ds_dict: settings of dataset, containing at most 4 params(keys) for WillowObject:
 
-            TRAIN_NUM: int, number of images for train in each class
+            * **TRAIN_NUM**: int, number of images for train in each class
 
-            SPLIT_OFFSET: int, offset when split train and test set
+            * **SPLIT_OFFSET**: int, offset when split train and testing set
 
-            TRAIN_SAME_AS_TEST: bool, whether to use same images for training and test
+            * **TRAIN_SAME_AS_TEST**: bool, whether to use same images for training and test
 
-            RAND_OUTLIER: int, number of added outliers in one image
+            * **RAND_OUTLIER**: int, number of added outliers in one image
     """
     def __init__(self, sets, obj_resize, ds_dict=None, **args):
         if ds_dict is not None:
@@ -467,7 +472,8 @@ class WillowObject:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
+        training set, and ``test.json`` for testing set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
@@ -637,20 +643,20 @@ class WillowObject:
 
 class SPair71k:
     r"""
-    This class is defined to download and preprocess SPair71k dataset.
+    Download and preprocess **SPair71k** dataset.
 
-    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
-    :param problem: str, problem type, only '2GM' in SPair71k
+    :param problem: str, problem type, only ``'2GM'`` is supported in SPair71k
     :param ds_dict: settings of dataset, containing at most 4 params(keys) for SPair71k:
 
-        TRAIN_DIFF_PARAMS: list of images that should be dumped in train set
+        * **TRAIN_DIFF_PARAMS**: list of images that should be dumped in train set
 
-        EVAL_DIFF_PARAMS: list of images that should be dumped in test set
+        * **EVAL_DIFF_PARAMS**: list of images that should be dumped in testing set
 
-        COMB_CLS: bool, whether to combine images in different classes
+        * **COMB_CLS**: bool, whether to combine images in different classes
 
-        SIZE: str, 'large' for SPair71k-large and 'small' for SPair71k-small
+        * **SIZE**: str, ``'large'`` for SPair71k-large and ``'small'`` for SPair71k-small
     """
     def __init__(self, sets, obj_resize, problem='2GM', ds_dict=None, **args):
         if ds_dict is not None:
@@ -738,7 +744,8 @@ class SPair71k:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
+        training set, and ``test.json`` for testing set.
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
@@ -925,13 +932,13 @@ class SPair71k:
 
 class IMC_PT_SparseGM:
     r"""
-    This class is defined to download and preprocess IMC_PT_SparseGM dataset.
+    Download and preprocess **IMC_PT_SparseGM** dataset.
 
-    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
     :param ds_dict: settings of dataset, containing at most 1 param(key) for IMC_PT_SparseGM:
 
-        TOTAL_KPT_NUM: int, maximum kpt_num in an image
+        * **TOTAL_KPT_NUM**: int, maximum kpt_num in an image
     """
     def __init__(self, sets, obj_resize, ds_dict=None, **args):
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
@@ -988,7 +995,8 @@ class IMC_PT_SparseGM:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
+        training set, and ``test.json`` for testing set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
@@ -1027,7 +1035,7 @@ class IMC_PT_SparseGM:
 
     def __get_anno_dict(self, img_name, cls):
         """
-        Get an annotation dict from .npz annotation
+        Get an annotation dict from ``.npz`` annotation
         """
         img_file = self.root_path_img / cls / img_name
         npz_file = self.root_path_npz / cls / (img_name.split('.')[0] + '.npz')
@@ -1076,13 +1084,13 @@ class IMC_PT_SparseGM:
 
 class CUB2011:
     r"""
-    This class is defined to download and preprocess CUB2011 dataset.
+    Download and preprocess **CUB2011** dataset.
 
-    :param sets: str, problem set, 'train' for training set and 'test' for test set
+    :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
     :param ds_dict: settings of dataset, containing at most 1 param(key) for CUB2011:
 
-        CLS_SPLIT: str, 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
+        * **CLS_SPLIT**: str, ``'ori'`` (original split), ``'sup'`` (super class) or ``'all'`` (all birds as one class)
     """
     def __init__(self, sets, obj_resize, ds_dict=None, **args):
         if ds_dict is not None:
@@ -1201,7 +1209,8 @@ class CUB2011:
 
     def process(self):
         r"""
-        Process the dataset and generate 'data-(size, size).json' for preprocessed dataset, 'train.json' for training set, and 'test.json' for test set.
+        Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
+        training set, and ``test.json`` for testing set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')

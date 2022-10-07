@@ -1,3 +1,7 @@
+"""
+Utility functions: problem formulating, data processing, and beyond.
+"""
+
 import time
 import functools
 import importlib
