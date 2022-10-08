@@ -22,7 +22,7 @@ NAME = 'pygmtools'
 DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and supports numpy and pytorch backends. ' \
               'pygmtools also provides dataset API for standard graph matching benchmarks.'
 URL = 'https://pygmtools.readthedocs.io/'
-AUTHOR = get_property('__version__', NAME)
+AUTHOR = get_property('__author__', NAME)
 VERSION = get_property('__version__', NAME)
 
 REQUIRED = [
