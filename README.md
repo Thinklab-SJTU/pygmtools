@@ -123,7 +123,7 @@ repository containing non-trivial implementation of deep graph matching models, 
 
 ## Chat with the Community
 
-If you have any questions or experiencing any issues, feel free to raise an issue on GitHub. 
+If you have any questions, or if you are experiencing any issues, feel free to raise an issue on GitHub. 
 
 We also offer the following chat rooms if you are more comfortable with them:
 
