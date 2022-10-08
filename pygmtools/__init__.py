@@ -5,7 +5,7 @@ from .multi_graph_solvers import cao, mgm_floyd, gamgm
 from .neural_solvers import pca_gm, ipca_gm, cie, ngm
 import pygmtools.utils as utils
 BACKEND = 'numpy'
-__version__ = '0.2.8'
+__version__ = '0.2.9'
 __author__ = 'ThinkLab at SJTU'
 
 
