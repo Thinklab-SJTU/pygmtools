@@ -4,7 +4,8 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/pygmtools.svg)](https://pypi.python.org/pypi/pygmtools/)
 [![Downloads](https://pepy.tech/badge/pygmtools)](https://pepy.tech/project/pygmtools)
 [![Documentation Status](https://readthedocs.org/projects/pygmtools/badge/?version=latest)](https://pygmtools.readthedocs.io/en/latest/?badge=latest)
-[![GitHub stars](https://img.shields.io/github/stars/Thinklab-SJTU/pygmtools.svg?style=social&label=Star&maxAge=8640)](https://GitHub.com/Thinklab-SJTU/pygmtools/stargazers/) [![Join the chat at https://gitter.im/pygmtools/community](https://badges.gitter.im/pygmtools/community.svg)](https://gitter.im/pygmtools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/pygmtools/community](https://badges.gitter.im/pygmtools/community.svg)](https://gitter.im/pygmtools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![GitHub stars](https://img.shields.io/github/stars/Thinklab-SJTU/pygmtools.svg?style=social&label=Star&maxAge=8640)](https://GitHub.com/Thinklab-SJTU/pygmtools/stargazers/) 
 
 -----------------------------------------
 
@@ -119,6 +120,15 @@ For more details, please [read the documentation](https://pygmtools.readthedocs.
 ``pygmtools`` is also featured with a standard data interface of several graph matching benchmarks. We also maintain a 
 repository containing non-trivial implementation of deep graph matching models, please check out
 [ThinkMatch](https://thinkmatch.readthedocs.io/) if you are interested!
+
+## Chat with the Community
+
+If you have any questions or experiencing any issues, feel free to raise an issue on GitHub. 
+
+We also offer the following chat rooms if you are more comfortable with them:
+
+* Gitter (for English users): [![Join the chat at https://gitter.im/pygmtools/community](https://badges.gitter.im/pygmtools/community.svg)](https://gitter.im/pygmtools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+* QQ Group (for Chinese users)/QQ群(中文用户): 696401889
 
 ## Contributing
 Any contributions/ideas/suggestions from the community is welcomed! Before starting your contribution, please read the
