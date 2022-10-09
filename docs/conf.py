@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosectionlabel',
     "sphinx_design",
+    'sphinx_gallery.gen_gallery',
     'm2r2']
 
 autodoc_mock_imports = ['scipy', 'matplotlib', 'torch_geometric', 'pynvml']
@@ -79,7 +80,7 @@ release = ''
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -179,3 +180,8 @@ texinfo_documents = [
      author, 'pygmtools', 'Python graph matching tools.',
      'Miscellaneous'),
 ]
+
+sphinx_gallery_conf = {
+     'examples_dirs': '../examples',
+     'gallery_dirs': 'auto_examples',
+}

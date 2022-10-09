@@ -11,4 +11,5 @@ Contents of Official Documentation
    guide/get_started
    guide/benchmark
    api/pygmtools
+   auto_examples/index.rst
    guide/contributing
