@@ -4,7 +4,6 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/pygmtools.svg)](https://pypi.python.org/pypi/pygmtools/)
 [![Downloads](https://pepy.tech/badge/pygmtools)](https://pepy.tech/project/pygmtools)
 [![Documentation Status](https://readthedocs.org/projects/pygmtools/badge/?version=latest)](https://pygmtools.readthedocs.io/en/latest/?badge=latest)
-[![Join the chat at https://gitter.im/pygmtools/community](https://badges.gitter.im/pygmtools/community.svg)](https://gitter.im/pygmtools/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GitHub stars](https://img.shields.io/github/stars/Thinklab-SJTU/pygmtools.svg?style=social&label=Star&maxAge=8640)](https://GitHub.com/Thinklab-SJTU/pygmtools/stargazers/) 
 
 -----------------------------------------
@@ -127,7 +126,7 @@ If you have any questions, or if you are experiencing any issues, feel free to r
 
 We also offer the following chat rooms if you are more comfortable with them:
 
-* Gitter (for English users): https://gitter.im/pygmtools/community
+* Discord (for English users): https://discord.gg/gdtRJZGnAR
 * QQ Group (for Chinese users)/QQ群(中文用户): 696401889
 
 ## Contributing
