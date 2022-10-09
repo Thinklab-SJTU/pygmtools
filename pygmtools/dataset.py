@@ -96,28 +96,62 @@ class PascalVOC:
 
     :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
+    :param ds_dict: settings of dataset, containing at most 5 params(keys) for PascalVOC:
+
+            * **KPT_ANNO_DIR**: str, directory of keypoint annotations
+
+            * **ROOT_DIR**: str, directory of data
+
+            * **SET_SPLIT**: str, set split path
+
+            * **CLASSES**: list, data classes
+
+            * **CACHE_PATH**: str, directory of data cache
     """
-    def __init__(self, sets, obj_resize, **args):
-        VOC2011_anno_path = dataset_cfg.PascalVOC.KPT_ANNO_DIR
-        VOC2011_img_path = dataset_cfg.PascalVOC.ROOT_DIR + 'JPEGImages'
-        VOC2011_ori_anno_path = dataset_cfg.PascalVOC.ROOT_DIR + 'Annotations'
-        VOC2011_cache_path = dataset_cfg.CACHE_PATH
+    def __init__(self, sets, obj_resize, **ds_dict):
+        KPT_ANNO_DIR = dataset_cfg.PascalVOC.KPT_ANNO_DIR
+        ROOT_DIR = dataset_cfg.PascalVOC.ROOT_DIR
+        SET_SPLIT = dataset_cfg.PascalVOC.SET_SPLIT
+        CLASSES = dataset_cfg.PascalVOC.CLASSES
+        CACHE_PATH = dataset_cfg.CACHE_PATH
+        if len(ds_dict.keys()) > 0:
+            if 'CLASSES' in ds_dict.keys():
+                CLASSES = ds_dict['CLASSES']
+            if 'ROOT_DIR' in ds_dict.keys():
+                ROOT_DIR = ds_dict['ROOT_DIR']
+            if 'SET_SPLIT' in ds_dict.keys():
+                SET_SPLIT = ds_dict['SET_SPLIT']
+            if 'KPT_ANNO_DIR' in ds_dict.keys():
+                KPT_ANNO_DIR = ds_dict['KPT_ANNO_DIR']
+            if 'CACHE_PATH' in ds_dict.keys():
+                CACHE_PATH = ds_dict['CACHE_PATH']
 
-        self.VOC2011_set_path = dataset_cfg.PascalVOC.SET_SPLIT
+        VOC2011_anno_path = KPT_ANNO_DIR
+        VOC2011_img_path = ROOT_DIR + 'JPEGImages'
+        VOC2011_ori_anno_path = ROOT_DIR + 'Annotations'
+        VOC2011_cache_path = CACHE_PATH
+
+        self.VOC2011_set_path = SET_SPLIT
         self.dataset_dir = 'data/PascalVOC'
-        data_dir = "data/PascalVOC/TrainVal/VOCdevkit/VOC2011"
-        anno_dir = "data/PascalVOC/annotations"
-        if not os.path.exists(data_dir):
-            self.download(url='http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar', name='PascalVOC' )
+        if not os.path.exists(ROOT_DIR):
+            assert ROOT_DIR == dataset_cfg.PascalVOC.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
+            self.download(url='http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar',
+                          name='PascalVOC')
 
-        if not os.path.exists(anno_dir):
-            self.download(url='https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz', name='PascalVOC_anno')
+        if not os.path.exists(KPT_ANNO_DIR):
+            assert KPT_ANNO_DIR == dataset_cfg.PascalVOC.KPT_ANNO_DIR, 'you should not change KPT_ANNO_DIR unless the annotations have been manually downloaded'
+            self.download(
+                url='https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz',
+                name='PascalVOC_anno')
+
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
 
         self.sets = sets
         self.obj_resize = obj_resize
 
-        self.classes = dataset_cfg.PascalVOC.CLASSES
-        self.kpt_len = [len(VOC2011_KPT_NAMES[_]) for _ in dataset_cfg.PascalVOC.CLASSES]
+        self.classes = CLASSES
+        self.kpt_len = [len(VOC2011_KPT_NAMES[_]) for _ in self.classes]
         self.classes_kpts = {cls: len(VOC2011_KPT_NAMES[cls]) for cls in self.classes}
         self.anno_path = Path(VOC2011_anno_path)
         self.img_path = Path(VOC2011_img_path)
@@ -389,7 +423,11 @@ class WillowObject:
 
         :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
         :param obj_resize: tuple, resized image size
-        :param ds_dict: settings of dataset, containing at most 4 params(keys) for WillowObject:
+        :param ds_dict: settings of dataset, containing at most 6 params(keys) for WillowObject:
+
+            * **ROOT_DIR**: str, directory of data
+
+            * **CLASSES**: list, data classes
 
             * **TRAIN_NUM**: int, number of images for train in each class
 
@@ -399,41 +437,43 @@ class WillowObject:
 
             * **RAND_OUTLIER**: int, number of added outliers in one image
     """
-    def __init__(self, sets, obj_resize, ds_dict=None, **args):
-        if ds_dict is not None:
+    def __init__(self, sets, obj_resize, **ds_dict):
+        CLASSES = dataset_cfg.WillowObject.CLASSES
+        KPT_LEN = dataset_cfg.WillowObject.KPT_LEN
+        ROOT_DIR = dataset_cfg.WillowObject.ROOT_DIR
+        TRAIN_NUM = dataset_cfg.WillowObject.TRAIN_NUM
+        SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
+        TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
+        RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
+        if len(ds_dict.keys()) > 0:
+            if 'CLASSES' in ds_dict.keys():
+                CLASSES = ds_dict['CLASSES']
+            if 'ROOT_DIR' in ds_dict.keys():
+                ROOT_DIR = ds_dict['ROOT_DIR']
             if 'TRAIN_NUM' in ds_dict.keys():
-                TRAIN_NUM = ds_dict.TRAIN_NUM
-            else:
-                TRAIN_NUM = dataset_cfg.WillowObject.TRAIN_NUM
+                TRAIN_NUM = ds_dict['TRAIN_NUM']
             if 'SPLIT_OFFSET' in ds_dict.keys():
-                SPLIT_OFFSET = ds_dict.SPLIT_OFFSET
-            else:
-                SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
+                SPLIT_OFFSET = ds_dict['SPLIT_OFFSET']
             if 'TRAIN_SAME_AS_TEST' in ds_dict.keys():
-                TRAIN_SAME_AS_TEST = ds_dict.TRAIN_SAME_AS_TEST
-            else:
-                TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
+                TRAIN_SAME_AS_TEST = ds_dict['TRAIN_SAME_AS_TEST']
             if 'RAND_OUTLIER' in ds_dict.keys():
-                RAND_OUTLIER = ds_dict.RAND_OUTLIER
-            else:
-                RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
-        else:
-            TRAIN_NUM = dataset_cfg.WillowObject.TRAIN_NUM
-            SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
-            TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
-            RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
+                RAND_OUTLIER = ds_dict['RAND_OUTLIER']
 
         self.dataset_dir = 'data/WillowObject'
-        if not os.path.exists(self.dataset_dir):
+        if not os.path.exists(ROOT_DIR):
+            assert ROOT_DIR == dataset_cfg.WillowObject.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
             self.download(url='http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip')
+
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
 
         self.sets = sets
         self.obj_resize = obj_resize
 
-        self.classes = dataset_cfg.WillowObject.CLASSES
-        self.kpt_len = [dataset_cfg.WillowObject.KPT_LEN for _ in dataset_cfg.WillowObject.CLASSES]
+        self.classes = CLASSES
+        self.kpt_len = [KPT_LEN for _ in self.classes]
 
-        self.root_path = Path(dataset_cfg.WillowObject.ROOT_DIR)
+        self.root_path = Path(ROOT_DIR)
         self.obj_resize = obj_resize
 
         assert sets == 'train' or 'test', 'No match found for dataset {}'.format(sets)
@@ -648,7 +688,9 @@ class SPair71k:
     :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
     :param problem: str, problem type, only ``'2GM'`` is supported in SPair71k
-    :param ds_dict: settings of dataset, containing at most 4 params(keys) for SPair71k:
+    :param ds_dict: settings of dataset, containing at most 5 params(keys) for SPair71k:
+
+        * **ROOT_DIR**: str, directory of data
 
         * **TRAIN_DIFF_PARAMS**: list of images that should be dumped in train set
 
@@ -658,34 +700,28 @@ class SPair71k:
 
         * **SIZE**: str, ``'large'`` for SPair71k-large and ``'small'`` for SPair71k-small
     """
-    def __init__(self, sets, obj_resize, problem='2GM', ds_dict=None, **args):
-        if ds_dict is not None:
+    def __init__(self, sets, obj_resize, problem='2GM', **ds_dict):
+        TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
+        EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
+        COMB_CLS = dataset_cfg.SPair.COMB_CLS
+        SIZE = dataset_cfg.SPair.size
+        ROOT_DIR = dataset_cfg.SPair.ROOT_DIR
+        if len(ds_dict.keys()) > 0:
             if 'TRAIN_DIFF_PARAMS' in ds_dict.keys():
-                TRAIN_DIFF_PARAMS = ds_dict.TRAIN_DIFF_PARAMS
-            else:
-                TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
+                TRAIN_DIFF_PARAMS = ds_dict['TRAIN_DIFF_PARAMS']
             if 'EVAL_DIFF_PARAMS' in ds_dict.keys():
-                EVAL_DIFF_PARAMS = ds_dict.EVAL_DIFF_PARAMS
-            else:
-                EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
+                EVAL_DIFF_PARAMS = ds_dict['EVAL_DIFF_PARAMS']
             if 'COMB_CLS' in ds_dict.keys():
-                COMB_CLS = ds_dict.COMB_CLS
-            else:
-                COMB_CLS = dataset_cfg.SPair.COMB_CLS
+                COMB_CLS = ds_dict['COMB_CLS']
             if 'SIZE' in ds_dict.keys():
-                SIZE = ds_dict.SIZE
-            else:
-                SIZE = dataset_cfg.SPair.size
-        else:
-            TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
-            EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
-            COMB_CLS = dataset_cfg.SPair.COMB_CLS
-            SIZE = dataset_cfg.SPair.size
+                SIZE = ds_dict['SIZE']
+            if 'ROOT_DIR' in ds_dict.keys():
+                ROOT_DIR = ds_dict['ROOT_DIR']
 
-        SPair71k_pair_ann_path = dataset_cfg.SPair.ROOT_DIR + "/PairAnnotation"
-        SPair71k_image_path = dataset_cfg.SPair.ROOT_DIR + "/JPEGImages"
-        SPair71k_image_annotation = dataset_cfg.SPair.ROOT_DIR + "/ImageAnnotation"
-        self.SPair71k_layout_path = dataset_cfg.SPair.ROOT_DIR + "/Layout"
+        SPair71k_pair_ann_path = ROOT_DIR + "/PairAnnotation"
+        SPair71k_image_path = ROOT_DIR + "/JPEGImages"
+        SPair71k_image_annotation = ROOT_DIR + "/ImageAnnotation"
+        self.SPair71k_layout_path = ROOT_DIR + "/Layout"
         self.SPair71k_dataset_size = SIZE
 
         sets_translation_dict = dict(train="trn", test="test")
@@ -695,8 +731,12 @@ class SPair71k:
 
         assert not problem == 'MGM', 'No match found for problem {} in SPair-71k'.format(problem)
         self.dataset_dir = 'data/SPair-71k'
-        if not os.path.exists(self.dataset_dir):
+        if not os.path.exists(SPair71k_image_path):
+            assert ROOT_DIR == dataset_cfg.SPair.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
             self.download(url='http://cvlab.postech.ac.kr/research/SPair-71k/data/SPair-71k.tar.gz')
+
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
 
         self.obj_resize = obj_resize
         self.sets = sets_translation_dict[sets]
@@ -936,31 +976,46 @@ class IMC_PT_SparseGM:
 
     :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
-    :param ds_dict: settings of dataset, containing at most 1 param(key) for IMC_PT_SparseGM:
+    :param ds_dict: settings of dataset, containing at most 4 params(keys) for IMC_PT_SparseGM:
+
+        * **ROOT_DIR_IMG**: str, directory of images
+
+        * **ROOT_DIR_NPZ**: str, directory of annotations
+
+        * **CLASSES**: dict, classes of training and test data, keys: ``'train'`` for training and ``'test'`` for test
 
         * **TOTAL_KPT_NUM**: int, maximum kpt_num in an image
     """
-    def __init__(self, sets, obj_resize, ds_dict=None, **args):
+    def __init__(self, sets, obj_resize, **ds_dict):
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
-
-        if ds_dict is not None:
+        TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
+        CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
+        ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
+        ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
+        if len(ds_dict.keys()) > 0:
             if 'TOTAL_KPT_NUM' in ds_dict.keys():
-                TOTAL_KPT_NUM = ds_dict.TOTAL_KPT_NUM
-            else:
-                TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
-        else:
-            TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
+                TOTAL_KPT_NUM = ds_dict['TOTAL_KPT_NUM']
+            if 'CLASSES' in ds_dict.keys():
+                CLASSES = ds_dict['CLASSES']
+            if 'ROOT_DIR_NPZ' in ds_dict.keys():
+                ROOT_DIR_NPZ = ds_dict['ROOT_DIR_NPZ']
+            if 'ROOT_DIR_IMG' in ds_dict.keys():
+                ROOT_DIR_IMG = ds_dict['ROOT_DIR_IMG']
 
         self.dataset_dir = 'data/IMC-PT-SparseGM'
-        if not os.path.exists(self.dataset_dir):
+        if not os.path.exists(ROOT_DIR_IMG):
+            assert ROOT_DIR_IMG == dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG, 'you should not change ROOT_DIR_IMG or ROOT_DIR_NPZ unless the data have been manually downloaded'
+            assert ROOT_DIR_NPZ == dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ, 'you should not change ROOT_DIR_IMG or ROOT_DIR_NPZ unless the data have been manually downloaded'
             self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B')
 
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
         self.sets = sets
-        self.classes = dataset_cfg.IMC_PT_SparseGM.CLASSES[sets]
+        self.classes = CLASSES[sets]
         self.total_kpt_num = TOTAL_KPT_NUM
 
-        self.root_path_npz = Path(dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ)
-        self.root_path_img = Path(dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG)
+        self.root_path_npz = Path(ROOT_DIR_NPZ)
+        self.root_path_img = Path(ROOT_DIR_IMG)
         self.obj_resize = obj_resize
 
         self.img_lists = [np.load(self.root_path_npz / cls / 'img_info.npz')['img_name'].tolist()
@@ -1088,18 +1143,20 @@ class CUB2011:
 
     :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
-    :param ds_dict: settings of dataset, containing at most 1 param(key) for CUB2011:
+    :param ds_dict: settings of dataset, containing at most 2 params(keys) for CUB2011:
+
+        * **ROOT_DIR**: str, directory of data
 
         * **CLS_SPLIT**: str, ``'ori'`` (original split), ``'sup'`` (super class) or ``'all'`` (all birds as one class)
     """
-    def __init__(self, sets, obj_resize, ds_dict=None, **args):
-        if ds_dict is not None:
+    def __init__(self, sets, obj_resize, **ds_dict):
+        CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
+        ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
+        if len(ds_dict.keys()) > 0:
             if 'CLS_SPLIT' in ds_dict.keys():
-                CLS_SPLIT = ds_dict.CLS_SPLIT
-            else:
-                CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
-        else:
-            CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
+                CLS_SPLIT = ds_dict['CLS_SPLIT']
+            if 'ROOT_DIR' in ds_dict.keys():
+                ROOT_DIR = ds_dict['ROOT_DIR']
 
         self.set_data = {'train': [], 'test': []}
         self.classes = []
@@ -1108,27 +1165,31 @@ class CUB2011:
         self._set_mask = {}
         self.cls_split = CLS_SPLIT
 
-        rootpath = dataset_cfg.CUB2011.ROOT_PATH
+        self.rootpath = ROOT_DIR
 
         self.dataset_dir = 'data/CUB_200_2011'
-        if not os.path.exists(self.dataset_dir):
+        if not os.path.exists(ROOT_DIR):
+            assert ROOT_DIR == dataset_cfg.CUB2011.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
             self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45')
 
-        with open(os.path.join(rootpath, 'images.txt')) as f:
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
+
+        with open(os.path.join(self.rootpath, 'images.txt')) as f:
             self.im2fn = dict(l.rstrip('\n').split() for l in f.readlines())
-        with open(os.path.join(rootpath, 'train_test_split.txt')) as f:
+        with open(os.path.join(self.rootpath, 'train_test_split.txt')) as f:
             train_split = dict(l.rstrip('\n').split() for l in f.readlines())
-        with open(os.path.join(rootpath, 'classes.txt')) as f:
+        with open(os.path.join(self.rootpath, 'classes.txt')) as f:
             classes = dict(l.rstrip('\n').split() for l in f.readlines())
-        with open(os.path.join(rootpath, 'image_class_labels.txt')) as f:
+        with open(os.path.join(self.rootpath, 'image_class_labels.txt')) as f:
             img2class = [l.rstrip('\n').split() for l in f.readlines()]
             img_idxs, class_idxs = map(list, zip(*img2class))
             class2img = self.__lists2dict_for_cub(class_idxs, img_idxs)
-        with open(os.path.join(rootpath, 'parts', 'part_locs.txt')) as f:
+        with open(os.path.join(self.rootpath, 'parts', 'part_locs.txt')) as f:
             part_locs = [l.rstrip('\n').split() for l in f.readlines()]
             fi, pi, x, y, v = map(list, zip(*part_locs))
             self.im2kpts = self.__lists2dict_for_cub(fi, zip(pi, x, y, v))
-        with open(os.path.join(rootpath, 'bounding_boxes.txt')) as f:
+        with open(os.path.join(self.rootpath, 'bounding_boxes.txt')) as f:
             bboxes = [l.rstrip('\n').split() for l in f.readlines()]
             ii, x, y, w, h = map(list, zip(*bboxes))
             self.im2bbox = dict(zip(ii, zip(x, y, w, h)))
@@ -1242,7 +1303,7 @@ class CUB2011:
             f2.close()
 
     def __get_imgname(self, data):
-        return os.path.join(dataset_cfg.CUB2011.ROOT_PATH, 'images', self.im2fn[data])
+        return os.path.join(self.rootpath, 'images', self.im2fn[data])
 
     def __get_meta(self, data):
         pi, x, y, v = map(list, zip(*self.im2kpts[data]))
