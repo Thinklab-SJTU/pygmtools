@@ -30,7 +30,7 @@ __C.CUB2011.CLASS_SPLIT = 'ori' # choose from 'ori' (original split), 'sup' (sup
 # SWPair-71 Dataset
 __C.SPair = edict()
 __C.SPair.ROOT_DIR = "data/SPair-71k"
-__C.SPair.size = "large"
+__C.SPair.SIZE = "large"
 __C.SPair.CLASSES = [
     "aeroplane",
     "bicycle",
@@ -64,6 +64,6 @@ __C.IMC_PT_SparseGM.CLASSES = {'train': ['brandenburg_gate', 'buckingham_palace'
                             'test': ['reichstag', 'sacre_coeur', 'st_peters_square']}
 __C.IMC_PT_SparseGM.ROOT_DIR_NPZ = 'data/IMC-PT-SparseGM/annotations'
 __C.IMC_PT_SparseGM.ROOT_DIR_IMG = 'data/IMC-PT-SparseGM/images'
-__C.IMC_PT_SparseGM.TOTAL_KPT_NUM = 50
+__C.IMC_PT_SparseGM.MAX_KPT_NUM = 50
 
 __C.CACHE_PATH = 'data/cache'

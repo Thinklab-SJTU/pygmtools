@@ -149,6 +149,7 @@ class PascalVOC:
 
         self.sets = sets
         self.obj_resize = obj_resize
+        self.suffix = 'pca'
 
         self.classes = CLASSES
         self.kpt_len = [len(VOC2011_KPT_NAMES[_]) for _ in self.classes]
@@ -277,7 +278,7 @@ class PascalVOC:
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
-        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
         if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
             if not (os.path.exists(train_file) and os.path.exists(test_file)):
                 list1 = []
@@ -469,6 +470,7 @@ class WillowObject:
 
         self.sets = sets
         self.obj_resize = obj_resize
+        self.suffix = 'willow-' + str(RAND_OUTLIER)
 
         self.classes = CLASSES
         self.kpt_len = [KPT_LEN for _ in self.classes]
@@ -517,7 +519,7 @@ class WillowObject:
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
-        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
 
         data_list = []
         mat_list_ = []
@@ -665,7 +667,7 @@ class WillowObject:
 
         for idx in range(self.rand_outlier):
             attr = {
-                'name': 'outlier',
+                'labels': 'outlier',
                 'x': random.uniform(0, self.obj_resize[0]),
                 'y': random.uniform(0, self.obj_resize[1])
             }
@@ -704,7 +706,7 @@ class SPair71k:
         TRAIN_DIFF_PARAMS = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
         EVAL_DIFF_PARAMS = dataset_cfg.SPair.EVAL_DIFF_PARAMS
         COMB_CLS = dataset_cfg.SPair.COMB_CLS
-        SIZE = dataset_cfg.SPair.size
+        SIZE = dataset_cfg.SPair.SIZE
         ROOT_DIR = dataset_cfg.SPair.ROOT_DIR
         if len(ds_dict.keys()) > 0:
             if 'TRAIN_DIFF_PARAMS' in ds_dict.keys():
@@ -723,6 +725,7 @@ class SPair71k:
         SPair71k_image_annotation = ROOT_DIR + "/ImageAnnotation"
         self.SPair71k_layout_path = ROOT_DIR + "/Layout"
         self.SPair71k_dataset_size = SIZE
+        self.suffix = 'spair-' + SIZE
 
         sets_translation_dict = dict(train="trn", test="test")
         difficulty_params_dict = dict(
@@ -789,7 +792,7 @@ class SPair71k:
         """
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
-        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
         if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
             train_list = []
             test_list = []
@@ -984,17 +987,17 @@ class IMC_PT_SparseGM:
 
         * **CLASSES**: dict, classes of training and test data, keys: ``'train'`` for training and ``'test'`` for test
 
-        * **TOTAL_KPT_NUM**: int, maximum kpt_num in an image
+        * **MAX_KPT_NUM**: int, maximum kpt_num in an image
     """
     def __init__(self, sets, obj_resize, **ds_dict):
         assert sets in ('train', 'test'), 'No match found for dataset {}'.format(sets)
-        TOTAL_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.TOTAL_KPT_NUM
+        MAX_KPT_NUM = dataset_cfg.IMC_PT_SparseGM.MAX_KPT_NUM
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
         if len(ds_dict.keys()) > 0:
-            if 'TOTAL_KPT_NUM' in ds_dict.keys():
-                TOTAL_KPT_NUM = ds_dict['TOTAL_KPT_NUM']
+            if 'MAX_KPT_NUM' in ds_dict.keys():
+                MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
             if 'CLASSES' in ds_dict.keys():
                 CLASSES = ds_dict['CLASSES']
             if 'ROOT_DIR_NPZ' in ds_dict.keys():
@@ -1012,7 +1015,8 @@ class IMC_PT_SparseGM:
             os.makedirs(self.dataset_dir)
         self.sets = sets
         self.classes = CLASSES[sets]
-        self.total_kpt_num = TOTAL_KPT_NUM
+        self.max_kpt_num = MAX_KPT_NUM
+        self.suffix = 'imcpt-' + str(MAX_KPT_NUM)
 
         self.root_path_npz = Path(ROOT_DIR_NPZ)
         self.root_path_img = Path(ROOT_DIR_IMG)
@@ -1054,7 +1058,7 @@ class IMC_PT_SparseGM:
         training set, and ``test.json`` for testing set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
-        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
 
         if not os.path.exists(set_file):
             set_list = []
@@ -1113,7 +1117,7 @@ class IMC_PT_SparseGM:
         keypoint_list = []
         for i in range(kpts.shape[1]):
             kpt_index = int(kpts[0, i])
-            assert kpt_index < self.total_kpt_num
+            assert kpt_index < self.max_kpt_num
             attr = {
                 'labels': kpt_index,
                 'x': kpts[1, i] * self.obj_resize[0] / w,
@@ -1126,7 +1130,7 @@ class IMC_PT_SparseGM:
         anno_dict['kpts'] = keypoint_list
         anno_dict['bounds'] = [xmin, ymin, w, h]
         anno_dict['cls'] = cls
-        anno_dict['univ_size'] = self.total_kpt_num
+        anno_dict['univ_size'] = self.max_kpt_num
 
         return anno_dict
 
@@ -1164,6 +1168,7 @@ class CUB2011:
         self._set_pairs = {}
         self._set_mask = {}
         self.cls_split = CLS_SPLIT
+        self.suffix = 'cub2011-' + CLS_SPLIT
 
         self.rootpath = ROOT_DIR
 
@@ -1274,7 +1279,7 @@ class CUB2011:
         training set, and ``test.json`` for testing set.
         """
         set_file = os.path.join(self.dataset_dir, self.sets + '.json')
-        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '.json')
+        img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
 
         if not os.path.exists(set_file):
             set_list = []
