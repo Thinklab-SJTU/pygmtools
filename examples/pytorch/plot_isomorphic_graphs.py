@@ -14,9 +14,9 @@ Isomorphic graphs means graphs whose structure are identical, but the node corre
 
 import torch # pytorch backend
 import pygmtools as pygm #
-import networkx as nx # for plotting networks
 import matplotlib.pyplot as plt # for plotting
 from matplotlib.patches import ConnectionPatch # for plotting matching result
+import networkx as nx # for plotting graphs
 pygm.BACKEND = 'pytorch'
 _ = torch.manual_seed(1)
 
@@ -30,6 +30,7 @@ X_gt = torch.zeros(num_nodes, num_nodes)
 X_gt[torch.arange(0, num_nodes, dtype=torch.int64), torch.randperm(num_nodes)] = 1
 A1 = torch.rand(num_nodes, num_nodes)
 A1 = (A1 + A1.t() > 1.) * (A1 + A1.t()) / 2
+torch.diagonal(A1)[:] = 0
 A2 = torch.mm(torch.mm(X_gt.t(), A1), X_gt)
 n1 = torch.tensor([num_nodes])
 n2 = torch.tensor([num_nodes])
@@ -56,6 +57,14 @@ nx.draw_networkx(G2, pos=pos2)
 #
 # Build affinity matrix
 # ----------------------
+# To match isomorphic graphs by graph matching, we follow the formulation of Quadratic Assignment Problem (QAP):
+#
+# .. math::
+#
+#     &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
+#     s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+#
+# where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 #
 conn1, edge1 = pygm.utils.dense_to_sparse(A1)
 conn2, edge2 = pygm.utils.dense_to_sparse(A2)
@@ -63,21 +72,27 @@ import functools
 gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1) # set affinity function
 K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
 
+##############################################################################
+# Visualization of the affinity matrix. For graph matching problem with :math:`N` nodes, the affinity matrix
+# has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
+#
 plt.figure(figsize=(4, 4))
-plt.title('Affinity Matrix')
+plt.title(f'Affinity Matrix (size: {K.shape[0]}$\\times${K.shape[1]})')
 plt.imshow(K.numpy(), cmap='Blues')
 
 ##############################################################################
 # Solve graph matching problem by RRWM solver
 # -------------------------------------------
-#
-# See :func:`~pygmtools.classic_solvers.rrwm`.
+# See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 #
 X = pygm.rrwm(K, n1, n2)
 
+##############################################################################
+# The output of RRWM is a soft matching matrix. Visualization:
+#
 plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
-plt.title('RRWM\'s Soft Matching Matrix')
+plt.title('RRWM Soft Matching Matrix')
 plt.imshow(X.numpy(), cmap='Blues')
 plt.subplot(1, 2, 2)
 plt.title('Ground Truth Matching Matrix')
@@ -86,9 +101,13 @@ plt.imshow(X_gt.numpy(), cmap='Blues')
 ##############################################################################
 # Get the discrete matching matrix
 # ---------------------------------
+# Hungarian algorithm is then adopted to reach a discrete matching matrix
 #
 X = pygm.hungarian(X)
 
+##############################################################################
+# Visualization of the discrete matching matrix:
+#
 plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
 plt.title(f'RRWM Matching Matrix (acc={(X * X_gt).sum()/ X_gt.sum():.2f})')
@@ -100,6 +119,7 @@ plt.imshow(X_gt.numpy(), cmap='Blues')
 ##############################################################################
 # Align the original graphs
 # --------------------------
+# Draw the matching:
 #
 plt.figure(figsize=(8, 4))
 ax1 = plt.subplot(1, 2, 1)
@@ -114,6 +134,9 @@ for i in range(num_nodes):
                           axesA=ax1, axesB=ax2, color="red")
     plt.gca().add_artist(con)
 
+##############################################################################
+# Align the nodes:
+#
 align_A2 = torch.mm(torch.mm(X, A2), X.t())
 plt.figure(figsize=(8, 4))
 ax1 = plt.subplot(1, 2, 1)
@@ -134,28 +157,51 @@ nx.draw_networkx(G2, pos=align_pos2)
 # Other solvers are also available
 # ---------------------------------
 #
-# Classic IPFP solver :func:`~pygmtools.classic_solvers.ipfp`:
+# Classic IPFP solver (see :func:`~pygmtools.classic_solvers.ipfp`):
 #
 X = pygm.ipfp(K, n1, n2)
 
+##############################################################################
+# Visualization of IPFP matching result:
+#
 plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
-plt.title('IPFP Matching Matrix')
+plt.title(f'IPFP Matching Matrix (acc={(X * X_gt).sum()/ X_gt.sum():.2f})')
 plt.imshow(X.numpy(), cmap='Blues')
 plt.subplot(1, 2, 2)
 plt.title('Ground Truth Matching Matrix')
 plt.imshow(X_gt.numpy(), cmap='Blues')
 
 ##############################################################################
-# NGM neural network solver :func:`~pygmtools.neural_solvers.ngm`:
+# Classic SM solver (see :func:`~pygmtools.classic_solvers.sm`):
+#
+X = pygm.sm(K, n1, n2)
+X = pygm.hungarian(X)
+
+##############################################################################
+# Visualization of SM matching result:
+#
+plt.figure(figsize=(8, 4))
+plt.subplot(1, 2, 1)
+plt.title(f'SM Matching Matrix (acc={(X * X_gt).sum()/ X_gt.sum():.2f})')
+plt.imshow(X.numpy(), cmap='Blues')
+plt.subplot(1, 2, 2)
+plt.title('Ground Truth Matching Matrix')
+plt.imshow(X_gt.numpy(), cmap='Blues')
+
+##############################################################################
+# NGM neural network solver (see :func:`~pygmtools.neural_solvers.ngm`):
 #
 with torch.set_grad_enabled(False):
     X = pygm.ngm(K, n1, n2, pretrain='voc')
     X = pygm.hungarian(X)
 
+##############################################################################
+# Visualization of NGM matching result:
+#
 plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
-plt.title('NGM Matching Matrix')
+plt.title(f'NGM Matching Matrix (acc={(X * X_gt).sum()/ X_gt.sum():.2f})')
 plt.imshow(X.numpy(), cmap='Blues')
 plt.subplot(1, 2, 2)
 plt.title('Ground Truth Matching Matrix')
