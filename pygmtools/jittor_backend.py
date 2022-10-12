@@ -417,7 +417,7 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
-            ne2 = [edge_aff.shape[1]] * batch_size
+            ne2 = [edge_aff.shape[2]] * batch_size
     else:
         # device = node_aff.device
         dtype = node_aff.dtype
