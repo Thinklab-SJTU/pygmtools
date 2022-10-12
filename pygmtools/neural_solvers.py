@@ -34,8 +34,8 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
     :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
     :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
-    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:``n_1``
-    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:``n_2``
+    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
+    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
     :param in_channel: (default: 1024) Channel size of the input layer. It must match the feature dimension :math:`(d)`
         of ``feat1, feat2``. Ignored if the network object is given (ignored if ``network!=None``)
     :param hidden_channel: (default: 2048) Channel size of hidden layers. Ignored if the network object is given
@@ -63,6 +63,9 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. dropdown:: PyTorch Example
 
@@ -192,8 +195,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
     :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
     :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
-    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:``n_1``
-    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:``n_2``
+    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
+    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
     :param in_channel: (default: 1024) Channel size of the input layer. It must match the feature dimension :math:`(d)`
         of ``feat1, feat2``. Ignored if the network object is given (ignored if ``network!=None``)
     :param hidden_channel: (default: 2048) Channel size of hidden layers. Ignored if the network object is given
@@ -222,6 +225,9 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. dropdown:: PyTorch Example
 
@@ -356,8 +362,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
     :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
     :param feat_edge1: :math:`(b\times n_1 \times n_1 \times d_e)` input edge feature of graph1
     :param feat_edge2: :math:`(b\times n_2 \times n_2 \times d_e)` input edge feature of graph2
-    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:``n_1``
-    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:``n_2``
+    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
+    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
     :param in_node_channel: (default: 1024) Node channel size of the input layer. It must match the feature dimension
         :math:`(d_n)` of ``feat_node1, feat_node2``. Ignored if the network object is given (ignored if ``network!=None``)
     :param in_edge_channel: (default: 1) Edge channel size of the input layer. It must match the feature dimension
@@ -387,6 +393,9 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. dropdown:: PyTorch Example
 
@@ -555,6 +564,9 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. dropdown:: PyTorch Example
 
