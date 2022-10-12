@@ -144,24 +144,23 @@ following rules before submitting:
 We are glad to accept any sort of documentation: function docstrings,
 reStructuredText documents, tutorials, etc.
 reStructuredText documents live in the source code repository under the
-doc/ directory.
+``doc/`` directory.
 
 You can edit the documentation using any text editor and then generate
 the HTML output by typing ``make html`` from the ``docs/`` directory. 
-The resulting HTML index is ``docs/_build/index.html`` and is viewable 
-in a web browser.
+The resulting HTML files are in ``docs/_build/`` and are viewable in 
+any web browser. The example files in ``examples/`` are also built.
+If you want to skip building the examples, please use the command
+``make html-noplot``.
 
-For building the documentation, you will need
-[sphinx](http://sphinx.pocoo.org/),
-[matplotlib](http://matplotlib.org/), and
-[pillow](http://pillow.readthedocs.io/en/latest/).
+For building the documentation, you will need the packages listed in
+``docs/requirements.txt``.
 
 When you are writing documentation, it is important to keep a good
 compromise between mathematical and algorithmic details, and give
 intuition to the reader on what the algorithm does. It is best to always
 start with a small paragraph with a hand-waving explanation of what the
-method does to the data and a figure (coming from an example)
-illustrating it.
+method does to the data.
 
 
 This Contribution guide is strongly inpired by the one of the [scikit-learn](https://github.com/scikit-learn/scikit-learn) team.

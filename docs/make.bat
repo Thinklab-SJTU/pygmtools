@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=ThinkMatch
+set SPHINXPROJ=pygmtools
 
 if "%1" == "" goto help
 
@@ -26,7 +26,13 @@ if errorlevel 9009 (
 	exit /b 1
 )
 
+if "%1" == "html-noplot" goto html-noplot
+
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+goto end
+
+:html-noplot
+%SPHINXBUILD% -D plot_gallery=0 -b html %ALLSPHINXOPTS% %SOURCEDIR% %BUILDDIR%
 goto end
 
 :help
