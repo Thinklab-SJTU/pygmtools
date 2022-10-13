@@ -932,9 +932,9 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
     batch_size = feat1.shape[0]
     if forward_pass:
         if n1 is None:
-            n1 = [feat1.shape[1]] * batch_size
+            n1 = torch.tensor([feat1.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [feat2.shape[1]] * batch_size
+            n2 = torch.tensor([feat2.shape[1]] * batch_size)
         result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
     else:
         result = None
@@ -1022,9 +1022,9 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
     if forward_pass:
         batch_size = feat_node1.shape[0]
         if n1 is None:
-            n1 = [feat_node1.shape[1]] * batch_size
+            n1 = torch.tensor([feat_node1.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [feat_node1.shape[1]] * batch_size
+            n2 = torch.tensor([feat_node1.shape[1]] * batch_size)
         result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
     else:
         result = None
