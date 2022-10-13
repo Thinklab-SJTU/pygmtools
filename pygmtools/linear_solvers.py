@@ -375,7 +375,7 @@ def sinkhorn(s, n1=None, n2=None,
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    _check_data_type(s, backend)
+    _check_data_type(s, 's', backend)
     if _check_shape(s, 2, backend):
         s = _unsqueeze(s, 0, backend)
         non_batched_input = True
@@ -384,6 +384,8 @@ def sinkhorn(s, n1=None, n2=None,
     else:
         raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
                          f's:{len(_get_shape(s, backend))}dims!')
+    if n1 is not None: _check_data_type(n1, 'n1', backend)
+    if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (s, n1, n2, dummy_row, max_iter, tau, batched_operation)
     try:

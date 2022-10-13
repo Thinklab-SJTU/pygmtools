@@ -123,7 +123,7 @@ def cao(K, x0=None, qap_solver=None,
     if backend is None:
         backend = pygmtools.BACKEND
     # check the correctness of input
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     K_shape = _get_shape(K, backend)
     if not (len(K_shape) == 4 and K_shape[0] == K_shape[1] and K_shape[2] == K_shape[3]):
         raise ValueError(f"Unsupported input data shape: got K {K_shape}")
@@ -136,7 +136,7 @@ def cao(K, x0=None, qap_solver=None,
     if not 0 <= lambda_max <= 1: raise ValueError(f"lambda_max must be in [0, 1], got lambda_max={lambda_max}")
     if not lambda_step > 1: raise ValueError(f"lambda_step must be >1, got lambda_step={lambda_step}")
     if x0 is not None:
-        _check_data_type(x0, backend)
+        _check_data_type(x0, 'x0', backend)
         x0_shape = _get_shape(x0, backend)
         if not len(x0_shape) == 4 and num_graph == x0_shape[0] == x0_shape[1] and num_node == x0_shape[2] == x0_shape[3]:
             raise ValueError(f"Unsupported input data shape: got K {K_shape} x0 {x0_shape}")
@@ -264,7 +264,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     if backend is None:
         backend = pygmtools.BACKEND
     # check the correctness of input
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     K_shape = _get_shape(K, backend)
     if not (len(K_shape) == 4 and K_shape[0] == K_shape[1] and K_shape[2] == K_shape[3]):
         raise ValueError(f"Unsupported input data shape: got K {K_shape}")
@@ -275,7 +275,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
                          "does not support matching with outliers or partial matching.")
     if not 0 <= param_lambda <= 1: raise ValueError(f"param_lambda must be in [0, 1], got param_lambda={param_lambda}")
     if x0 is not None:
-        _check_data_type(x0, backend)
+        _check_data_type(x0, 'x0', backend)
         x0_shape = _get_shape(x0, backend)
         if not len(x0_shape) == 4 and num_graph == x0_shape[0] == x0_shape[1] and num_node == x0_shape[2] == x0_shape[3]:
             raise ValueError(f"Unsupported input data shape: got K {K_shape} x0 {x0_shape}")
@@ -467,24 +467,24 @@ def gamgm(A, W,
     if backend is None:
         backend = pygmtools.BACKEND
     # check the correctness of input
-    _check_data_type(A, backend)
+    _check_data_type(A, 'A', backend)
     A_shape = _get_shape(A, backend)
     if not (len(A_shape) == 3 and A_shape[1] == A_shape[2]):
         raise ValueError(f"Unsupported input data shape: got A {A_shape}")
     num_graph, max_node = A_shape[0], A_shape[1]
-    _check_data_type(W, backend)
+    _check_data_type(W, 'W', backend)
     W_shape = _get_shape(W, backend)
     if not (len(W_shape) == 4 and W_shape[0] == W_shape[1] == num_graph and W_shape[2] == W_shape[3] == max_node):
         raise ValueError(f"Unsupported input data shape: got A {A_shape}, W {W_shape}")
     if ns is not None:
-        _check_data_type(ns, backend)
+        _check_data_type(ns, 'ns', backend)
         ns_shape = _get_shape(ns, backend)
         if not (len(ns_shape) == 1 and ns_shape[0] == num_graph):
             raise ValueError(f"The size of ns mismatches the sizes of A and W: got ns {ns_shape}, A {A_shape}, W {W_shape}")
     if n_univ is None:
         n_univ = max_node
     if U0 is not None:
-        _check_data_type(U0, backend)
+        _check_data_type(U0, 'U0', backend)
     if not sk_init_tau > 0: raise ValueError(f"sk_init_tau must be >0, got sk_init_tau={sk_init_tau}")
     if not sk_min_tau > 0: raise ValueError(f"sk_min_tau must be >0, got sk_min_tau={sk_min_tau}")
     if not 0 < sk_gamma < 1: raise ValueError(f"sk_gamma must be in (0, 1), got sk_gamma={sk_gamma}")

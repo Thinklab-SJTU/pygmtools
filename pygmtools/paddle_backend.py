@@ -425,12 +425,13 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     return paddle.stack(ks, axis=0)
 
 
-def _check_data_type(input: paddle.Tensor):
+def _check_data_type(input: paddle.Tensor, var_name=None):
     """
     Paddle implementation of _check_data_type
     """
     if type(input) is not paddle.Tensor:
-        raise ValueError(f'Expected Paddle Tensor, but got {type(input)}. Perhaps the wrong backend?')
+        raise ValueError(f'Expected Paddle Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}. Perhaps the wrong backend?')
 
 
 def _check_shape(input, dim_num):
@@ -463,7 +464,7 @@ def _unsqueeze(input, dim):
 
 def _transpose(input, dim1, dim2):
     """
-    Paddle implementaiton of _transpose
+    Paddle implementation of _transpose
     """
     return paddle.transpose(input, (dim2, dim1))
 

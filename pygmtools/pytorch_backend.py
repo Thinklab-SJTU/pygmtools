@@ -890,9 +890,9 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
     if forward_pass:
         batch_size = feat1.shape[0]
         if n1 is None:
-            n1 = [feat1.shape[1]] * batch_size
+            n1 = torch.tensor([feat1.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [feat2.shape[1]] * batch_size
+            n2 = torch.tensor([feat2.shape[1]] * batch_size)
         result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
     else:
         result = None
@@ -1307,12 +1307,13 @@ def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity
     return torch.stack(ks, dim=0)
 
 
-def _check_data_type(input: Tensor):
+def _check_data_type(input: Tensor, var_name=None):
     """
     Pytorch implementation of _check_data_type
     """
     if type(input) is not Tensor:
-        raise ValueError(f'Expected Pytorch Tensor, but got {type(input)}. Perhaps the wrong backend?')
+        raise ValueError(f'Expected Pytorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}. Perhaps the wrong backend?')
 
 
 def _check_shape(input, dim_num):

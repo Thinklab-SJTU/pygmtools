@@ -291,8 +291,10 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
         backend = pygmtools.BACKEND
     non_batched_input = False
     if feat1 is not None:  # if feat1 is None, this function skips the forward pass and only returns a network object
-        for _ in (feat1, feat2, A1, A2):
-            _check_data_type(_, backend)
+        _check_data_type(feat1, 'feat1', backend)
+        _check_data_type(feat2, 'feat2', backend)
+        _check_data_type(A1, 'A1', backend)
+        _check_data_type(A2, 'A2', backend)
 
         if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
             feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
@@ -460,8 +462,12 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
         backend = pygmtools.BACKEND
     non_batched_input = False
     if feat_node1 is not None:  # if feat_node1 is None, this function skips the forward pass and only returns a network object
-        for _ in (feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2):
-            _check_data_type(_, backend)
+        _check_data_type(feat_node1, 'feat_node1', backend)
+        _check_data_type(feat_node2, 'feat_node2', backend)
+        _check_data_type(A1, 'A1', backend)
+        _check_data_type(A2, 'A2', backend)
+        _check_data_type(feat_edge1, 'feat_edge1', backend)
+        _check_data_type(feat_edge2, 'feat_edge2', backend)
 
         if all([_check_shape(_, 2, backend) for _ in (feat_node1, feat_node2, A1, A2)]) \
                 and all([_check_shape(_, 3, backend) for _ in (feat_edge1, feat_edge2)]):
@@ -638,7 +644,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         backend = pygmtools.BACKEND
     non_batched_input = False
     if K is not None: # if K is None, this function skips the forward pass and only returns a network object
-        _check_data_type(K, backend)
+        _check_data_type(K, 'K', backend)
         if _check_shape(K, 2, backend):
             K = _unsqueeze(K, 0, backend)
             non_batched_input = True

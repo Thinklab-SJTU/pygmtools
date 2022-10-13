@@ -226,7 +226,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
@@ -472,7 +472,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
@@ -702,7 +702,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
