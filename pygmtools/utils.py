@@ -934,16 +934,17 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     return fn(*args)
 
 
-def _check_data_type(input, backend=None):
+def _check_data_type(input, var_name=None, backend=None):
     r"""
     Check whether the input data meets the backend. If not met, it will raise an ValueError
 
     :param input: input data (must be Tensor/ndarray)
+    :param var_name: name of the variable
     :return: None
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input, )
+    args = (input, var_name)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_data_type
