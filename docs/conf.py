@@ -184,4 +184,5 @@ texinfo_documents = [
 sphinx_gallery_conf = {
      'examples_dirs': '../examples',
      'gallery_dirs': 'auto_examples',
+     'nested_sections': False,
 }
