@@ -183,3 +183,9 @@ Final Step: Evaluate the accuracy
 
     >>> (X * X_gt).sum() / X_gt.sum()
     1.0
+
+
+What's Next
+------------
+Please checkout :doc:`../auto_examples/index` to see how to apply ``pygmtools`` to tackle real-world problems.
+You may see :doc:`../api/pygmtools` for the API documentation.

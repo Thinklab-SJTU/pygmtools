@@ -146,3 +146,7 @@ As a highly packed toolkit, ``pygmtools`` lacks some flexibilities in the implem
 experts in graph matching. If you are researching new graph matching algorithms or developing next-generation deep
 graph matching neural networks, ``pygmtools`` may not be suitable. We recommend
 `ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_ as the protocol for academic research.
+
+What's Next
+------------
+Please read the :doc:`get_started` guide.
