@@ -5,7 +5,7 @@ easydict
 pyyaml
 tqdm
 appdirs>=1.4.4
-sphinx==4.5.0
+sphinx==5.2.3
 sphinx-design==0.0.13
 sphinx_rtd_theme==0.5.2
 sphinx-gallery
