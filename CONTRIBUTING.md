@@ -142,7 +142,7 @@ following rules before submitting:
 ## Documentation
 
 We are glad to accept any sort of documentation: function docstrings,
-reStructuredText documents, tutorials, etc.
+reStructuredText documents, tutorials, examples, etc.
 reStructuredText documents live in the source code repository under the
 ``doc/`` directory.
 
@@ -154,7 +154,8 @@ If you want to skip building the examples, please use the command
 ``make html-noplot``.
 
 For building the documentation, you will need the packages listed in
-``docs/requirements.txt``.
+``docs/requirements.txt``. Please use ``python>=3.7`` because the packages
+for earlier Python versions are outdated.
 
 When you are writing documentation, it is important to keep a good
 compromise between mathematical and algorithmic details, and give
