@@ -130,7 +130,7 @@ plt.imshow(X_gt.numpy(), cmap='Blues')
 ##############################################################################
 # Align the original graphs
 # --------------------------
-# Draw the matching:
+# Draw the matching (green lines for correct matching, red lines for wrong matching):
 #
 plt.figure(figsize=(8, 4))
 ax1 = plt.subplot(1, 2, 1)
@@ -168,7 +168,9 @@ nx.draw_networkx(G2, pos=align_pos2)
 # Other solvers are also available
 # ---------------------------------
 #
-# Classic IPFP solver (see :func:`~pygmtools.classic_solvers.ipfp`):
+# Classic IPFP solver
+# ^^^^^^^^^^^^^^^^^^^^^
+# See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 #
 X = pygm.ipfp(K, n1, n2)
 
@@ -184,7 +186,9 @@ plt.title('Ground Truth Matching Matrix')
 plt.imshow(X_gt.numpy(), cmap='Blues')
 
 ##############################################################################
-# Classic SM solver (see :func:`~pygmtools.classic_solvers.sm`):
+# Classic SM solver
+# ^^^^^^^^^^^^^^^^^^^^^
+# See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 #
 X = pygm.sm(K, n1, n2)
 X = pygm.hungarian(X)
@@ -201,7 +205,9 @@ plt.title('Ground Truth Matching Matrix')
 plt.imshow(X_gt.numpy(), cmap='Blues')
 
 ##############################################################################
-# NGM neural network solver (see :func:`~pygmtools.neural_solvers.ngm`):
+# NGM neural network solver
+# ^^^^^^^^^^^^^^^^^^^^^^^^^
+# See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 #
 with torch.set_grad_enabled(False):
     X = pygm.ngm(K, n1, n2, pretrain='voc')
