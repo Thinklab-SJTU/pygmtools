@@ -235,6 +235,339 @@ def ipfp(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
     pred_x = binary_sol
     return pred_x
 
+############################################
+#          Neural Network Solvers          #
+############################################
+
+from pygmtools.jittor_modules import *
+
+
+class PCA_GM_Net(Sequential):
+    """
+    Jittor implementation of PCA-GM and IPCA-GM network
+    """
+    def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
+        super(PCA_GM_Net, self).__init__()
+        self.gnn_layer = num_layers
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_Gconv(in_channel, hidden_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_Gconv(hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_Gconv(hidden_channel, out_channel)
+                self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(out_channel))
+            self.add_module('gnn_layer_{}'.format(i), gnn_layer)
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.add_module('cross_graph_{}'.format(i), jt.nn.Linear(hidden_channel * 2, hidden_channel))
+                if cross_iter_num <= 0:
+                    self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
+
+
+    def execute(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat1, feat2
+        if cross_iter_num <= 0:
+            # Vanilla PCA-GM
+            for i in range(self.gnn_layer):
+                gnn_layer = self.layers[f'gnn_layer_{i}']
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+
+                if i == self.gnn_layer - 2:
+                    affinity = self.layers[f'affinity_{i}']
+                    s = affinity(emb1, emb2)
+                    s = _sinkhorn_func(s, n1, n2)
+
+                    cross_graph = self.layers[f'cross_graph_{i}']
+                    new_emb1 = cross_graph(jt.concat((emb1, jt.bmm(s, emb2)), dim=-1))
+                    new_emb2 = cross_graph(jt.concat((emb2, jt.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                    emb1 = new_emb1
+                    emb2 = new_emb2
+
+            affinity = self.layers[f'affinity_{self.gnn_layer - 1}']
+            s = affinity(emb1, emb2)
+            s = _sinkhorn_func(s, n1, n2)
+
+        else:
+            # IPCA-GM
+            for i in range(self.gnn_layer - 1):
+                gnn_layer = self.layers[f'gnn_layer_{i}']
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+
+            emb1_0, emb2_0 = emb1, emb2
+            s = jt.zeros((emb1.shape[0], emb1.shape[1], emb2.shape[1]))
+
+            for x in range(cross_iter_num):
+                # cross-graph convolution in second last layer
+                i = self.gnn_layer - 2
+                cross_graph = self.layers[f'cross_graph_{i}']
+                emb1 = cross_graph(jt.concat((emb1_0, jt.bmm(s, emb2_0)), dim=-1))
+                emb2 = cross_graph(jt.concat((emb2_0, jt.bmm(s.transpose(1, 2), emb1_0)), dim=-1))
+
+                # last layer
+                i = self.gnn_layer - 1
+                gnn_layer = self.layers[f'gnn_layer_{i}']
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+                affinity = self.layers[f'affinity_{i}']
+                s = affinity(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+        return s
+
+
+pca_gm_pretrain_path = {
+    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
+    'willow': 'https://drive.google.com/u/0/uc?export=download&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
+    'voc-all': 'https://drive.google.com/u/0/uc?export=download&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I'
+}
+
+
+def pca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Jittor implementation of PCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            if pretrain in pca_gm_pretrain_path:
+                # url, md5 = pca_gm_pretrain_path[pretrain]
+                # filename = pygmtools.utils.download(f'pca_gm_{pretrain}_jittor.pt', url, md5)
+                # _load_model(network, filename)
+                # _load_model(network, f'pca_gm_{pretrain}_jittor.pt') # load from local file
+                url =  pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_jittor.pt', url)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = [feat1.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [feat2.shape[1]] * batch_size
+        result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+ipca_gm_pretrain_path = {
+    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+    'willow': 'https://drive.google.com/u/0/uc?export=download&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO'
+}
+
+
+def ipca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Jittor implementation of IPCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
+        if pretrain:
+            if pretrain in ipca_gm_pretrain_path:
+                # url, md5 = ipca_gm_pretrain_path[pretrain]
+                # filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url, md5)
+                # _load_model(network, filename)
+                # _load_model(network, f'ipca_gm_{pretrain}_jittor.pt') # load from local file
+                url = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
+    
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = [feat1.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [feat2.shape[1]] * batch_size
+        result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+class CIE_Net(Sequential):
+    """
+    Jittor implementation of CIE graph matching network
+    """
+
+    def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
+        super(CIE_Net, self).__init__()
+
+        self.gnn_layer = num_layers
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_ChannelIndependentConv(in_node_channel, hidden_channel, in_edge_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, out_channel, hidden_channel)
+                self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(out_channel))
+            self.add_module('gnn_layer_{}'.format(i), gnn_layer)
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.add_module('cross_graph_{}'.format(i), jt.nn.Linear(hidden_channel * 2, hidden_channel))
+                self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
+
+    def execute(self, feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat_node1, feat_node2
+        emb_edge1, emb_edge2 = feat_edge1, feat_edge2
+        for i in range(self.gnn_layer):
+            gnn_layer = self.layers[f'gnn_layer_{i}']
+            # during forward process, the network structure will not change
+            emb1, emb2, emb_edge1, emb_edge2 = gnn_layer([A1, emb1, emb_edge1], [A2, emb2, emb_edge2])
+
+            if i == self.gnn_layer - 2:
+                affinity = self.layers[f'affinity_{i}']
+                s = affinity(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+                cross_graph = self.layers[f'cross_graph_{i}']
+                new_emb1 = cross_graph(jt.concat((emb1, jt.bmm(s, emb2)), dim=-1))
+                new_emb2 = cross_graph(jt.concat((emb2, jt.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                emb1 = new_emb1
+                emb2 = new_emb2
+
+        affinity = self.layers[f'affinity_{self.gnn_layer - 1}']
+        s = affinity(emb1, emb2)
+        s = _sinkhorn_func(s, n1, n2)
+        return s
+
+
+cie_pretrain_path = {
+    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
+    'willow': 'https://drive.google.com/u/0/uc?export=download&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv'
+}
+
+
+def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
+        in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+        network, pretrain):
+    """
+    Jittor implementation of CIE
+    """
+    if feat_node1 is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            if pretrain in cie_pretrain_path:
+                # url, md5 = cie_pretrain_path[pretrain]
+                # filename = pygmtools.utils.download(f'cie_{pretrain}_jittor.pt', url, md5)
+                # _load_model(network, filename)
+                # _load_model(network, f'cie_{pretrain}_jittor.pt') # load from local file
+                url = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_jittor.pt', url)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_size = feat_node1.shape[0]
+        if n1 is None:
+            n1 = [feat_node1.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [feat_node1.shape[1]] * batch_size
+        result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+class NGM_Net(Sequential):
+    """
+    Jittor implementation of NGM network
+    """
+    def __init__(self, gnn_channels, sk_emb):
+        super(NGM_Net, self).__init__()
+        self.gnn_layer = len(gnn_channels)
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = NGMConvLayer(1, 1,
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb, edge_emb=False)
+            else:
+                gnn_layer = NGMConvLayer(gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb, edge_emb=False)
+            self.add_module('gnn_layer_{}'.format(i), gnn_layer)
+        # self.classifier = nn.Linear(gnn_channels[-1] + sk_emb, 1)
+        self.add_module('classifier', nn.Linear(gnn_channels[-1] + sk_emb, 1))
+
+    def execute(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb = v0
+        A = (K != 0)
+        emb_K = K.unsqueeze(-1)
+
+        # NGM qap solver
+        for i in range(self.gnn_layer):
+            gnn_layer = self.layers[f'gnn_layer_{i}']
+            emb_K, emb = gnn_layer(A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
+
+        classifier = self.layers['classifier']
+        v = classifier(emb)
+        s = v.view(v.shape[0], n2max, -1).transpose(1, 2)
+
+        return _sinkhorn_func(s, n1, n2, dummy_row=True)
+
+
+ngm_pretrain_path = {
+    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL',
+    'willow': 'https://drive.google.com/u/0/uc?export=download&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7'
+}
+
+
+
+def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
+    """
+    Jittor implementation of NGM
+    """
+    if K is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = NGM_Net(gnn_channels, sk_emb)
+        if pretrain:
+            if pretrain in ngm_pretrain_path:
+                # url, md5 = ngm_pretrain_path[pretrain]
+                # filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url, md5)
+                # _load_model(network, filename)
+                # _load_model(network, f'ngm_{pretrain}_jittor.pt') # load from local file
+                url = ngm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+        v0 = v0 / jt.mean(v0)
+        result = network(K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
 
 #############################################
 #              Utils Functions              #
@@ -339,7 +672,9 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
     X_gt = jt.mm(joint_X, joint_X.t())
     X_gt = X_gt.reshape(graph_num, node_num, graph_num, node_num).permute(0, 2, 1, 3)
     A0 = jt.rand(node_num, node_num)
-    jt.diagonal(A0)[:] = 0
+    for i in range(graph_num):
+        for j in range(node_num):
+            A0.data[i][j][j] = 0
     As = [A0]
     for i in range(graph_num):
         if i > 0:
@@ -354,6 +689,33 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
     else:
         return jt.stack(As, dim=0), X_gt
 
+    def permutation_loss(pred_dsmat: Var, gt_perm: Var, n1: Var, n2: Var) -> Var:
+    """
+    Pytorch implementation of permutation_loss
+    """
+    batch_num = pred_dsmat.shape[0]
+
+    pred_dsmat = pred_dsmat.float32()
+
+    if not jt.all((pred_dsmat >= 0) * (pred_dsmat <= 1)):
+        raise ValueError("pred_dsmat contains invalid numerical entries.")
+    if not jt.all((gt_perm >= 0) * (gt_perm <= 1)):
+        raise ValueError("gt_perm contains invalid numerical entries.")
+
+    if n1 is None:
+        n1 = jt.Var([pred_dsmat.shape[1] for _ in range(batch_num)])
+    if n2 is None:
+        n2 = jt.Var([pred_dsmat.shape[2] for _ in range(batch_num)])
+
+    loss = jt.Var(0.)
+    n_sum = jt.zeros_like(loss)
+    for b in range(batch_num):
+        loss += jt.nn.bce_loss(
+            pred_dsmat[b, 0:n1[b].item(), 0:n2[b].item()],
+            gt_perm[b, 0:n1[b].item(), 0:n2[b].item()]).sum()
+        n_sum += n1[b] #.to(n_sum.dtype)
+
+    return loss / n_sum
 
 def _get_shape(input):
     """
@@ -475,3 +837,19 @@ def _mm(input1, input2):
     Jittor implementation of _mm
     """
     return jt.matmul(input1, input2)
+
+def _save_model(model, path):
+    """
+    Save Jittor model to a given path
+    """
+    if isinstance(model, jt.nn.DataParallel):
+        model = model.module
+
+    jt.save(model.state_dict(), path)
+
+def _load_model(model, path, strict=True):
+    """
+    Load Jittor model from a given path. strict=True means all keys must be matched
+    """
+    module = model
+    module.load_state_dict(jt.load(path))
