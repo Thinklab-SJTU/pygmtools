@@ -9,15 +9,18 @@ This example shows how to match a smaller graph to a subset of a larger graph.
 # Author: Runzhong Wang
 #
 # License: Mulan PSL v2 License
-# sphinx_gallery_thumbnail_number = 6
+# sphinx_gallery_thumbnail_number = 5
 
 ##############################################################################
 # .. note::
 #     The following solvers are included in this example:
 #
 #     * :func:`~pygmtools.classic_solvers.rrwm` (classic solver)
+#
 #     * :func:`~pygmtools.classic_solvers.ipfp` (classic solver)
+#
 #     * :func:`~pygmtools.classic_solvers.sm` (classic solver)
+#
 #     * :func:`~pygmtools.neural_solvers.ngm` (neural network solver)
 #
 import torch # pytorch backend

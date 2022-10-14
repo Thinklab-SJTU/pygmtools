@@ -18,7 +18,9 @@ can be further passed to tackle downstream tasks.
 #     The following solvers are based on matching two individual graphs, and are included in this example:
 #
 #     * :func:`~pygmtools.neural_solvers.pca_gm` (neural network solver)
+#
 #     * :func:`~pygmtools.neural_solvers.ipca_gm` (neural network solver)
+#
 #     * :func:`~pygmtools.neural_solvers.cie` (neural network solver)
 #
 import torch # pytorch backend
