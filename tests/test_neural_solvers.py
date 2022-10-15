@@ -86,7 +86,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                 f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
             if last_X is not None:
-                assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 1e-4, \
+                assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 5e-3, \
                     f"Incorrect GM solution for {working_backend}, " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                     f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
@@ -100,18 +100,18 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
-    }, ['pytorch'])
+    }, ['pytorch', 'jittor'])
 
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch'])
+    }, ['pytorch', 'jittor'])
 
 def test_cie():
     args = (
         list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
-        }, ['pytorch']
+        }, ['pytorch', 'jittor']
     )
     max_retries = 5
     for i in range(max_retries - 1):
@@ -131,7 +131,7 @@ def test_ngm():
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch'])
+    }, ['pytorch', 'jittor'])
 
 
 if __name__ == '__main__':
