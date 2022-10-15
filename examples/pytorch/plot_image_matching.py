@@ -18,8 +18,11 @@ The matched images can be further processed for other downstream tasks.
 #     The following solvers support QAP formulation, and are included in this example:
 #
 #     * :func:`~pygmtools.classic_solvers.rrwm` (classic solver)
+#
 #     * :func:`~pygmtools.classic_solvers.ipfp` (classic solver)
+#
 #     * :func:`~pygmtools.classic_solvers.sm` (classic solver)
+#
 #     * :func:`~pygmtools.neural_solvers.ngm` (neural network solver)
 #
 import torch # pytorch backend
