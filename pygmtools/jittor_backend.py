@@ -1,6 +1,9 @@
 import numpy as np
 import jittor as jt
 from jittor import Var
+import functools
+import itertools
+import math
 import pygmtools.utils
 from multiprocessing import Pool
 from pygmtools.numpy_backend import _hung_kernel
@@ -317,9 +320,12 @@ class PCA_GM_Net(Sequential):
 
 
 pca_gm_pretrain_path = {
-    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
-    'willow': 'https://drive.google.com/u/0/uc?export=download&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
-    'voc-all': 'https://drive.google.com/u/0/uc?export=download&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I'
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
+            '05924bffc97c9773fda233317c8169d7'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
+               'db4fe01e9ba1911c1e22f034e2087b7a'),
+    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
+                '0491f3064e2b841099e5ee12fac6c7a2')
 }
 
 
@@ -337,12 +343,8 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
         if pretrain:
             if pretrain in pca_gm_pretrain_path:
-                # url, md5 = pca_gm_pretrain_path[pretrain]
-                # filename = pygmtools.utils.download(f'pca_gm_{pretrain}_jittor.pt', url, md5)
-                # _load_model(network, filename)
-                # _load_model(network, f'pca_gm_{pretrain}_jittor.pt') # load from local file
-                url =  pca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_jittor.pt', url)
+                url, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_jittor.pt', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
@@ -360,8 +362,10 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
-    'willow': 'https://drive.google.com/u/0/uc?export=download&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO'
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+            '572da07231ea436ba174fde332f2ae6c'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
+               'd9febe4f567bf5a93430b42b11ebd302'),
 }
 
 
@@ -379,12 +383,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
         if pretrain:
             if pretrain in ipca_gm_pretrain_path:
-                # url, md5 = ipca_gm_pretrain_path[pretrain]
-                # filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url, md5)
-                # _load_model(network, filename)
-                # _load_model(network, f'ipca_gm_{pretrain}_jittor.pt') # load from local file
-                url = ipca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url)
+                url, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
@@ -451,8 +451,10 @@ class CIE_Net(Sequential):
 
 
 cie_pretrain_path = {
-    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
-    'willow': 'https://drive.google.com/u/0/uc?export=download&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv'
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
+            '187916041d9454aecedfd1d09c197f29'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
+               '47cf8f5176a3d17faed96f30fa14ecf4'),
 }
 
 
@@ -470,12 +472,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
         if pretrain:
             if pretrain in cie_pretrain_path:
-                # url, md5 = cie_pretrain_path[pretrain]
-                # filename = pygmtools.utils.download(f'cie_{pretrain}_jittor.pt', url, md5)
-                # _load_model(network, filename)
-                # _load_model(network, f'cie_{pretrain}_jittor.pt') # load from local file
-                url = cie_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'cie_{pretrain}_jittor.pt', url)
+                url, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_jittor.pt', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
@@ -532,10 +530,11 @@ class NGM_Net(Sequential):
 
 
 ngm_pretrain_path = {
-    'voc': 'https://drive.google.com/u/0/uc?export=download&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL',
-    'willow': 'https://drive.google.com/u/0/uc?export=download&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7'
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL',
+            '60dbc7cc882fd88de4fc9596b7fb0f4a'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7',
+               'dd13498bb385df07ac8530da87b14cd6'),
 }
-
 
 
 def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
@@ -550,12 +549,8 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         network = NGM_Net(gnn_channels, sk_emb)
         if pretrain:
             if pretrain in ngm_pretrain_path:
-                # url, md5 = ngm_pretrain_path[pretrain]
-                # filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url, md5)
-                # _load_model(network, filename)
-                # _load_model(network, f'ngm_{pretrain}_jittor.pt') # load from local file
-                url = ngm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url)
+                url, md5 = ngm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
@@ -774,9 +769,9 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = jt.max(jt.max(connectivity1, dim=-1).values, dim=-1).values + 1
+            n1 = jt.Var([math.sqrt(connectivity1.shape[1])] * batch_size)
         if n2 is None:
-            n2 = jt.max(jt.max(connectivity2, dim=-1).values, dim=-1).values + 1
+            n2 = jt.Var([math.sqrt(connectivity2.shape[1])] * batch_size)
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
