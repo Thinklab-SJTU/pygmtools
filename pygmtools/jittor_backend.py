@@ -689,9 +689,9 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
     else:
         return jt.stack(As, dim=0), X_gt
 
-    def permutation_loss(pred_dsmat: Var, gt_perm: Var, n1: Var, n2: Var) -> Var:
+def permutation_loss(pred_dsmat: Var, gt_perm: Var, n1: Var, n2: Var) -> Var:
     """
-    Pytorch implementation of permutation_loss
+    Jittor implementation of permutation_loss
     """
     batch_num = pred_dsmat.shape[0]
 
