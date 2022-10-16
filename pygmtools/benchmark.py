@@ -403,9 +403,10 @@ class Benchmark:
                 gt_array = gt.toarray()
                 assert type(perm_mat) == type(gt_array)
 
-                if perm_mat.sum() == 0 or gt_array.sum() == 0:
-                    precision = 1
-                    recall = 1
+                assert gt_array.sum() != 0, 'ground truth permutation matrix should not be all zeros'
+                if perm_mat.sum() == 0:
+                    precision = 0
+                    recall = 0
                 else:
                     precision = (perm_mat * gt_array).sum() / perm_mat.sum()
                     recall = (perm_mat * gt_array).sum() / gt_array.sum()
@@ -503,9 +504,10 @@ class Benchmark:
                 gt_array = gt.toarray()
                 assert type(perm_mat) == type(gt_array)
 
-                if perm_mat.sum() == 0 or gt_array.sum() == 0:
-                    precision = 1
-                    recall = 1
+                assert gt_array.sum() != 0, 'ground truth permutation matrix should not be all zeros'
+                if perm_mat.sum() == 0:
+                    precision = 0
+                    recall = 0
                 else:
                     precision = (perm_mat * gt_array).sum() / perm_mat.sum()
                     recall = (perm_mat * gt_array).sum() / gt_array.sum()
