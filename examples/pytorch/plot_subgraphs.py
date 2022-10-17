@@ -99,8 +99,9 @@ gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=.001) # set a
 K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
 
 ##############################################################################
-# Visualization of the affinity matrix. For graph matching problem with :math:`N` nodes, the affinity matrix
-# has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
+# Visualization of the affinity matrix. For graph matching problem with :math:`N_1` and :math:`N_2` nodes,
+# the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :math:`N_1^2` and
+# :math:`N_2^2` edges in each graph, respectively.
 #
 # .. note::
 #     The diagonal elements of the affinity matrix is empty because there is no node features in this example.
