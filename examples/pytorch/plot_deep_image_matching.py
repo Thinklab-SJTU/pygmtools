@@ -402,7 +402,7 @@ for i in range(X.shape[0]):
 class GMNet(torch.nn.Module):
     def __init__(self):
         super(GMNet, self).__init__()
-        _, self.gm_net = pygm.pca_gm(None, None, None, None, return_network=True, pretrain=False) # only build network, no forward pass
+        self.gm_net = pygm.utils.get_network(pygm.pca_gm, pretrain=False) # fetch the network object
         self.cnn = CNNNet(vgg16_cnn)
 
     def forward(self, img1, img2, kpts1, kpts2, A1, A2):
