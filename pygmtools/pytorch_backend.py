@@ -929,8 +929,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
-    batch_size = feat1.shape[0]
     if forward_pass:
+        batch_size = feat1.shape[0]
         if n1 is None:
             n1 = torch.tensor([feat1.shape[1]] * batch_size)
         if n2 is None:

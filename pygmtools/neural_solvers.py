@@ -109,6 +109,51 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
             >>> loss.backward()
             >>> optimizer.step()
 
+        
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = 1. * (jt.rand(batch_size, 4, 4) > 0.5)
+            >>> for i in range(batch_size):
+            >>>     for j in range(4):
+            >>>         A1.data[i][j][j] = 0  # discard self-loop edges
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> feat1 = jt.rand(batch_size, 4, 1024) - 0.5
+            >>> feat2 = jt.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = jt.Var([4] * batch_size)
+
+            # Match by PCA-GM (load pretrained model)
+            >>> X, net = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/pca_gm_voc_jittor.pt...
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/pca_gm_willow_jittor.pt...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            jt.Var([1.], dtype=float32)
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.pca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            >>> optimizer = jt.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> optimizer.backward(loss)
+            >>> optimizer.step()
+
     .. note::
 
         If you find this model useful in your research, please cite:
@@ -263,12 +308,57 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
             Downloading to ~/.cache/pygmtools/ipca_gm_willow_pytorch.pt...
 
             # You may configure your own model and integrate the model into a deep learning pipeline. For example:
-            >>> net = pygm.utils.get_network(in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, cross_iter=10, pretrain=False)
+            >>> net = pygm.utils.get_network(pygm.ipca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, cross_iter=10, pretrain=False)
             >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
             # feat1/feat2 may be outputs by other neural networks
             >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
             >>> loss = pygm.utils.permutation_loss(X, X_gt)
             >>> loss.backward()
+            >>> optimizer.step()
+
+
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = 1. * (jt.rand(batch_size, 4, 4) > 0.5)
+            >>> for i in range(batch_size):
+            >>>     for j in range(4):
+            >>>         A1.data[i][j][j] = 0  # discard self-loop edges
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> feat1 = jt.rand(batch_size, 4, 1024) - 0.5
+            >>> feat2 = jt.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = jt.Var([4] * batch_size)
+
+            # Match by IPCA-GM (load pretrained model)
+            >>> X, net = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/ipca_gm_voc_jitttor.pt...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            jt.Var([1.], dtype=float32)
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.ca/che/pygmtools/ipca_gm_willow_jittor.pt...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.ipca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, cross_iter=10, pretrain=False)
+            >>> optimizer = jt.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> optimizer.backward(loss)
             >>> optimizer.step()
 
     .. note::
@@ -443,6 +533,52 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
             >>> loss.backward()
             >>> optimizer.step()
 
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = 1. * (jt.rand(batch_size, 4, 4) > 0.5)
+            >>> for i in range(batch_size):
+            >>>     for j in range(4):
+            >>>        A1.data[i][j][j] = 0  # discard self-loop edges
+            >>> e_feat1 = (jt.rand(batch_size, 4, 4) * A1).unsqueeze(-1) # shape: (10, 4, 4, 1)
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> e_feat2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), e_feat1.squeeze(-1)), X_gt).unsqueeze(-1)
+            >>> feat1 = jt.rand(batch_size, 4, 1024) - 0.5
+            >>> feat2 = jt.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = jt.Var([4] * batch_size)
+
+            # Match by CIE (load pretrained model)
+            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/cie_voc_jittor.pt...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            jt.Var([1.], dtype=float32)
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/cie_willow_jittor.pt...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.cie, in_node_channel=1024, in_edge_channel=1, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            >>> optimizer = jt.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+            # feat1/feat2/e_feat1/e_feat2 may be outputs by other neural networks
+            >>> X = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> optimizer.backward(loss)
+            >>> optimizer.step()
+
     .. note::
 
         If you find this model useful in your research, please cite:
@@ -615,10 +751,56 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> net = pygm.utils.get_network(pygm.ngm, gnn_channels=(32, 64, 128, 64, 32), sk_emb=8, pretrain=False)
             >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
             # K may be outputs by other neural networks (constructed K from node/edge features by pygm.utils.build_aff_mat)
-            >>> X, net = pygm.ngm(K, n1, n2, network=net)
+            >>> X = pygm.ngm(K, n1, n2, network=net)
             >>> loss = pygm.utils.permutation_loss(X, X_gt)
             >>> loss.backward()
             >>> optimizer.step()
+
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = jt.zeros((batch_size, 4, 4))
+            >>> X_gt[:, jt.arange(0, 4, dtype=jt.int64), jt.randperm(4)] = 1
+            >>> A1 = jt.rand(batch_size, 4, 4)
+            >>> A2 = jt.bmm(jt.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> n1 = n2 = jt.Var([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by NGM
+            >>> X, net = pygm.ngm(K, n1, n2, return_network=True)
+            # Downloading to ~/.cache/pygmtools/ngm_voc_jittor.pt...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            jt.Var([1.], dtype=float32)
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.ngm(K, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.ngm(K, n1, n2, return_network=True, pretrain='willow')
+            # Downloading to ~/.cache/pygmtools/ngm_willow_jittor.pt...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.ngm, gnn_channels=(32, 64, 128, 64, 32), sk_emb=8, pretrain=False)
+            >>> optimizer = jt.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+            # K may be outputs by other neural networks (constructed K from node/edge features by pygm.utils.build_aff_mat)
+            >>> X = pygm.ngm(K, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> optimizer.backward(loss)
+            >>> optimizer.step()        
 
     .. note::
 
