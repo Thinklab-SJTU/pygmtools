@@ -10,7 +10,7 @@ The given models are trained by MNIST data with different distributions, therefo
 # Author: Chang Liu
 #
 # License: Mulan PSL v2 License
-# sphinx_gallery_thumbnail_number = 6
+# sphinx_gallery_thumbnail_number = 1
 
 ##############################################################################
 # .. note::
@@ -21,14 +21,14 @@ The given models are trained by MNIST data with different distributions, therefo
 #     * :func:`~pygmtools.linear_solvers.hungarian` (linear solver)
 #
 
-
 import torch.nn.functional as F
 import torch
 import torchvision
 import torchvision.transforms as transforms
 import time
 import sys
-
+from PIL import Image
+import matplotlib.pyplot as plt
 sys.path.append("../data")
 import utils
 import pygmtools as pygm
@@ -86,6 +86,8 @@ with torch.no_grad():
 # Start the time counter, set the ensemble step as 0.2, which denotes fused model = 80% model1 + 20% model2.
 #
 
+img = Image.open('../data/model_fusion.png')
+plt.imshow(img)
 ensemble_step = 0.2
 st_time = time.perf_counter()
 

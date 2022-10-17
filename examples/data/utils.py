@@ -179,11 +179,11 @@ def total_node_num(network: torch.nn.Module):
 class SimpleNet(nn.Module):
     def __init__(self):
         super(SimpleNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 5, padding='same', device=device, bias=False)
-        self.max_pool = nn.MaxPool2d(2, padding=0)
-        self.conv2 = nn.Conv2d(32, 64, 5, padding='same', device=device, bias=False)
-        self.fc1 = nn.Linear(3136, 32, device=device, bias=False)
-        self.fc2 = nn.Linear(32, 10, device=device, bias=False)
+        self.conv1 = nn.Conv2d(1, 32, 5, padding=1, padding_mode='replicate', bias=False)
+        self.max_pool = nn.MaxPool2d(2, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 5, padding=1, padding_mode='replicate', bias=False)
+        self.fc1 = nn.Linear(3136, 32, bias=False)
+        self.fc2 = nn.Linear(32, 10, bias=False)
 
     def forward(self, x):
         output = F.relu(self.conv1(x))
