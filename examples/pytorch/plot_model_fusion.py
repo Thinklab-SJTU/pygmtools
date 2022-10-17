@@ -1,10 +1,12 @@
 # coding: utf-8
 """
 ========================================
-Introduction: Model Fusion
+Model Fusion by Graph Matching
 ========================================
-This example is an introduction to ``pygmtools`` which shows how to fuse different models into a single model.
-The given models are trained by MNIST data with different distributions, therefore the fused model has the advantage of both the input models and can reach higher accuracy when testing.
+This example shows how to fuse different models into a single model by ``pygmtools``.
+Model fusion aims to fuse multiple models into one, such that the fused model could have higher performance.
+In this example, the given models are trained on MNIST data from different distributions, and the fused model 
+should fuse the knowledge in both the input models and can reach higher accuracy when testing.
 """
 
 # Author: Chang Liu
@@ -14,7 +16,7 @@ The given models are trained by MNIST data with different distributions, therefo
 
 ##############################################################################
 # .. note::
-#     The following solvers support QAP formulation, and are included in this example:
+#     The following solvers support are included in this example:
 #
 #     * :func:`~pygmtools.classic_solvers.sm` (classic solver)
 #
@@ -88,6 +90,7 @@ with torch.no_grad():
 
 img = Image.open('../data/model_fusion.png')
 plt.imshow(img)
+plt.axis('off')
 ensemble_step = 0.2
 st_time = time.perf_counter()
 
