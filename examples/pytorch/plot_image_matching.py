@@ -8,7 +8,7 @@ These solvers follow the Quadratic Assignment Problem formulation and can genera
 The matched images can be further processed for other downstream tasks.
 """
 
-# Author: Runzhong Wang
+# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 5

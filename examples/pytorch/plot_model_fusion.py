@@ -9,7 +9,8 @@ In this example, the given models are trained on MNIST data from different distr
 should fuse the knowledge in both the input models and can reach higher accuracy when testing.
 """
 
-# Author: Chang Liu
+# Author: Chang Liu <only-changer@sjtu.edu.cn>
+#         Runzhong Wang <runzhong.wang@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 1

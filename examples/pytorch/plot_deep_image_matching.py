@@ -8,7 +8,7 @@ These graph matching solvers are designed to match two individual graphs. The ma
 can be further passed to tackle downstream tasks.
 """
 
-# Author: Runzhong Wang
+# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 3
