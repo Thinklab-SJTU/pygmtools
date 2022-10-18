@@ -5,10 +5,10 @@ Model Fusion by Graph Matching
 ========================================
 This example shows how to fuse different models into a single model by ``pygmtools``.
 Model fusion aims to fuse multiple models into one, such that the fused model could have higher performance.
-The neural networks can be regarded as graphs (node feature - bias, edge feature - weights), and fusing the
-models is equivalent to solving a graph matching problem. In this example, the given models are trained on
-MNIST data from different distributions, and the fused model should fuse the knowledge in both the input
-models and can reach higher accuracy when testing.
+The neural networks can be regarded as graphs (channels - nodes, update functions between channels - edges;
+node feature - bias, edge feature - weights), and fusing the models is equivalent to solving a graph matching
+problem. In this example, the given models are trained on MNIST data from different distributions, and the
+fused model could combine the knowledge from two input models and can reach higher accuracy when testing.
 """
 
 # Author: Chang Liu <only-changer@sjtu.edu.cn>
@@ -19,7 +19,11 @@ models and can reach higher accuracy when testing.
 
 ##############################################################################
 # .. note::
-#     The following solvers support are included in this example:
+#     This is a simplified implementation of the ideas in `Liu et al. Deep Neural Network Fusion via Graph Matching with Applications to Model Ensemble and Federated Learning. ICML 2022. <https://proceedings.mlr.press/v162/liu22k/liu22k.pdf>`_
+#     For more details, please refer to the paper and the `official code repository <https://github.com/Thinklab-SJTU/GAMF>`_.
+#
+# .. note::
+#     The following solvers are included in this example:
 #
 #     * :func:`~pygmtools.classic_solvers.sm` (classic solver)
 #
@@ -335,7 +339,7 @@ for idx in params[2]:
 ##############################################################################
 # Define the alignment function: fuse the models based on matching result
 #
-def align(solution, fusion_step, networks: list, params: list):
+def align(solution, fusion_proportion, networks: list, params: list):
     [_, _, num_nodes_incremental, num_nodes_layers, cur_conv_list, conv_kernel_size_list] = params
     named_weight_list_0 = [named_parameter for named_parameter in networks[0].named_parameters()]
     aligned_wt_0 = [parameter.data for name, parameter in named_weight_list_0]
@@ -377,19 +381,19 @@ def align(solution, fusion_step, networks: list, params: list):
 
     averaged_weights = []
     for idx, parameter in enumerate(networks[1].parameters()):
-        averaged_weights.append((1 - fusion_step) * aligned_wt_0[idx] + fusion_step * parameter)
+        averaged_weights.append((1 - fusion_proportion) * aligned_wt_0[idx] + fusion_proportion * parameter)
     return averaged_weights
 
 ##############################################################################
 # Test the fused model
 # ---------------------
-# The ``fusion_step`` variable denotes the contribution to the new model. For example, if ``fusion_step=0.2``,
+# The ``fusion_proportion`` variable denotes the contribution to the new model. For example, if ``fusion_proportion=0.2``,
 # the fused model = 80% model1 + 20% model2.
 #
 def align_model_and_test(X):
     acc_list = []
-    for fusion_step in torch.arange(0, 1.1, 0.1):
-        fused_weights = align(X, fusion_step, [model1, model2], params)
+    for fusion_proportion in torch.arange(0, 1.1, 0.1):
+        fused_weights = align(X, fusion_proportion, [model1, model2], params)
 
         fused_model = SimpleNet()
         state_dict = fused_model.state_dict()
@@ -408,7 +412,7 @@ def align_model_and_test(X):
             correct += pred.eq(target.data.view_as(pred)).sum()
         test_loss /= len(test_loader.dataset)
         acc = 100. * correct / len(test_loader.dataset)
-        print(f"{1-fusion_step:.2f} model1 + {fusion_step:.2f} model2 -> fused model accuracy: {acc:.2f}%")
+        print(f"{1-fusion_proportion:.2f} model1 + {fusion_proportion:.2f} model2 -> fused model accuracy: {acc:.2f}%")
         acc_list.append(acc)
     return torch.tensor(acc_list)
 
@@ -425,7 +429,7 @@ plt.figure(figsize=(4, 4))
 plt.title('Fused Model Accuracy')
 plt.plot(torch.arange(0, 1.1, 0.1).numpy(), gm_acc_list.cpu().numpy(), 'r-', label='Graph Matching Fusion')
 plt.plot(torch.arange(0, 1.1, 0.1).numpy(), vanilla_acc_list.cpu().numpy(), 'b-', label='No Matching Fusion')
-plt.gca().set_xlabel('fusion_step')
+plt.gca().set_xlabel('fusion_proportion')
 plt.gca().set_ylabel('accuracy (%)')
 plt.legend()
 
@@ -440,6 +444,6 @@ print(f"best fused model accuracy: {torch.max(gm_acc_list):.2f}%")
 
 ##############################################################################
 # .. note::
-#     This example supports both GPU and CPU, and the online version is built by a CPU-only machine.
+#     This example supports both GPU and CPU, and the online documentation is built by a CPU-only machine.
 #     The efficiency will be significantly improved if you run this code on GPU.
 #
