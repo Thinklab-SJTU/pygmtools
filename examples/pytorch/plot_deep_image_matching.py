@@ -481,3 +481,9 @@ plt.stem(grad_size)
 #
 optim.step()
 optim.zero_grad()
+
+##############################################################################
+# .. note::
+#     This example supports both GPU and CPU, and the online version is built by a CPU-only machine.
+#     The efficiency will be significantly improved if you run this code on GPU.
+#
