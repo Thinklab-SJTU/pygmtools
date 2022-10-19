@@ -43,6 +43,7 @@ import pygmtools as pygm
 pygm.BACKEND = 'pytorch'
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
+
 ##############################################################################
 # Define a simple CNN classifier network
 # ---------------------------------------
@@ -130,6 +131,7 @@ plt.imshow(img)
 plt.axis('off')
 st_time = time.perf_counter()
 
+
 ##############################################################################
 # Define the graph matching affinity metric function
 #
@@ -166,6 +168,7 @@ class Ground_Metric_GM:
 
     def process_soft_affinity(self, p: int = 2):
         return torch.exp(0 - self.process_distance(p=p))
+
 
 ##############################################################################
 # Define the affinity function between two neural networks. This function takes multiple neural network modules,
@@ -292,8 +295,9 @@ def graph_matching_fusion(networks: list):
             num_nodes_before += num_nodes_pre
             num_nodes_incremental.append(num_nodes_before)
             num_nodes_layers.append(num_nodes_cur)
-    #affinity = (affinity + affinity.t()) / 2
+    # affinity = (affinity + affinity.t()) / 2
     return affinity, [n1, n2, num_nodes_incremental, num_nodes_layers, cur_conv_list, conv_kernel_size_list]
+
 
 ##############################################################################
 # Get the affinity (similarity) matrix between model1 and model2.
@@ -319,11 +323,11 @@ X = pygm.sm(K, n1, n2)
 #
 new_X = torch.zeros_like(X)
 new_X[:params[2][0], :params[2][0]] = torch.eye(params[2][0], device=device)
-for start_idx, length in zip(params[2][:-1], params[3][:-1]): # params[2] and params[3] are the indices of layers
-    slicing = slice(start_idx, start_idx+length)
+for start_idx, length in zip(params[2][:-1], params[3][:-1]):  # params[2] and params[3] are the indices of layers
+    slicing = slice(start_idx, start_idx + length)
     new_X[slicing, slicing] = pygm.hungarian(X[slicing, slicing])
 # assume the final FC layer is aligned
-slicing = slice(params[2][-1], params[2][-1]+params[3][-1])
+slicing = slice(params[2][-1], params[2][-1] + params[3][-1])
 new_X[slicing, slicing] = torch.eye(params[3][-1], device=device)
 X = new_X
 
@@ -335,6 +339,7 @@ plt.imshow(X.cpu().numpy(), cmap='Blues')
 for idx in params[2]:
     plt.axvline(x=idx, color='k')
     plt.axhline(y=idx, color='k')
+
 
 ##############################################################################
 # Define the alignment function: fuse the models based on matching result
@@ -384,6 +389,7 @@ def align(solution, fusion_proportion, networks: list, params: list):
         averaged_weights.append((1 - fusion_proportion) * aligned_wt_0[idx] + fusion_proportion * parameter)
     return averaged_weights
 
+
 ##############################################################################
 # Test the fused model
 # ---------------------
@@ -412,9 +418,11 @@ def align_model_and_test(X):
             correct += pred.eq(target.data.view_as(pred)).sum()
         test_loss /= len(test_loader.dataset)
         acc = 100. * correct / len(test_loader.dataset)
-        print(f"{1-fusion_proportion:.2f} model1 + {fusion_proportion:.2f} model2 -> fused model accuracy: {acc:.2f}%")
+        print(
+            f"{1 - fusion_proportion:.2f} model1 + {fusion_proportion:.2f} model2 -> fused model accuracy: {acc:.2f}%")
         acc_list.append(acc)
     return torch.tensor(acc_list)
+
 
 print('Graph Matching Fusion')
 gm_acc_list = align_model_and_test(X)
@@ -427,12 +435,15 @@ vanilla_acc_list = align_model_and_test(torch.eye(n1, device=device))
 
 plt.figure(figsize=(4, 4))
 plt.title('Fused Model Accuracy')
-plt.plot(torch.arange(0, 1.1, 0.1).numpy(), gm_acc_list.cpu().numpy(), 'r-', label='Graph Matching Fusion')
-plt.plot(torch.arange(0, 1.1, 0.1).numpy(), vanilla_acc_list.cpu().numpy(), 'b-', label='No Matching Fusion')
-plt.gca().set_xlabel('fusion_proportion')
-plt.gca().set_ylabel('accuracy (%)')
-plt.legend()
-
+plt.plot(torch.arange(0, 1.1, 0.1).numpy(), gm_acc_list.cpu().numpy(), 'r*-', label='Graph Matching Fusion')
+plt.plot(torch.arange(0, 1.1, 0.1).numpy(), vanilla_acc_list.cpu().numpy(), 'b*-', label='No Matching Fusion')
+plt.plot(torch.arange(0, 1.1, 0.1).numpy(), [acc1] * 11, '--', color="gray", label='Model1 Accuracy')
+plt.plot(torch.arange(0, 1.1, 0.1).numpy(), [acc2] * 11, '--', color="brown", label='Model2 Accuracy')
+plt.gca().set_xlabel('Fusion Proportion')
+plt.gca().set_ylabel('Accuracy (%)')
+plt.ylim((70, 87))
+plt.legend(loc=3)
+plt.show()
 ##############################################################################
 # Print the result summary
 # ------------------------------------
