@@ -126,6 +126,7 @@ print(f'model1 accuracy = {acc1}%, model2 accuracy = {acc2}%')
 # the edge features, and the bias corresponds to the node features. In this example, the neural network
 # does not have bias so that there are only edge features.
 #
+plt.figure(figsize=(8, 4))
 img = Image.open('../data/model_fusion.png')
 plt.imshow(img)
 plt.axis('off')
@@ -319,14 +320,14 @@ X = pygm.sm(K, n1, n2)
 # matched.
 #
 # .. note::
-#     In this example, we assume the final FC layer is aligned and need not to be matched.
+#     In this example, we assume the last FC layer is aligned and need not to be matched.
 #
 new_X = torch.zeros_like(X)
 new_X[:params[2][0], :params[2][0]] = torch.eye(params[2][0], device=device)
 for start_idx, length in zip(params[2][:-1], params[3][:-1]):  # params[2] and params[3] are the indices of layers
     slicing = slice(start_idx, start_idx + length)
     new_X[slicing, slicing] = pygm.hungarian(X[slicing, slicing])
-# assume the final FC layer is aligned
+# assume the last FC layer is aligned
 slicing = slice(params[2][-1], params[2][-1] + params[3][-1])
 new_X[slicing, slicing] = torch.eye(params[3][-1], device=device)
 X = new_X
