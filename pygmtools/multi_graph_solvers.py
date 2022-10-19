@@ -143,9 +143,9 @@ def cao(K, x0=None, qap_solver=None,
     else:
         if qap_solver is None:
             qap_solver = functools.partial(pygmtools.rrwm, n1max=num_node, n2max=num_node, backend=backend)
-        x0 = qap_solver(K.reshape(num_graph ** 2, aff_size, aff_size))
+        x0 = qap_solver(K.reshape((num_graph ** 2, aff_size, aff_size)))
         x0 = pygmtools.hungarian(x0, backend=backend)
-        x0 = x0.reshape(num_graph, num_graph, num_node, num_node)
+        x0 = x0.reshape((num_graph, num_graph, num_node, num_node))
 
     args = (K, x0, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost)
     try:
@@ -282,9 +282,9 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     else:
         if qap_solver is None:
             qap_solver = functools.partial(pygmtools.rrwm, n1max=num_node, n2max=num_node, backend=backend)
-        x0 = qap_solver(K.reshape(num_graph ** 2, aff_size, aff_size))
+        x0 = qap_solver(K.reshape((num_graph ** 2, aff_size, aff_size)))
         x0 = pygmtools.hungarian(x0, backend=backend)
-        x0 = x0.reshape(num_graph, num_graph, num_node, num_node)
+        x0 = x0.reshape((num_graph, num_graph, num_node, num_node))
 
     args = (K, x0, num_graph, num_node, param_lambda)
     try:
