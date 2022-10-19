@@ -22,7 +22,7 @@ Graph matching is a fundamental yet challenging problem in pattern recognition, 
 Graph matching aims to find node-to-node correspondence among multiple graphs, by solving an NP-hard combinatorial
 optimization problem.
 
-Doing graph matching in Python used to be non-trivial, and this library wants to make researchers' lives easier. 
+Doing graph matching in Python used to be difficult, and this library wants to make researchers' lives easier. 
 To highlight, ``pygmtools`` has the following features:
 
 * *Support various solvers*, including traditional combinatorial solvers (including linear, quadratic, and multi-graph) 
