@@ -6,7 +6,7 @@ Discovering Subgraphs
 This example shows how to match a smaller graph to a subset of a larger graph.
 """
 
-# Author: Runzhong Wang
+# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 5

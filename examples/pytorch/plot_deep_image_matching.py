@@ -8,7 +8,7 @@ These graph matching solvers are designed to match two individual graphs. The ma
 can be further passed to tackle downstream tasks.
 """
 
-# Author: Runzhong Wang
+# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 3
@@ -481,3 +481,9 @@ plt.stem(grad_size)
 #
 optim.step()
 optim.zero_grad()
+
+##############################################################################
+# .. note::
+#     This example supports both GPU and CPU, and the online documentation is built by a CPU-only machine.
+#     The efficiency will be significantly improved if you run this code on GPU.
+#
