@@ -55,11 +55,9 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         transposed = True
 
     if nrows is None:
-        # nrows = [s.shape[1] for _ in range(batch_size)]
         nrows = jt.Var([s.shape[1] for _ in range(batch_size)])
     if ncols is None:
-        ncols = [s.shape[2] for _ in range(batch_size)]
-        ncols = jt.Var([s.shape[2] for _ in range(batch_size)], device=s.device)
+        ncols = jt.Var([s.shape[2] for _ in range(batch_size)])
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
@@ -79,23 +77,21 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         ncols = new_ncols
 
     # operations are performed on log_s
-    s = s / tau
+    log_s = s / tau
 
     if dummy_row:
-        assert s.shape[2] >= s.shape[1]
-        dummy_shape = list(s.shape)
-        dummy_shape[1] = s.shape[2] - s.shape[1]
+        assert log_s.shape[2] >= log_s.shape[1]
+        dummy_shape = list(log_s.shape)
+        dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
         nrows = ncols
-        s = jt.concat((s, jt.full(dummy_shape, -float('inf'))), dim=1)
+        log_s = jt.concat((log_s, jt.full(dummy_shape, -float('inf'))), dim=1)
         for b in range(batch_size):
-            s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
-            s[b, int(nrows[b]):, :] = -float('inf')
-            s[b, :, int(ncols[b]):] = -float('inf')
+            log_s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
+            log_s[b, int(nrows[b]):, :] = -float('inf')
+            log_s[b, :, int(ncols[b]):] = -float('inf')
 
     if batched_operation:
-        log_s = s
-
         for i in range(max_iter):
             if i % 2 == 0:
                 m = log_s.max(2, keepdims=True)  #optimized logsumexp
@@ -110,7 +106,7 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
 
         ret_log_s = log_s
     else:
-        ret_log_s = jt.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype)
+        ret_log_s = jt.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
         
         for b in range(batch_size):
             r,c = nrows[b],ncols[b]
@@ -118,17 +114,17 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
                 r = int(nrows[b].item())
             if not isinstance(ncols[b],int):
                 c = int(ncols[b].item())
-            log_s = s[b, 0:r, 0:c]
+            log_s_b = log_s[b, 0:r, 0:c]
             for i in range(max_iter):
                 if i % 2 == 0:
-                    m = log_s.max(1, keepdims=True)
-                    log_sum = jt.nn.logsumexp(log_s - m, 1, keepdim=True) + m
-                    log_s = log_s - log_sum
+                    m = log_s_b.max(1, keepdims=True)
+                    log_sum = jt.nn.logsumexp(log_s_b - m, 1, keepdim=True) + m
+                    log_s_b = log_s_b - log_sum
                 else:
-                    m = log_s.max(0, keepdims=True)
-                    log_sum = jt.nn.logsumexp(log_s - m, 0, keepdim=True) + m
-                    log_s = log_s - log_sum
-            ret_log_s[b, 0:r, 0:c] = log_s
+                    m = log_s_b.max(0, keepdims=True)
+                    log_sum = jt.nn.logsumexp(log_s_b - m, 0, keepdim=True) + m
+                    log_s_b = log_s_b - log_sum
+            ret_log_s[b, 0:r, 0:c] = log_s_b
 
     if dummy_row:
         if dummy_shape[1] > 0:

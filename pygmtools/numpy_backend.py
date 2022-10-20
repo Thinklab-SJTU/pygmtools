@@ -80,23 +80,21 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
         ncols = new_ncols
 
     # operations are performed on log_s
-    s = s / tau
+    log_s = s / tau
 
     if dummy_row:
-        assert s.shape[2] >= s.shape[1]
-        dummy_shape = list(s.shape)
-        dummy_shape[1] = s.shape[2] - s.shape[1]
+        assert log_s.shape[2] >= log_s.shape[1]
+        dummy_shape = list(log_s.shape)
+        dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
         nrows = ncols
-        s = np.concatenate((s, np.full(dummy_shape, -float('inf'))), axis=1)
+        log_s = np.concatenate((log_s, np.full(dummy_shape, -float('inf'))), axis=1)
         for b in range(batch_size):
-            s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
-            s[b, nrows[b]:, :] = -float('inf')
-            s[b, :, ncols[b]:] = -float('inf')
+            log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+            log_s[b, nrows[b]:, :] = -float('inf')
+            log_s[b, :, ncols[b]:] = -float('inf')
 
     if batched_operation:
-        log_s = s
-
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = scipy.special.logsumexp(log_s, 2, keepdims=True)
@@ -109,22 +107,22 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
 
         ret_log_s = log_s
     else:
-        ret_log_s = np.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype)
+        ret_log_s = np.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
             col_slice = slice(0, ncols[b])
-            log_s = s[b, row_slice, col_slice]
+            log_s_b = log_s[b, row_slice, col_slice]
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    log_sum = scipy.special.logsumexp(log_s, 1, keepdims=True)
-                    log_s = log_s - log_sum
+                    log_sum = scipy.special.logsumexp(log_s_b, 1, keepdims=True)
+                    log_s_b = log_s_b - log_sum
                 else:
-                    log_sum = scipy.special.logsumexp(log_s, 0, keepdims=True)
-                    log_s = log_s - log_sum
+                    log_sum = scipy.special.logsumexp(log_s_b, 0, keepdims=True)
+                    log_s_b = log_s_b - log_sum
 
-            ret_log_s[b, row_slice, col_slice] = log_s
+            ret_log_s[b, row_slice, col_slice] = log_s_b
 
     if dummy_row:
         if dummy_shape[1] > 0:

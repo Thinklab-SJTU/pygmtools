@@ -44,7 +44,7 @@ def hungarian(s: Tensor, n1: Tensor=None, n2: Tensor=None, nproc: int=1) -> Tens
     return perm_mat
 
 
-def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
+def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None, unmatchrows: Tensor=None, unmatchcols: Tensor=None,
              dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> Tensor:
     """
     Pytorch implementation of Sinkhorn algorithm
@@ -78,23 +78,21 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         ncols = new_ncols
 
     # operations are performed on log_s
-    s = s / tau
+    log_s = s / tau
 
     if dummy_row:
-        assert s.shape[2] >= s.shape[1]
-        dummy_shape = list(s.shape)
-        dummy_shape[1] = s.shape[2] - s.shape[1]
+        assert log_s.shape[2] >= log_s.shape[1]
+        dummy_shape = list(log_s.shape)
+        dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
         nrows = ncols
-        s = torch.cat((s, torch.full(dummy_shape, -float('inf')).to(s.device)), dim=1)
+        log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)), dim=1)
         for b in range(batch_size):
-            s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
-            s[b, nrows[b]:, :] = -float('inf')
-            s[b, :, ncols[b]:] = -float('inf')
+            log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+            log_s[b, nrows[b]:, :] = -float('inf')
+            log_s[b, :, ncols[b]:] = -float('inf')
 
     if batched_operation:
-        log_s = s
-
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = torch.logsumexp(log_s, 2, keepdim=True)
@@ -107,22 +105,22 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
 
         ret_log_s = log_s
     else:
-        ret_log_s = torch.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), device=s.device, dtype=s.dtype)
+        ret_log_s = torch.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), device=log_s.device, dtype=log_s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
             col_slice = slice(0, ncols[b])
-            log_s = s[b, row_slice, col_slice]
+            log_s_b = log_s[b, row_slice, col_slice]
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    log_sum = torch.logsumexp(log_s, 1, keepdim=True)
-                    log_s = log_s - log_sum
+                    log_sum = torch.logsumexp(log_s_b, 1, keepdim=True)
+                    log_s_b = log_s_b - log_sum
                 else:
-                    log_sum = torch.logsumexp(log_s, 0, keepdim=True)
-                    log_s = log_s - log_sum
+                    log_sum = torch.logsumexp(log_s_b, 0, keepdim=True)
+                    log_s_b = log_s_b - log_sum
 
-            ret_log_s[b, row_slice, col_slice] = log_s
+            ret_log_s[b, row_slice, col_slice] = log_s_b
 
     if dummy_row:
         if dummy_shape[1] > 0:
@@ -134,7 +132,7 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         s_t = ret_log_s.transpose(1, 2)
         s_t = torch.cat((
             s_t[:, :ret_log_s.shape[1], :],
-            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf'), device=s.device)), dim=2)
+            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf'), device=log_s.device)), dim=2)
         ret_log_s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, ret_log_s)
 
     if transposed:

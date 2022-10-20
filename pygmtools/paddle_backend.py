@@ -54,9 +54,9 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         transposed = True
 
     if nrows is None:
-        nrows = paddle.to_tensor([s.shape[1] for _ in range(batch_size)], place=s.place, dtype=paddle.int)
+        nrows = paddle.to_tensor([s.shape[1] for _ in range(batch_size)], place=s.place, dtype=paddle.int64)
     if ncols is None:
-        ncols = paddle.to_tensor([s.shape[2] for _ in range(batch_size)], place=s.place, dtype=paddle.int)
+        ncols = paddle.to_tensor([s.shape[2] for _ in range(batch_size)], place=s.place, dtype=paddle.int64)
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
@@ -73,23 +73,21 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         ncols = new_ncols
 
     # operations are performed on log_s
-    s = s / tau
+    log_s = s / tau
 
     if dummy_row:
-        assert s.shape[2] >= s.shape[1]
-        dummy_shape = list(s.shape)
-        dummy_shape[1] = s.shape[2] - s.shape[1]
+        assert log_s.shape[2] >= log_s.shape[1]
+        dummy_shape = list(log_s.shape)
+        dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
         nrows = ncols
-        s = paddle.concat((s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf')), place=s.place)), axis=1)
+        log_s = paddle.concat((log_s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf'), dtype=log_s.dtype), place=log_s.place)), axis=1)
         for b in range(batch_size):
-            s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
-            s[b, nrows[b]:, :] = -float('inf')
-            s[b, :, ncols[b]:] = -float('inf')
+            log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+            log_s[b, nrows[b]:, :] = -float('inf')
+            log_s[b, :, ncols[b]:] = -float('inf')
 
     if batched_operation:
-        log_s = s
-
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = paddle.logsumexp(log_s, 2, keepdim=True)
@@ -106,22 +104,22 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
 
         ret_log_s = log_s
     else:
-        ret_log_s = paddle.to_tensor(paddle.full((batch_size, s.shape[1], s.shape[2]), -float('inf')), place=s.place, dtype=s.dtype)
+        ret_log_s = paddle.to_tensor(paddle.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf')), place=log_s.place, dtype=log_s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
             col_slice = slice(0, ncols[b])
-            log_s = s[b, row_slice, col_slice]
+            log_s_b = log_s[b, row_slice, col_slice]
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    log_sum = paddle.logsumexp(log_s, 1, keepdim=True)
-                    log_s = log_s - log_sum
+                    log_sum = paddle.logsumexp(log_s_b, 1, keepdim=True)
+                    log_s_b = log_s_b - log_sum
                 else:
-                    log_sum = paddle.logsumexp(log_s, 0, keepdim=True)
-                    log_s = log_s - log_sum
+                    log_sum = paddle.logsumexp(log_s_b, 0, keepdim=True)
+                    log_s_b = log_s_b - log_sum
 
-            ret_log_s[b, row_slice, col_slice] = log_s
+            ret_log_s[b, row_slice, col_slice] = log_s_b
 
     if dummy_row:
         if dummy_shape[1] > 0:
@@ -133,7 +131,7 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         s_t = ret_log_s.transpose((0, 2, 1))
         s_t = paddle.concat((
             s_t[:, :ret_log_s.shape[1], :],
-            paddle.to_tensor(paddle.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf')), place=s.place)), axis=2)
+            paddle.to_tensor(paddle.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf')), place=log_s.place)), axis=2)
         ret_log_s = paddle.where(transposed_batch.reshape((batch_size, 1, 1)), s_t, ret_log_s)
 
     if transposed:

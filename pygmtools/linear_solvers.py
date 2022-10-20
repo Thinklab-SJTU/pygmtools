@@ -161,7 +161,8 @@ def sinkhorn(s, n1=None, n2=None,
                     [0.1173, 0.1230, 0.2382, 0.1996, 0.3219],
                     [0.2673, 0.2504, 0.1536, 0.1869, 0.1418]], dtype=torch.float64)
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
-            row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
+            row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
+            col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
 
             # 3-dimensional (batched) input
             >>> s_3d = torch.from_numpy(np.random.rand(3, 5, 5))
@@ -281,9 +282,9 @@ def sinkhorn(s, n1=None, n2=None,
             >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: Tensor(shape=[4], dtype=float64, place=Place(cpu), stop_gradient=True,
-            [1.00000000, 1.00000000, 1.00000000, 1.00000000])
+                            [1.00000000, 1.00000000, 1.00000000, 1.00000000])
             col_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
-            [0.78239609, 0.80485526, 0.80165627, 0.80004254, 0.81104984])
+                            [0.78239609, 0.80485526, 0.80165627, 0.80004254, 0.81104984])
 
     .. dropdown:: Jittor Example
 
