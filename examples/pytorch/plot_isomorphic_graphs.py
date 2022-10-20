@@ -145,7 +145,7 @@ nx.draw_networkx(G2, pos=pos2)
 for i in range(num_nodes):
     j = torch.argmax(X[i]).item()
     con = ConnectionPatch(xyA=pos1[i], xyB=pos2[j], coordsA="data", coordsB="data",
-                          axesA=ax1, axesB=ax2, color="green")
+                          axesA=ax1, axesB=ax2, color="green" if X_gt[i, j] else "red")
     plt.gca().add_artist(con)
 
 ##############################################################################
@@ -163,7 +163,7 @@ for i in range(num_nodes):
     j = torch.argmax(X[i]).item()
     align_pos2[j] = pos1[i]
     con = ConnectionPatch(xyA=pos1[i], xyB=align_pos2[j], coordsA="data", coordsB="data",
-                          axesA=ax1, axesB=ax2, color="green")
+                          axesA=ax1, axesB=ax2, color="green" if X_gt[i, j] else "red")
     plt.gca().add_artist(con)
 nx.draw_networkx(G2, pos=align_pos2)
 
