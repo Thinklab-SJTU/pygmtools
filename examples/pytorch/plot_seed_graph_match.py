@@ -3,6 +3,7 @@
 ======================
 Seeded Graph Matching
 ======================
+
 Seeded graph matching means some partial of the matching result is already known, and the known matching
 results are called "seeds". In this example, we show how to exploit such prior with ``pygmtools``.
 """

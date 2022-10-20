@@ -3,6 +3,7 @@
 ======================
 Discovering Subgraphs
 ======================
+
 This example shows how to match a smaller graph to a subset of a larger graph.
 """
 

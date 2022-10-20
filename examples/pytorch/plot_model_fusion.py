@@ -1,8 +1,9 @@
 # coding: utf-8
 """
-========================================
+==============================
 Model Fusion by Graph Matching
-========================================
+==============================
+
 This example shows how to fuse different models into a single model by ``pygmtools``.
 Model fusion aims to fuse multiple models into one, such that the fused model could have higher performance.
 The neural networks can be regarded as graphs (channels - nodes, update functions between channels - edges;

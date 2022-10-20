@@ -3,6 +3,7 @@
 ========================================
 Matching Image Keypoints by QAP Solvers
 ========================================
+
 This example shows how to match image keypoints by graph matching solvers provided by ``pygmtools``.
 These solvers follow the Quadratic Assignment Problem formulation and can generally work out-of-box.
 The matched images can be further processed for other downstream tasks.

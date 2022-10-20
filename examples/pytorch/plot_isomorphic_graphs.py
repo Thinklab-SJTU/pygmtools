@@ -3,6 +3,7 @@
 ========================================
 Introduction: Matching Isomorphic Graphs
 ========================================
+
 This example is an introduction to ``pygmtools`` which shows how to match isomorphic graphs.
 Isomorphic graphs means graphs whose structures are identical, but the node correspondence is unknown.
 """
