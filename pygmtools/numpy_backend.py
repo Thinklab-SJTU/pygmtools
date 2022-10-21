@@ -91,10 +91,12 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
         log_s = np.concatenate((log_s, np.full(dummy_shape, -float('inf'))), axis=1)
         for b in range(batch_size):
             log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+
+    if batched_operation:
+        for b in range(batch_size):
             log_s[b, nrows[b]:, :] = -float('inf')
             log_s[b, :, ncols[b]:] = -float('inf')
 
-    if batched_operation:
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = scipy.special.logsumexp(log_s, 2, keepdims=True)

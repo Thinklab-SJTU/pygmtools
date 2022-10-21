@@ -89,10 +89,12 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)), dim=1)
         for b in range(batch_size):
             log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+
+    if batched_operation:
+        for b in range(batch_size):
             log_s[b, nrows[b]:, :] = -float('inf')
             log_s[b, :, ncols[b]:] = -float('inf')
 
-    if batched_operation:
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = torch.logsumexp(log_s, 2, keepdim=True)

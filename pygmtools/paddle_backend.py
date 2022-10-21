@@ -84,10 +84,12 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         log_s = paddle.concat((log_s, paddle.to_tensor(paddle.full(dummy_shape, -float('inf'), dtype=log_s.dtype), place=log_s.place)), axis=1)
         for b in range(batch_size):
             log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+
+    if batched_operation:
+        for b in range(batch_size):
             log_s[b, nrows[b]:, :] = -float('inf')
             log_s[b, :, ncols[b]:] = -float('inf')
 
-    if batched_operation:
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = paddle.logsumexp(log_s, 2, keepdim=True)

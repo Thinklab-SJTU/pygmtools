@@ -88,10 +88,12 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         log_s = jt.concat((log_s, jt.full(dummy_shape, -float('inf'))), dim=1)
         for b in range(batch_size):
             log_s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
+
+    if batched_operation:
+        for b in range(batch_size):
             log_s[b, int(nrows[b]):, :] = -float('inf')
             log_s[b, :, int(ncols[b]):] = -float('inf')
 
-    if batched_operation:
         for i in range(max_iter):
             if i % 2 == 0:
                 m = log_s.max(2, keepdims=True)  #optimized logsumexp
