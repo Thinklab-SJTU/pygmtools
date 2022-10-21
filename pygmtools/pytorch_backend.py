@@ -44,7 +44,7 @@ def hungarian(s: Tensor, n1: Tensor=None, n2: Tensor=None, nproc: int=1) -> Tens
     return perm_mat
 
 
-def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None, unmatchrows: Tensor=None, unmatchcols: Tensor=None,
+def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
              dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> Tensor:
     """
     Pytorch implementation of Sinkhorn algorithm
