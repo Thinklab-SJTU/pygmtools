@@ -4,6 +4,8 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/pygmtools.svg)](https://pypi.python.org/pypi/pygmtools/)
 [![Downloads](https://pepy.tech/badge/pygmtools)](https://pepy.tech/project/pygmtools)
 [![Documentation Status](https://readthedocs.org/projects/pygmtools/badge/?version=latest)](https://pygmtools.readthedocs.io/en/latest/?badge=latest)
+[![discord channel](https://img.shields.io/discord/1028701206526304317.svg?&color=blueviolet&label=discord)](https://discord.gg/8m6n7rRz9T)
+[![QQ group](https://img.shields.io/badge/QQ%20group-696401889-blue)](https://qm.qq.com/cgi-bin/qm/qr?k=QolXYJn_M5ilDEM9e2jEjlPnJ02Ktabd&jump_from=webapi&authKey=6zG6D/Js4YF5h5zj778aO5MDKOXBwPFi8gQ4LsXJN8Hn1V8uCVGV81iT4J/FjPGT)
 [![GitHub stars](https://img.shields.io/github/stars/Thinklab-SJTU/pygmtools.svg?style=social&label=Star&maxAge=8640)](https://GitHub.com/Thinklab-SJTU/pygmtools/stargazers/) 
 
 -----------------------------------------
@@ -126,8 +128,13 @@ If you have any questions, or if you are experiencing any issues, feel free to r
 
 We also offer the following chat rooms if you are more comfortable with them:
 
-* Discord (for English users): https://discord.gg/8m6n7rRz9T
+* Discord (for English users): 
+  
+  [<img src="https://discordapp.com/api/guilds/1028701206526304317/widget.png?style=banner2">](https://discord.gg/8m6n7rRz9T)
+
 * QQ Group (for Chinese users)/QQ群(中文用户): 696401889
+  
+  [<img src="http://pub.idqqimg.com/wpa/images/group.png" alt="ThinkMatch/pygmtools交流群" title="ThinkMatch/pygmtools交流群">](https://qm.qq.com/cgi-bin/qm/qr?k=NlPuwwvaFaHzEWD8w7jSOTzoqSLIM80V&jump_from=webapi&authKey=chI2htrWDujQed6VtVid3V1NXEoJvwz3MVwruax6x5lQIvLsC8BmpmzBJOCzhtQd)
 
 ## Contributing
 Any contributions/ideas/suggestions from the community is welcomed! Before starting your contribution, please read the
