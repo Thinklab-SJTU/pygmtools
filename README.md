@@ -130,11 +130,11 @@ We also offer the following chat rooms if you are more comfortable with them:
 
 * Discord (for English users): 
   
-  [<img src="https://discordapp.com/api/guilds/1028701206526304317/widget.png?style=banner2">](https://discord.gg/8m6n7rRz9T)
+  [![discord](https://discordapp.com/api/guilds/1028701206526304317/widget.png?style=banner2)](https://discord.gg/8m6n7rRz9T)
 
 * QQ Group (for Chinese users)/QQ群(中文用户): 696401889
   
-  [<img src="http://pub.idqqimg.com/wpa/images/group.png" alt="ThinkMatch/pygmtools交流群" title="ThinkMatch/pygmtools交流群">](https://qm.qq.com/cgi-bin/qm/qr?k=NlPuwwvaFaHzEWD8w7jSOTzoqSLIM80V&jump_from=webapi&authKey=chI2htrWDujQed6VtVid3V1NXEoJvwz3MVwruax6x5lQIvLsC8BmpmzBJOCzhtQd)
+  [![ThinkMatch/pygmtools交流群](http://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=NlPuwwvaFaHzEWD8w7jSOTzoqSLIM80V&jump_from=webapi&authKey=chI2htrWDujQed6VtVid3V1NXEoJvwz3MVwruax6x5lQIvLsC8BmpmzBJOCzhtQd)
 
 ## Contributing
 Any contributions/ideas/suggestions from the community is welcomed! Before starting your contribution, please read the
