@@ -30,7 +30,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     And then turns the matrix into doubly-stochastic matrix by iterative row- and column-wise normalization:
 
     .. math::
-        \mathbf{S} &= \mathbf{S} \oslash (\mathbf{1}_{n_2} \mathbf{1}_{n_2}^\top \cdot \mathbf{S}) \\
+        \mathbf{S} &= \mathbf{S} \oslash (\mathbf{1}_{n_1} \mathbf{1}_{n_1}^\top \cdot \mathbf{S}) \\
         \mathbf{S} &= \mathbf{S} \oslash (\mathbf{S} \cdot \mathbf{1}_{n_2} \mathbf{1}_{n_2}^\top)
 
     where :math:`\oslash` means element-wise division, :math:`\mathbf{1}_n` means a column-vector with length :math:`n`
@@ -41,7 +41,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     :param n1: (optional) :math:`(b)` number of objects in dim1
     :param n2: (optional) :math:`(b)` number of objects in dim2
     :param unmatch1: (optional, new in ``0.3.0``) :math:`(b\times n_1)` the scores indicating the objects in dim1 is unmatched
-    :param unmatch2: (optional, new in ``0.3.0``) :math:`(b\times n_1)` the scores indicating the objects in dim2 is unmatched
+    :param unmatch2: (optional, new in ``0.3.0``) :math:`(b\times n_2)` the scores indicating the objects in dim2 is unmatched
     :param dummy_row: (default: False) whether to add dummy rows (rows whose elements are all 0) to pad the matrix
                       to square matrix.
     :param max_iter: (default: 10) maximum iterations
@@ -573,7 +573,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     :param n1: :math:`(b)` (optional) number of objects in dim1
     :param n2: :math:`(b)` (optional) number of objects in dim2
     :param unmatch1: (optional, new in ``0.3.0``) :math:`(b\times n_1)` the scores indicating the objects in dim1 is unmatched
-    :param unmatch2: (optional, new in ``0.3.0``) :math:`(b\times n_1)` the scores indicating the objects in dim2 is unmatched
+    :param unmatch2: (optional, new in ``0.3.0``) :math:`(b\times n_2)` the scores indicating the objects in dim2 is unmatched
     :param nproc: (default: 1, i.e. no parallel) number of parallel processes
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` optimal permutation matrix
