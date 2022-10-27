@@ -365,13 +365,13 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
             score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
             score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
 
+        idx = paddle.argmax(score_combo, axis=-1)
         score_combo = paddle.max(score_combo, axis=-1)
-        idx = paddle.argmax(score_combo, axis=-1, keepdim=True).numpy()
 
-        assert paddle.all(score_combo >= score_ori), paddle.min(score_combo - score_ori)
-        X_upt = X_combo[mask1, mask2, idx, :, :]
-        X = X_upt * X_mask + X_upt.transpose((1, 0)).transpose((0, 1, 3, 2)) * X_mask.transpose((1, 0)) + X * (1 - X_mask - X_mask.transpose((1, 0)))
-        assert paddle.all(X.transpose((1, 0)).transpose((0, 1, 3, 2)) == X)
+        # assert paddle.all(score_combo >= score_ori), paddle.min(score_combo - score_ori)
+        X_upt = X_combo[mask1, mask2, idx]
+        X = X_upt * X_mask + X_upt.transpose((1, 0, 3, 2))* X_mask.transpose((1, 0, 2, 3)) + X * (1 - X_mask - X_mask.transpose((1, 0, 2, 3)))
+        assert paddle.all(X.transpose((1, 0, 3, 2)) == X)
     return X
 
 
@@ -481,7 +481,7 @@ def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
         upt = paddle.to_tensor((score_ori < score_combo), dtype = 'float32')
         upt = (upt * mask).reshape((m, m, 1, 1))
         X = X * (1.0 - upt) + X_combo * upt
-        X = X * X_mask + X.transpose((1, 0)).transpose((0, 1, 3, 2)) * (1 - X_mask)
+        X = X * X_mask + X.transpose((1, 0, 2, 3)).transpose((0, 1, 3, 2)) * (1 - X_mask)
     return X
 
 
@@ -654,8 +654,8 @@ def gamgm_real(
             # compact matrix form update of V
             UUt = paddle.mm(U, U.t())
             lastUUt = UUt
-            cluster_weight = paddle.repeat_interleave(cluster_M, paddle.to_tensor(ns, dtype=paddle.int32), axis=0)
-            cluster_weight = paddle.repeat_interleave(cluster_weight, paddle.to_tensor(ns, dtype=paddle.int32), axis=1)
+            cluster_weight = paddle.repeat_interleave(cluster_M, paddle.to_tensor(ns, dtype=paddle.int64), axis=0)
+            cluster_weight = paddle.repeat_interleave(cluster_weight, paddle.to_tensor(ns, dtype=paddle.int64), axis=1)
             quad = paddle.matmul(paddle.matmul(paddle.matmul(supA, UUt * cluster_weight), supA), U) * quad_weight * 2
 
             unary = paddle.mm(supW * cluster_weight, U)
@@ -726,8 +726,8 @@ def gamgm_real(
             if projector == 'hungarian' and outlier_thresh > 0:
                 U_hung = U
                 UUt = paddle.mm(U_hung, U_hung.t())
-                cluster_weight = paddle.repeat_interleave(cluster_M, paddle.to_tensor(ns, dtype=paddle.int32), axis=0)
-                cluster_weight = paddle.repeat_interleave(cluster_weight, paddle.to_tensor(ns, dtype=paddle.int32), axis=1)
+                cluster_weight = paddle.repeat_interleave(cluster_M, paddle.to_tensor(ns, dtype=paddle.int64), axis=0)
+                cluster_weight = paddle.repeat_interleave(cluster_weight, paddle.to_tensor(ns, dtype=paddle.int64), axis=1)
                 quad = paddle.matmul(paddle.matmul(paddle.matmul(supA, UUt * cluster_weight), supA), U_hung) * quad_weight * 2
                 unary = paddle.mm(supW * cluster_weight, U_hung)
                 max_vals = (unary + quad).max(axis=1)
