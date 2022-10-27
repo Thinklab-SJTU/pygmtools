@@ -111,7 +111,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                 if last_X is not None:
                     diff = 0
                     for i, j in itertools.product(range(num_graph), repeat=2):
-                        diff += np.abs(pygm.utils.to_numpy(_X[i, j]) * last_X[i, j]).sum()
+                        diff -= np.abs(pygm.utils.to_numpy(_X[i, j]) * last_X[i, j]).sum()
                     assert diff < 1e-4, \
                         f"Incorrect GM solution for {working_backend}, " \
                         f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
