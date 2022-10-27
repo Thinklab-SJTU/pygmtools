@@ -125,8 +125,8 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         for b in range(batch_size):
             log_s[b, :nrows[b], ncols[b]] = unmatchrows[b, :nrows[b]]
             log_s[b, nrows[b], :ncols[b]] = unmatchcols[b, :ncols[b]]
-    row_mask = torch.zeros(batch_size, log_s.shape[1], 1, dtype=torch.bool)
-    col_mask = torch.zeros(batch_size, 1, log_s.shape[2], dtype=torch.bool)
+    row_mask = torch.zeros(batch_size, log_s.shape[1], 1, dtype=torch.bool, device=log_s.device)
+    col_mask = torch.zeros(batch_size, 1, log_s.shape[2], dtype=torch.bool, device=log_s.device)
     for b in range(batch_size):
         row_mask[b, :nrows[b], 0] = 1
         col_mask[b, 0, :ncols[b]] = 1
