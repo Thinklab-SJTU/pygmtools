@@ -46,6 +46,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
     for values in tqdm(itertools.product(*matrix_params.values()), total=total):
         aff_param_dict = {} # for affinity functions (supported keys: 'node_aff_fn', 'edge_aff_fn')
         solver_param_dict = {} # for solvers
+        v_np = None
         for k, v in zip(matrix_params.keys(), values):
             if k in ['node_aff_fn', 'edge_aff_fn']:
                 aff_param_dict[k] = v
@@ -62,13 +63,16 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                             _rand_perm[np.arange(num_node), np.random.permutation(num_node)] = 1
                             x0.append(_rand_perm)
                     x0 = np.stack(x0)
-                    v = data_from_numpy(x0.reshape((num_graph, num_graph, num_node, num_node)))
+                    v = x0.reshape((num_graph, num_graph, num_node, num_node))
+                    v_np = v
                 solver_param_dict[k] = v
 
         last_K = None
         last_X = None
         for working_backend in backends:
             pygm.BACKEND = working_backend
+            if v_np is not None:
+                solver_param_dict['x0'] = data_from_numpy(v_np)
             if mode == 'lawler-qap':
                 _As_1, _As_2, _Fs_1, _Fs_2, _X_gt = data_from_numpy(As_1, As_2, Fs_1, Fs_2, X_gt)
                 _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_As_1)
@@ -111,7 +115,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                 if last_X is not None:
                     diff = 0
                     for i, j in itertools.product(range(num_graph), repeat=2):
-                        diff -= np.abs(pygm.utils.to_numpy(_X[i, j]) * last_X[i, j]).sum()
+                        diff = np.abs(pygm.utils.to_numpy(_X[i, j]) - last_X[i, j]).sum()
                     assert diff < 1e-4, \
                         f"Incorrect GM solution for {working_backend}, " \
                         f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
