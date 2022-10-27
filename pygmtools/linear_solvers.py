@@ -7,7 +7,7 @@ The linear assignment problem only considers nodes, and is also known as biparti
 
 .. math::
 
-    &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{M})\\
+    &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S})\\
     s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
 """
 
@@ -16,7 +16,7 @@ import pygmtools
 from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
 
 
-def sinkhorn(s, n1=None, n2=None,
+def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
              dummy_row: bool = False, max_iter: int = 10, tau: float = 1., batched_operation: bool = False,
              backend=None):
     r"""
@@ -30,7 +30,7 @@ def sinkhorn(s, n1=None, n2=None,
     And then turns the matrix into doubly-stochastic matrix by iterative row- and column-wise normalization:
 
     .. math::
-        \mathbf{S} &= \mathbf{S} \oslash (\mathbf{1}_{n_2} \mathbf{1}_{n_2}^\top \cdot \mathbf{S}) \\
+        \mathbf{S} &= \mathbf{S} \oslash (\mathbf{1}_{n_1} \mathbf{1}_{n_1}^\top \cdot \mathbf{S}) \\
         \mathbf{S} &= \mathbf{S} \oslash (\mathbf{S} \cdot \mathbf{1}_{n_2} \mathbf{1}_{n_2}^\top)
 
     where :math:`\oslash` means element-wise division, :math:`\mathbf{1}_n` means a column-vector with length :math:`n`
@@ -40,6 +40,8 @@ def sinkhorn(s, n1=None, n2=None,
               supported if ``s`` is of size :math:`(n_1 \times n_2)`
     :param n1: (optional) :math:`(b)` number of objects in dim1
     :param n2: (optional) :math:`(b)` number of objects in dim2
+    :param unmatch1: (optional, new in ``0.3.0``) :math:`(b\times n_1)` the scores indicating the objects in dim1 is unmatched
+    :param unmatch2: (optional, new in ``0.3.0``) :math:`(b\times n_2)` the scores indicating the objects in dim2 is unmatched
     :param dummy_row: (default: False) whether to add dummy rows (rows whose elements are all 0) to pad the matrix
                       to square matrix.
     :param max_iter: (default: 10) maximum iterations
@@ -69,6 +71,40 @@ def sinkhorn(s, n1=None, n2=None,
         Setting ``batched_operation=True`` may be preferred when you are doing inference with this module and do not
         need the gradient. It is assumed that ``row number <= column number``. If not, the input matrix will be
         transposed.
+
+    .. warning::
+        This function can work with or without the maximal inlier matching:
+
+        * **With maximal inlier matching** (the default mode). If ``unmatch1=None`` and ``unmatch2=None``,
+          the solver aims to match as many nodes as possible. The corresponding linear assignment problem is
+
+          .. math::
+
+              &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S})\\
+              s.t. \quad &\mathbf{X} \in [0, 1]^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+          where the constraint :math:`\mathbf{X}\mathbf{1} = \mathbf{1}` urges the solver to match as many inlier
+          nodes as possible. :math:`\mathbf{X}` is relaxed to continuous value in Sinkhorn.
+        * **Without maximal inlier matching** (new in ``0.3.0``). If ``unmatch1`` and ``unmatch2`` are not ``None``,
+          the solver is allowed to match nodes to void nodes, and the corresponding scores for matching to void nodes
+          are specified by ``unmatch1`` and ``unmatch2``. The following (modified) linear assignment problem is
+          considered:
+
+          .. math::
+              &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S}^\prime)\\
+              s.t. \quad &\mathbf{X} \in [0, 1]^{n_1+1\times n_2+1}, \ \mathbf{X}_{[0:n_1, :]}\mathbf{1} = \mathbf{1}, \ \mathbf{X}_{[:, 0:n_2]}^\top\mathbf{1} \leq \mathbf{1}
+
+          where the last column and last row of :math:`\mathbf{S}^\prime` are ``unmatch1`` and ``unmatch2``,
+          respectively.
+
+          For example, if you want to solve the following problem (note that both consrtraints are :math:`\leq`)
+
+          .. math::
+
+              &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S})\\
+              s.t. \quad &\mathbf{X} \in [0, 1]^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} \leq \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+          you can simply set ``unmatch1`` and ``unmatch2`` as zero vectors.
 
     .. dropdown:: Numpy Example
 
@@ -136,6 +172,30 @@ def sinkhorn(s, n1=None, n2=None,
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: [1. 1. 1. 1.] col_sum: [0.78239609 0.80485526 0.80165627 0.80004254 0.81104984]
 
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = np.random.randn(5, 5)
+            >>> s_2d
+            array([[ 0.01050002,  1.78587049,  0.12691209,  0.40198936,  1.8831507 ],
+                   [-1.34775906, -1.270485  ,  0.96939671, -1.17312341,  1.94362119],
+                   [-0.41361898, -0.74745481,  1.92294203,  1.48051479,  1.86755896],
+                   [ 0.90604466, -0.86122569,  1.91006495, -0.26800337,  0.8024564 ],
+                   [ 0.94725197, -0.15501009,  0.61407937,  0.92220667,  0.37642553]])
+            >>> unmatch1 = np.random.randn(5)
+            >>> unmatch1
+            array([-1.09940079,  0.29823817,  1.3263859 , -0.69456786, -0.14963454])
+            >>> unmatch2 = np.random.randn(5)
+            >>> unmatch2
+            array([-0.43515355,  1.84926373,  0.67229476,  0.40746184, -0.76991607])
+            >>> x = pygm.sinkhorn(s_2d, unmatch1=unmatch1, unmatch2=unmatch2, max_iter=40)
+            >>> x
+            array([[0.12434101, 0.23913991, 0.05663597, 0.13943479, 0.31811425],
+                   [0.03084473, 0.01085787, 0.12689067, 0.02784578, 0.3260589 ],
+                   [0.03192548, 0.00745004, 0.13391025, 0.16087345, 0.12289304],
+                   [0.29820536, 0.01659601, 0.32997174, 0.06988242, 0.10573396],
+                   [0.29787774, 0.0322356 , 0.08654936, 0.22023996, 0.06619393]])
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: [0.87766593 0.52249794 0.45705226 0.82038949 0.70309659] col_sum: [0.78319431 0.30627943 0.733958   0.61827641 0.93899407]
+
     .. dropdown:: Pytorch Example
 
         ::
@@ -161,7 +221,8 @@ def sinkhorn(s, n1=None, n2=None,
                     [0.1173, 0.1230, 0.2382, 0.1996, 0.3219],
                     [0.2673, 0.2504, 0.1536, 0.1869, 0.1418]], dtype=torch.float64)
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
-            row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
+            row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
+            col_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64)
 
             # 3-dimensional (batched) input
             >>> s_3d = torch.from_numpy(np.random.rand(3, 5, 5))
@@ -203,6 +264,30 @@ def sinkhorn(s, n1=None, n2=None,
             >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: tensor([1.0000, 1.0000, 1.0000, 1.0000], dtype=torch.float64) col_sum: tensor([0.7824, 0.8049, 0.8017, 0.8000, 0.8110], dtype=torch.float64)
+
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = torch.from_numpy(np.random.randn(5, 5))
+            >>> s_2d
+            tensor([[ 0.0105,  1.7859,  0.1269,  0.4020,  1.8832],
+                    [-1.3478, -1.2705,  0.9694, -1.1731,  1.9436],
+                    [-0.4136, -0.7475,  1.9229,  1.4805,  1.8676],
+                    [ 0.9060, -0.8612,  1.9101, -0.2680,  0.8025],
+                    [ 0.9473, -0.1550,  0.6141,  0.9222,  0.3764]], dtype=torch.float64)
+            >>> unmatch1 = torch.from_numpy(np.random.randn(5))
+            >>> unmatch1
+            tensor([-1.0994,  0.2982,  1.3264, -0.6946, -0.1496], dtype=torch.float64)
+            >>> unmatch2 = torch.from_numpy(np.random.randn(5))
+            >>> unmatch2
+            tensor([-0.4352,  1.8493,  0.6723,  0.4075, -0.7699], dtype=torch.float64)
+            >>> x = pygm.sinkhorn(s_2d, unmatch1=unmatch1, unmatch2=unmatch2, max_iter=40)
+            >>> x
+            tensor([[0.1243, 0.2391, 0.0566, 0.1394, 0.3181],
+                    [0.0308, 0.0109, 0.1269, 0.0278, 0.3261],
+                    [0.0319, 0.0075, 0.1339, 0.1609, 0.1229],
+                    [0.2982, 0.0166, 0.3300, 0.0699, 0.1057],
+                    [0.2979, 0.0322, 0.0865, 0.2202, 0.0662]], dtype=torch.float64)
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: tensor([0.8777, 0.5225, 0.4571, 0.8204, 0.7031], dtype=torch.float64) col_sum: tensor([0.7832, 0.3063, 0.7340, 0.6183, 0.9390], dtype=torch.float64)
 
     .. dropdown:: Paddle Example
 
@@ -281,9 +366,40 @@ def sinkhorn(s, n1=None, n2=None,
             >>> x = pygm.sinkhorn(s_non_square, dummy_row=True) # set dummy_row=True for non-squared cases
             >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
             row_sum: Tensor(shape=[4], dtype=float64, place=Place(cpu), stop_gradient=True,
-            [1.00000000, 1.00000000, 1.00000000, 1.00000000])
+                            [1.00000000, 1.00000000, 1.00000000, 1.00000000])
             col_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
-            [0.78239609, 0.80485526, 0.80165627, 0.80004254, 0.81104984])
+                            [0.78239609, 0.80485526, 0.80165627, 0.80004254, 0.81104984])
+
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = paddle.to_tensor(np.random.randn(5, 5))
+            >>> s_2d
+            Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [[ 0.01050002,  1.78587049,  0.12691209,  0.40198936,  1.88315070],
+                    [-1.34775906, -1.27048500,  0.96939671, -1.17312341,  1.94362119],
+                    [-0.41361898, -0.74745481,  1.92294203,  1.48051479,  1.86755896],
+                    [ 0.90604466, -0.86122569,  1.91006495, -0.26800337,  0.80245640],
+                    [ 0.94725197, -0.15501009,  0.61407937,  0.92220667,  0.37642553]])
+            >>> unmatch1 = paddle.to_tensor(np.random.randn(5))
+            >>> unmatch1
+            Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [-1.09940079,  0.29823817,  1.32638590, -0.69456786, -0.14963454])
+            >>> unmatch2 = paddle.to_tensor(np.random.randn(5))
+            >>> unmatch2
+            Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [-0.43515355,  1.84926373,  0.67229476,  0.40746184, -0.76991607])
+            >>> x = pygm.sinkhorn(s_2d, unmatch1=unmatch1, unmatch2=unmatch2, max_iter=40)
+            >>> x
+            Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [[0.12434101, 0.23913991, 0.05663597, 0.13943479, 0.31811425],
+                    [0.03084473, 0.01085787, 0.12689067, 0.02784578, 0.32605890],
+                    [0.03192548, 0.00745004, 0.13391025, 0.16087345, 0.12289304],
+                    [0.29820536, 0.01659601, 0.32997174, 0.06988242, 0.10573396],
+                    [0.29787774, 0.03223560, 0.08654936, 0.22023996, 0.06619393]])
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [0.87766593, 0.52249794, 0.45705226, 0.82038949, 0.70309659])
+            col_sum: Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [0.78319431, 0.30627943, 0.73395800, 0.61827641, 0.93899407])
 
     .. dropdown:: Jittor Example
 
@@ -355,6 +471,30 @@ def sinkhorn(s, n1=None, n2=None,
             row_sum: jt.Var([1.         1.         1.         0.99999994], dtype=float32)
             col_sum: jt.Var([0.78239614 0.8048552  0.80165625 0.8000425  0.8110498], dtype=float32)
 
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = pygm.utils.from_numpy(np.random.randn(5, 5))
+            >>> s_2d
+            jt.Var([[ 0.01050002  1.7858706   0.12691209  0.40198937  1.8831507 ]
+                    [-1.347759   -1.270485    0.9693967  -1.1731234   1.9436212 ]
+                    [-0.41361898 -0.7474548   1.922942    1.4805148   1.867559  ]
+                    [ 0.90604466 -0.86122566  1.9100649  -0.26800337  0.8024564 ]
+                    [ 0.947252   -0.15501009  0.61407936  0.9222067   0.37642553]], dtype=float32)
+            >>> unmatch1 = pygm.utils.from_numpy(np.random.randn(5))
+            >>> unmatch1
+            jt.Var([-1.0994008   0.2982382   1.3263859  -0.69456786 -0.14963454], dtype=float32)
+            >>> unmatch2 = pygm.utils.from_numpy(np.random.randn(5))
+            >>> unmatch2
+            jt.Var([-0.43515354  1.8492638   0.67229474  0.40746182 -0.76991606], dtype=float32)
+            >>> x = pygm.sinkhorn(s_2d, unmatch1=unmatch1, unmatch2=unmatch2, max_iter=40)
+            >>> x
+            jt.Var([[0.12434097 0.23913991 0.05663597 0.13943481 0.3181142 ]
+                    [0.03084473 0.01085788 0.12689069 0.02784578 0.32605886]
+                    [0.03192548 0.00745005 0.13391027 0.16087341 0.12289305]
+                    [0.2982054  0.01659602 0.32997176 0.06988242 0.10573398]
+                    [0.29787776 0.0322356  0.08654935 0.22023994 0.06619392]], dtype=float32)
+            >>> print('row_sum:', x.sum(1), 'col_sum:', x.sum(0))
+            row_sum: jt.Var([0.8776659  0.52249795 0.45705223 0.8203896  0.70309657], dtype=float32) col_sum: jt.Var([0.7831943  0.30627945 0.73395807 0.61827636 0.938994  ], dtype=float32)
+
 
     .. note::
 
@@ -386,8 +526,27 @@ def sinkhorn(s, n1=None, n2=None,
                          f's:{len(_get_shape(s, backend))}dims!')
     if n1 is not None: _check_data_type(n1, 'n1', backend)
     if n2 is not None: _check_data_type(n2, 'n2', backend)
-
-    args = (s, n1, n2, dummy_row, max_iter, tau, batched_operation)
+    if unmatch1 is not None and unmatch2 is not None:
+        _check_data_type(unmatch1, 'unmatch1', backend)
+        _check_data_type(unmatch2, 'unmatch2', backend)
+        if non_batched_input:
+            unmatch1 = _unsqueeze(unmatch1, 0, backend)
+            unmatch2 = _unsqueeze(unmatch2, 0, backend)
+        if not _check_shape(unmatch1, 2, backend) or not _check_shape(unmatch2, 2, backend):
+            raise ValueError(f'the input argument unmatch1 and unmatch2 are illegal. They should be 2-dim'
+                             f'for batched input, and 1-dim for non-batched input.')
+        if not all((_get_shape(unmatch1, backend)[1] == _get_shape(s, backend)[1],
+                    _get_shape(unmatch2, backend)[1] == _get_shape(s, backend)[2],
+                    _get_shape(unmatch1, backend)[0] == _get_shape(unmatch2, backend)[0] == _get_shape(s, backend)[0])):
+            raise ValueError(f'the shapes of the following arguments mismatch. '
+                             f'Please read the doc for the correct shape.\n'
+                             f'Got s:{_get_shape(s, backend)}, unmatch1:{_get_shape(unmatch1, backend)}, '
+                             f'unmatch2:{_get_shape(unmatch2, backend)}!')
+    elif unmatch1 is None and unmatch2 is None:
+        pass
+    else:
+        raise ValueError('The arguments unmatch1 and unmatch2 must be specified together.')
+    args = (s, n1, n2, unmatch1, unmatch2, dummy_row, max_iter, tau, batched_operation)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.sinkhorn
@@ -403,7 +562,7 @@ def sinkhorn(s, n1=None, n2=None,
         return result
 
 
-def hungarian(s, n1=None, n2=None,
+def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
               nproc: int = 1,
               backend=None):
     r"""
@@ -413,6 +572,8 @@ def hungarian(s, n1=None, n2=None,
               supported if ``s`` is of size :math:`(n_1 \times n_2)`
     :param n1: :math:`(b)` (optional) number of objects in dim1
     :param n2: :math:`(b)` (optional) number of objects in dim2
+    :param unmatch1: (optional, new in ``0.3.0``) :math:`(b\times n_1)` the scores indicating the objects in dim1 is unmatched
+    :param unmatch2: (optional, new in ``0.3.0``) :math:`(b\times n_2)` the scores indicating the objects in dim2 is unmatched
     :param nproc: (default: 1, i.e. no parallel) number of parallel processes
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` optimal permutation matrix
@@ -429,6 +590,40 @@ def hungarian(s, n1=None, n2=None,
         We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
         required to specify the exact number of objects of each dimension in the batch. If not specified, we assume
         the batched matrices are not padded and all elements in ``n1`` are equal, all in ``n2`` are equal.
+
+    .. warning::
+        This function can work with or without maximal inlier matching:
+
+        * **With maximal inlier matching** (the default mode). If ``unmatch1=None`` and ``unmatch2=None``,
+          the solver aims to match as many nodes as possible. The corresponding linear assignment problem is
+
+          .. math::
+
+              &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S})\\
+              s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+          where the constraint :math:`\mathbf{X}\mathbf{1} = \mathbf{1}` urges the solver to match as many inlier
+          nodes as possible.
+        * **Without maximal inlier matching** (new in ``0.3.0``). If ``unmatch1`` and ``unmatch2`` are not ``None``,
+          the solver is allowed to match nodes to void nodes, and the corresponding scores for matching to void nodes
+          are specified by ``unmatch1`` and ``unmatch2``. The following (modified) linear assignment problem is
+          considered:
+
+          .. math::
+              &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S}^\prime)\\
+              s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1+1\times n_2+1}, \ \mathbf{X}_{[0:n_1, :]}\mathbf{1} = \mathbf{1}, \ \mathbf{X}_{[:, 0:n_2]}^\top\mathbf{1} \leq \mathbf{1}
+
+          where the last column and last row of :math:`\mathbf{S}^\prime` are ``unmatch1`` and ``unmatch2``,
+          respectively.
+
+          For example, if you want to solve the following problem (note that both consrtraints are :math:`\leq`)
+
+          .. math::
+
+              &\max_{\mathbf{X}} \ \texttt{tr}(\mathbf{X}^\top \mathbf{S})\\
+              s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} \leq \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+          you can simply set ``unmatch1`` and ``unmatch2`` as zero vectors.
 
     .. dropdown:: Numpy Example
 
@@ -479,6 +674,28 @@ def hungarian(s, n1=None, n2=None,
                     [0., 1., 0., 0., 0.],
                     [0., 0., 0., 1., 0.]]])
 
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = np.random.randn(5, 5)
+            >>> s_2d
+            array([[-1.16514984,  0.90082649,  0.46566244, -1.53624369,  1.48825219],
+                   [ 1.89588918,  1.17877957, -0.17992484, -1.07075262,  1.05445173],
+                   [-0.40317695,  1.22244507,  0.20827498,  0.97663904,  0.3563664 ],
+                   [ 0.70657317,  0.01050002,  1.78587049,  0.12691209,  0.40198936],
+                   [ 1.8831507 , -1.34775906, -1.270485  ,  0.96939671, -1.17312341]])
+            >>> unmatch1 = np.random.randn(5)
+            >>> unmatch1
+            array([ 1.94362119, -0.41361898, -0.74745481,  1.92294203,  1.48051479])
+            >>> unmatch2 = np.random.randn(5)
+            >>> unmatch2
+            array([ 1.86755896,  0.90604466, -0.86122569,  1.91006495, -0.26800337])
+            >>> x = pygm.hungarian(s_2d, unmatch1=unmatch1, unmatch2=unmatch2)
+            >>> x
+            array([[0., 0., 0., 0., 1.],
+                   [1., 0., 0., 0., 0.],
+                   [0., 1., 0., 0., 0.],
+                   [0., 0., 1., 0., 0.],
+                   [0., 0., 0., 1., 0.]])
+
     .. dropdown:: Pytorch Example
 
         ::
@@ -526,6 +743,28 @@ def hungarian(s, n1=None, n2=None,
                      [0., 0., 0., 0., 1.],
                      [0., 1., 0., 0., 0.],
                      [0., 0., 0., 1., 0.]]], dtype=torch.float64)
+
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = torch.from_numpy(np.random.randn(5, 5))
+            >>> s_2d
+            tensor([[-1.1651,  0.9008,  0.4657, -1.5362,  1.4883],
+                    [ 1.8959,  1.1788, -0.1799, -1.0708,  1.0545],
+                    [-0.4032,  1.2224,  0.2083,  0.9766,  0.3564],
+                    [ 0.7066,  0.0105,  1.7859,  0.1269,  0.4020],
+                    [ 1.8832, -1.3478, -1.2705,  0.9694, -1.1731]], dtype=torch.float64)
+            >>> unmatch1 = torch.from_numpy(np.random.randn(5))
+            >>> unmatch1
+            tensor([ 1.9436, -0.4136, -0.7475,  1.9229,  1.4805], dtype=torch.float64)
+            >>> unmatch2 = torch.from_numpy(np.random.randn(5))
+            >>> unmatch2
+            tensor([ 1.8676,  0.9060, -0.8612,  1.9101, -0.2680], dtype=torch.float64)
+            >>> x = pygm.hungarian(s_2d, unmatch1=unmatch1, unmatch2=unmatch2)
+            >>> x
+            tensor([[0., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 1.],
+                    [0., 0., 1., 0., 0.],
+                    [0., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 0.]], dtype=torch.float64)
 
     .. dropdown:: Paddle Example
 
@@ -578,6 +817,33 @@ def hungarian(s, n1=None, n2=None,
                      [0., 1., 0., 0., 0.],
                      [0., 0., 0., 1., 0.]]])
 
+
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = paddle.to_tensor(np.random.randn(5, 5))
+            >>> s_2d
+            Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [[-1.16514984,  0.90082649,  0.46566244, -1.53624369,  1.48825219],
+                    [ 1.89588918,  1.17877957, -0.17992484, -1.07075262,  1.05445173],
+                    [-0.40317695,  1.22244507,  0.20827498,  0.97663904,  0.35636640],
+                    [ 0.70657317,  0.01050002,  1.78587049,  0.12691209,  0.40198936],
+                    [ 1.88315070, -1.34775906, -1.27048500,  0.96939671, -1.17312341]])
+            >>> unmatch1 = paddle.to_tensor(np.random.randn(5))
+            >>> unmatch1
+            Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [ 1.94362119, -0.41361898, -0.74745481,  1.92294203,  1.48051479])
+            >>> unmatch2 = paddle.to_tensor(np.random.randn(5))
+            >>> unmatch2
+            Tensor(shape=[5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [ 1.86755896,  0.90604466, -0.86122569,  1.91006495, -0.26800337])
+            >>> x = pygm.hungarian(s_2d, unmatch1=unmatch1, unmatch2=unmatch2)
+            >>> x
+            Tensor(shape=[5, 5], dtype=float64, place=Place(cpu), stop_gradient=True,
+                   [[0., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 1.],
+                    [0., 0., 1., 0., 0.],
+                    [0., 0., 0., 0., 0.],
+                    [0., 0., 0., 0., 0.]])
+
     .. dropdown:: Jittor Example
 
         ::
@@ -609,22 +875,44 @@ def hungarian(s, n1=None, n2=None,
             >>> x = pygm.hungarian(s_3d, n1, n2)
             >>> x
             jt.Var([[[0. 0. 1. 0. 0.]
-                    [0. 1. 0. 0. 0.]
-                    [1. 0. 0. 0. 0.]
-                    [0. 0. 0. 0. 0.]
-                    [0. 0. 0. 0. 0.]]
+                     [0. 1. 0. 0. 0.]
+                     [1. 0. 0. 0. 0.]
+                     [0. 0. 0. 0. 0.]
+                     [0. 0. 0. 0. 0.]]
             <BLANKLINE>
                     [[1. 0. 0. 0. 0.]
-                    [0. 1. 0. 0. 0.]
-                    [0. 0. 1. 0. 0.]
-                    [0. 0. 0. 1. 0.]
-                    [0. 0. 0. 0. 0.]]
+                     [0. 1. 0. 0. 0.]
+                     [0. 0. 1. 0. 0.]
+                     [0. 0. 0. 1. 0.]
+                     [0. 0. 0. 0. 0.]]
             <BLANKLINE>
                     [[0. 0. 1. 0. 0.]
-                    [1. 0. 0. 0. 0.]
+                     [1. 0. 0. 0. 0.]
+                     [0. 0. 0. 0. 1.]
+                     [0. 1. 0. 0. 0.]
+                     [0. 0. 0. 1. 0.]]], dtype=float32)
+
+            # allow matching to void nodes by setting unmatch1 and unmatch2
+            >>> s_2d = pygm.utils.from_numpy(np.random.randn(5, 5))
+            >>> s_2d
+            jt.Var([[-1.1651498   0.9008265   0.46566245 -1.5362437   1.4882522 ]
+                    [ 1.8958892   1.1787796  -0.17992483 -1.0707526   1.0544517 ]
+                    [-0.40317693  1.222445    0.20827498  0.97663903  0.3563664 ]
+                    [ 0.7065732   0.01050002  1.7858706   0.12691209  0.40198937]
+                    [ 1.8831507  -1.347759   -1.270485    0.9693967  -1.1731234 ]], dtype=float32)
+            >>> unmatch1 = pygm.utils.from_numpy(np.random.randn(5))
+            >>> unmatch1
+            jt.Var([ 1.9436212  -0.41361898 -0.7474548   1.922942    1.4805148 ], dtype=float32)
+            >>> unmatch2 = pygm.utils.from_numpy(np.random.randn(5))
+            >>> unmatch2
+            jt.Var([ 1.867559    0.90604466 -0.86122566  1.9100649  -0.26800337], dtype=float32)
+            >>> x = pygm.hungarian(s_2d, unmatch1=unmatch1, unmatch2=unmatch2)
+            >>> x
+            jt.Var([[0. 0. 0. 0. 0.]
                     [0. 0. 0. 0. 1.]
-                    [0. 1. 0. 0. 0.]
-                    [0. 0. 0. 1. 0.]]], dtype=float32)
+                    [0. 0. 1. 0. 0.]
+                    [0. 0. 0. 0. 0.]
+                    [0. 0. 0. 0. 0.]], dtype=float32)
 
     .. note::
 
@@ -655,8 +943,27 @@ def hungarian(s, n1=None, n2=None,
     else:
         raise ValueError(f'the input argument s is expected to be 2-dimensional or 3-dimensional, got '
                          f's:{len(_get_shape(s, backend))}dims!')
-
-    args = (s, n1, n2, nproc)
+    if unmatch1 is not None and unmatch2 is not None:
+        _check_data_type(unmatch1, 'unmatch1', backend)
+        _check_data_type(unmatch2, 'unmatch2', backend)
+        if non_batched_input:
+            unmatch1 = _unsqueeze(unmatch1, 0, backend)
+            unmatch2 = _unsqueeze(unmatch2, 0, backend)
+        if not _check_shape(unmatch1, 2, backend) or not _check_shape(unmatch2, 2, backend):
+            raise ValueError(f'the input argument unmatch1 and unmatch2 are illegal. They should be 2-dim'
+                             f'for batched input, and 1-dim for non-batched input.')
+        if not all((_get_shape(unmatch1, backend)[1] == _get_shape(s, backend)[1],
+                    _get_shape(unmatch2, backend)[1] == _get_shape(s, backend)[2],
+                    _get_shape(unmatch1, backend)[0] == _get_shape(unmatch2, backend)[0] == _get_shape(s, backend)[0])):
+            raise ValueError(f'the shapes of the following arguments mismatch. '
+                             f'Please read the doc for the correct shape.\n'
+                             f'Got s:{_get_shape(s, backend)}, unmatch1:{_get_shape(unmatch1, backend)}, '
+                             f'unmatch2:{_get_shape(unmatch2, backend)}!')
+    elif unmatch1 is None and unmatch2 is None:
+        pass
+    else:
+        raise ValueError('The arguments unmatch1 and unmatch2 must be specified together.')
+    args = (s, n1, n2, unmatch1, unmatch2, nproc)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.hungarian

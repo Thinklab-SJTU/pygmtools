@@ -37,11 +37,11 @@ and make sure it in the right path.
 PascalVOC-Keypoint Dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Download `VOC2011 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2011/index.html>`_ and make sure it looks like ``data/PascalVOC/TrainVal/VOCdevkit/VOC2011``
+#. Download `VOC2011 dataset <http://host.robots.ox.ac.uk/pascal/VOC/voc2011/index.html>`_ and make sure it looks like ``data/PascalVOC/TrainVal/VOCdevkit/VOC2011``
 
-1. Download keypoint annotation for VOC2011 from `Berkeley server <https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz>`_ or `google drive <https://drive.google.com/open?id=1D5o8rmnY1-DaDrgAXSygnflX5c-JyUWR>`_ and make sure it looks like ``data/PascalVOC/annotations``
+#. Download keypoint annotation for VOC2011 from `Berkeley server <https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz>`_ or `google drive <https://drive.google.com/open?id=1D5o8rmnY1-DaDrgAXSygnflX5c-JyUWR>`_ and make sure it looks like ``data/PascalVOC/annotations``
 
-1. Download the `train/test split file <https://github.com/Thinklab-SJTU/ThinkMatch/raw/master/data/PascalVOC/voc2011_pairs.npz>`_ and make sure it looks like ``data/PascalVOC/voc2011_pairs.npz``
+#. Download the `train/test split file <https://github.com/Thinklab-SJTU/ThinkMatch/raw/master/data/PascalVOC/voc2011_pairs.npz>`_ and make sure it looks like ``data/PascalVOC/voc2011_pairs.npz``
 
 Please cite the following papers if you use PascalVOC-Keypoint dataset:
 
@@ -68,9 +68,9 @@ Please cite the following papers if you use PascalVOC-Keypoint dataset:
 Willow-Object-Class Dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Download `Willow-ObjectClass dataset <http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip>`_
+#. Download `Willow-ObjectClass dataset <http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip>`_
 
-1. Unzip the dataset and make sure it looks like ``data/WillowObject/WILLOW-ObjectClass``
+#. Unzip the dataset and make sure it looks like ``data/WillowObject/WILLOW-ObjectClass``
 
 Please cite the following paper if you use Willow-Object-Class dataset:
 
@@ -87,9 +87,9 @@ Please cite the following paper if you use Willow-Object-Class dataset:
 CUB2011 Dataset
 ^^^^^^^^^^^^^^^^^^^
 
-1. Download `CUB-200-2011 dataset <http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz>`_.
+#. Download `CUB-200-2011 dataset <http://www.vision.caltech.edu/visipedia-data/CUB-200-2011/CUB_200_2011.tgz>`_.
 
-1. Unzip the dataset and make sure it looks like ``data/CUB_200_2011/CUB_200_2011``
+#. Unzip the dataset and make sure it looks like ``data/CUB_200_2011/CUB_200_2011``
 
 Please cite the following report if you use CUB2011 dataset:
 
@@ -106,9 +106,9 @@ Please cite the following report if you use CUB2011 dataset:
 IMC-PT-SparseGM Dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Download the IMC-PT-SparseGM dataset from `google drive <https://drive.google.com/file/d/1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B/view?usp=sharing>`_ or `baidu drive (code: 0576) <https://pan.baidu.com/s/1hlJdIFp4rkiz1Y-gztyHIw>`_
+#. Download the IMC-PT-SparseGM dataset from `google drive <https://drive.google.com/file/d/1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B/view?usp=sharing>`_ or `baidu drive (code: 0576) <https://pan.baidu.com/s/1hlJdIFp4rkiz1Y-gztyHIw>`_
 
-1. Unzip the dataset and make sure it looks like ``data/IMC_PT_SparseGM/annotations``
+#. Unzip the dataset and make sure it looks like ``data/IMC_PT_SparseGM/annotations``
 
 Please cite the following papers if you use IMC-PT-SparseGM dataset:
 

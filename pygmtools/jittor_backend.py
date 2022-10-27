@@ -12,7 +12,9 @@ from pygmtools.numpy_backend import _hung_kernel
 #     Linear Assignment Problem Solvers     #
 #############################################
 
-def hungarian(s: Var, n1: Var=None, n2: Var=None, nproc: int=1) -> Var:
+def hungarian(s: Var, n1: Var=None, n2: Var=None,
+              unmatch1: Var=None, unmatch2: Var=None,
+              nproc: int=1) -> Var:
     """
     Jittor implementation of Hungarian algorithm
     """
@@ -28,19 +30,28 @@ def hungarian(s: Var, n1: Var=None, n2: Var=None, nproc: int=1) -> Var:
         n2 = n2.numpy()
     else:
         n2 = [None] * batch_num
+    if unmatch1 is not None:
+        unmatch1 = -unmatch1.numpy()
+    else:
+        unmatch1 = [None] * batch_num
+    if unmatch2 is not None:
+        unmatch2 = -unmatch2.numpy()
+    else:
+        unmatch2 = [None] * batch_num
 
     if nproc > 1:
         with Pool(processes=nproc) as pool:
-            mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2))
+            mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2, unmatch1, unmatch2))
             perm_mat = np.stack(mapresult.get())
     else:
-        perm_mat = np.stack([_hung_kernel(perm_mat[b], n1[b], n2[b]) for b in range(batch_num)])
+        perm_mat = np.stack([_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
 
     perm_mat = jt.Var(perm_mat)
 
     return perm_mat
 
 def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
+             unmatchrows: Var=None, unmatchcols: Var=None,
              dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> Var:
     """
     Jittor implementation of Sinkhorn algorithm
@@ -52,14 +63,13 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
     else:
         s = s.transpose(1, 2)
         nrows, ncols = ncols, nrows
+        unmatchrows, unmatchcols = unmatchcols, unmatchrows
         transposed = True
 
     if nrows is None:
-        # nrows = [s.shape[1] for _ in range(batch_size)]
         nrows = jt.Var([s.shape[1] for _ in range(batch_size)])
     if ncols is None:
-        ncols = [s.shape[2] for _ in range(batch_size)]
-        ncols = jt.Var([s.shape[2] for _ in range(batch_size)], device=s.device)
+        ncols = jt.Var([s.shape[2] for _ in range(batch_size)])
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
@@ -78,39 +88,72 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         nrows = new_nrows
         ncols = new_ncols
 
+        if unmatchrows is not None and unmatchcols is not None:
+            unmatchrows_pad = jt.concat((
+                unmatchrows,
+                jt.full((batch_size, unmatchcols.shape[1]-unmatchrows.shape[1]), -float('inf'))), dim=1)
+            new_unmatchrows = jt.where(transposed_batch.view(batch_size, 1).expand(unmatchcols.shape), unmatchcols, unmatchrows_pad)[:, :unmatchrows.shape[1]]
+            new_unmatchcols = jt.where(transposed_batch.view(batch_size, 1).expand(unmatchcols.shape), unmatchrows_pad, unmatchcols)
+            unmatchrows = new_unmatchrows
+            unmatchcols = new_unmatchcols
+
     # operations are performed on log_s
-    s = s / tau
+    log_s = s / tau
+    if unmatchrows is not None and unmatchcols is not None:
+        unmatchrows = unmatchrows / tau
+        unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert s.shape[2] >= s.shape[1]
-        dummy_shape = list(s.shape)
-        dummy_shape[1] = s.shape[2] - s.shape[1]
+        assert log_s.shape[2] >= log_s.shape[1]
+        dummy_shape = list(log_s.shape)
+        dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
-        nrows = ncols
-        s = jt.concat((s, jt.full(dummy_shape, -float('inf'))), dim=1)
+        nrows = ncols.clone()
+        log_s = jt.concat((log_s, jt.full(dummy_shape, -float('inf'))), dim=1)
+        if unmatchrows is not None:
+            unmatchrows = jt.concat((unmatchrows, jt.full((dummy_shape[0], dummy_shape[1]), -float('inf'))), dim=1)
         for b in range(batch_size):
-            s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
-            s[b, int(nrows[b]):, :] = -float('inf')
-            s[b, :, int(ncols[b]):] = -float('inf')
+            log_s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
+
+    # assign the unmatch weights
+    if unmatchrows is not None and unmatchcols is not None:
+        new_log_s = jt.full((log_s.shape[0], log_s.shape[1]+1, log_s.shape[2]+1), -float('inf'))
+        new_log_s[:, :-1, :-1] = log_s
+        log_s = new_log_s
+        for b in range(batch_size):
+            r, c = int(nrows[b]), int(ncols[b])
+            log_s[b, 0:r, c] = unmatchrows[b, 0:r]
+            log_s[b, r, 0:c] = unmatchcols[b, 0:c]
+    row_mask = jt.zeros((batch_size, log_s.shape[1], 1), dtype=jt.bool)
+    col_mask = jt.zeros((batch_size, 1, log_s.shape[2]), dtype=jt.bool)
+    for b in range(batch_size):
+        r, c = int(nrows[b]), int(ncols[b])
+        row_mask[b, 0:r, 0] = 1
+        col_mask[b, 0, 0:c] = 1
+    if unmatchrows is not None and unmatchcols is not None:
+        ncols += 1
+        nrows += 1
 
     if batched_operation:
-        log_s = s
+        for b in range(batch_size):
+            log_s[b, int(nrows[b]):, :] = -float('inf')
+            log_s[b, :, int(ncols[b]):] = -float('inf')
 
         for i in range(max_iter):
             if i % 2 == 0:
                 m = log_s.max(2, keepdims=True)  #optimized logsumexp
                 log_sum = jt.nn.logsumexp(log_s - m, 2, keepdim=True) + m
-                log_s = log_s - log_sum
-                log_s[jt.isnan(log_s)] = -float('inf')
+                log_s = log_s - jt.where(row_mask, log_sum, jt.zeros_like(log_sum))
+                assert not jt.any(jt.isnan(log_s))
             else:
                 m = log_s.max(1, keepdims=True)
                 log_sum = jt.nn.logsumexp(log_s - m, 1, keepdim=True) + m                
-                log_s = log_s - log_sum
-                log_s[jt.isnan(log_s)] = -float('inf')
+                log_s = log_s - jt.where(col_mask, log_sum, jt.zeros_like(log_sum))
+                assert not jt.any(jt.isnan(log_s))
 
         ret_log_s = log_s
     else:
-        ret_log_s = jt.full((batch_size, s.shape[1], s.shape[2]), -float('inf'), dtype=s.dtype)
+        ret_log_s = jt.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
         
         for b in range(batch_size):
             r,c = nrows[b],ncols[b]
@@ -118,17 +161,28 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
                 r = int(nrows[b].item())
             if not isinstance(ncols[b],int):
                 c = int(ncols[b].item())
-            log_s = s[b, 0:r, 0:c]
+            log_s_b = log_s[b, 0:r, 0:c]
+            row_mask_b = row_mask[b, 0:r, :]
+            col_mask_b = col_mask[b, :, 0:c]
             for i in range(max_iter):
                 if i % 2 == 0:
-                    m = log_s.max(1, keepdims=True)
-                    log_sum = jt.nn.logsumexp(log_s - m, 1, keepdim=True) + m
-                    log_s = log_s - log_sum
+                    m = log_s_b.max(1, keepdims=True)
+                    log_sum = jt.nn.logsumexp(log_s_b - m, 1, keepdim=True) + m
+                    log_s_b = log_s_b - jt.where(row_mask_b, log_sum, jt.zeros_like(log_sum))
                 else:
-                    m = log_s.max(0, keepdims=True)
-                    log_sum = jt.nn.logsumexp(log_s - m, 0, keepdim=True) + m
-                    log_s = log_s - log_sum
-            ret_log_s[b, 0:r, 0:c] = log_s
+                    m = log_s_b.max(0, keepdims=True)
+                    log_sum = jt.nn.logsumexp(log_s_b - m, 0, keepdim=True) + m
+                    log_s_b = log_s_b - jt.where(col_mask_b, log_sum, jt.zeros_like(log_sum))
+            ret_log_s[b, 0:r, 0:c] = log_s_b
+
+    if unmatchrows is not None and unmatchcols is not None:
+        ncols -= 1
+        nrows -= 1
+        for b in range(batch_size):
+            r, c = int(nrows[b]), int(ncols[b])
+            ret_log_s[b, 0:r+1, c] = -float('inf')
+            ret_log_s[b, r, 0:c] = -float('inf')
+        ret_log_s = ret_log_s[:, :-1, :-1]
 
     if dummy_row:
         if dummy_shape[1] > 0:

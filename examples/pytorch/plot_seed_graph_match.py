@@ -1,11 +1,11 @@
 # coding: utf-8
 """
-========================================
-Introduction: Matching Isomorphic Graphs
-========================================
+======================
+Seeded Graph Matching
+======================
 
-This example is an introduction to ``pygmtools`` which shows how to match isomorphic graphs.
-Isomorphic graphs means graphs whose structures are identical, but the node correspondence is unknown.
+Seeded graph matching means some partial of the matching result is already known, and the known matching
+results are called "seeds". In this example, we show how to exploit such prior with ``pygmtools``.
 """
 
 # Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
@@ -15,7 +15,11 @@ Isomorphic graphs means graphs whose structures are identical, but the node corr
 
 ##############################################################################
 # .. note::
-#     The following solvers support QAP formulation, and are included in this example:
+#     How to perform seeded graph matching is still an open research problem. In this example, we show a
+#     simple yet effective approach that works with ``pygmtools``.
+#
+# .. note::
+#     The following solvers are included in this example:
 #
 #     * :func:`~pygmtools.classic_solvers.rrwm` (classic solver)
 #
@@ -34,12 +38,21 @@ pygm.BACKEND = 'pytorch' # set default backend for pygmtools
 _ = torch.manual_seed(1) # fix random seed
 
 ##############################################################################
-# Generate two isomorphic graphs
-# ------------------------------------
+# Generate two isomorphic graphs (with seeds)
+# -------------------------------------------
+# In this example, we assume the first three nodes are already aligned. Firstly, we generate the seed matching
+# matrix:
 #
 num_nodes = 10
-X_gt = torch.zeros(num_nodes, num_nodes)
-X_gt[torch.arange(0, num_nodes, dtype=torch.int64), torch.randperm(num_nodes)] = 1
+num_seeds = 3
+seed_mat = torch.zeros(num_nodes, num_nodes)
+seed_mat[:num_seeds, :num_seeds] = torch.eye(num_seeds)
+
+##############################################################################
+# Then we generate the isomorphic graphs:
+#
+X_gt = seed_mat.clone()
+X_gt[num_seeds:, num_seeds:][torch.arange(0, num_nodes-num_seeds, dtype=torch.int64), torch.randperm(num_nodes-num_seeds)] = 1
 A1 = torch.rand(num_nodes, num_nodes)
 A1 = (A1 + A1.t() > 1.) * (A1 + A1.t()) / 2
 torch.diagonal(A1)[:] = 0
@@ -48,35 +61,49 @@ n1 = torch.tensor([num_nodes])
 n2 = torch.tensor([num_nodes])
 
 ##############################################################################
-# Visualize the graphs
-# ----------------------
+# Visualize the graphs and seeds
+# -------------------------------
+# The seed matching matrix:
+#
+plt.figure(figsize=(4, 4))
+plt.title('Seed Matching Matrix')
+plt.imshow(seed_mat.numpy(), cmap='Blues')
+
+##############################################################################
+# The blue lines denote the matching seeds.
 #
 plt.figure(figsize=(8, 4))
 G1 = nx.from_numpy_array(A1.numpy())
 G2 = nx.from_numpy_array(A2.numpy())
 pos1 = nx.spring_layout(G1)
 pos2 = nx.spring_layout(G2)
-plt.subplot(1, 2, 1)
+ax1 = plt.subplot(1, 2, 1)
 plt.title('Graph 1')
 nx.draw_networkx(G1, pos=pos1)
-plt.subplot(1, 2, 2)
+ax2 = plt.subplot(1, 2, 2)
 plt.title('Graph 2')
 nx.draw_networkx(G2, pos=pos2)
+for i in range(num_seeds):
+    j = torch.argmax(seed_mat[i]).item()
+    con = ConnectionPatch(xyA=pos1[i], xyB=pos2[j], coordsA="data", coordsB="data",
+                          axesA=ax1, axesB=ax2, color="blue")
+    plt.gca().add_artist(con)
 
 ##############################################################################
-# These two graphs look dissimilar because they are not aligned. We then align these two graphs
+# Now these two graphs look dissimilar because they are not aligned. We then align these two graphs
 # by graph matching.
 #
-# Build affinity matrix
-# ----------------------
-# To match isomorphic graphs by graph matching, we follow the formulation of Quadratic Assignment Problem (QAP):
+# Build affinity matrix with seed prior
+# --------------------------------------
+# We follow the formulation of Quadratic Assignment Problem (QAP):
 #
 # .. math::
 #
 #     &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
 #     s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
 #
-# where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
+# where the first step is to build the affinity matrix (:math:`\mathbf{K}`). We firstly build a "standard"
+# affinity matrix:
 #
 conn1, edge1 = pygm.utils.dense_to_sparse(A1)
 conn2, edge2 = pygm.utils.dense_to_sparse(A2)
@@ -85,11 +112,22 @@ gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1) # set aff
 K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
 
 ##############################################################################
-# Visualization of the affinity matrix. For graph matching problem with :math:`N` nodes, the affinity matrix
-# has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
+# The next step is to add the seed matching information as priors to the affinity matrix. The matching priors
+# are treated as node affinities and the corresponding node affinity is added by 10 if there is an matching
+# prior.
 #
 # .. note::
-#     The diagonal elements of the affinity matrix is empty because there is no node features in this example.
+#     The node affinity matrix is transposed because in the graph matching formulation followed by ``pygmtools``,
+#     :math:`\texttt{vec}(\mathbf{X})` means column vectorization. The node affinity should also be column-
+#     vectorized.
+#
+torch.diagonal(K)[:] += seed_mat.t().reshape(-1) * 10
+
+##############################################################################
+# Visualization of the affinity matrix.
+#
+# .. note::
+#     In this example, the diagonal elements reflect the matching prior.
 #
 plt.figure(figsize=(4, 4))
 plt.title(f'Affinity Matrix (size: {K.shape[0]}$\\times${K.shape[1]})')
@@ -103,7 +141,7 @@ plt.imshow(K.numpy(), cmap='Blues')
 X = pygm.rrwm(K, n1, n2)
 
 ##############################################################################
-# The output of RRWM is a soft matching matrix. Visualization:
+# The output of RRWM is a soft matching matrix. The matching prior is well-preserved:
 #
 plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
@@ -134,7 +172,8 @@ plt.imshow(X_gt.numpy(), cmap='Blues')
 ##############################################################################
 # Align the original graphs
 # --------------------------
-# Draw the matching (green lines for correct matching, red lines for wrong matching):
+# Draw the matching (green lines for correct matching, red lines for wrong matching, blue lines for
+# seed matching):
 #
 plt.figure(figsize=(8, 4))
 ax1 = plt.subplot(1, 2, 1)
@@ -145,8 +184,14 @@ plt.title('Graph 2')
 nx.draw_networkx(G2, pos=pos2)
 for i in range(num_nodes):
     j = torch.argmax(X[i]).item()
+    if seed_mat[i, j]:
+        line_color = "blue"
+    elif X_gt[i, j]:
+        line_color = "green"
+    else:
+        line_color = "red"
     con = ConnectionPatch(xyA=pos1[i], xyB=pos2[j], coordsA="data", coordsB="data",
-                          axesA=ax1, axesB=ax2, color="green" if X_gt[i, j] else "red")
+                          axesA=ax1, axesB=ax2, color=line_color)
     plt.gca().add_artist(con)
 
 ##############################################################################
@@ -163,14 +208,22 @@ align_pos2 = {}
 for i in range(num_nodes):
     j = torch.argmax(X[i]).item()
     align_pos2[j] = pos1[i]
+    if seed_mat[i, j]:
+        line_color = "blue"
+    elif X_gt[i, j]:
+        line_color = "green"
+    else:
+        line_color = "red"
     con = ConnectionPatch(xyA=pos1[i], xyB=align_pos2[j], coordsA="data", coordsB="data",
-                          axesA=ax1, axesB=ax2, color="green" if X_gt[i, j] else "red")
+                          axesA=ax1, axesB=ax2, color=line_color)
     plt.gca().add_artist(con)
 nx.draw_networkx(G2, pos=align_pos2)
 
 ##############################################################################
 # Other solvers are also available
 # ---------------------------------
+# Only the affinity matrix is modified to encode matching priors, thus other graph matching solvers are also
+# available to handle this seeded graph matching setting.
 #
 # Classic IPFP solver
 # ^^^^^^^^^^^^^^^^^^^^^
