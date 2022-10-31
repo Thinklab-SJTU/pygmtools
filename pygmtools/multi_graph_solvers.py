@@ -109,9 +109,9 @@ def cao(K, x0=None, qap_solver=None,
 
         ::
 
-            >>> import torch
+            >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.BACKEND = 'paddle'
             >>> _ = paddle.seed(1)
 
             # Generate 10 isomorphic graphs
