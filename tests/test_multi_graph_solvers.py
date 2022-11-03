@@ -1,3 +1,4 @@
+import copy
 import sys
 
 import random
@@ -137,7 +138,7 @@ def test_cao():
     num_nodes = 5
     num_graphs = 10
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.cao, 'lawler-qap', {
-        'mode': ['fast', 'accu', 'pc', 'c'],
+        'mode': ['time', 'memory'],
         'x0': [None, 0.2, 0.5],
         'lambda_init': [0.1, 0.3],
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],
@@ -150,7 +151,7 @@ def test_mgm_floyd():
     num_nodes = 5
     num_graphs = 10
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.mgm_floyd, 'lawler-qap', {
-        'mode': ['fast', 'accu', 'pc', 'c'],
+        'mode': ['time', 'memory'],
         'x0': [None, 0.2, 0.5],
         'param_lambda': [0.1, 0.3],
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],

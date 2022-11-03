@@ -11,7 +11,7 @@ import math
 
 
 def cao(K, x0=None, qap_solver=None,
-        mode='accu',
+        mode='time',
         max_iter=6, lambda_init=0.3, lambda_step=1.1, lambda_max=1.0, iter_boost=2,
         backend=None):
     r"""
@@ -37,9 +37,8 @@ def cao(K, x0=None, qap_solver=None,
     :param qap_solver: (default: pygm.rrwm) a function object that accepts a batched affinity matrix and returns the
                        matching matrices. It is suggested to use ``functools.partial`` and the QAP solvers provided in
                        the :mod:`~pygmtools.classic_solvers` module (see examples below).
-    :param mode: (default: ``'accu'``) the operation mode of this algorithm. Options: ``'accu', 'c', 'fast', 'pc'``,
-                 where ``'accu'`` is equivalent to ``'c'`` (accurate version) and ``'fast'`` is equivalent to ``'pc'``
-                 (fast version).
+    :param mode: (default: ``'time'``) the operation mode of this algorithm. Options: ``'time', 'memory'``,
+                 where ``'time'`` is a time-efficient version and ``'memory'`` is a memory-efficient version.
     :param max_iter: (default: 6) max number of iterations
     :param lambda_init: (default: 0.3) initial value of :math:`\lambda`, with :math:`\lambda\in[0,1]`
     :param lambda_step: (default: 1.1) the increase step size of :math:`\lambda`, updated by ``lambda = step * lambda``
@@ -150,12 +149,12 @@ def cao(K, x0=None, qap_solver=None,
     args = (K, x0, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        if mode in ['pc', 'fast']:
+        if mode in ['time']:
             fn = mod.cao_fast_solver
-        elif mode in ['c', 'accu']:
+        elif mode in ['memory']:
             fn = mod.cao_solver
         else:
-            raise ValueError("Unknown value of mode: supported values ['c', 'accu', 'pc', 'fast']")
+            raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
@@ -165,7 +164,7 @@ def cao(K, x0=None, qap_solver=None,
 
 
 def mgm_floyd(K, x0=None, qap_solver=None,
-              mode='accu',
+              mode='time',
               param_lambda=0.2,
               backend=None):
     r"""
@@ -191,9 +190,8 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     :param qap_solver: (default: pygm.rrwm) a function object that accepts a batched affinity matrix and returns the
                        matching matrices. It is suggested to use ``functools.partial`` and the QAP solvers provided in
                        the :mod:`~pygmtools.classic_solvers` module (see examples below).
-    :param mode: (default: ``'accu'``) the operation mode of this algorithm. Options: ``'accu', 'c', 'fast', 'pc'``,
-                 where ``'accu'`` is equivalent to ``'c'`` (accurate version) and ``'fast'`` is equivalent to ``'pc'``
-                 (fast version).
+    :param mode: (default: ``'time'``) the operation mode of this algorithm. Options: ``'time', 'memory'``,
+                 where ``'time'`` is a time-efficient version and ``'memory'`` is a memory-efficient version.
     :param param_lambda: (default: 0.3) value of :math:`\lambda`, with :math:`\lambda\in[0,1]`
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(m\times m \times n \times n)` the multi-graph matching result
@@ -289,12 +287,12 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     args = (K, x0, num_graph, num_node, param_lambda)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        if mode in ['pc', 'fast']:
+        if mode in ['time']:
             fn = mod.mgm_floyd_fast_solver
-        elif mode in ['c', 'accu']:
+        elif mode in ['memory']:
             fn = mod.mgm_floyd_solver
         else:
-            raise ValueError("Unknown value of mode: supported values ['c', 'accu', 'pc', 'fast']")
+            raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
