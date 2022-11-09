@@ -72,7 +72,7 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         ncols = jt.Var([s.shape[2] for _ in range(batch_size)])
 
     # ensure that in each dimension we have nrow < ncol
-    transposed_batch = nrows > ncols
+    transposed_batch = jt.Var(nrows > ncols)
     if jt.any(transposed_batch):
         s_t = s.transpose(1, 2)
         s_t = jt.concat((
