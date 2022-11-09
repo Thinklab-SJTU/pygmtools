@@ -53,10 +53,10 @@ jt.flags.use_cuda = jt.has_cuda
 # The images are resized to 256x256.
 #
 obj_resize = (256, 256)
-img1 = Image.open('examples/data/willow_duck_0001.png')
-img2 = Image.open('examples/data/willow_duck_0002.png')
-kpts1 = jt.Var(sio.loadmat('examples/data/willow_duck_0001.mat')['pts_coord'])
-kpts2 = jt.Var(sio.loadmat('examples/data/willow_duck_0002.mat')['pts_coord'])
+img1 = Image.open('../data/willow_duck_0001.png')
+img2 = Image.open('../data/willow_duck_0002.png')
+kpts1 = jt.Var(sio.loadmat('../data/willow_duck_0001.mat')['pts_coord'])
+kpts2 = jt.Var(sio.loadmat('../data/willow_duck_0002.mat')['pts_coord'])
 kpts1[0] = kpts1[0] * obj_resize[0] / img1.size[0]
 kpts1[1] = kpts1[1] * obj_resize[1] / img1.size[1]
 kpts2[0] = kpts2[0] * obj_resize[0] / img2.size[0]
