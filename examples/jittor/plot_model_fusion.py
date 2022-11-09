@@ -73,14 +73,14 @@ class SimpleNet(Module):
 #
 model1 = SimpleNet()
 model2 = SimpleNet()
-model1.load_state_dict(jt.load('examples/data/example_model_fusion_1_jittor.dat'))
-model2.load_state_dict(jt.load('examples/data/example_model_fusion_2_jittor.dat'))
+model1.load_state_dict(jt.load('../data/example_model_fusion_1_jittor.dat'))
+model2.load_state_dict(jt.load('../data/example_model_fusion_2_jittor.dat'))
 test_transform = transform.Compose([
     transform.Gray(),
     transform.ToTensor()
 ])
 test_dataset = dataset.MNIST(
-    data_root='examples/data/mnist_data/',  # the directory to store the dataset
+    data_root='../data/mnist_data_jittor/',  # the directory to store the dataset
     train=False,  # the dataset is used to test
     transform=test_transform,  # the dataset is in the form of tensors
     download=True)
