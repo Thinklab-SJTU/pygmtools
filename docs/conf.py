@@ -19,6 +19,7 @@
 #
 import os
 import sys
+import datetime
 sys.path.insert(0, os.path.abspath('..'))
 
 os.environ['SPHINX'] = '1'
@@ -41,6 +42,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosectionlabel',
     "sphinx_design",
+    'sphinx_gallery.gen_gallery',
     'm2r2']
 
 autodoc_mock_imports = ['scipy', 'matplotlib', 'torch_geometric', 'pynvml']
@@ -61,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'pygmtools'
-copyright = '2022, ThinkLab@SJTU'
+copyright = datetime.datetime.now().strftime('%Y') + ', ThinkLab@SJTU'
 author = 'Runzhong Wang, Ziao Guo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -78,7 +80,7 @@ release = ''
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -154,7 +156,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'pygmtools.tex', 'pygmtools Documentation',
-     'Runzhong Wang', 'manual'),
+     author, 'manual'),
 ]
 
 
@@ -178,3 +180,10 @@ texinfo_documents = [
      author, 'pygmtools', 'Python graph matching tools.',
      'Miscellaneous'),
 ]
+
+sphinx_gallery_conf = {
+     'examples_dirs': '../examples',
+     'gallery_dirs': 'auto_examples',
+     'nested_sections': False,
+     'remove_config_comments': True,
+}

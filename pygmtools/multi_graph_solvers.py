@@ -1,3 +1,8 @@
+r"""
+Classic (learning-free) **multi-graph matching** solvers. These multi-graph matching solvers are recommended to solve
+the joint matching problem of multiple graphs.
+"""
+
 import functools
 import importlib
 import pygmtools
@@ -6,7 +11,7 @@ import math
 
 
 def cao(K, x0=None, qap_solver=None,
-        mode='accu',
+        mode='time',
         max_iter=6, lambda_init=0.3, lambda_step=1.1, lambda_max=1.0, iter_boost=2,
         backend=None):
     r"""
@@ -32,9 +37,8 @@ def cao(K, x0=None, qap_solver=None,
     :param qap_solver: (default: pygm.rrwm) a function object that accepts a batched affinity matrix and returns the
                        matching matrices. It is suggested to use ``functools.partial`` and the QAP solvers provided in
                        the :mod:`~pygmtools.classic_solvers` module (see examples below).
-    :param mode: (default: ``'accu'``) the operation mode of this algorithm. Options: ``'accu', 'c', 'fast', 'pc'``,
-                 where ``'accu'`` is equivalent to ``'c'`` (accurate version) and ``'fast'`` is equivalent to ``'pc'``
-                 (fast version).
+    :param mode: (default: ``'time'``) the operation mode of this algorithm. Options: ``'time', 'memory'``,
+                 where ``'time'`` is a time-efficient version and ``'memory'`` is a memory-efficient version.
     :param max_iter: (default: 6) max number of iterations
     :param lambda_init: (default: 0.3) initial value of :math:`\lambda`, with :math:`\lambda\in[0,1]`
     :param lambda_step: (default: 1.1) the increase step size of :math:`\lambda`, updated by ``lambda = step * lambda``
@@ -89,7 +93,7 @@ def cao(K, x0=None, qap_solver=None,
             tensor(1.)
 
             # Use the IPFP solver for two-graph matching
-            >>> ipfp_func = functools.partial(pygmtools.ipfp, n1max=4, n2max=4)
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
             >>> X = pygm.cao(K, qap_solver=ipfp_func)
             >>> (X * X_gt).sum() / X_gt.sum()
             tensor(1.)
@@ -98,6 +102,53 @@ def cao(K, x0=None, qap_solver=None,
             >>> X = pygm.cao(K, mode='fast')
             >>> (X * X_gt).sum() / X_gt.sum()
             tensor(1.)
+
+
+    .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10)
+            >>> As_1, As_2 = [], []
+            >>> for i in range(graph_num):
+            ...     for j in range(graph_num):
+            ...         As_1.append(As[i])
+            ...         As_2.append(As[j])
+            >>> As_1 = paddle.stack(As_1, axis=0)
+            >>> As_2 = paddle.stack(As_2, axis=0)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+            >>> K = K.reshape((graph_num, graph_num, 4*4, 4*4))
+            >>> K.shape
+            [10, 10, 16, 16]
+
+            # Solve the multi-matching problem
+            >>> X = pygm.cao(K)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+            # Use the IPFP solver for two-graph matching
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
+            >>> X = pygm.cao(K, qap_solver=ipfp_func)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+            # Run the faster version of CAO algorithm
+            >>> X = pygm.cao(K, mode='fast')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -118,7 +169,7 @@ def cao(K, x0=None, qap_solver=None,
     if backend is None:
         backend = pygmtools.BACKEND
     # check the correctness of input
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     K_shape = _get_shape(K, backend)
     if not (len(K_shape) == 4 and K_shape[0] == K_shape[1] and K_shape[2] == K_shape[3]):
         raise ValueError(f"Unsupported input data shape: got K {K_shape}")
@@ -131,26 +182,26 @@ def cao(K, x0=None, qap_solver=None,
     if not 0 <= lambda_max <= 1: raise ValueError(f"lambda_max must be in [0, 1], got lambda_max={lambda_max}")
     if not lambda_step > 1: raise ValueError(f"lambda_step must be >1, got lambda_step={lambda_step}")
     if x0 is not None:
-        _check_data_type(x0, backend)
+        _check_data_type(x0, 'x0', backend)
         x0_shape = _get_shape(x0, backend)
         if not len(x0_shape) == 4 and num_graph == x0_shape[0] == x0_shape[1] and num_node == x0_shape[2] == x0_shape[3]:
             raise ValueError(f"Unsupported input data shape: got K {K_shape} x0 {x0_shape}")
     else:
         if qap_solver is None:
             qap_solver = functools.partial(pygmtools.rrwm, n1max=num_node, n2max=num_node, backend=backend)
-        x0 = qap_solver(K.reshape(num_graph ** 2, aff_size, aff_size))
+        x0 = qap_solver(K.reshape((num_graph ** 2, aff_size, aff_size)))
         x0 = pygmtools.hungarian(x0, backend=backend)
-        x0 = x0.reshape(num_graph, num_graph, num_node, num_node)
+        x0 = x0.reshape((num_graph, num_graph, num_node, num_node))
 
     args = (K, x0, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        if mode in ['pc', 'fast']:
+        if mode in ['time']:
             fn = mod.cao_fast_solver
-        elif mode in ['c', 'accu']:
+        elif mode in ['memory']:
             fn = mod.cao_solver
         else:
-            raise ValueError("Unknown value of mode: supported values ['c', 'accu', 'pc', 'fast']")
+            raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
@@ -160,7 +211,7 @@ def cao(K, x0=None, qap_solver=None,
 
 
 def mgm_floyd(K, x0=None, qap_solver=None,
-              mode='accu',
+              mode='time',
               param_lambda=0.2,
               backend=None):
     r"""
@@ -186,9 +237,8 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     :param qap_solver: (default: pygm.rrwm) a function object that accepts a batched affinity matrix and returns the
                        matching matrices. It is suggested to use ``functools.partial`` and the QAP solvers provided in
                        the :mod:`~pygmtools.classic_solvers` module (see examples below).
-    :param mode: (default: ``'accu'``) the operation mode of this algorithm. Options: ``'accu', 'c', 'fast', 'pc'``,
-                 where ``'accu'`` is equivalent to ``'c'`` (accurate version) and ``'fast'`` is equivalent to ``'pc'``
-                 (fast version).
+    :param mode: (default: ``'time'``) the operation mode of this algorithm. Options: ``'time', 'memory'``,
+                 where ``'time'`` is a time-efficient version and ``'memory'`` is a memory-efficient version.
     :param param_lambda: (default: 0.3) value of :math:`\lambda`, with :math:`\lambda\in[0,1]`
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(m\times m \times n \times n)` the multi-graph matching result
@@ -229,7 +279,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             tensor(1.)
 
             # Use the IPFP solver for two-graph matching
-            >>> ipfp_func = functools.partial(pygmtools.ipfp, n1max=4, n2max=4)
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
             >>> X = pygm.mgm_floyd(K, qap_solver=ipfp_func)
             >>> (X * X_gt).sum() / X_gt.sum()
             tensor(1.)
@@ -238,6 +288,53 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             >>> X = pygm.mgm_floyd(K, mode='fast')
             >>> (X * X_gt).sum() / X_gt.sum()
             tensor(1.)
+
+
+        .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10)
+            >>> As_1, As_2 = [], []
+            >>> for i in range(graph_num):
+            ...     for j in range(graph_num):
+            ...         As_1.append(As[i])
+            ...         As_2.append(As[j])
+            >>> As_1 = paddle.stack(As_1, axis=0)
+            >>> As_2 = paddle.stack(As_2, axis=0)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+            >>> K = K.reshape((graph_num, graph_num, 4*4, 4*4))
+            >>> K.shape
+            [10, 10, 16, 16]
+
+            # Solve the multi-matching problem
+            >>> X = pygm.mgm_floyd(K)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+            # Use the IPFP solver for two-graph matching
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
+            >>> X = pygm.mgm_floyd(K, qap_solver=ipfp_func)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+            # Run the faster version of CAO algorithm
+            >>> X = pygm.mgm_floyd(K, mode='fast')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
 
     .. note::
 
@@ -259,7 +356,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     if backend is None:
         backend = pygmtools.BACKEND
     # check the correctness of input
-    _check_data_type(K, backend)
+    _check_data_type(K, 'K', backend)
     K_shape = _get_shape(K, backend)
     if not (len(K_shape) == 4 and K_shape[0] == K_shape[1] and K_shape[2] == K_shape[3]):
         raise ValueError(f"Unsupported input data shape: got K {K_shape}")
@@ -270,26 +367,26 @@ def mgm_floyd(K, x0=None, qap_solver=None,
                          "does not support matching with outliers or partial matching.")
     if not 0 <= param_lambda <= 1: raise ValueError(f"param_lambda must be in [0, 1], got param_lambda={param_lambda}")
     if x0 is not None:
-        _check_data_type(x0, backend)
+        _check_data_type(x0, 'x0', backend)
         x0_shape = _get_shape(x0, backend)
         if not len(x0_shape) == 4 and num_graph == x0_shape[0] == x0_shape[1] and num_node == x0_shape[2] == x0_shape[3]:
             raise ValueError(f"Unsupported input data shape: got K {K_shape} x0 {x0_shape}")
     else:
         if qap_solver is None:
             qap_solver = functools.partial(pygmtools.rrwm, n1max=num_node, n2max=num_node, backend=backend)
-        x0 = qap_solver(K.reshape(num_graph ** 2, aff_size, aff_size))
+        x0 = qap_solver(K.reshape((num_graph ** 2, aff_size, aff_size)))
         x0 = pygmtools.hungarian(x0, backend=backend)
-        x0 = x0.reshape(num_graph, num_graph, num_node, num_node)
+        x0 = x0.reshape((num_graph, num_graph, num_node, num_node))
 
     args = (K, x0, num_graph, num_node, param_lambda)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
-        if mode in ['pc', 'fast']:
+        if mode in ['time']:
             fn = mod.mgm_floyd_fast_solver
-        elif mode in ['c', 'accu']:
+        elif mode in ['memory']:
             fn = mod.mgm_floyd_solver
         else:
-            raise ValueError("Unknown value of mode: supported values ['c', 'accu', 'pc', 'fast']")
+            raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
     except ModuleNotFoundError and AttributeError:
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
@@ -301,7 +398,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
 def gamgm(A, W,
           ns=None, n_univ=None, U0=None,
           sk_init_tau=0.5, sk_min_tau=0.1, sk_gamma=0.8, sk_iter=20, max_iter=100, param_lambda=1.,
-          converge_thresh=1e-5, outlier_thresh=-1,
+          converge_thresh=1e-5, outlier_thresh=-1, bb_smooth=0.1,
           verbose=False,
           backend=None):
     r"""
@@ -345,13 +442,26 @@ def gamgm(A, W,
                             is stopped.
     :param outlier_thresh: (default: -1) if > 0, pairs with node+edge similarity score smaller than this threshold will
                            be discarded. This threshold is designed to handle outliers.
+    :param bb_smooth: (default: 0.1) the black-box differentiation smoothing parameter.
     :param verbose: (default: False) print verbose information for parameter tuning
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: the multi-graph matching result (a :mod:`~pygmtools.utils.MultiMatchingResult` object)
 
     .. note::
 
-        Set ``verbose=True`` may help you tune the parameters.
+        In PyTorch backend, this function is differentiable through the black-box trick. See the following paper for
+        details:
+
+        ::
+
+            Vlastelica M, Paulus A., Differentiation of Blackbox Combinatorial Solvers, ICLR 2020
+
+        If you want to disable this differentiable feature, please detach the input tensors from the computational
+        graph.
+
+    .. note::
+
+        Setting ``verbose=True`` may help you tune the parameters.
 
     .. dropdown:: Pytorch Example
 
@@ -377,8 +487,22 @@ def gamgm(A, W,
             >>> matched = 0
             >>> for i, j in itertools.product(range(graph_num), repeat=2):
             ...     matched += (X[i,j] * X_gt[i,j]).sum()
-            >>> matched / X_gt.sum()
+            >>> acc = matched / X_gt.sum()
+            >>> acc
             tensor(1.)
+
+            # This function is differentiable by the black-box trick
+            >>> W.requires_grad_(True)  # tell PyTorch to track the gradients
+            >>> X = pygm.gamgm(As, W)
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
+
+            # Backward pass via black-box trick
+            >>> acc.backward()
+            >>> torch.sum(W.grad != 0)
+            tensor(128)
 
             # This function supports graphs with different nodes (also known as partial matching)
             # In the following we ignore the last node from the last 5 graphs
@@ -391,6 +515,7 @@ def gamgm(A, W,
             ...     X_gt[i, j, :, ns[j]:] = 0
             ...     W[i, j, ns[i]:, :] = 0
             ...     W[i, j, :, ns[j]:] = 0
+            >>> W = W.detach() # detach tensor if gradient is not needed
 
             # Partial matching is challenging and the following parameters are carefully tuned
             >>> X = pygm.gamgm(As, W, ns, n_univ=4, sk_init_tau=.1, sk_min_tau=0.01, param_lambda=0.3)
@@ -401,6 +526,71 @@ def gamgm(A, W,
             ...     matched += (X[i,j] * X_gt[i, j, :ns[i], :ns[j]]).sum()
             >>> matched / X_gt.sum()
             tensor(1.)
+
+
+    .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> import itertools
+            >>> import time
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
+
+            # Compute node-wise similarity by inner-product and Sinkhorn
+            >>> W = paddle.matmul(Fs.unsqueeze(1), Fs.transpose((0, 2, 1)).unsqueeze(0))
+            >>> W = pygm.sinkhorn(W.reshape((graph_num ** 2, 4, 4))).reshape((graph_num, graph_num, 4, 4))
+
+            # Solve the multi-matching problem
+            >>> X = pygm.gamgm(As, W)
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
+            >>> acc
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+            # This function is differentiable by the black-box trick
+            >>> W.requires_grad_(True)  # tell Paddle to track the gradients
+            >>> X = pygm.gamgm(As, W)
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
+
+            # Backward pass via black-box trick
+            >>> acc.backward()
+            >>> paddle.sum(W.grad != 0)
+            "AttributeError: 'GAMGMPaddleFunc_backward' object has no attribute 'needs_input_grad'"
+
+            # This function supports graphs with different nodes (also known as partial matching)
+            # In the following we ignore the last node from the last 5 graphs
+            >>> ns = paddle.to_tensor([4, 4, 4, 4, 4, 3, 3, 3, 3, 3], dtype=paddle.int32)
+            >>> for i in range(graph_num):
+            ...     As[i, ns[i]:, :] = 0
+            ...     As[i, :, ns[i]:] = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     X_gt[i, j, ns[i]:, :] = 0
+            ...     X_gt[i, j, :, ns[j]:] = 0
+            ...     W[i, j, ns[i]:, :] = 0
+            ...     W[i, j, :, ns[j]:] = 0
+            >>> W = W.detach() # detach tensor if gradient is not needed
+
+            # Partial matching is challenging and the following parameters are carefully tuned
+            >>> X = pygm.gamgm(As, W, ns, n_univ=4, sk_init_tau=.1, sk_min_tau=0.01, param_lambda=0.3)
+
+            # Check the partial matching result
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     matched += (X[i,j] * X_gt[i, j, :ns[i], :ns[j]]).sum()
+            >>> matched / X_gt.sum()
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [0.88424438])
 
     .. note::
 
@@ -434,29 +624,31 @@ def gamgm(A, W,
     if backend is None:
         backend = pygmtools.BACKEND
     # check the correctness of input
-    _check_data_type(A, backend)
+    _check_data_type(A, 'A', backend)
     A_shape = _get_shape(A, backend)
     if not (len(A_shape) == 3 and A_shape[1] == A_shape[2]):
         raise ValueError(f"Unsupported input data shape: got A {A_shape}")
     num_graph, max_node = A_shape[0], A_shape[1]
-    _check_data_type(W, backend)
+    _check_data_type(W, 'W', backend)
     W_shape = _get_shape(W, backend)
     if not (len(W_shape) == 4 and W_shape[0] == W_shape[1] == num_graph and W_shape[2] == W_shape[3] == max_node):
         raise ValueError(f"Unsupported input data shape: got A {A_shape}, W {W_shape}")
     if ns is not None:
-        _check_data_type(ns, backend)
+        _check_data_type(ns, 'ns', backend)
         ns_shape = _get_shape(ns, backend)
         if not (len(ns_shape) == 1 and ns_shape[0] == num_graph):
             raise ValueError(f"The size of ns mismatches the sizes of A and W: got ns {ns_shape}, A {A_shape}, W {W_shape}")
     if n_univ is None:
         n_univ = max_node
     if U0 is not None:
-        _check_data_type(U0, backend)
+        _check_data_type(U0, 'U0', backend)
     if not sk_init_tau > 0: raise ValueError(f"sk_init_tau must be >0, got sk_init_tau={sk_init_tau}")
     if not sk_min_tau > 0: raise ValueError(f"sk_min_tau must be >0, got sk_min_tau={sk_min_tau}")
     if not 0 < sk_gamma < 1: raise ValueError(f"sk_gamma must be in (0, 1), got sk_gamma={sk_gamma}")
+    if not 0 < bb_smooth < 1: raise ValueError(f"bb_smooth must be in (0, 1), got bb_smooth={bb_smooth}")
+
     args = (A, W, ns, n_univ, U0, sk_init_tau, sk_min_tau, sk_gamma, sk_iter, max_iter, param_lambda,
-            converge_thresh, outlier_thresh, verbose)
+            converge_thresh, outlier_thresh, bb_smooth, verbose)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gamgm

@@ -89,15 +89,16 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
         prob_param_dict = {}
         solver_param_dict = {}
         for k, v in zip(matrix_params.keys(), values):
-            if k in ['outlier_num']:
+            if k in ['outlier_num', 'unmatch']:
                 prob_param_dict[k] = v
             else:
                 solver_param_dict[k] = v
+        unmatch = prob_param_dict['outlier_num'] > 0 if 'outlier_num' in prob_param_dict else False
 
         # Generate random node features
         pygm.BACKEND = 'pytorch'
         torch.manual_seed(3)
-        X_gt, F1, F2 = [], [], []
+        X_gt, F1, F2, unmatch1, unmatch2 = [], [], [], [], []
         for b, (num_node1, num_node2) in enumerate(zip(num_nodes1, num_nodes2)):
             outlier_num = prob_param_dict['outlier_num'] if 'outlier_num' in prob_param_dict else 0
             max_inlier_index = max(num_node1, num_node2)
@@ -112,10 +113,16 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             F1.append(Fs_b[0][idx1])
             F2.append(Fs_b[1][idx2])
             X_gt.append(X_gt_b[idx1, :][:, idx2])
-        n1 = torch.tensor(num_nodes1, dtype=torch.int)
-        n2 = torch.tensor(num_nodes2, dtype=torch.int)
+            if unmatch:
+                unmatch1.append(torch.ones(num_node1 + outlier_num) * 0.49)
+                unmatch2.append(torch.ones(num_node2 + outlier_num) * 0.49)
+        n1 = torch.tensor(num_nodes1, dtype=torch.int) + outlier_num
+        n2 = torch.tensor(num_nodes2, dtype=torch.int) + outlier_num
         F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (F1, F2, X_gt))
         F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
+        if unmatch:
+            unmatch1, unmatch2 = (pygm.utils.build_batch(_) for _ in (unmatch1, unmatch2))
+            unmatch1, unmatch2 = data_to_numpy(unmatch1, unmatch2)
 
         last_X = None
         for working_backend in backends:
@@ -128,23 +135,36 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             linear_sim = pygm.utils.build_batch(linear_sim)
 
             # call the solver
-            _X = solver_func(linear_sim, _n1, _n2, **solver_param_dict)
+            if unmatch:
+                _unmatch1, _unmatch2 = data_from_numpy(unmatch1, unmatch2)
+                _X = solver_func(linear_sim, _n1, _n2, _unmatch1, _unmatch2, **solver_param_dict)
 
-            if last_X is not None:
-                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 5e-4, \
-                    f"Incorrect GM solution for {working_backend} " \
-                    f"params: {';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
-            last_X = pygm.utils.to_numpy(_X)
+                # get the corresponding hungarian solution
+                _X_np = pygm.utils.to_numpy(_X)
+                X_hung = pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2,
+                                                            pygm.utils.from_numpy(1 - _X_np.sum(-1)) * 0.5,
+                                                            pygm.utils.from_numpy(1 - _X_np.sum(-2)) * 0.5))
+                accuracy = (X_hung * X_gt).sum() / max(X_hung.sum(), X_gt.sum())
+            else:
+                _X = solver_func(linear_sim, _n1, _n2, **solver_param_dict)
+                accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
 
-            accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
             assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
                                   f"params: {';'.join([k + '=' + str(v) for k, v in prob_param_dict.items()])};" \
                                   f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+
+            if last_X is not None:
+                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 5e-4, \
+                    f"Incorrect GM solution for {working_backend}\n" \
+                    f"params: {';'.join([k + '=' + str(v) for k, v in prob_param_dict.items()])}\n" \
+                    f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+            last_X = pygm.utils.to_numpy(_X)
 
 
 def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
+        'outlier_num': [0, 5, 10]
     }, ['pytorch', 'numpy', 'paddle' ,'jittor'])
 
 
@@ -155,7 +175,7 @@ def test_sinkhorn():
             'max_iter': [10, 20, 50],
             'batched_operation': [True, False],
             'dummy_row': [True, ],
-        }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
     # test symmetric matching
     args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -165,9 +185,28 @@ def test_sinkhorn():
         'dummy_row': [True, False],
     }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
+    # test outlier matching (non-symmetric)
+    args3 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
+        'tau': [0.01, 0.001],
+        'max_iter': [500, 1000],
+        'batched_operation': [True, False],
+        'dummy_row': [True, False],
+        'outlier_num': [5, 10]
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+
+    # test outlier matching (symmetric)
+    args4 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
+        'tau': [0.01, 0.001],
+        'max_iter': [500, 1000],
+        'batched_operation': [True, False],
+        'dummy_row': [True, False],
+        'outlier_num': [5, 10]
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
+    _test_classic_solver_on_linear_assignment(*args3)
+    _test_classic_solver_on_linear_assignment(*args4)
 
 
 def test_rrwm():

@@ -1,6 +1,18 @@
+"""
+Utility functions: problem formulating, data processing, and beyond.
+"""
+
+import time
 import functools
 import importlib
 import copy
+import requests
+import os
+from appdirs import user_cache_dir
+import hashlib
+import shutil
+from tqdm.auto import tqdm
+import inspect
 
 import pygmtools
 
@@ -48,6 +60,9 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
                         example.
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1n_2 \times n_1n_2)` the affinity matrix
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
     .. dropdown:: Numpy Example
 
@@ -144,35 +159,52 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     """
     if backend is None:
         backend = pygmtools.BACKEND
+    __get_shape = functools.partial(_get_shape, backend=backend)
 
     # check the correctness of input
     batch_size = None
+    non_batched_input = False
     if node_feat1 is not None or node_feat2 is not None:
         assert all([_ is not None for _ in (node_feat1, node_feat2)]), \
             'The following arguments must all be given if you want to compute node-wise affinity: ' \
             'node_feat1, node_feat2'
         _check_data_type(node_feat1, backend)
         _check_data_type(node_feat2, backend)
-        assert all([_check_shape(_, 3, backend) for _ in (node_feat1, node_feat2)]), \
-            f'The shape of the following tensors are illegal, expected 3-dimensional, ' \
-            f'got node_feat1={len(_get_shape(node_feat1))}d; node_feat2={len(_get_shape(node_feat2))}d!'
+        if all([_check_shape(_, 2, backend) for _ in (node_feat1, node_feat2)]):
+            non_batched_input = True
+            node_feat1, node_feat2 = [_unsqueeze(_, 0, backend) for _ in (node_feat1, node_feat2)]
+        elif all([_check_shape(_, 3, backend) for _ in (node_feat1, node_feat2)]):
+            pass
+        else:
+            raise ValueError(
+                f'The shape of the following tensors are illegal, expected 3-dimensional, '
+                f'got node_feat1={len(__get_shape(node_feat1))}d; node_feat2={len(__get_shape(node_feat2))}d!'
+            )
         if batch_size is None:
-            batch_size = _get_shape(node_feat1)[0]
-        assert _get_shape(node_feat1)[0] == _get_shape(node_feat2)[0] == batch_size, 'batch size mismatch'
+            batch_size = __get_shape(node_feat1)[0]
+        assert __get_shape(node_feat1)[0] == __get_shape(node_feat2)[0] == batch_size, 'batch size mismatch'
     if edge_feat1 is not None or edge_feat2 is not None:
         assert all([_ is not None for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]), \
             'The following arguments must all be given if you want to compute edge-wise affinity: ' \
             'edge_feat1, edge_feat2, connectivity1, connectivity2'
-        assert all([_check_shape(_, 3, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]), \
-            f'The shape of the following tensors are illegal, expected 3-dimensional, ' \
-            f'got edge_feat1:{len(_get_shape(edge_feat1))}d; edge_feat2:{len(_get_shape(edge_feat2))}d; ' \
-            f'connectivity1:{len(_get_shape(connectivity1))}d; connectivity2:{len(_get_shape(connectivity2))}d!'
-        assert _get_shape(connectivity1)[2] == _get_shape(connectivity1)[2] == 2, \
-            'the 3rd dimension of connectivity1, connectivity2 must be 2-dimensional'
+        if all([_check_shape(_, 2, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]):
+            non_batched_input = True
+            edge_feat1, edge_feat2, connectivity1, connectivity2 = \
+                [_unsqueeze(_, 0, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]
+        elif all([_check_shape(_, 3, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]):
+            pass
+        else:
+            raise ValueError(
+                f'The shape of the following tensors are illegal, expected 3-dimensional, '
+                f'got edge_feat1:{len(__get_shape(edge_feat1))}d; edge_feat2:{len(__get_shape(edge_feat2))}d; '
+                f'connectivity1:{len(__get_shape(connectivity1))}d; connectivity2:{len(__get_shape(connectivity2))}d!'
+            )
+        assert __get_shape(connectivity1)[2] == __get_shape(connectivity1)[2] == 2, \
+            'the last dimension of connectivity1, connectivity2 must be 2-dimensional'
         if batch_size is None:
-            batch_size = _get_shape(edge_feat1)[0]
-        assert _get_shape(edge_feat1)[0] == _get_shape(edge_feat2)[0] == _get_shape(connectivity1)[0] == \
-               _get_shape(connectivity2)[0] == batch_size, 'batch size mismatch'
+            batch_size = __get_shape(edge_feat1)[0]
+        assert __get_shape(edge_feat1)[0] == __get_shape(edge_feat2)[0] == __get_shape(connectivity1)[0] == \
+               __get_shape(connectivity2)[0] == batch_size, 'batch size mismatch'
 
     # assign the default affinity functions if not given
     if node_aff_fn is None:
@@ -183,7 +215,11 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     node_aff = node_aff_fn(node_feat1, node_feat2) if node_feat1 is not None else None
     edge_aff = edge_aff_fn(edge_feat1, edge_feat2) if edge_feat1 is not None else None
 
-    return _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    if non_batched_input:
+        return _squeeze(result, 0, backend)
+    else:
+        return result
 
 
 def inner_prod_aff_fn(feat1, feat2, backend=None):
@@ -357,8 +393,12 @@ def dense_to_sparse(dense_adj, backend=None):
     :param dense_adj: :math:`(b\times n\times n)` the dense adjacency matrix. This function also supports non-batched
                       input where the batch dimension ``b`` is ignored
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :return: :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor,
+    :return: if batched input:
+             :math:`(b\times ne\times 2)` sparse connectivity matrix, :math:`(b\times ne\times 1)` edge weight tensor,
              :math:`(b)` number of edges
+
+             if non-batched input:
+             :math:`(ne\times 2)` sparse connectivity matrix, :math:`(ne\times 1)` edge weight tensor,
 
     .. dropdown:: Numpy Example
 
@@ -483,7 +523,30 @@ def compute_affinity_score(X, K, backend=None):
 
     .. note::
 
-       This function also supports non-batched input if the first dimension of ``X, K`` is removed.
+       This function also supports non-batched input if the batch dimension of ``X, K`` is ignored.
+
+    .. dropdown:: Pytorch Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> import torch
+            >>> pygm.BACKEND = 'pytorch'
+
+            # Generate a graph matching problem
+            >>> X_gt = torch.zeros(4, 4)
+            >>> X_gt[torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] =1
+            >>> A1 = torch.rand(4, 4)
+            >>> A2 = torch.mm(torch.mm(X_gt.transpose(0,1), A1), X_gt)
+            >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+
+            # Compute the objective score of ground truth matching
+            >>> pygm.utils.compute_affinity_score(X_gt, K)
+            tensor(16.)
 
     """
     if backend is None:
@@ -723,6 +786,116 @@ class MultiMatchingResult:
         self.backend = 'numpy'
 
 
+def get_network(nn_solver_func, **params):
+    r"""
+    Get the network object of a neural network solver.
+
+    :param nn_solver_func: the neural network solver function, for example ``pygm.pca_gm``
+    :param params: keyword parameters to define the neural network
+    :return: the network object
+
+    .. dropdown:: Pytorch Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> import torch
+            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.utils.get_network(pygm.pca_gm, pretrain='willow')
+            PCA_GM_Net(
+              (gnn_layer_0): Siamese_Gconv(
+                (gconv): Gconv(
+                  (a_fc): Linear(in_features=1024, out_features=2048, bias=True)
+                  (u_fc): Linear(in_features=1024, out_features=2048, bias=True)
+                )
+              )
+              (cross_graph_0): Linear(in_features=4096, out_features=2048, bias=True)
+              (affinity_0): WeightedInnerProdAffinity()
+              (affinity_1): WeightedInnerProdAffinity()
+              (gnn_layer_1): Siamese_Gconv(
+                (gconv): Gconv(
+                  (a_fc): Linear(in_features=2048, out_features=2048, bias=True)
+                  (u_fc): Linear(in_features=2048, out_features=2048, bias=True)
+                )
+              )
+            )
+
+            # the neural network can be integrated into a deep learning pipeline
+            >>> net = pygm.utils.get_network(pygm.pca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+
+    """
+    if 'return_network' in params:
+        params.pop('return_network')
+    # count parameters w/o default value
+    sig = inspect.signature(nn_solver_func)
+    required_params = 0
+    for p in sig.parameters.items():
+        if p[1].default is inspect._empty:
+            required_params += 1
+    _, net = nn_solver_func(*[None] * required_params, # fill the required parameters by None
+                            return_network=True, **params)
+    return net
+
+
+def permutation_loss(pred_dsmat, gt_perm, n1=None, n2=None, backend=None):
+    r"""
+    Binary cross entropy loss between two permutations, also known as "permutation loss".
+    Proposed by `"Wang et al. Learning Combinatorial Embedding Networks for Deep Graph Matching. ICCV 2019."
+    <http://openaccess.thecvf.com/content_ICCV_2019/papers/Wang_Learning_Combinatorial_Embedding_Networks_for_Deep_Graph_Matching_ICCV_2019_paper.pdf>`_
+
+    .. math::
+        L_{perm} =- \sum_{i \in \mathcal{V}_1, j \in \mathcal{V}_2}
+        \left(\mathbf{X}^{gt}_{i,j} \log \mathbf{S}_{i,j} + (1-\mathbf{X}^{gt}_{i,j}) \log (1-\mathbf{S}_{i,j}) \right)
+
+    where :math:`\mathcal{V}_1, \mathcal{V}_2` are vertex sets for two graphs.
+
+    :param pred_dsmat: :math:`(b\times n_1 \times n_2)` predicted doubly-stochastic matrix :math:`(\mathbf{S})`
+    :param gt_perm: :math:`(b\times n_1 \times n_2)` ground truth permutation matrix :math:`(\mathbf{X}^{gt})`
+    :param n1: (optional) :math:`(b)` number of exact pairs in the first graph.
+    :param n2: (optional) :math:`(b)` number of exact pairs in the second graph.
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: :math:`(1)` averaged permutation loss
+
+    .. note::
+        We support batched instances with different number of nodes, therefore ``n1`` and ``n2`` are
+        required if you want to specify the exact number of nodes of each instance in the batch.
+
+    .. note::
+        For batched input, this loss function computes the averaged loss among all instances in the batch. This function
+        also supports non-batched input if the batch dimension (:math:`b`) is ignored.
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    _check_data_type(pred_dsmat, backend)
+    _check_data_type(gt_perm, backend)
+    dsmat_shape = _get_shape(pred_dsmat, backend)
+    perm_shape = _get_shape(gt_perm, backend)
+    if len(dsmat_shape) == len(perm_shape) == 2:
+        pred_dsmat = _unsqueeze(pred_dsmat, 0, backend)
+        gt_perm = _unsqueeze(gt_perm, 0, backend)
+    elif len(dsmat_shape) == len(perm_shape) == 3:
+        pass
+    else:
+        raise ValueError(f'the input arguments pred_dsmat and gt_perm are expected to be 2-dimensional or 3-dimensional,'
+                         f' got pred_dsmat:{len(dsmat_shape)}, gt_perm:{len(perm_shape)}!')
+
+    for d1, d2 in zip(dsmat_shape, perm_shape):
+        if d1 != d2:
+            raise ValueError(f'dimension mismatch for pred_dsmat and gt_perm, got pred_dsmat:{dsmat_shape}, gt_perm:{gt_perm}!')
+
+    args = (pred_dsmat, gt_perm, n1, n2)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod.permutation_loss
+    except ModuleNotFoundError and AttributeError:
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+    return fn(*args)
+
+
 ###################################################
 #   Private Functions that Unseeable from Users   #
 ###################################################
@@ -761,16 +934,17 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     return fn(*args)
 
 
-def _check_data_type(input, backend=None):
+def _check_data_type(input, var_name=None, backend=None):
     r"""
     Check whether the input data meets the backend. If not met, it will raise an ValueError
 
     :param input: input data (must be Tensor/ndarray)
+    :param var_name: name of the variable
     :return: None
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input, )
+    args = (input, var_name)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_data_type
@@ -885,6 +1059,7 @@ def _transpose(input, dim1, dim2, backend=None):
         )
     return fn(*args)
 
+
 def _mm(input1, input2, backend=None):
     r"""
     Matrix multiplication.
@@ -904,3 +1079,48 @@ def _mm(input1, input2, backend=None):
             NOT_IMPLEMENTED_MSG.format(backend)
         )
     return fn(*args)
+
+
+def download(filename, url, md5=None, retries=5):
+    r"""
+    Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
+    depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
+
+    :param filename: the destination file name
+    :param url: the url
+    :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
+    :param retries: (default: 5) max number of retries
+    :return: the full path to the file: ``<user cache path>/pygmtools/<filename>``
+    """
+    if retries <= 0:
+        raise RuntimeError('Max Retries exceeded!')
+
+    dirs = user_cache_dir("pygmtools")
+    if not os.path.exists(dirs):
+        os.makedirs(dirs)
+    filename = os.path.join(dirs, filename)
+    if not os.path.exists(filename):
+        print(f'Downloading to {filename}...')
+        down_res = requests.get(url, stream=True)
+        file_size = int(down_res.headers.get('Content-Length', 0))
+        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+            with open(filename, 'wb') as file:
+                shutil.copyfileobj(content, file)
+
+    if md5 is not None:
+        hash_md5 = hashlib.md5()
+        chunk = 8192
+        with open(filename, 'rb') as file_to_check:
+            while True:
+                buffer = file_to_check.read(chunk)
+                if not buffer:
+                    break
+                hash_md5.update(buffer)
+            md5_returned = hash_md5.hexdigest()
+        if md5 != md5_returned:
+            print('Warning: MD5 check failed for the downloaded content. Retrying...')
+            os.remove(filename)
+            time.sleep(1)
+            return download(filename, url, md5, retries - 1)
+
+    return filename

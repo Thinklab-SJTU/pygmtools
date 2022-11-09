@@ -1,47 +1,79 @@
-===============================
-What is Graph Matching
-===============================
+=================================
+Introduction and Guidelines
+=================================
 
-This page provides some background information for graph matching.
+This page provides a brief introduction to graph matching and some guidelines for using ``pygmtools``.
+If you are seeking some background information, this is the right place!
 
-Introduction
-------------------
+.. note::
+    For more technical details, we recommend the following two surveys.
+
+    About **learning-based** deep graph matching:
+    Junchi Yan, Shuang Yang, Edwin Hancock. `"Learning Graph Matching and Related Combinatorial Optimization Problems." <https://www.ijcai.org/proceedings/2020/0694.pdf>`_ *IJCAI 2020*.
+
+    About **non-learning** two-graph matching and multi-graph matching:
+    Junchi Yan, Xu-Cheng Yin, Weiyao Lin, Cheng Deng, Hongyuan Zha, Xiaokang Yang. `"A Short Survey of Recent Advances in Graph Matching." <https://dl.acm.org/doi/10.1145/2911996.2912035>`_ *ICMR 2016*.
+
+
+Why Graph Matching?
+--------------------
 
 Graph Matching (GM) is a fundamental yet challenging problem in pattern recognition, data mining, and others.
 GM aims to find node-to-node correspondence among multiple graphs, by solving an NP-hard combinatorial problem.
-Recently, there is growing interest in developing deep learning based graph matching methods.
+Recently, there is growing interest in developing deep learning-based graph matching methods.
+
+Compared to other straight-forward matching methods e.g. greedy matching, graph matching methods are more reliable
+because it is based on an optimization form. Besides, graph matching methods exploit both node affinity and edge
+affinity, thus graph matching methods are usually more robust to noises and outliers. The recent line of deep graph
+matching methods also enables many graph matching solvers to be integrated into a deep learning pipeline.
 
 Graph matching techniques have been applied to the following applications:
 
 * `Bridging movie and synopses <https://openaccess.thecvf.com/content_ICCV_2019/papers/Xiong_A_Graph-Based_Framework_to_Bridge_Movies_and_Synopses_ICCV_2019_paper.pdf>`_
 
   .. image:: ../images/movie_synopses.png
+     :width: 500
 
 * `Image correspondence <https://arxiv.org/pdf/1911.11763.pdf>`_
 
   .. image:: ../images/superglue.png
+     :width: 500
+
+* `Model ensemble and federated learning <https://proceedings.mlr.press/v162/liu22k/liu22k.pdf>`_
+
+  .. image:: ../images/federated_learning.png
+     :width: 500
 
 * `Molecules matching <https://openaccess.thecvf.com/content/CVPR2021/papers/Wang_Combinatorial_Learning_of_Graph_Edit_Distance_via_Dynamic_Embedding_CVPR_2021_paper.pdf>`_
 
   .. image:: ../images/molecules.png
+     :width: 450
 
 * and more...
 
-Graph Matching Pipeline
--------------------------
+If your task involves matching two or more graphs, you should try the solvers in ``pygmtools``!
 
-Solving a real world graph matching problem may involve the following steps:
+What is Graph Matching?
+------------------------
+
+The Graph Matching Pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Solving a real-world graph-matching problem may involve the following steps:
 
 1. Extract node/edge features from the graphs you want to match.
-2. Build affinity matrix from node/edge features.
-3. Solve the graph matching problem by GM solvers.
+2. Build an affinity matrix from node/edge features.
+3. Solve the graph matching problem with GM solvers.
 
-And Step 1 maybe done by methods depending on your application, Step 2\&3 can be handled by **pygmtools**.
+And Step 1 may be done by methods depending on your application, Step 2\&3 can be handled by ``pygmtools``.
+The following plot illustrates a standard deep graph matching pipeline.
+
+.. image:: ../images/QAP_illustration.png
 
 The Math Form
-------------------
+^^^^^^^^^^^^^^
 
-Let's involve a little bit math to better understand the graph matching pipeline.
+Let's involve a little bit of math to better understand the graph matching pipeline.
 In general, graph matching is of the following form, known as **Quadratic Assignment Problem (QAP)**:
 
 .. math::
@@ -71,11 +103,50 @@ The notations are explained as follows:
   * The off-diagonal element :math:`\mathbf{K}_{i + a\times n_1, j + b\times n_1}` means the edge-wise affinity of
     edge :math:`ij` in graph 1 and edge :math:`ab` in graph 2.
 
+Graph Matching Best Practice
+-----------------------------
 
-Other Materials
-------------------
+We need to understand the advantages and limitations of graph matching solvers. As discussed above, the major advantage
+of graph matching solvers is that they are more robust to noises and outliers. Graph matching also utilizes edge
+information, which is usually ignored in linear matching methods. The major drawback of graph matching
+solvers is their efficiency and scalability since the optimization problem is NP-hard. Therefore, to decide which
+matching method is most suitable, one needs to balance between the required matching accuracy and the affordable time
+and memory cost according to his/her application.
 
-Readers are referred to the following surveys for more technical details about graph matching:
+.. note::
 
-* Junchi Yan, Shuang Yang, Edwin Hancock. "Learning Graph Matching and Related Combinatorial Optimization Problems." *IJCAI 2020*.
-* Junchi Yan, Xu-Cheng Yin, Weiyao Lin, Cheng Deng, Hongyuan Zha, Xiaokang Yang. "A Short Survey of Recent Advances in Graph Matching." *ICMR 2016*.
+    Anyway, it does no harm to try graph matching first!
+
+When to use pygmtools
+^^^^^^^^^^^^^^^^^^^^^^
+
+``pygmtools`` is recommended for the following cases, and you could benefit from the friendly API:
+
+* If you want to integrate graph matching as a step of your pipeline (either learning or non-learning).
+
+* If you want a quick benchmarking and profiling of the graph matching solvers available in ``pygmtools``.
+
+* If you do not want to dive too deep into the algorithm details and do not need to modify the algorithm.
+
+We offer the following guidelines for your reference:
+
+* If you want to integrate graph matching solvers into your end-to-end supervised deep learning pipeline, try
+  :mod:`~pygmtools.neural_solvers`.
+
+* If no ground truth label is available for the matching step, try :mod:`~pygmtools.classic_solvers`.
+
+* If there are multiple graphs to be jointly matched, try :mod:`~pygmtools.multi_graph_solvers`.
+
+* If time and memory cost of the above methods are unacceptable for your task, try :mod:`~pygmtools.linear_solvers`.
+
+When not to use pygmtools
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As a highly packed toolkit, ``pygmtools`` lacks some flexibilities in the implementation details, especially for
+experts in graph matching. If you are researching new graph matching algorithms or developing next-generation deep
+graph matching neural networks, ``pygmtools`` may not be suitable. We recommend
+`ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_ as the protocol for academic research.
+
+What's Next
+------------
+Please read the :doc:`get_started` guide.
