@@ -9,3 +9,4 @@ torch
 tqdm
 jittor
 appdirs>=1.4.4
+tensorflow
