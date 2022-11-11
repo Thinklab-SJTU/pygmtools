@@ -1,5 +1,7 @@
 import sys
+import os
 
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 sys.path.insert(0, '.')
 
 import numpy as np
@@ -165,7 +167,7 @@ def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
-    }, ['pytorch', 'numpy', 'paddle' ,'jittor'])
+    }, ['pytorch', 'numpy','mindspore'])
 
 
 def test_sinkhorn():
@@ -238,7 +240,7 @@ def test_ipfp():
 
 if __name__ == '__main__':
     test_hungarian()
-    test_sinkhorn()
-    test_rrwm()
-    test_sm()
-    test_ipfp()
+    # test_sinkhorn()
+    # test_rrwm()
+    # test_sm()
+    # test_ipfp()
