@@ -1,6 +1,8 @@
 from multiprocessing import Pool
 import numpy as np
 import mindspore
+import mindspore.nn as nn
+from mindspore.ops import stop_gradient
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -9,30 +11,30 @@ import mindspore
 from pygmtools.numpy_backend import _hung_kernel
 
 
-def hungarian(s: mindspore.Tensor, n1: mindspore.Tensor=None, n2: mindspore.Tensor=None,
-              unmatch1: mindspore.Tensor=None, unmatch2: mindspore.Tensor=None,
-              nproc: int=1) -> mindspore.Tensor:
+def hungarian(s: mindspore.Tensor, n1: mindspore.Tensor = None, n2: mindspore.Tensor = None,
+              unmatch1: mindspore.Tensor = None, unmatch2: mindspore.Tensor = None,
+              nproc: int = 1) -> mindspore.Tensor:
     """
     mindspore implementation of Hungarian algorithm
     """
-    #device = s.device
+    # device = s.device
     batch_num = s.shape[0]
 
-    perm_mat = s.detach().numpy() * -1
+    perm_mat = stop_gradient(s).asnumpy() * -1
     if n1 is not None:
-        n1 = n1.numpy()
+        n1 = n1.asnumpy()
     else:
         n1 = [None] * batch_num
     if n2 is not None:
-        n2 = n2.numpy()
+        n2 = n2.asnumpy()
     else:
         n2 = [None] * batch_num
     if unmatch1 is not None:
-        unmatch1 = -unmatch1.numpy()
+        unmatch1 = -unmatch1.asnumpy()
     else:
         unmatch1 = [None] * batch_num
     if unmatch2 is not None:
-        unmatch2 = -unmatch2.numpy()
+        unmatch2 = -unmatch2.asnumpy()
     else:
         unmatch2 = [None] * batch_num
 
@@ -41,16 +43,18 @@ def hungarian(s: mindspore.Tensor, n1: mindspore.Tensor=None, n2: mindspore.Tens
             mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2, unmatch1, unmatch2))
             perm_mat = np.stack(mapresult.get())
     else:
-        perm_mat = np.stack([_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
+        perm_mat = np.stack(
+            [_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
 
     perm_mat = mindspore.Tensor(perm_mat)
 
     return perm_mat
 
 
-def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore.Tensor=None,
-             unmatchrows: mindspore.Tensor=None, unmatchcols: mindspore.Tensor=None,
-             dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> mindspore.Tensor:
+def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspore.Tensor = None,
+             unmatchrows: mindspore.Tensor = None, unmatchcols: mindspore.Tensor = None,
+             dummy_row: bool = False, max_iter: int = 10, tau: float = 1.,
+             batched_operation: bool = False) -> mindspore.Tensor:
     """
     mindspore implementation of Sinkhorn algorithm
     """
@@ -65,17 +69,17 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore
         transposed = True
 
     if nrows is None:
-        nrows = torch.tensor([s.shape[1] for _ in range(batch_size)], device=s.device)
+        nrows = mindspore.Tensor([s.shape[1] for _ in range(batch_size)])
     if ncols is None:
-        ncols = torch.tensor([s.shape[2] for _ in range(batch_size)], device=s.device)
+        ncols = mindspore.Tensor([s.shape[2] for _ in range(batch_size)])
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
-    if torch.any(transposed_batch):
+    if transposed_batch.any():
         s_t = s.transpose(1, 2)
         s_t = torch.cat((
             s_t[:, :s.shape[1], :],
-            torch.full((batch_size, s.shape[1], s.shape[2]-s.shape[1]), -float('inf'), device=s.device)), dim=2)
+            torch.full((batch_size, s.shape[1], s.shape[2] - s.shape[1]), -float('inf'), device=s.device)), dim=2)
         s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, s)
 
         new_nrows = torch.where(transposed_batch, ncols, nrows)
@@ -87,8 +91,9 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore
             unmatchrows_pad = torch.cat((
                 unmatchrows,
                 torch.full((batch_size, unmatchcols.shape[1] - unmatchrows.shape[1]), -float('inf'), device=s.device)),
-            dim=1)
-            new_unmatchrows = torch.where(transposed_batch.view(batch_size, 1), unmatchcols, unmatchrows_pad)[:, :unmatchrows.shape[1]]
+                dim=1)
+            new_unmatchrows = torch.where(transposed_batch.view(batch_size, 1), unmatchcols, unmatchrows_pad)[:,
+                              :unmatchrows.shape[1]]
             new_unmatchcols = torch.where(transposed_batch.view(batch_size, 1), unmatchrows_pad, unmatchcols)
             unmatchrows = new_unmatchrows
             unmatchcols = new_unmatchcols
@@ -105,15 +110,19 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
         nrows = ncols.clone()
-        log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)), dim=1)
+        log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)),
+                          dim=1)
         if unmatchrows is not None:
-            unmatchrows = torch.cat((unmatchrows, torch.full((dummy_shape[0], dummy_shape[1]), -float('inf'), device=log_s.device, dtype=log_s.dtype)), dim=1)
+            unmatchrows = torch.cat((unmatchrows,
+                                     torch.full((dummy_shape[0], dummy_shape[1]), -float('inf'), device=log_s.device,
+                                                dtype=log_s.dtype)), dim=1)
         for b in range(batch_size):
             log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
 
     # assign the unmatch weights
     if unmatchrows is not None and unmatchcols is not None:
-        new_log_s = torch.full((log_s.shape[0], log_s.shape[1]+1, log_s.shape[2]+1), -float('inf'), device=log_s.device, dtype=log_s.dtype)
+        new_log_s = torch.full((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1), -float('inf'),
+                               device=log_s.device, dtype=log_s.dtype)
         new_log_s[:, :-1, :-1] = log_s
         log_s = new_log_s
         for b in range(batch_size):
@@ -145,7 +154,8 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore
 
         ret_log_s = log_s
     else:
-        ret_log_s = torch.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), device=log_s.device, dtype=log_s.dtype)
+        ret_log_s = torch.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), device=log_s.device,
+                               dtype=log_s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
@@ -182,7 +192,8 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore
         s_t = ret_log_s.transpose(1, 2)
         s_t = torch.cat((
             s_t[:, :ret_log_s.shape[1], :],
-            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf'), device=log_s.device)), dim=2)
+            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2] - ret_log_s.shape[1]), -float('inf'),
+                       device=log_s.device)), dim=2)
         ret_log_s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, ret_log_s)
 
     if transposed:
@@ -190,15 +201,54 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor=None, ncols: mindspore
 
     return torch.exp(ret_log_s)
 
+
 #############################################
 #              Utils Functions              #
 #############################################
+
+def build_batch(input, return_ori_dim=False):
+    """
+    mindspore implementation of building a batched tensor
+    """
+    assert type(input[0]) == mindspore.Tensor
+    # device = input[0].device
+    it = iter(input)
+    t = next(it)
+    max_shape = list(t.shape)
+    ori_shape = [[_] for _ in max_shape]
+    while True:
+        try:
+            t = next(it)
+            for i in range(len(max_shape)):
+                max_shape[i] = int(max(max_shape[i], t.shape[i]))
+                ori_shape[i].append(t.shape[i])
+        except StopIteration:
+            break
+    max_shape = np.array(max_shape)
+
+    padded_ts = []
+    for t in input:
+        pad_pattern = np.zeros(2 * len(max_shape), dtype=np.int64)
+        pad_pattern[::-2] = max_shape - np.array(t.shape)
+        pad_pattern = tuple(pad_pattern.tolist())
+        pad_pattern = tuple(list((pad_pattern[2 * i], pad_pattern[2 * i + 1]) for i in range(int(len(pad_pattern) / 2))))
+        # print(type(pad_pattern))
+        mindspore_pad = nn.Pad(pad_pattern, mode="CONSTANT")
+        padded_ts.append(mindspore_pad(t))
+
+    if return_ori_dim:
+        return mindspore.ops.stack(padded_ts, axis=0), tuple(
+            [mindspore.Tensor(_, dtype=mindspore.int64) for _ in ori_shape])
+    else:
+        return mindspore.ops.stack(padded_ts, axis=0)
+
 
 def to_numpy(input):
     """
     mindspore function to_numpy
     """
-    return input.detach().numpy()
+    return stop_gradient(input).asnumpy()
+
 
 def from_numpy(input, device=None):
     """
@@ -210,11 +260,22 @@ def from_numpy(input, device=None):
     # else:
     #     return torch.from_numpy(input).to(device)
 
+
+def _check_data_type(input: mindspore.Tensor, var_name=None):
+    """
+    mindspore implementation of _check_data_type
+    """
+    if type(input) is not mindspore.Tensor:
+        raise ValueError(f'Expected Pytorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}. Perhaps the wrong backend?')
+
+
 def _check_shape(input, dim_num):
     """
     mindspore implementation of _check_shape
     """
     return len(input.shape) == dim_num
+
 
 def _get_shape(input):
     """
@@ -222,14 +283,30 @@ def _get_shape(input):
     """
     return input.shape
 
+
+def _squeeze(input, dim):
+    """
+    mindspore implementation of _squeeze
+    """
+    return mindspore.ops.squeeze(input, axis=dim)
+
+
+def _unsqueeze(input, dim):
+    """
+    mindspore implementation of _unsqueeze
+    """
+    return mindspore.ops.expand_dims(input, axis=dim)
+
+
 def _transpose(input, dim1, dim2):
     """
     mindspore implementaiton of _transpose
     """
     return input.swapaxes(dim1, dim2)
 
+
 def _mm(input1, input2):
     """
     mindspore implementation of _mm
     """
-    return mindspore.ops.MatMul(input1, input2)
+    return mindspore.ops.matmul(input1, input2)
