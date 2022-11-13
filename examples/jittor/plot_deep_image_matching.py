@@ -63,8 +63,8 @@ kpts2[0] = kpts2[0] * obj_resize[0] / img2.size[0]
 kpts2[1] = kpts2[1] * obj_resize[1] / img2.size[1]
 img1 = img1.resize(obj_resize, resample=Image.BILINEAR)
 img2 = img2.resize(obj_resize, resample=Image.BILINEAR)
-torch_img1 = jt.Var(np.array(img1, dtype=np.float32) / 256).permute(2, 0, 1).unsqueeze(0) # shape: BxCxHxW
-torch_img2 = jt.Var(np.array(img2, dtype=np.float32) / 256).permute(2, 0, 1).unsqueeze(0) # shape: BxCxHxW
+jittor_img1 = jt.Var(np.array(img1, dtype=np.float32) / 256).permute(2, 0, 1).unsqueeze(0) # shape: BxCxHxW
+jittor_img2 = jt.Var(np.array(img2, dtype=np.float32) / 256).permute(2, 0, 1).unsqueeze(0) # shape: BxCxHxW
 
 ##############################################################################
 # Visualize the images and keypoints
@@ -154,8 +154,8 @@ cnn = CNNNet(vgg16_cnn)
 path = pygm.utils.download('vgg16_pca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_MDLVc8YWn6-J0whr341xHVZsg6INf6W')
 cnn.load_state_dict(jt.load(path))
 
-feat1_local, feat1_global = cnn(torch_img1)
-feat2_local, feat2_global = cnn(torch_img2)
+feat1_local, feat1_global = cnn(jittor_img1)
+feat2_local, feat2_global = cnn(jittor_img2)
 
 ##############################################################################
 # Normalize the features
@@ -272,8 +272,8 @@ for i in range(X.shape[0]):
 path = pygm.utils.download('vgg16_ipca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1CG3RaZqS2mP_Yp3T7VuJqQisrm9zcz1p')
 cnn.load_state_dict(jt.load(path))
 
-feat1_local, feat1_global = cnn(torch_img1)
-feat2_local, feat2_global = cnn(torch_img2)
+feat1_local, feat1_global = cnn(jittor_img1)
+feat2_local, feat2_global = cnn(jittor_img2)
 
 ##############################################################################
 # Normalize the features
@@ -344,8 +344,8 @@ for i in range(X.shape[0]):
 path = pygm.utils.download('vgg16_cie_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1DVRwk_ggMKWBC_0KhcMmfzl1_j_f2u2q')
 cnn.load_state_dict(jt.load(path))
 
-feat1_local, feat1_global = cnn(torch_img1)
-feat2_local, feat2_global = cnn(torch_img2)
+feat1_local, feat1_global = cnn(jittor_img1)
+feat2_local, feat2_global = cnn(jittor_img2)
 
 ##############################################################################
 # Normalize the features
@@ -470,7 +470,7 @@ optim = jt.optim.Adam(model.parameters(), lr=1e-3)
 # Forward pass
 # ^^^^^^^^^^^^^
 #
-X = model(torch_img1, torch_img2, kpts1, kpts2, A1, A2)
+X = model(jittor_img1, jittor_img2, kpts1, kpts2, A1, A2)
 
 ##############################################################################
 # Compute loss
