@@ -153,27 +153,25 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         ret_log_s = log_s
     else:
         ret_log_s = jt.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
-        with jt.no_grad():
-            for b in range(batch_size):
-                r,c = nrows[b],ncols[b]
-                if not isinstance(nrows[b],int):
-                    r = int(nrows[b].item())
-                if not isinstance(ncols[b],int):
-                    c = int(ncols[b].item())
-                log_s_b = log_s[b, 0:r, 0:c]
-                row_mask_b = row_mask[b, 0:r, :]
-                col_mask_b = col_mask[b, :, 0:c]
-                for i in range(max_iter):
-            
-                    if i % 2 == 0:
-                        m = log_s_b.max(1, keepdims=True)
-                        log_sum = jt.nn.logsumexp(log_s_b - m, 1, keepdim=True) + m
-                        log_s_b = log_s_b - jt.where(row_mask_b, log_sum, jt.zeros_like(log_sum))
-                    else:
-                        m = log_s_b.max(0, keepdims=True)
-                        log_sum = jt.nn.logsumexp(log_s_b - m, 0, keepdim=True) + m
-                        log_s_b = log_s_b - jt.where(col_mask_b, log_sum, jt.zeros_like(log_sum))
-                ret_log_s[b, 0:r, 0:c] = log_s_b
+          for b in range(batch_size):
+              r,c = nrows[b],ncols[b]
+              if not isinstance(nrows[b],int):
+                  r = int(nrows[b].item())
+              if not isinstance(ncols[b],int):
+                  c = int(ncols[b].item())
+              log_s_b = log_s[b, 0:r, 0:c]
+              row_mask_b = row_mask[b, 0:r, :]
+              col_mask_b = col_mask[b, :, 0:c]
+              for i in range(max_iter):
+                  if i % 2 == 0:
+                      m = log_s_b.max(1, keepdims=True)
+                      log_sum = jt.nn.logsumexp(log_s_b - m, 1, keepdim=True) + m
+                      log_s_b = log_s_b - jt.where(row_mask_b, log_sum, jt.zeros_like(log_sum))
+                  else:
+                      m = log_s_b.max(0, keepdims=True)
+                      log_sum = jt.nn.logsumexp(log_s_b - m, 0, keepdim=True) + m
+                      log_s_b = log_s_b - jt.where(col_mask_b, log_sum, jt.zeros_like(log_sum))
+              ret_log_s[b, 0:r, 0:c] = log_s_b
 
     if unmatchrows is not None and unmatchcols is not None:
         ncols -= 1
@@ -220,22 +218,23 @@ def rrwm(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
     dmax = d.max(dim=1, keepdims=True) 
     K = K / (dmax + d.min() * 1e-5)
     v = v0
-    for i in range(max_iter):
-        # random walk
-        v = jt.bmm(K, v)
-        last_v = v
-        n = jt.norm(v, p=1, dim=1, keepdim=True)
-        v = v / n
+    with jt.no_grad():
+        for i in range(max_iter):
+            # random walk
+            v = jt.bmm(K, v)
+            last_v = v
+            n = jt.norm(v, p=1, dim=1, keepdim=True)
+            v = v / n
 
-        # reweighted jump
-        s = v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
-        s = beta * s / s.max(dim=1, keepdims=True).max(dim=2, keepdims=True)
-        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
-            (1 - alpha) * v
-        n = jt.norm(v, p=1, dim=1, keepdim=True)
-        v = jt.matmul(v, 1 / n)
-        if (v - last_v).sum().sqrt() < 1e-5:
-            break
+            # reweighted jump
+            s = v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
+            s = beta * s / s.max(dim=1, keepdims=True).max(dim=2, keepdims=True)
+            v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
+                (1 - alpha) * v
+            n = jt.norm(v, p=1, dim=1, keepdim=True)
+            v = jt.matmul(v, 1 / n)
+            if (v - last_v).sum().sqrt() < 1e-5:
+                break
 
     return v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
 
