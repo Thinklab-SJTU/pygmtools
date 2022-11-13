@@ -18,7 +18,6 @@ def hungarian(s: Var, n1: Var=None, n2: Var=None,
     """
     Jittor implementation of Hungarian algorithm
     """
-    # device = s.device
     batch_num = s.shape[0]
 
     perm_mat = s.detach().numpy() * -1
@@ -72,7 +71,7 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         ncols = jt.Var([s.shape[2] for _ in range(batch_size)])
 
     # ensure that in each dimension we have nrow < ncol
-    transposed_batch = nrows > ncols
+    transposed_batch = jt.Var(nrows > ncols)
     if jt.any(transposed_batch):
         s_t = s.transpose(1, 2)
         s_t = jt.concat((
@@ -154,26 +153,27 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         ret_log_s = log_s
     else:
         ret_log_s = jt.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
-        
-        for b in range(batch_size):
-            r,c = nrows[b],ncols[b]
-            if not isinstance(nrows[b],int):
-                r = int(nrows[b].item())
-            if not isinstance(ncols[b],int):
-                c = int(ncols[b].item())
-            log_s_b = log_s[b, 0:r, 0:c]
-            row_mask_b = row_mask[b, 0:r, :]
-            col_mask_b = col_mask[b, :, 0:c]
-            for i in range(max_iter):
-                if i % 2 == 0:
-                    m = log_s_b.max(1, keepdims=True)
-                    log_sum = jt.nn.logsumexp(log_s_b - m, 1, keepdim=True) + m
-                    log_s_b = log_s_b - jt.where(row_mask_b, log_sum, jt.zeros_like(log_sum))
-                else:
-                    m = log_s_b.max(0, keepdims=True)
-                    log_sum = jt.nn.logsumexp(log_s_b - m, 0, keepdim=True) + m
-                    log_s_b = log_s_b - jt.where(col_mask_b, log_sum, jt.zeros_like(log_sum))
-            ret_log_s[b, 0:r, 0:c] = log_s_b
+        with jt.no_grad():
+            for b in range(batch_size):
+                r,c = nrows[b],ncols[b]
+                if not isinstance(nrows[b],int):
+                    r = int(nrows[b].item())
+                if not isinstance(ncols[b],int):
+                    c = int(ncols[b].item())
+                log_s_b = log_s[b, 0:r, 0:c]
+                row_mask_b = row_mask[b, 0:r, :]
+                col_mask_b = col_mask[b, :, 0:c]
+                for i in range(max_iter):
+            
+                    if i % 2 == 0:
+                        m = log_s_b.max(1, keepdims=True)
+                        log_sum = jt.nn.logsumexp(log_s_b - m, 1, keepdim=True) + m
+                        log_s_b = log_s_b - jt.where(row_mask_b, log_sum, jt.zeros_like(log_sum))
+                    else:
+                        m = log_s_b.max(0, keepdims=True)
+                        log_sum = jt.nn.logsumexp(log_s_b - m, 0, keepdim=True) + m
+                        log_s_b = log_s_b - jt.where(col_mask_b, log_sum, jt.zeros_like(log_sum))
+                ret_log_s[b, 0:r, 0:c] = log_s_b
 
     if unmatchrows is not None and unmatchcols is not None:
         ncols -= 1
@@ -217,7 +217,7 @@ def rrwm(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     # rescale the values in K
     d = K.sum(dim=2, keepdims=True)
-    dmax = d.max(dim=1, keepdims=True) #.values
+    dmax = d.max(dim=1, keepdims=True) 
     K = K / (dmax + d.min() * 1e-5)
     v = v0
     for i in range(max_iter):
@@ -250,8 +250,6 @@ def sm(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
         v = jt.bmm(K, v)
         n = jt.norm(v, p=2, dim=1)
         v = jt.matmul(v, (1 / n).reshape(batch_num, 1, 1))
-        # if jt.norm(v - vlast) < 1e-5: # Wrong with norm: lack of Frobenius norm 
-        #     break
         if (v - vlast).sum().sqrt() < 1e-5:
             break        
         vlast = v
@@ -275,7 +273,7 @@ def ipfp(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
         cost = jt.bmm(K, v).reshape((batch_num, int(n2max), int(n1max))).transpose(1, 2)
         binary_sol = hungarian(cost, n1, n2)
         binary_v = binary_sol.transpose(1, 2).view(batch_num, -1, 1)
-        alpha = comp_obj_score(v, K, binary_v - v)  # + jt.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
         t0 = alpha / beta
         cond = jt.logical_or(beta <= 0, t0 >= 1)
@@ -291,6 +289,540 @@ def ipfp(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
 
     pred_x = binary_sol
     return pred_x
+
+
+############################################
+#      Multi-Graph Matching Solvers        #
+############################################
+
+
+def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
+    r"""
+    Jittor implementation of CAO solver (mode="c")
+
+    :param K: affinity matrix, (m, m, n*n, n*n)
+    :param X: initial matching, (m, m, n, n)
+    :param num_graph: number of graphs, int
+    :param num_node: number of nodes, int
+    :return: X, (m, m, n, n)
+    """
+    m, n = num_graph, num_node
+    param_lambda = lambda_init
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='jittor').unsqueeze(-1).unsqueeze(-1)
+
+    for iter in range(max_iter):
+        if iter >= iter_boost:
+            param_lambda = np.min([param_lambda * lambda_step, lambda_max])
+        # pair_con = get_batch_pc_opt(X)
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
+        pair_aff = pair_aff - jt.init.eye(m) * pair_aff
+        norm = jt.max(pair_aff)
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                aff_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
+                con_ori = _get_single_pc_opt(X, i, j)
+                # con_ori = jt.sqrt(pair_con[i, j])
+                if iter < iter_boost:
+                    score_ori = aff_ori
+                else:
+                    score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+                X_upt = X[i, j]
+                for k in range(m):
+                    X_combo = jt.matmul(X[i, k], X[k, j])
+                    aff_combo = _comp_aff_score(X_combo, K[i, j]) / norm
+                    con_combo = _get_single_pc_opt(X, i, j, X_combo)
+                    # con_combo = jt.sqrt(pair_con[i, k] * pair_con[k, j])
+                    if iter < iter_boost:
+                        score_combo = aff_combo
+                    else:
+                        score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+                    if score_combo > score_ori:
+                        X_upt = X_combo
+                X[i, j] = X_upt
+                X[j, i] = X_upt.transpose(0, 1)
+    return X
+
+
+def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
+    r"""
+    Jittor implementation of CAO solver in fast config (mode="pc")
+
+    :param K: affinity matrix, (m, m, n*n, n*n)
+    :param X: initial matching, (m, m, n, n)
+    :param num_graph: number of graphs, int
+    :param num_node: number of nodes, int
+    :return: X, (m, m, n, n)
+    """
+    m, n = num_graph, num_node
+    param_lambda = lambda_init
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='jittor').unsqueeze(-1).unsqueeze(-1)
+
+    mask1 = jt.arange(m).reshape(m, 1).repeat(1, m)
+    mask2 = jt.arange(m).reshape(1, m).repeat(m, 1)
+    mask = (mask1 < mask2).float()
+    X_mask = mask.reshape(m, m, 1, 1)
+
+    for iter in range(max_iter):
+        if iter >= iter_boost:
+            param_lambda = np.min([param_lambda * lambda_step, lambda_max])
+
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
+        pair_aff = pair_aff - jt.init.eye(m) * pair_aff
+        norm = jt.max(pair_aff)
+
+        X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i,j,k] = X[i,k]
+        X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i,j,k] = X[k,j]
+        X_combo = jt.bmm(X1, X2).reshape(m, m, m, n, n) # X_combo[i,j,k] = X[i, k] * X[k, j]
+
+        aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        pair_con = _get_batch_pc_opt(X)
+        con_ori = jt.sqrt(pair_con)
+
+        K_repeat = K.reshape(m, m, 1, n * n, n * n).repeat(1, 1, m, 1, 1).reshape(-1, n * n, n * n)
+        aff_combo = (_comp_aff_score(X_combo.reshape(-1, n, n), K_repeat) / norm).reshape(m, m, m)
+        con1 = pair_con.reshape(m, 1, m).repeat(1, m, 1)  # con1[i,j,k] = pair_con[i,k]
+        con2 = pair_con.reshape(1, m, m).repeat(m, 1, 1).transpose(1, 2)  # con2[i,j,k] = pair_con[j,k]
+        con_combo = jt.sqrt(con1 * con2)
+
+        if iter < iter_boost:
+            score_ori = aff_ori
+            score_combo = aff_combo
+        else:
+            score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+            score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+        score_combo_max = jt.max(score_combo, dim=-1)
+        idx = []
+        for i in range(score_combo.shape[0]):
+            idx.append([])
+            for j in range(score_combo.shape[1]):
+                ix = jt.where(score_combo[i][j]==score_combo_max[i][j])[0]
+                idx[i].append(ix[0].item() if ix.shape[0]>1 else ix.item())
+        idx = jt.Var(idx)
+
+        assert jt.all(score_combo_max >= score_ori), jt.min(score_combo_max - score_ori)
+        X_upt = X_combo[mask1, mask2, idx, :, :]
+        X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (1 - X_mask - X_mask.transpose(0, 1))
+        assert jt.all(X.transpose(0, 1).transpose(2, 3) == X)
+    return X
+
+
+def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
+    m, n = num_graph, num_node
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='jittor').unsqueeze(-1).unsqueeze(-1)
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
+        pair_aff = pair_aff - jt.init.eye(m) * pair_aff
+        norm = jt.max(pair_aff)
+
+        # print("iter:{} aff:{:.4f} con:{:.4f}".format(
+        #     k, jt.mean(pair_aff).item(), jt.mean(get_batch_pc_opt(X)).item()
+        # ))
+
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                score_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
+                X_combo = jt.matmul(X[i, k], X[k, j])
+                score_combo = _comp_aff_score(X_combo, K[i, j]) / norm
+
+                if score_combo > score_ori:
+                    X[i, j] = X_combo
+                    X[j, i] = X_combo.transpose(0, 1)
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
+        pair_aff = pair_aff - jt.init.eye(m) * pair_aff
+        norm = jt.max(pair_aff)
+
+        pair_con = _get_batch_pc_opt(X)
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                aff_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
+                con_ori = _get_single_pc_opt(X, i, j)
+                # con_ori = jt.sqrt(pair_con[i, j])
+                score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+
+                X_combo = jt.matmul(X[i, k], X[k, j])
+                aff_combo = _comp_aff_score(X_combo, K[i, j]) / norm
+                con_combo = _get_single_pc_opt(X, i, j, X_combo)
+                # con_combo = jt.sqrt(pair_con[i, k] * pair_con[k, j])
+                score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+                if score_combo > score_ori:
+                    X[i, j] = X_combo
+                    X[j, i] = X_combo.transpose(0, 1)
+    return X
+
+
+def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
+    m, n = num_graph, num_node
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='jittor').unsqueeze(-1).unsqueeze(-1)
+
+    mask1 = jt.arange(m).reshape(m, 1).repeat(1, m)
+    mask2 = jt.arange(m).reshape(1, m).repeat(m, 1)
+    mask = (mask1 < mask2).float()
+    X_mask = mask.reshape(m, m, 1, 1)
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
+        pair_aff = pair_aff - jt.init.eye(m) * pair_aff
+        norm = jt.max(pair_aff)
+
+        # print("iter:{} aff:{:.4f} con:{:.4f}".format(
+        #     k, jt.mean(pair_aff).item(), jt.mean(get_batch_pc_opt(X)).item()
+        # ))
+
+        X1 = X[:, k].reshape(m, 1, n, n).repeat(1, m, 1, 1).reshape(-1, n, n)  # X[i, j] = X[i, k]
+        X2 = X[k, :].reshape(1, m, n, n).repeat(m, 1, 1, 1).reshape(-1, n, n)  # X[i, j] = X[j, k]
+        X_combo = jt.bmm(X1, X2).reshape(m, m, n, n)
+
+        aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        aff_combo = (_comp_aff_score(X_combo.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+
+        score_ori = aff_ori
+        score_combo = aff_combo
+
+        upt = (score_ori < score_combo).float()
+        upt = (upt * mask).reshape(m, m, 1, 1)
+        X = X * (1.0 - upt) + X_combo * upt
+        X = X * X_mask + X.transpose(0, 1).transpose(2, 3) * (1 - X_mask)
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)).reshape(m, m)
+        pair_aff = pair_aff - jt.init.eye(m) * pair_aff
+        norm = jt.max(pair_aff)
+
+        pair_con = _get_batch_pc_opt(X)
+
+        X1 = X[:, k].reshape(m, 1, n, n).repeat(1, m, 1, 1).reshape(-1, n, n)  # X[i, j] = X[i, k]
+        X2 = X[k, :].reshape(1, m, n, n).repeat(m, 1, 1, 1).reshape(-1, n, n)  # X[i, j] = X[j, k]
+        X_combo = jt.bmm(X1, X2).reshape(m, m, n, n)
+
+        aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+        aff_combo = (_comp_aff_score(X_combo.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
+
+        con_ori = jt.sqrt(pair_con)
+        con1 = pair_con[:, k].reshape(m, 1).repeat(1, m)
+        con2 = pair_con[k, :].reshape(1, m).repeat(m, 1)
+        con_combo = jt.sqrt(con1 * con2)
+
+        score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+        score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+        upt = (score_ori < score_combo).float()
+        upt = (upt * mask).reshape(m, m, 1, 1)
+        X = X * (1.0 - upt) + X_combo * upt
+        X = X * X_mask + X.transpose(0, 1).transpose(2, 3) * (1 - X_mask)
+    return X
+
+
+def _get_single_pc_opt(X, i, j, Xij=None):
+    """
+    CAO/Floyd helper function (compute consistency)
+    :param X: (m, m, n, n) all the matching results
+    :param i: index
+    :param j: index
+    :return: the consistency of X_ij
+    """
+    m, _, n, _ = X.size()
+    if Xij is None:
+        Xij = X[i, j]
+    X1 = X[i, :].reshape(-1, n, n)
+    X2 = X[:, j].reshape(-1, n, n)
+    X_combo = jt.bmm(X1, X2)
+    pair_con = 1 - jt.sum(jt.abs(Xij - X_combo)) / (2 * n * m)
+    return pair_con
+
+
+def _get_batch_pc_opt(X):
+    """
+    CAO/Floyd-fast helper function (compute consistency in batch)
+    :param X: (m, m, n, n) all the matching results
+    :return: (m, m) the consistency of X
+    """
+    m, _, n, _ = X.size()
+    X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i, j, k] = X[i, k]
+    X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i, j, k] = X[k, j]
+    X_combo = jt.bmm(X1, X2).reshape(m, m, m, n, n)
+    X_ori = X.reshape(m, m, 1, n, n).repeat(1, 1, m, 1, 1)
+    pair_con = 1 - jt.sum(jt.abs(X_combo - X_ori), dims=(2, 3, 4)) / (2 * n * m)
+    return pair_con
+
+
+def gamgm(
+        A, W, ns, n_univ, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh, bb_smooth,
+        verbose,
+        cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
+):
+    """
+    Jittor implementation of Graduated Assignment for Multi-Graph Matching (with compatibility for 2GM and clustering)
+    """
+
+    num_graphs = A.shape[0]
+    if ns is None:
+        ns = jt.full((num_graphs,), A.shape[1], dtype=jt.int)
+    n_indices = jt.cumsum(ns, dim=0)
+
+    # build a super adjacency matrix A
+    supA = jt.zeros((n_indices[-1].item(), n_indices[-1].item()))
+    for i in range(num_graphs):
+        start_n = (n_indices[i] - ns[i]).item()
+        end_n = n_indices[i].item()
+        supA[start_n:end_n, start_n:end_n] = A[i, :ns[i].item(), :ns[i].item()]
+
+    # handle the type of n_univ
+    if type(n_univ) is jt.Var:
+        n_univ = n_univ.item()
+
+    # randomly init U
+    if U0 is None:
+        U0 = jt.full((n_indices[-1].item(), n_univ), 1 / n_univ)
+        U0 += jt.randn_like(U0) / 1000
+
+    # init cluster_M if not given
+    if cluster_M is None:
+        cluster_M = jt.ones((num_graphs, num_graphs))
+
+    # reshape W into supW
+    supW = jt.zeros((n_indices[-1].item(), n_indices[-1].item()))
+    for i, j in itertools.product(range(num_graphs), repeat=2):
+        start_x = (n_indices[i] - ns[i]).item()
+        end_x = n_indices[i].item()
+        start_y = (n_indices[j] - ns[j]).item()
+        end_y = n_indices[j].item()
+        supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i].item(), :ns[j].item()]
+
+    U = GAMGMTorchFunc.apply(
+        bb_smooth,
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh,
+        verbose,
+        cluster_M, projector, hung_iter
+    )
+
+    # build MultiMatchingResult
+    result = pygmtools.utils.MultiMatchingResult(True, 'jittor')
+
+    for i in range(num_graphs):
+        start_n = n_indices[i] - ns[i]
+        end_n = n_indices[i]
+        result[i] = U[start_n.item():end_n.item()]
+
+    return result
+
+
+class GAMGMTorchFunc(jt.Function):
+    """
+    Jittor wrapper to support forward and backward pass (by black-box differentiation)
+    """
+
+    def execute(self, bb_smooth, supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args):
+        # save parameters
+        self.bb_smooth = bb_smooth
+        self.named_args = supA, supW, ns, n_indices, n_univ, num_graphs, U0
+        self.list_args = args
+
+        # real solver function
+        U = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
+
+        # save result
+        self.U = U
+        return U
+
+    def backward(self, dU):
+        epsilon = 1e-8
+        bb_smooth = self.bb_smooth
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0 = self.named_args
+        args = self.list_args
+        U = self.U
+
+        for i, j in itertools.product(range(num_graphs), repeat=2):
+            start_x = n_indices[i] - ns[i]
+            end_x = n_indices[i]
+            start_y = n_indices[j] - ns[j]
+            end_y = n_indices[j]
+            supW[start_x:end_x, start_y:end_y] += bb_smooth * jt.matmul(dU[start_x:end_x], dU[start_y:end_y].transpose(0, 1))
+
+        U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
+
+        grad_supW = jt.zeros((n_indices[-1], n_indices[-1]))
+        for i, j in itertools.product(range(num_graphs), repeat=2):
+            start_x = n_indices[i] - ns[i]
+            end_x = n_indices[i]
+            start_y = n_indices[j] - ns[j]
+            end_y = n_indices[j]
+            X = jt.matmul(U[start_x:end_x], U[start_y:end_y].transpose(0, 1))
+            X_prime = jt.matmul(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose(0, 1))
+            grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
+
+        return_list = [None, None, grad_supW] + [None] * (len(self.needs_input_grad) - 3)
+        return tuple(return_list)
+
+
+def gamgm_real(
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh,
+        verbose,
+        cluster_M, projector, hung_iter # these arguments are reserved for clustering
+        ):
+    """
+    The real forward function of GAMGM
+    """
+    U = U0
+    sinkhorn_tau = init_tau
+    iter_flag = True
+
+    while iter_flag:
+        with jt.no_grad():
+            for i in range(max_iter):
+                # compact matrix form update of V
+                UUt = jt.matmul(U, U.t())
+                lastUUt = UUt
+                # jittor does not accept array as the second parameter of repeat_interleave and jittor Var is based on numpy array
+                import numpy as np
+                cluster_weight = jt.Var(np.repeat(cluster_M, ns.long().data, axis=0))
+                cluster_weight = jt.Var(np.repeat(cluster_weight, ns.long().data, axis=1))
+                quad, chains = supA, [UUt * cluster_weight, supA, U]
+                for matrix in chains:
+                    quad = jt.matmul(quad, matrix)
+                quad *= (quad_weight * 2)
+                # quad = jt.chain_matmul(supA, UUt * cluster_weight, supA, U) * quad_weight * 2
+                unary = jt.matmul(supW * cluster_weight, U)
+                if verbose:
+                    if projector == 'sinkhorn':
+                        print_str = f'tau={sinkhorn_tau:.3e}'
+                    else:
+                        print_str = 'hungarian'
+                    print(print_str + f' #iter={i}/{max_iter} '
+                        f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
+                V = (quad + unary) / num_graphs
+
+                U_list = []
+                if projector == 'hungarian':
+                    n_start = 0
+                    for n_end in n_indices:
+                        if isinstance(n_start, Var):
+                            n_start = n_start.item()
+                        U_list.append(pygmtools.hungarian(V[n_start:n_end.item(), :n_univ], backend='jittor'))
+                        n_start = n_end
+                elif projector == 'sinkhorn':
+                    if jt.all(ns == ns[0]):
+                        if ns[0] <= n_univ:
+                            U_list.append(
+                                sinkhorn(
+                                    V.reshape(num_graphs, -1, n_univ),
+                                    max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True
+                                ).reshape(-1, n_univ))
+                        else:
+                            U_list.append(
+                                sinkhorn(
+                                    V.reshape(num_graphs, -1, n_univ).transpose(1, 2),
+                                    max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True
+                                ).transpose(1, 2).reshape(-1, n_univ))
+                    else:
+                        V_list = []
+                        n1 = []
+                        n_start = 0
+                        for n_end in n_indices:
+                            if isinstance(n_start, Var):
+                                n_start = n_start.item()
+                            V_list.append(V[n_start:n_end.item(), :n_univ])
+                            n1.append(n_end.item() - n_start)
+                            n_start = n_end
+                        V_batch = build_batch(V_list)
+                        n1 = jt.Var(n1)
+                        U = sinkhorn(V_batch, n1,
+                                    max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
+                        n_start = 0
+                        for idx, n_end in enumerate(n_indices):
+                            U_list.append(U[idx, :n_end.item() - n_start, :])
+                            n_start = n_end.item()
+                else:
+                    raise NameError('Unknown projecter name: {}'.format(projector))
+
+                U = jt.concat(U_list, dim=0)
+                if num_graphs == 2:
+                    U[:ns[0], :] = jt.init.eye(ns[0], n_univ)
+
+                # calculate gap to discrete
+                if projector == 'sinkhorn' and verbose:
+                    U_list_hung = []
+                    n_start = 0
+                    for n_end in n_indices:
+                        U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='jittor'))
+                        n_start = n_end
+                    U_hung = jt.concat(U_list_hung, dim=0)
+                    diff = jt.norm(jt.matmul(U, U.t()) - lastUUt)
+                    print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
+                        f'gap to discrete: {jt.mean(jt.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+
+                if projector == 'hungarian' and outlier_thresh > 0:
+                    U_hung = U
+                    UUt = jt.matmul(U_hung, U_hung.t())
+                    cluster_weight = jt.Var(np.repeat(cluster_M, ns.long().data, axis=0))
+                    cluster_weight = jt.Var(np.repeat(cluster_weight, ns.long().data, axis=1))
+                    quad, chains = supA, [UUt * cluster_weight, supA, U_hung]
+                    for matrix in chains:
+                        quad = jt.matmul(quad, matrix)
+                    quad *= (quad_weight * 2)
+                    unary = jt.matmul(supW * cluster_weight, U_hung)
+                    max_vals = (unary + quad).max(dim=1)
+                    U = U * (unary + quad > outlier_thresh)
+                    if verbose:
+                        print(f'hungarian #iter={i}/{max_iter} '
+                            f'unary+quad score thresh={outlier_thresh:.3f}, #>thresh={jt.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]}'
+                            f' min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, median:{max_vals.median():.4f}, max:{max_vals.max():.4f}')
+
+                if (jt.matmul(U, U.t()) - lastUUt).pow(2).sum().sqrt() < converge_thresh:
+                    break
+
+        if verbose: print('-' * 20)
+
+        if i == max_iter - 1: # not converged
+            if hung_iter:
+                pass
+            else:
+                U_list = [pygmtools.hungarian(_, backend='jittor') for _ in U_list]
+                U = jt.concat(U_list, dim=0)
+                break
+
+        # projection control
+        if projector == 'hungarian':
+            break
+        elif sinkhorn_tau > min_tau:
+            sinkhorn_tau *= sk_gamma
+        else:
+            if hung_iter:
+                projector = 'hungarian'
+            else:
+                U_list = [pygmtools.hungarian(_, backend='jittor') for _ in U_list]
+                U = jt.concat(U_list, dim=0)
+                break
+
+    return U
+
 
 ############################################
 #          Neural Network Solvers          #
@@ -399,7 +931,7 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
             if pretrain in pca_gm_pretrain_path:
                 url, md5 = pca_gm_pretrain_path[pretrain]
                 filename = pygmtools.utils.download(f'pca_gm_{pretrain}_jittor.pt', url, md5)
-                _load_model(network, filename)
+                _load_model(network, filename) 
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
 
@@ -643,7 +1175,7 @@ def build_batch(input, return_ori_dim=False):
     Jittor implementation of building a batched Var
     """
     assert type(input[0]) == jt.Var
-    # device = input[0].device
+
     it = iter(input)
     t = next(it)
     max_shape = list(t.shape)
@@ -697,8 +1229,6 @@ def to_numpy(input):
     """
     Jittor function to_numpy
     """
-    # return input.detach().cpu().numpy()
-    # return input.detach().numpy()
     return input.detach().numpy()
 
 def from_numpy(input, device=None):
@@ -712,28 +1242,26 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
     """
     Jittor implementation of generate_isomorphic_graphs
     """
-    X_gt = jt.zeros(graph_num, node_num, node_num)
+    X_gt = jt.zeros((graph_num, node_num, node_num))
     X_gt[0, jt.arange(0, node_num, dtype=jt.int64), jt.arange(0, node_num, dtype=jt.int64)] = 1
     for i in range(graph_num):
         if i > 0:
             X_gt[i, jt.arange(0, node_num, dtype=jt.int64), jt.randperm(node_num)] = 1
     joint_X = X_gt.reshape(graph_num * node_num, node_num)
-    X_gt = jt.mm(joint_X, joint_X.t())
+    X_gt = jt.matmul(joint_X, joint_X.t())
     X_gt = X_gt.reshape(graph_num, node_num, graph_num, node_num).permute(0, 2, 1, 3)
     A0 = jt.rand(node_num, node_num)
-    for i in range(graph_num):
-        for j in range(node_num):
-            A0.data[i][j][j] = 0
+    A0[jt.arange(node_num), jt.arange(node_num)] = 0
     As = [A0]
     for i in range(graph_num):
         if i > 0:
-            As.append(jt.mm(jt.mm(X_gt[i, 0], A0), X_gt[0, i]))
+            As.append(jt.matmul(jt.matmul(X_gt[i, 0], A0), X_gt[0, i]))
     if node_feat_dim > 0:
         F0 = jt.rand(node_num, node_feat_dim)
         Fs = [F0]
         for i in range(graph_num):
             if i > 0:
-                Fs.append(jt.mm(X_gt[i, 0], F0))
+                Fs.append(jt.matmul(X_gt[i, 0], F0))
         return jt.stack(As, dim=0), X_gt, jt.stack(Fs, dim=0)
     else:
         return jt.stack(As, dim=0), X_gt
@@ -762,7 +1290,7 @@ def permutation_loss(pred_dsmat: Var, gt_perm: Var, n1: Var, n2: Var) -> Var:
         loss += jt.nn.bce_loss(
             pred_dsmat[b, 0:n1[b].item(), 0:n2[b].item()],
             gt_perm[b, 0:n1[b].item(), 0:n2[b].item()]).sum()
-        n_sum += n1[b] #.to(n_sum.dtype)
+        n_sum += n1[b]
 
     return loss / n_sum
 
@@ -779,9 +1307,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = jt.full((batch_num,), n1max, dtype=jt.int, device=K.device)
+        n1 = jt.full((batch_num,), n1max, dtype=jt.int)
     if n2 is None:
-        n2 = jt.full((batch_num,), n2max, dtype=jt.int, device=K.device)
+        n2 = jt.full((batch_num,), n2max, dtype=jt.int)
     if n1max is None:
         n1max = jt.max(n1).item()
     if n2max is None:
@@ -791,7 +1319,7 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # initialize x0 (also v0)
     if x0 is None:
-        x0 = jt.zeros((batch_num, int(n1max), int(n2max)), dtype=K.dtype)#, device=K.device)
+        x0 = jt.zeros((batch_num, int(n1max), int(n2max)), dtype=K.dtype)
         for b in range(batch_num):
             x0[b, 0:int(n1[b].item()), 0:int(n2[b].item())] = jt.Var(1.) / (n1[b] * n2[b])
     v0 = x0.transpose(1, 2).reshape(batch_num, n1n2, 1)
@@ -819,19 +1347,17 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
     Jittor implementation of _aff_mat_from_node_edge_aff
     """
     if edge_aff is not None:
-        # device = edge_aff.device
         dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = jt.Var([math.sqrt(connectivity1.shape[1])] * batch_size)
+            n1 = jt.max(jt.max(connectivity1, dim=-1), dim=-1) + 1
         if n2 is None:
-            n2 = jt.Var([math.sqrt(connectivity2.shape[1])] * batch_size)
+            n2 = jt.max(jt.max(connectivity2, dim=-1), dim=-1) + 1
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
             ne2 = [edge_aff.shape[2]] * batch_size
     else:
-        # device = node_aff.device
         dtype = node_aff.dtype
         batch_size = node_aff.shape[0]
         if n1 is None:
@@ -839,25 +1365,22 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         if n2 is None:
             n2 = [node_aff.shape[2]] * batch_size
 
-    # print(n1.max(),type(n1))
     n1max = int(max(n1).item())
     n2max = int(max(n2).item())
     ks = []
     for b in range(batch_size):
-        k = jt.zeros((n2max, n1max, n2max, n1max), dtype=dtype)#, device=device)
+        k = jt.zeros((n2max, n1max, n2max, n1max), dtype=dtype)
         # edge-wise affinity
         if edge_aff is not None:
             conn1 = connectivity1[b][:int(ne1[b])]
             conn2 = connectivity2[b][:int(ne2[b])]
-            # print(conn1, ne2[b])
+
             edge_indices = jt.concat([conn1.repeat_interleave(int(ne2[b]), dim=0), conn2.repeat(int(ne1[b]), 1)], dim=1) # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
             k[edge_indices] = edge_aff[b, :int(ne1[b]), :int(ne2[b])].reshape(-1)
         k = k.reshape(n2max * n1max, n2max * n1max)
         # node-wise affinity
         if node_aff is not None:
-            # k_diag = jt.diag(k)
-            # k_diag[:] = node_aff[b].transpose(0, 1).reshape(-1)
             k[jt.arange(n2max * n1max), jt.arange(n2max * n1max)] = node_aff[b].transpose(0, 1).reshape(-1)
         ks.append(k)
 
@@ -896,9 +1419,9 @@ def _save_model(model, path):
 
     jt.save(model.state_dict(), path)
 
-def _load_model(model, path, strict=True):
+def _load_model(model, path):
     """
-    Load Jittor model from a given path. strict=True means all keys must be matched
+    Load Jittor model from a given path. Unmatched keys shall be shown in jittor warning.
     """
     module = model
     module.load_state_dict(jt.load(path))
