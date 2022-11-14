@@ -154,8 +154,9 @@ cnn = CNNNet(vgg16_cnn)
 path = pygm.utils.download('vgg16_pca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_MDLVc8YWn6-J0whr341xHVZsg6INf6W')
 cnn.load_state_dict(jt.load(path))
 
-feat1_local, feat1_global = cnn(jittor_img1)
-feat2_local, feat2_global = cnn(jittor_img2)
+with jt.no_grad():
+    feat1_local, feat1_global = cnn(jittor_img1)
+    feat2_local, feat2_global = cnn(jittor_img2)
 
 ##############################################################################
 # Normalize the features
