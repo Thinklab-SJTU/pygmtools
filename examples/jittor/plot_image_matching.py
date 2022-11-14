@@ -16,7 +16,7 @@ The matched images can be further processed for other downstream tasks.
 # sphinx_gallery_thumbnail_number = 5
 
 ##############################################################################
-# examples note::
+# .. note::
 #     The following solvers support QAP formulation, and are included in this example:
 #
 #     * :func:`~pygmtools.classic_solvers.rrwm` (classic solver)
@@ -224,7 +224,7 @@ K = pygm.utils.build_aff_mat(node1, edge1, conn1, node2, edge2, conn2, edge_aff_
 # Visualization of the affinity matrix. For graph matching problem with :math:`N` nodes, the affinity matrix
 # has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
 #
-# examples note::
+# .. note::
 #     The diagonal elements are node affinities, the off-diagonal elements are edge features.
 #
 plt.figure(figsize=(4, 4))
@@ -312,7 +312,7 @@ for i in range(X.shape[0]):
 # ^^^^^^^^^^^
 # See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 #
-# examples note::
+# .. note::
 #     The NGM solvers are pretrained on a different problem setting, so their performance may seem inferior.
 #     To improve their performance, you may change the way of building affinity matrices, or try finetuning
 #     NGM on the new problem.
