@@ -12,7 +12,8 @@ problem. In this example, the given models are trained on MNIST data from differ
 fused model could combine the knowledge from two input models and can reach higher accuracy when testing.
 """
 
-# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
+# Author: Chang Liu <only-changer@sjtu.edu.cn>
+#         Runzhong Wang <runzhong.wang@sjtu.edu.cn>
 #         Wenzheng Pan <pwz1121@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
@@ -123,7 +124,7 @@ print(f'model1 accuracy = {acc1}%, model2 accuracy = {acc2}%')
 # does not have bias so that there are only edge features.
 #
 plt.figure(figsize=(8, 4))
-img = Image.open('examples/data/model_fusion.png')
+img = Image.open('../data/model_fusion.png')
 plt.imshow(img)
 plt.axis('off')
 st_time = time.perf_counter()
