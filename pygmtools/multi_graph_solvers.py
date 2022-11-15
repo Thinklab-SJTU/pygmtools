@@ -150,6 +150,53 @@ def cao(K, x0=None, qap_solver=None,
             >>> (X * X_gt).sum() / X_gt.sum()
             Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
 
+
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10)
+            >>> As_1, As_2 = [], []
+            >>> for i in range(graph_num):
+            ...     for j in range(graph_num):
+            ...         As_1.append(As[i])
+            ...         As_2.append(As[j])
+            >>> As_1 = jt.stack(As_1, dim=0)
+            >>> As_2 = jt.stack(As_2, dim=0)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+            >>> K = K.reshape(graph_num, graph_num, 4*4, 4*4)
+            >>> K.shape
+            [10,10,16,16,]
+
+            # Solve the multi-matching problem
+            >>> X = pygm.cao(K, mode='memory')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
+            # Use the IPFP solver for two-graph matching
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
+            >>> X = pygm.cao(K, qap_solver=ipfp_func, mode='memory')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
+            # Run the faster version of CAO algorithm
+            >>> X = pygm.cao(K, mode='time')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
     .. note::
         If you find this graph matching solver useful in your research, please cite:
 
@@ -290,7 +337,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             tensor(1.)
 
 
-        .. dropdown:: Paddle Example
+    .. dropdown:: Paddle Example
 
         ::
 
@@ -335,6 +382,54 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             >>> X = pygm.mgm_floyd(K, mode='fast')
             >>> (X * X_gt).sum() / X_gt.sum()
             Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
+
+
+    .. dropdown:: Jittor Example
+
+        ::
+            
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'jittor'
+            >>> _ = jt.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10)
+            >>> As_1, As_2 = [], []
+            >>> for i in range(graph_num):
+            ...    for j in range(graph_num):
+            ...        As_1.append(As[i])
+            ...        As_2.append(As[j])
+            >>> As_1 = jt.stack(As_1, dim=0)
+            >>> As_2 = jt.stack(As_2, dim=0)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+            >>> K = K.reshape(graph_num, graph_num, 4*4, 4*4)
+            >>> K.shape
+            [10,10,16,16,]
+
+            # Solve the multi-matching problem
+            >>> X = pygm.mgm_floyd(K, mode='memory')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
+            # Use the IPFP solver for two-graph matching
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
+            >>> X = pygm.mgm_floyd(K, qap_solver=ipfp_func, mode='memory')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
+            # Run the faster version of CAO algorithm
+            >>> X = pygm.mgm_floyd(K, mode='time')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            jt.Var([1.], dtype=float32)
+
 
     .. note::
 
@@ -591,6 +686,58 @@ def gamgm(A, W,
             ...     matched += (X[i,j] * X_gt[i, j, :ns[i], :ns[j]]).sum()
             >>> matched / X_gt.sum()
             Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [0.88424438])
+
+
+    .. dropdown:: Jittor Example
+
+        ::
+
+            >>> import jittor as jt
+            >>> import pygmtools as pygm
+            >>> import itertools
+            >>> import time
+            >>> pygm.BACKEND = 'jittor'
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
+
+            # Compute node-wise similarity by inner-product and Sinkhorn
+            >>> W = jt.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
+            >>> W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
+
+            # Solve the multi-matching problem
+            >>> X = pygm.gamgm(As, W)
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...    matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
+            >>> acc
+            jt.Var([1.], dtype=float32)
+
+            # This function supports graphs with different nodes (also known as partial matching)
+            # In the following we ignore the last node from the last 3 graphs
+            >>> ns = [4, 4, 4, 4, 4, 3, 3, 3, 3, 3]
+            >>> for i in range(graph_num):
+            ...    As[i, ns[i]:, :] = 0
+            ...    As[i, :, ns[i]:] = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...    X_gt[i, j, ns[i]:, :] = 0
+            ...    X_gt[i, j, :, ns[j]:] = 0
+            ...    W[i, j, ns[i]:, :] = 0
+            ...    W[i, j, :, ns[j]:] = 0
+            >>> ns = jt.int32(ns)
+            >>> W = W.detach() # detach tensor if gradient is not needed
+
+            # Partial matching is challenging and the following parameters are carefully tuned
+            >>> X = pygm.gamgm(As, W, ns, n_univ=4, sk_init_tau=.1, sk_min_tau=0.01, param_lambda=0.3)
+
+            # Check the partial matching result
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...    matched += (X[i,j] * X_gt[i, j, :ns[i].item(), :ns[j].item()]).sum()
+            >>> matched / X_gt.sum()
+            jt.Var([1.], dtype=float32)
 
     .. note::
 
