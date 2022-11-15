@@ -63,7 +63,7 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
     if s.shape[2] >= s.shape[1]:
         transposed = False
     else:
-        s = s.transpose(1, 2)
+        s = s.swapaxes(1, 2)
         nrows, ncols = ncols, nrows
         unmatchrows, unmatchcols = unmatchcols, unmatchrows
         transposed = True
@@ -76,29 +76,34 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
     if transposed_batch.any():
-        s_t = s.transpose(1, 2)
-        s_t = torch.cat((
+        s_t = s.swapaxes(1, 2)
+        s_t = mindspore.ops.concat((
             s_t[:, :s.shape[1], :],
-            torch.full((batch_size, s.shape[1], s.shape[2] - s.shape[1]), -float('inf'), device=s.device)), dim=2)
-        s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, s)
+            mindspore.numpy.full((batch_size, s.shape[1], s.shape[2] - s.shape[1]), -float('inf'))),
+            axis=2)
+        s = mindspore.numpy.where(transposed_batch.view(batch_size, 1, 1), s_t, s)
 
-        new_nrows = torch.where(transposed_batch, ncols, nrows)
-        new_ncols = torch.where(transposed_batch, nrows, ncols)
+        new_nrows = mindspore.numpy.where(transposed_batch, ncols, nrows)
+        new_ncols = mindspore.numpy.where(transposed_batch, nrows, ncols)
         nrows = new_nrows
         ncols = new_ncols
 
         if unmatchrows is not None and unmatchcols is not None:
-            unmatchrows_pad = torch.cat((
+            unmatchrows_pad = mindspore.ops.concat((
                 unmatchrows,
-                torch.full((batch_size, unmatchcols.shape[1] - unmatchrows.shape[1]), -float('inf'), device=s.device)),
-                dim=1)
-            new_unmatchrows = torch.where(transposed_batch.view(batch_size, 1), unmatchcols, unmatchrows_pad)[:,
+                mindspore.numpy.full((batch_size, unmatchcols.shape[1] - unmatchrows.shape[1]),
+                                     -float('inf'))),
+                axis=1)
+            new_unmatchrows = mindspore.numpy.where(transposed_batch.view(batch_size, 1), unmatchcols, unmatchrows_pad)[
+                              :,
                               :unmatchrows.shape[1]]
-            new_unmatchcols = torch.where(transposed_batch.view(batch_size, 1), unmatchrows_pad, unmatchcols)
+            new_unmatchcols = mindspore.numpy.where(transposed_batch.view(batch_size, 1), unmatchrows_pad, unmatchcols)
             unmatchrows = new_unmatchrows
             unmatchcols = new_unmatchcols
 
     # operations are performed on log_s
+    # print('tau:')
+    # print(tau)
     log_s = s / tau
     if unmatchrows is not None and unmatchcols is not None:
         unmatchrows = unmatchrows / tau
@@ -109,70 +114,82 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
-        nrows = ncols.clone()
-        log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)),
-                          dim=1)
+        nrows = ncols.copy()
+        log_s = mindspore.ops.concat((log_s, mindspore.numpy.full(dummy_shape, -float('inf'), dtype=log_s.dtype)),
+                                     axis=1)
         if unmatchrows is not None:
-            unmatchrows = torch.cat((unmatchrows,
-                                     torch.full((dummy_shape[0], dummy_shape[1]), -float('inf'), device=log_s.device,
-                                                dtype=log_s.dtype)), dim=1)
+            unmatchrows = mindspore.ops.concat((unmatchrows,
+                                                mindspore.numpy.full((dummy_shape[0], dummy_shape[1]),
+                                                                     -float('inf'), dtype=log_s.dtype
+                                                                     )), axis=1)
         for b in range(batch_size):
-            log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
+            log_s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
 
     # assign the unmatch weights
     if unmatchrows is not None and unmatchcols is not None:
-        new_log_s = torch.full((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1), -float('inf'),
-                               device=log_s.device, dtype=log_s.dtype)
+        new_log_s = mindspore.numpy.full((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1),
+                                         -float('inf'), dtype=log_s.dtype
+                                         )
         new_log_s[:, :-1, :-1] = log_s
         log_s = new_log_s
         for b in range(batch_size):
-            log_s[b, :nrows[b], ncols[b]] = unmatchrows[b, :nrows[b]]
-            log_s[b, nrows[b], :ncols[b]] = unmatchcols[b, :ncols[b]]
-    row_mask = torch.zeros(batch_size, log_s.shape[1], 1, dtype=torch.bool, device=log_s.device)
-    col_mask = torch.zeros(batch_size, 1, log_s.shape[2], dtype=torch.bool, device=log_s.device)
+            r, c = int(nrows[b]), int(ncols[b])
+            log_s[b, 0:r, c] = unmatchrows[b, 0:r]
+            log_s[b, r, 0:c] = unmatchcols[b, 0:c]
+    row_mask = mindspore.numpy.zeros((batch_size, log_s.shape[1], 1), dtype=mindspore.bool_)
+    col_mask = mindspore.numpy.zeros((batch_size, 1, log_s.shape[2]), dtype=mindspore.bool_)
     for b in range(batch_size):
-        row_mask[b, :nrows[b], 0] = 1
-        col_mask[b, 0, :ncols[b]] = 1
+        r, c = int(nrows[b]), int(ncols[b])
+        row_mask[b, 0:r, 0] = 1
+        col_mask[b, 0, 0:c] = 1
     if unmatchrows is not None and unmatchcols is not None:
         ncols += 1
         nrows += 1
 
     if batched_operation:
         for b in range(batch_size):
-            log_s[b, nrows[b]:, :] = -float('inf')
-            log_s[b, :, ncols[b]:] = -float('inf')
+            log_s[b, int(nrows[b]):, :] = -float('inf')
+            log_s[b, :, int(ncols[b]):] = -float('inf')
 
         for i in range(max_iter):
             if i % 2 == 0:
-                log_sum = torch.logsumexp(log_s, 2, keepdim=True)
-                log_s = log_s - torch.where(row_mask, log_sum, torch.zeros_like(log_sum))
-                assert not torch.any(torch.isnan(log_s))
+                index, m = mindspore.ops.max(log_s, axis=2, keep_dims=True)
+                log_sum = mindspore.ops.logsumexp(log_s - m, 2, keep_dims=True) + m
+                log_s = log_s - mindspore.numpy.where(row_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
+                assert not mindspore.ops.isnan(log_s).any()
             else:
-                log_sum = torch.logsumexp(log_s, 1, keepdim=True)
-                log_s = log_s - torch.where(col_mask, log_sum, torch.zeros_like(log_sum))
-                assert not torch.any(torch.isnan(log_s))
+                index, m = mindspore.ops.max(log_s, axis=1, keep_dims=True)
+                log_sum = mindspore.ops.logsumexp(log_s - m, 1, keep_dims=True) + m
+                log_s = log_s - mindspore.numpy.where(col_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
+                assert not mindspore.ops.isnan(log_s).any()
 
         ret_log_s = log_s
     else:
-        ret_log_s = torch.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), device=log_s.device,
-                               dtype=log_s.dtype)
+        ret_log_s = mindspore.numpy.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
 
         for b in range(batch_size):
-            row_slice = slice(0, nrows[b])
-            col_slice = slice(0, ncols[b])
+            # print(nrows[b].shape)
+            row_slice = slice(0, int(nrows[b]))
+            col_slice = slice(0, int(ncols[b]))
+            # print(row_slice)
             log_s_b = log_s[b, row_slice, col_slice]
+            # print(log_s_b)
             row_mask_b = row_mask[b, row_slice, :]
             col_mask_b = col_mask[b, :, col_slice]
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    log_sum = torch.logsumexp(log_s_b, 1, keepdim=True)
-                    log_s_b = log_s_b - torch.where(row_mask_b, log_sum, torch.zeros_like(log_sum))
+                    index, m = mindspore.ops.max(log_s_b, axis=1, keep_dims=True)
+                    log_sum = mindspore.ops.logsumexp(log_s_b - m, 1, keep_dims=True) + m
+                    log_s_b = log_s_b - mindspore.numpy.where(row_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
                 else:
-                    log_sum = torch.logsumexp(log_s_b, 0, keepdim=True)
-                    log_s_b = log_s_b - torch.where(col_mask_b, log_sum, torch.zeros_like(log_sum))
+                    index, m = mindspore.ops.max(log_s_b, axis=0, keep_dims=True)
+                    log_sum = mindspore.ops.logsumexp(log_s_b - m, 0, keep_dims=True) + m
+                    log_s_b = log_s_b - mindspore.numpy.where(col_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
 
             ret_log_s[b, row_slice, col_slice] = log_s_b
+
+    # print(ret_log_s)
 
     if unmatchrows is not None and unmatchcols is not None:
         ncols -= 1
@@ -188,18 +205,21 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
         for b in range(batch_size):
             ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
-    if torch.any(transposed_batch):
-        s_t = ret_log_s.transpose(1, 2)
-        s_t = torch.cat((
+    if transposed_batch.any():
+        s_t = ret_log_s.swapaxes(1, 2)
+        s_t = mindspore.ops.concat((
             s_t[:, :ret_log_s.shape[1], :],
-            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2] - ret_log_s.shape[1]), -float('inf'),
-                       device=log_s.device)), dim=2)
-        ret_log_s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, ret_log_s)
+            mindspore.numpy.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2] - ret_log_s.shape[1]),
+                                 -float('inf'), )), axis=2)
+        ret_log_s = mindspore.numpy.where(transposed_batch.view(batch_size, 1, 1), s_t, ret_log_s)
 
     if transposed:
-        ret_log_s = ret_log_s.transpose(1, 2)
+        ret_log_s = ret_log_s.swapaxes(1, 2)
 
-    return torch.exp(ret_log_s)
+    # print(ret_log_s)
+    # print('mindspore111:')
+    # print(mindspore.ops.exp(ret_log_s))
+    return mindspore.ops.exp(ret_log_s)
 
 
 #############################################
@@ -231,7 +251,8 @@ def build_batch(input, return_ori_dim=False):
         pad_pattern = np.zeros(2 * len(max_shape), dtype=np.int64)
         pad_pattern[::-2] = max_shape - np.array(t.shape)
         pad_pattern = tuple(pad_pattern.tolist())
-        pad_pattern = tuple(list((pad_pattern[2 * i], pad_pattern[2 * i + 1]) for i in range(int(len(pad_pattern) / 2))))
+        pad_pattern = tuple(
+            list((pad_pattern[2 * i], pad_pattern[2 * i + 1]) for i in range(int(len(pad_pattern) / 2))))
         # print(type(pad_pattern))
         mindspore_pad = nn.Pad(pad_pattern, mode="CONSTANT")
         padded_ts.append(mindspore_pad(t))

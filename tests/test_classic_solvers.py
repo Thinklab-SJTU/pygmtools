@@ -12,12 +12,13 @@ from tqdm import tqdm
 
 from test_utils import *
 
+
 # The testing function for quadratic assignment
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
     if backends[0] != 'pytorch':
-        backends.insert(0, 'pytorch') # force pytorch as the reference backend
+        backends.insert(0, 'pytorch')  # force pytorch as the reference backend
 
     batch_size = len(graph_num_nodes)
 
@@ -80,7 +81,8 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
 
 
 # The testing function for linear assignment
-def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params, backends):
+def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params,
+                                              backends):
     batch_size = len(num_nodes1)
 
     # iterate over matrix parameters
@@ -104,8 +106,9 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
         for b, (num_node1, num_node2) in enumerate(zip(num_nodes1, num_nodes2)):
             outlier_num = prob_param_dict['outlier_num'] if 'outlier_num' in prob_param_dict else 0
             max_inlier_index = max(num_node1, num_node2)
-            As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(max_inlier_index + outlier_num * 2, node_feat_dim=node_feat_dim)
-            Fs_b = Fs_b / torch.norm(Fs_b, dim=-1, p='fro', keepdim=True) # normalize features
+            As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(max_inlier_index + outlier_num * 2,
+                                                                       node_feat_dim=node_feat_dim)
+            Fs_b = Fs_b / torch.norm(Fs_b, dim=-1, p='fro', keepdim=True)  # normalize features
             outlier_indices_1 = list(range(max_inlier_index, max_inlier_index + outlier_num))
             outlier_indices_2 = list(range(max_inlier_index + outlier_num, max_inlier_index + outlier_num * 2))
             idx1 = list(set(list(range(num_node1)) + outlier_indices_1))
@@ -149,6 +152,8 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
                 accuracy = (X_hung * X_gt).sum() / max(X_hung.sum(), X_gt.sum())
             else:
                 _X = solver_func(linear_sim, _n1, _n2, **solver_param_dict)
+                # print(values)
+                # print(_X)
                 accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
 
             assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
@@ -167,17 +172,17 @@ def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
-    }, ['pytorch', 'numpy','mindspore'])
+    }, ['pytorch', 'numpy', 'mindspore'])
 
 
 def test_sinkhorn():
     # test non-symmetric matching
     args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
-            'tau': [0.1, 0.01],
-            'max_iter': [10, 20, 50],
-            'batched_operation': [True, False],
-            'dummy_row': [True, ],
-    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+        'tau': [0.1, 0.01],
+        'max_iter': [10, 20, 50],
+        'batched_operation': [True, False],
+        'dummy_row': [True, ],
+    }, ['pytorch', 'numpy', 'mindspore'])
 
     # test symmetric matching
     args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -185,7 +190,7 @@ def test_sinkhorn():
         'max_iter': [10, 20, 50],
         'batched_operation': [True, False],
         'dummy_row': [True, False],
-    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    }, ['pytorch', 'numpy', 'mindspore'])
 
     # test outlier matching (non-symmetric)
     args3 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
@@ -194,7 +199,7 @@ def test_sinkhorn():
         'batched_operation': [True, False],
         'dummy_row': [True, False],
         'outlier_num': [5, 10]
-    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    }, ['pytorch', 'numpy', 'mindspore'])
 
     # test outlier matching (symmetric)
     args4 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -203,7 +208,7 @@ def test_sinkhorn():
         'batched_operation': [True, False],
         'dummy_row': [True, False],
         'outlier_num': [5, 10]
-    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    }, ['pytorch', 'numpy', 'mindspore'])
 
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
@@ -239,8 +244,8 @@ def test_ipfp():
 
 
 if __name__ == '__main__':
-    test_hungarian()
-    # test_sinkhorn()
+    # test_hungarian()
+    test_sinkhorn()
     # test_rrwm()
     # test_sm()
     # test_ipfp()
