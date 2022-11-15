@@ -102,8 +102,6 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
             unmatchcols = new_unmatchcols
 
     # operations are performed on log_s
-    # print('tau:')
-    # print(tau)
     log_s = s / tau
     if unmatchrows is not None and unmatchcols is not None:
         unmatchrows = unmatchrows / tau
@@ -168,12 +166,9 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
         ret_log_s = mindspore.numpy.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
 
         for b in range(batch_size):
-            # print(nrows[b].shape)
             row_slice = slice(0, int(nrows[b]))
             col_slice = slice(0, int(ncols[b]))
-            # print(row_slice)
             log_s_b = log_s[b, row_slice, col_slice]
-            # print(log_s_b)
             row_mask_b = row_mask[b, row_slice, :]
             col_mask_b = col_mask[b, :, col_slice]
 
@@ -188,8 +183,6 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
                     log_s_b = log_s_b - mindspore.numpy.where(col_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
 
             ret_log_s[b, row_slice, col_slice] = log_s_b
-
-    # print(ret_log_s)
 
     if unmatchrows is not None and unmatchcols is not None:
         ncols -= 1
@@ -216,9 +209,6 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
     if transposed:
         ret_log_s = ret_log_s.swapaxes(1, 2)
 
-    # print(ret_log_s)
-    # print('mindspore111:')
-    # print(mindspore.ops.exp(ret_log_s))
     return mindspore.ops.exp(ret_log_s)
 
 

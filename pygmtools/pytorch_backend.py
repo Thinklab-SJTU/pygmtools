@@ -157,7 +157,6 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
             row_slice = slice(0, nrows[b])
             col_slice = slice(0, ncols[b])
             log_s_b = log_s[b, row_slice, col_slice]
-            # print(log_s_b)
             row_mask_b = row_mask[b, row_slice, :]
             col_mask_b = col_mask[b, :, col_slice]
 
@@ -170,8 +169,6 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
                     log_s_b = log_s_b - torch.where(col_mask_b, log_sum, torch.zeros_like(log_sum))
 
             ret_log_s[b, row_slice, col_slice] = log_s_b
-
-    # print(ret_log_s)
 
     if unmatchrows is not None and unmatchcols is not None:
         ncols -= 1
