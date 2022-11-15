@@ -117,12 +117,12 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
             unmatchrows = tf.concat([unmatchrows, tf.cast(tf.fill((dummy_shape[0], dummy_shape[1]), -float('inf')), dtype=log_s.dtype)], axis=1)
 
         for b in range(batch_size):
-            f = tf.fill([nrows[b] - ori_nrows[b], ncols[b]], -100.)
+            f = tf.cast(tf.fill([nrows[b] - ori_nrows[b], ncols[b]], -100), dtype=log_s.dtype)
             log_s[b, ori_nrows[b]:nrows[b], :ncols[b]].assign(f)
 
     # assign the unmatch weights
     if unmatchrows is not None and unmatchcols is not None:
-        new_log_s = tf.Variable(tf.fill((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1), -float('inf')), dtype=log_s.dtype)
+        new_log_s = tf.Variable(tf.cast(tf.fill((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1), -float('inf')), dtype=log_s.dtype))
         new_log_s[:, :-1, :-1].assign(log_s)
         log_s = new_log_s
         for b in range(batch_size):
@@ -158,7 +158,7 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
 
         ret_log_s = log_s
     else:
-        ret_log_s = tf.Variable(tf.fill([batch_size, log_s.shape[1], log_s.shape[2]], -float('inf')), dtype=s.dtype)
+        ret_log_s = tf.Variable(tf.cast(tf.fill([batch_size, log_s.shape[1], log_s.shape[2]], -float('inf')), dtype=log_s.dtype))
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
@@ -181,9 +181,9 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
         ncols -= 1
         nrows -= 1
         for b in range(batch_size):
-            f = tf.fill([nrows[b]+1], -float('inf'))
+            f = tf.cast(tf.fill([nrows[b]+1], -float('inf')), dtype=ret_log_s.dtype)
             ret_log_s[b, :nrows[b] + 1, ncols[b]].assign(f)
-            f = tf.fill([ncols[b]], -float('inf'))
+            f = tf.cast(tf.fill([ncols[b]], -float('inf')), dtype=ret_log_s.dtype)
             ret_log_s[b, nrows[b], :ncols[b]].assign(f)
         ret_log_s = tf.Variable(ret_log_s[:, :-1, :-1])
 
@@ -191,7 +191,8 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
         if dummy_shape[1] > 0:
             ret_log_s = tf.Variable(ret_log_s[:, :-dummy_shape[1]])
         for b in range(batch_size):
-            ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]].assign(ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]]-float('inf'))
+            f = tf.cast(ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] - float('inf'), dtype=ret_log_s.dtype)
+            ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]].assign(f)
 
     if tf.reduce_any(transposed_batch):
         s_t = tf.transpose(ret_log_s, perm=[0, 2, 1])
