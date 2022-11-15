@@ -1288,7 +1288,8 @@ def permutation_loss(pred_dsmat: Var, gt_perm: Var, n1: Var, n2: Var) -> Var:
     for b in range(batch_num):
         loss += jt.nn.bce_loss(
             pred_dsmat[b, 0:n1[b].item(), 0:n2[b].item()],
-            gt_perm[b, 0:n1[b].item(), 0:n2[b].item()]).sum()
+            gt_perm[b, 0:n1[b].item(), 0:n2[b].item()],
+            size_average=False).sum()
         n_sum += n1[b]
 
     return loss / n_sum
