@@ -33,7 +33,7 @@ import networkx as nx # for plotting graphs
 pygm.BACKEND = 'jittor' # set default backend for pygmtools
 _ = jt.set_seed(1) # fix random seed
 
-jt.flags.use_cuda = 1 # use cuda
+# jt.flags.use_cuda = 1 # use cuda
 
 #! The following code is used for testing jittor codes.
 import numpy as np
