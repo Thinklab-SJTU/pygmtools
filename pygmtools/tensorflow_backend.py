@@ -12,7 +12,9 @@ from pygmtools.numpy_backend import _hung_kernel
 #############################################
 
 
-def hungarian(s: tf.Tensor, n1: tf.Tensor=None, n2: tf.Tensor=None, nproc: int=1) -> tf.Tensor:
+def hungarian(s: tf.Tensor, n1: tf.Tensor=None, n2: tf.Tensor=None,
+              unmatch1: tf.Tensor=None, unmatch2: tf.Tensor=None,
+              nproc: int=1) -> tf.Tensor:
     """
     Tensorflow implementation of Hungarian algorithm
     """
@@ -30,13 +32,22 @@ def hungarian(s: tf.Tensor, n1: tf.Tensor=None, n2: tf.Tensor=None, nproc: int=1
             n2 = n2.numpy()
         else:
             n2 = [None] * batch_num
+        if unmatch1 is not None:
+            unmatch1 = -unmatch1.numpy()
+        else:
+            unmatch1 = [None] * batch_num
+        if unmatch2 is not None:
+            unmatch2 = -unmatch2.numpy()
+        else:
+            unmatch2 = [None] * batch_num
 
     if nproc > 1:
         with Pool(processes=nproc) as pool:
-            mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2))
+            mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2, unmatch1, unmatch2))
             perm_mat = tnp.stack(mapresult.get())
     else:
-        perm_mat = tnp.stack([_hung_kernel(perm_mat[b], n1[b], n2[b]) for b in range(batch_num)])
+        perm_mat = tnp.stack([_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
+
 
     with tf.device(device):
         perm_mat = tf.convert_to_tensor(perm_mat)
@@ -45,6 +56,7 @@ def hungarian(s: tf.Tensor, n1: tf.Tensor=None, n2: tf.Tensor=None, nproc: int=1
 
 
 def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
+             unmatchrows: tf.Tensor=None, unmatchcols: tf.Tensor=None,
              dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> tf.Tensor:
     """
     Tensorflow implementation of Sinkhorn algorithm
@@ -56,6 +68,7 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
     else:
         s = tf.transpose(s, perm=[0, 2, 1])
         nrows, ncols = ncols, nrows
+        unmatchrows, unmatchcols = unmatchcols, unmatchrows
         transposed = True
 
     if nrows is None:
@@ -67,9 +80,9 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
     transposed_batch = nrows > ncols
     if tf.reduce_any(transposed_batch):
         s_t = tf.transpose(s, perm=[0, 2, 1])
-        s_t = tf.concat((
+        s_t = tf.concat([
             s_t[:, :s.shape[1], :],
-            tf.fill([batch_size, s.shape[1], s.shape[2] - s.shape[1]], -float('inf'))), axis=2)
+            tf.fill([batch_size, s.shape[1], s.shape[2] - s.shape[1]], -float('inf'))], axis=2)
         s = tf.where(tf.reshape(transposed_batch, [batch_size, 1, 1]), s_t, s)
 
         new_nrows = tf.where(transposed_batch, ncols, nrows)
@@ -77,55 +90,102 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
         nrows = new_nrows
         ncols = new_ncols
 
+        if unmatchrows is not None and unmatchcols is not None:
+            unmatchrows_pad = tf.concat([
+                unmatchrows,
+                tf.fill([batch_size, unmatchcols.shape[1] - unmatchrows.shape[1]], -float('inf'))],
+            axis=1)
+            new_unmatchrows = tf.where(tf.reshape(transposed_batch, [batch_size, 1]), unmatchcols, unmatchrows_pad)[:, :unmatchrows.shape[1]]
+            new_unmatchcols = tf.where(tf.reshape(transposed_batch, [batch_size, 1]), unmatchrows_pad, unmatchcols)
+            unmatchrows = new_unmatchrows
+            unmatchcols = new_unmatchcols
+
     # operations are performed on log_s
-    s = s / tau
+    log_s = tf.Variable(s / tau)
+    if unmatchrows is not None and unmatchcols is not None:
+        unmatchrows = unmatchrows / tau
+        unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert s.shape[2] >= s.shape[1]
-        dummy_shape = list(s.shape)
-        dummy_shape[1] = s.shape[2] - s.shape[1]
+        assert log_s.shape[2] >= log_s.shape[1]
+        dummy_shape = list(log_s.shape)
+        dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
-        nrows = ncols
-        s = tf.Variable(tf.concat((s, tf.fill(dummy_shape, -float('inf'))), axis=1))
+        nrows = tf.constant(ncols)
+        log_s = tf.Variable(tf.concat([log_s, tf.cast(tf.fill(dummy_shape, -float('inf')), dtype=log_s.dtype)], axis=1))
+        if unmatchrows is not None:
+            unmatchrows = tf.concat([unmatchrows, tf.cast(tf.fill((dummy_shape[0], dummy_shape[1]), -float('inf')), dtype=log_s.dtype)], axis=1)
+
         for b in range(batch_size):
             f = tf.fill([nrows[b] - ori_nrows[b], ncols[b]], -100.)
-            s[b, ori_nrows[b]:nrows[b], :ncols[b]].assign(f)
-            f = tf.fill([s.shape[1] - nrows[b], s.shape[2]], -float('inf'))
-            s[b, nrows[b]:, :].assign(f)
-            f = tf.fill([s.shape[1], s.shape[2]-ncols[b]], -float('inf'))
-            s[b, :, ncols[b]:].assign(f)
+            log_s[b, ori_nrows[b]:nrows[b], :ncols[b]].assign(f)
+
+    # assign the unmatch weights
+    if unmatchrows is not None and unmatchcols is not None:
+        new_log_s = tf.Variable(tf.fill((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1), -float('inf')), dtype=log_s.dtype)
+        new_log_s[:, :-1, :-1].assign(log_s)
+        log_s = new_log_s
+        for b in range(batch_size):
+            log_s[b, :nrows[b], ncols[b]].assign(unmatchrows[b, :nrows[b]])
+            log_s[b, nrows[b], :ncols[b]].assign(unmatchcols[b, :ncols[b]])
+    row_mask = tf.Variable(tf.zeros([batch_size, log_s.shape[1], 1], dtype=tf.bool))
+    col_mask = tf.Variable(tf.zeros([batch_size, 1, log_s.shape[2]], dtype=tf.bool))
+    for b in range(batch_size):
+        f = tf.fill([nrows[b]], True)
+        row_mask[b, :nrows[b], 0].assign(f)
+        f = tf.fill([ncols[b]], True)
+        col_mask[b, 0, :ncols[b]].assign(f)
+    if unmatchrows is not None and unmatchcols is not None:
+        ncols += 1
+        nrows += 1
 
     if batched_operation:
-        log_s = s
+        for b in range(batch_size):
+            f = tf.fill([log_s.shape[1]-nrows[b], log_s.shape[2]], -float('inf'))
+            log_s[b, nrows[b]:, :].assign(f)
+            f = tf.fill([log_s.shape[1], log_s.shape[2]-ncols[b]], -float('inf'))
+            log_s[b, :, ncols[b]:].assign(f)
 
         for i in range(max_iter):
             if i % 2 == 0:
                 log_sum = tf.reduce_logsumexp(log_s, 2, keepdims=True)
-                log_s = log_s - log_sum
-                log_s = tf.Variable(tf.where(tf.math.is_nan(log_s), -float('inf'), log_s))
+                log_s = tf.Variable(log_s - tf.where(row_mask, log_sum, tf.zeros_like(log_sum)))
+                assert not tf.reduce_any(tf.math.is_nan(log_s))
             else:
                 log_sum = tf.reduce_logsumexp(log_s, 1, keepdims=True)
-                log_s = log_s - log_sum
-                log_s = tf.Variable(tf.where(tf.math.is_nan(log_s), -float('inf'), log_s))
+                log_s = tf.Variable(log_s - tf.where(col_mask, log_sum, tf.zeros_like(log_sum)))
+                assert not tf.reduce_any(tf.math.is_nan(log_s))
 
         ret_log_s = log_s
     else:
-        ret_log_s = tf.Variable(tf.fill((batch_size, s.shape[1], s.shape[2]), -float('inf')), dtype=s.dtype)
+        ret_log_s = tf.Variable(tf.fill([batch_size, log_s.shape[1], log_s.shape[2]], -float('inf')), dtype=s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
             col_slice = slice(0, ncols[b])
-            log_s = s[b, row_slice, col_slice]
+            log_s_b = log_s[b, row_slice, col_slice]
+            row_mask_b = row_mask[b, row_slice, :]
+            col_mask_b = col_mask[b, :, col_slice]
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    log_sum = tf.reduce_logsumexp(log_s, 1, keepdims=True)
-                    log_s = log_s - log_sum
+                    log_sum = tf.reduce_logsumexp(log_s_b, 1, keepdims=True)
+                    log_s_b = log_s_b - tf.where(row_mask_b, log_sum, tf.zeros_like(log_sum))
                 else:
-                    log_sum = tf.reduce_logsumexp(log_s, 0, keepdims=True)
-                    log_s = log_s - log_sum
+                    log_sum = tf.reduce_logsumexp(log_s_b, 0, keepdims=True)
+                    log_s_b = log_s_b - tf.where(col_mask_b, log_sum, tf.zeros_like(log_sum))
 
-            ret_log_s[b, row_slice, col_slice].assign(log_s)
+            ret_log_s[b, row_slice, col_slice].assign(log_s_b)
+
+    if unmatchrows is not None and unmatchcols is not None:
+        ncols -= 1
+        nrows -= 1
+        for b in range(batch_size):
+            f = tf.fill([nrows[b]+1], -float('inf'))
+            ret_log_s[b, :nrows[b] + 1, ncols[b]].assign(f)
+            f = tf.fill([ncols[b]], -float('inf'))
+            ret_log_s[b, nrows[b], :ncols[b]].assign(f)
+        ret_log_s = tf.Variable(ret_log_s[:, :-1, :-1])
 
     if dummy_row:
         if dummy_shape[1] > 0:
@@ -135,9 +195,9 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
 
     if tf.reduce_any(transposed_batch):
         s_t = tf.transpose(ret_log_s, perm=[0, 2, 1])
-        s_t = tf.concat((
+        s_t = tf.concat([
             s_t[:, :ret_log_s.shape[1], :],
-            tf.fill((batch_size, ret_log_s.shape[1], ret_log_s.shape[2] - ret_log_s.shape[1]), -float('inf'))),
+            tf.fill((batch_size, ret_log_s.shape[1], ret_log_s.shape[2] - ret_log_s.shape[1]), -float('inf'))],
             axis=2)
         ret_log_s = tf.where(tf.reshape(transposed_batch, [batch_size, 1, 1]), s_t, ret_log_s)
 
@@ -475,12 +535,13 @@ def _aff_mat_from_node_edge_aff(node_aff: tf.Tensor, edge_aff: tf.Tensor, connec
     return tf.stack(ks, axis=0)
 
 
-def _check_data_type(input: tf.Tensor):
+def _check_data_type(input: tf.Tensor, var_name=None):
     """
     Tensorflow implementation of _check_data_type
     """
     if not tf.is_tensor(input):
-        raise ValueError(f'Expected Tensorflow Tensor, but got {type(input)}. Perhaps the wrong backend?')
+        raise ValueError(f'Expected Pytorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}. Perhaps the wrong backend?')
 
 
 def _check_shape(input, dim_num):
