@@ -359,33 +359,33 @@ def align(solution, fusion_proportion, networks: list, params: list):
         perm = jt.Var(solution[num_before:num_before + num_cur, num_before:num_before + num_cur])
         assert 'bias' not in named_weight_list_0[idx][0]
         if len(named_weight_list_0[idx][1].shape) == 4:
-            aligned_wt_0[idx] = (perm.transpose(0, 1).float64() @
-                                 jt.Var(aligned_wt_0[idx]).float64().permute(2, 3, 0, 1)) \
+            aligned_wt_0[idx] = (perm.transpose(0, 1).float32() @
+                                 jt.Var(aligned_wt_0[idx]).float32().permute(2, 3, 0, 1)) \
                 .permute(2, 3, 0, 1)
         else:
-            aligned_wt_0[idx] = perm.transpose(0, 1).float64() @ jt.Var(aligned_wt_0[idx]).float64()
+            aligned_wt_0[idx] = perm.transpose(0, 1).float32() @ jt.Var(aligned_wt_0[idx]).float32()
         idx += 1
         if idx >= num_layers:
             continue
         if 'bias' in named_weight_list_0[idx][0]:
-            aligned_wt_0[idx] = jt.Var(aligned_wt_0[idx]).float64() @ perm.float64()
+            aligned_wt_0[idx] = jt.Var(aligned_wt_0[idx]).float32() @ perm.float32()
             idx += 1
         if idx >= num_layers:
             continue
         if cur_conv and len(named_weight_list_0[idx][1].shape) == 2:
-            aligned_wt_0[idx] = (jt.Var(aligned_wt_0[idx]).float64()
+            aligned_wt_0[idx] = (jt.Var(aligned_wt_0[idx]).float32()
                                  .reshape(aligned_wt_0[idx].shape[0], 64, -1)
                                  .permute(0, 2, 1)
-                                 @ perm.float64()) \
+                                 @ perm.float32()) \
                 .permute(0, 2, 1) \
                 .reshape(aligned_wt_0[idx].shape[0], -1)
         elif len(named_weight_list_0[idx][1].shape) == 4:
-            aligned_wt_0[idx] = (jt.Var(aligned_wt_0[idx]).float64()
+            aligned_wt_0[idx] = (jt.Var(aligned_wt_0[idx]).float32()
                                  .permute(2, 3, 0, 1)
-                                 @ perm.float64()) \
+                                 @ perm.float32()) \
                 .permute(2, 3, 0, 1)
         else:
-            aligned_wt_0[idx] = jt.Var(aligned_wt_0[idx]).float64() @ perm.float64()
+            aligned_wt_0[idx] = jt.Var(aligned_wt_0[idx]).float32() @ perm.float32()
     assert idx == num_layers
 
     averaged_weights = []
