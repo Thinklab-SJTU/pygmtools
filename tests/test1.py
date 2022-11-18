@@ -3,17 +3,29 @@ import torch
 import mindspore.nn as nn
 import mindspore as ms
 
-x = ms.Tensor(np.ones([1, 2, 2, 3]).astype(np.float32))
-pad_op = nn.Pad(paddings=((0, 0), (0, 0), (2, 2), (1, 2)))
-output = pad_op(x)
-print(output)
-# Out:
-# (1, 2, 6, 5)
 
-# In Pytorch.
-x = torch.ones(1, 2, 2, 3)
-pad = (1, 2, 2, 2)
-output = torch.nn.functional.pad(x, pad)
-print(output)
+a=(1,2,3,5,6)
+print(a[0])
+# x = ms.Tensor(np.ones([1, 2, 3]).astype(np.float32))
+# print(x.ndim)
+# pad_op = nn.Pad(paddings=((0, 0), (0, 0), (2, 2), (1, 2)))
+# output = pad_op(x)
+# print(output)
+# # Out:
+# # (1, 2, 6, 5)
+#
+# # In Pytorch.
+# x = torch.ones(1, 2, 2, 3)
+# pad = (1, 2, 2, 2)
+# output = torch.nn.functional.pad(x, pad)
+# print(output)
 # Out:
 # torch.Size([1, 2, 6, 5])
+#
+# l=list()
+# l.append(1)
+# l.append(3)
+# l.append(2)
+# l.reverse()
+# a=tuple(l)
+# print(a)

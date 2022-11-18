@@ -331,9 +331,16 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 #              Utils Functions              #
 #############################################
 
+def gaussian_aff_fn(feat1, feat2, sigma):
+    """
+    mindspore implementation of Gaussian affinity function
+    """
+    feat1 = mindspore.ops.expand_dims(feat1, axis=2)
+    feat2 = mindspore.ops.expand_dims(feat2, axis=1)
+    return mindspore.ops.exp(-((feat1 - feat2) ** 2).sum(axis=-1) / sigma)
+
+
 def build_batch(input, return_ori_dim=False):
-    print('mindspore:')
-    print(input)
     """
     mindspore implementation of building a batched tensor
     """
@@ -357,10 +364,13 @@ def build_batch(input, return_ori_dim=False):
     for t in input:
         pad_pattern = np.zeros(2 * len(max_shape), dtype=np.int64)
         pad_pattern[::-2] = max_shape - np.array(t.shape)
-        pad_pattern = tuple(pad_pattern.tolist())
-        pad_pattern = tuple(
-            list((pad_pattern[2 * i], pad_pattern[2 * i + 1]) for i in range(int(len(pad_pattern) / 2))))
-        # print(type(pad_pattern))
+        pad_list = list((pad_pattern[2 * i], pad_pattern[2 * i + 1]) for i in range(int(len(pad_pattern) / 2)))
+        while len(pad_list) < t.ndim:
+            pad_list.append((0, 0))
+        pad_list.reverse()
+        pad_pattern = tuple(pad_list)
+        # print("mindspore:")
+        # print(pad_pattern)
         mindspore_pad = nn.Pad(pad_pattern, mode="CONSTANT")
         padded_ts.append(mindspore_pad(t))
 
@@ -379,7 +389,7 @@ def dense_to_sparse(dense_adj):
     conn, ori_shape = build_batch([mindspore.ops.nonzero(a) for a in dense_adj], return_ori_dim=True)
     nedges = ori_shape[0]
     edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
-    return conn, edge_weight.unsqueeze(-1), nedges
+    return conn, mindspore.ops.expand_dims(edge_weight, axis=-1), nedges
 
 
 def to_numpy(input):
@@ -398,6 +408,58 @@ def from_numpy(input, device=None):
     #     return torch.from_numpy(input)
     # else:
     #     return torch.from_numpy(input).to(device)
+
+
+def _aff_mat_from_node_edge_aff(node_aff: mindspore.Tensor, edge_aff: mindspore.Tensor, connectivity1: mindspore.Tensor,
+                                connectivity2: mindspore.Tensor,
+                                n1, n2, ne1, ne2):
+    """
+    mindspore implementation of _aff_mat_from_node_edge_aff
+    """
+    if edge_aff is not None:
+        # device = edge_aff.device
+        dtype = edge_aff.dtype
+        batch_size = edge_aff.shape[0]
+        if n1 is None:
+            n1 = mindspore.ops.max(mindspore.ops.max(connectivity1, axis=-1)[1].values, axis=-1)[1].values + 1
+        if n2 is None:
+            n2 = mindspore.ops.max(mindspore.ops.max(connectivity2, axis=-1)[1].values, axis=-1)[1].values + 1
+        if ne1 is None:
+            ne1 = [edge_aff.shape[1]] * batch_size
+        if ne2 is None:
+            ne2 = [edge_aff.shape[2]] * batch_size
+    else:
+        # device = node_aff.device
+        dtype = node_aff.dtype
+        batch_size = node_aff.shape[0]
+        if n1 is None:
+            n1 = [node_aff.shape[1]] * batch_size
+        if n2 is None:
+            n2 = [node_aff.shape[2]] * batch_size
+
+    n1max = int(max(n1))
+    n2max = int(max(n2))
+    ks = []
+    for b in range(batch_size):
+        k = mindspore.numpy.zeros((n2max, n1max, n2max, n1max), dtype=dtype)
+        # edge-wise affinity
+        if edge_aff is not None:
+            conn1 = connectivity1[b][:int(ne1[b])]
+            conn2 = connectivity2[b][:int(ne2[b])]
+            edge_indices = mindspore.ops.concat(
+                [mindspore.ops.repeat_elements(conn1, int(ne2[b]), axis=0), mindspore.numpy.tile(conn2, (int(ne1[b]), 1))],
+                axis=1)  # indices: start_g1, end_g1, start_g2, end_g2
+            edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3],
+                            edge_indices[:, 1])  # indices: start_g2, start_g1, end_g2, end_g1
+            k[edge_indices] = edge_aff[b, :int(ne1[b]), :int(ne2[b])].reshape(-1)
+        k = k.reshape(n2max * n1max, n2max * n1max)
+        # node-wise affinity
+        if node_aff is not None:
+            k_diag = mindspore.numpy.diagonal(k)
+            k_diag[:] = node_aff[b].transpose(0, 1).reshape(-1)
+        ks.append(k)
+
+    return mindspore.ops.stack(ks, axis=0)
 
 
 def _check_data_type(input: mindspore.Tensor, var_name=None):
