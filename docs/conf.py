@@ -23,7 +23,6 @@ import datetime
 sys.path.insert(0, os.path.abspath('..'))
 
 os.environ['SPHINX'] = '1'
-os.environ['FIX_TORCH_ERROR'] = '1'
 
 # -- General configuration ------------------------------------------------
 
