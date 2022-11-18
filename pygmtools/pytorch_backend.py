@@ -1182,6 +1182,8 @@ def gaussian_aff_fn(feat1, feat2, sigma):
 
 
 def build_batch(input, return_ori_dim=False):
+    print('pytorch:')
+    print(input)
     """
     Pytorch implementation of building a batched tensor
     """

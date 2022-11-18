@@ -213,10 +213,127 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
 
 
 #############################################
+#    Quadratic Assignment Problem Solvers   #
+#############################################
+
+
+def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max, n2max, x0: mindspore.Tensor,
+         max_iter: int, sk_iter: int, alpha: float, beta: float) -> mindspore.Tensor:
+    """
+    mindspore implementation of RRWM algorithm.
+    """
+    batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+    # rescale the values in K
+    d = K.sum(axis=2, keepdims=True)
+    dmax = d.max(axis=1, keepdims=True)
+    K = K / (dmax + d.min() * 1e-5)
+    v = v0
+    for i in range(max_iter):
+        # random walk
+        v = mindspore.ops.BatchMatMul(K, v)
+        last_v = v
+        n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
+        v = v / n
+
+        # reweighted jump
+        s = v.view(batch_num, n2max, n1max).transpose(1, 2)
+        s = beta * s / s.max(dim=1, keepdim=True).values.max(dim=2, keepdim=True).values
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
+            (1 - alpha) * v
+        n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
+        v = mindspore.ops.matmul(v, 1 / n)
+
+        if mindspore.ops.norm(v - last_v, axis=None) < 1e-5:
+            break
+
+    return v.view(batch_num, n2max, n1max).transpose(1, 2)
+
+
+def sm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max, n2max, x0: mindspore.Tensor,
+       max_iter: int) -> mindspore.Tensor:
+    """
+    mindspore implementation of SM algorithm.
+    """
+    batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+    v = vlast = v0
+    for i in range(max_iter):
+        v = mindspore.ops.BatchMatMul(K, v)
+        n = mindspore.ops.norm(v, axis=1, p=2)
+        v = mindspore.ops.matmul(v, (1 / n).view(batch_num, 1, 1))
+        if mindspore.ops.norm(v - vlast, axis=None) < 1e-5:
+            break
+        vlast = v
+
+    x = v.view(batch_num, n2max, n1max).swapaxes(1, 2)
+    return x
+
+
+def ipfp(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max, n2max, x0: mindspore.Tensor,
+         max_iter) -> mindspore.Tensor:
+    """
+    mindspore implementation of IPFP algorithm
+    """
+    batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+    v = v0
+    last_v = v
+
+    def comp_obj_score(v1, K, v2):
+        return mindspore.ops.BatchMatMul(mindspore.ops.BatchMatMul(v1.view(batch_num, 1, -1), K), v2)
+
+    for i in range(max_iter):
+        cost = mindspore.ops.BatchMatMul(K, v).reshape(batch_num, n2max, n1max).transpose(1, 2)
+        binary_sol = hungarian(cost, n1, n2)
+        binary_v = binary_sol.swapaxes(1, 2).view(batch_num, -1, 1)
+        alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        beta = comp_obj_score(binary_v - v, K, binary_v - v)
+        t0 = alpha / beta
+        v = mindspore.numpy.where(mindspore.ops.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
+        last_v_sol = comp_obj_score(last_v, K, last_v)
+        if mindspore.ops.max(mindspore.ops.abs(
+                last_v_sol - mindspore.ops.BatchMatMul(cost.reshape(batch_num, 1, -1),
+                                                       binary_sol.reshape(batch_num, -1, 1))
+        ) / last_v_sol)[1] < 1e-3:
+            break
+        last_v = v
+
+    pred_x = binary_sol
+    return pred_x
+
+
+def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
+    # get batch number
+    batch_num = K.shape[0]
+    n1n2 = K.shape[1]
+
+    # get values of n1, n2, n1max, n2max and check
+    if n1 is None:
+        n1 = mindspore.numpy.full((batch_num,), n1max, dtype=mindspore.int_)
+    if n2 is None:
+        n2 = mindspore.numpy.full((batch_num,), n2max, dtype=mindspore.int_)
+    if n1max is None:
+        n1max = mindspore.ops.max(n1)[1]
+    if n2max is None:
+        n2max = mindspore.ops.max(n2)[1]
+
+    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+
+    # initialize x0 (also v0)
+    if x0 is None:
+        x0 = mindspore.numpy.zeros((batch_num, n1max, n2max), dtype=K.dtype)
+        for b in range(batch_num):
+            x0[b, 0:n1[b], 0:n2[b]] = mindspore.Tensor(1.) / (n1[b] * n2[b])
+    v0 = x0.transpose(1, 2).reshape(batch_num, n1n2, 1)
+
+    return batch_num, n1, n2, n1max, n2max, n1n2, v0
+
+
+#############################################
 #              Utils Functions              #
 #############################################
 
 def build_batch(input, return_ori_dim=False):
+    print('mindspore:')
+    print(input)
     """
     mindspore implementation of building a batched tensor
     """
@@ -252,6 +369,17 @@ def build_batch(input, return_ori_dim=False):
             [mindspore.Tensor(_, dtype=mindspore.int64) for _ in ori_shape])
     else:
         return mindspore.ops.stack(padded_ts, axis=0)
+
+
+def dense_to_sparse(dense_adj):
+    """
+    mindspore implementation of converting a dense adjacency matrix to a sparse matrix
+    """
+    batch_size = dense_adj.shape[0]
+    conn, ori_shape = build_batch([mindspore.ops.nonzero(a) for a in dense_adj], return_ori_dim=True)
+    nedges = ori_shape[0]
+    edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
+    return conn, edge_weight.unsqueeze(-1), nedges
 
 
 def to_numpy(input):
