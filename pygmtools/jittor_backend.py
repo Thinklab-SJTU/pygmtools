@@ -143,12 +143,14 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
                 m = log_s.max(2, keepdims=True)  #optimized logsumexp
                 log_sum = jt.nn.logsumexp(log_s - m, 2, keepdim=True) + m
                 log_s = log_s - jt.where(row_mask, log_sum, jt.zeros_like(log_sum))
-                assert not jt.any(jt.isnan(log_s))
+                if jt.flags.use_cuda == 0:
+                    assert not jt.any(jt.isnan(log_s))
             else:
                 m = log_s.max(1, keepdims=True)
                 log_sum = jt.nn.logsumexp(log_s - m, 1, keepdim=True) + m                
                 log_s = log_s - jt.where(col_mask, log_sum, jt.zeros_like(log_sum))
-                assert not jt.any(jt.isnan(log_s))
+                if jt.flags.use_cuda == 0:
+                    assert not jt.any(jt.isnan(log_s))
 
         ret_log_s = log_s
     else:
