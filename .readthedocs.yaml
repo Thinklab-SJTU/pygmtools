@@ -1,12 +1,7 @@
 version: 2
 
-# Set the version of Python and other tools you might need
 build:
   os: ubuntu-20.04
-  tools:
-    python: "3.7"
-  apt_packages:
-    - python3.7-dev
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
@@ -17,5 +12,6 @@ formats: []
 
 # Optionally declare the Python requirements required to build your docs
 python:
-   install:
-   - requirements: docs/requirements.txt
+  version: "3.7"
+  install:
+    - requirements: docs/requirements.txt
