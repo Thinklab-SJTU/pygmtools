@@ -151,7 +151,7 @@ class CNNNet(jt.nn.Module):
 # load the weights and then extract the CNN features
 #
 cnn = CNNNet(vgg16_cnn)
-path = pygm.utils.download('vgg16_pca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_MDLVc8YWn6-J0whr341xHVZsg6INf6W')
+path = pygm.utils.download('vgg16_pca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1qLxjcVq7X3brylxRJvELCbtCzfuXQ24J')
 cnn.load_state_dict(jt.load(path))
 
 with jt.no_grad():
@@ -270,7 +270,7 @@ for i in range(X.shape[0]):
 # ^^^^^^^^^^^^^^^^^^^^^^^^^
 # See :func:`~pygmtools.neural_solvers.ipca_gm` for the API reference.
 #
-path = pygm.utils.download('vgg16_ipca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1CG3RaZqS2mP_Yp3T7VuJqQisrm9zcz1p')
+path = pygm.utils.download('vgg16_ipca_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1f7KEl9ZFZwI26j6UId-fsdl8Y8QWPKZi')
 cnn.load_state_dict(jt.load(path))
 
 feat1_local, feat1_global = cnn(jittor_img1)
@@ -342,7 +342,7 @@ for i in range(X.shape[0]):
 # ^^^^^^^^^^^^^^^^^^^^^^
 # See :func:`~pygmtools.neural_solvers.cie` for the API reference.
 #
-path = pygm.utils.download('vgg16_cie_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1DVRwk_ggMKWBC_0KhcMmfzl1_j_f2u2q')
+path = pygm.utils.download('vgg16_cie_voc_jittor.pt', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1wDbA-8sK4BNhA48z2c-Gtdd4AarRxfqT')
 cnn.load_state_dict(jt.load(path))
 
 feat1_local, feat1_global = cnn(jittor_img1)
