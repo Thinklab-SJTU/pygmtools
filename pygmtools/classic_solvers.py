@@ -211,7 +211,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             jt.Var([1.], dtype=float32)
 
 
-    .. dropdown:: Pytorch Example
+    .. dropdown:: Tensorflow Example
 
         ::
 
