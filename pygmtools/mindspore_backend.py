@@ -3,6 +3,7 @@ import numpy as np
 import mindspore
 import mindspore.nn as nn
 from mindspore.ops import stop_gradient
+import math
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -227,26 +228,27 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
     d = K.sum(axis=2, keepdims=True)
     dmax = d.max(axis=1, keepdims=True)
     K = K / (dmax + d.min() * 1e-5)
+    # print(K.shape)
     v = v0
     for i in range(max_iter):
         # random walk
-        v = mindspore.ops.BatchMatMul(K, v)
+        v = mindspore.ops.BatchMatMul()(K, v)
         last_v = v
         n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
         v = v / n
 
         # reweighted jump
-        s = v.view(batch_num, n2max, n1max).transpose(1, 2)
-        s = beta * s / s.max(dim=1, keepdim=True).values.max(dim=2, keepdim=True).values
-        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
+        s = v.view(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
+        s = beta * s / s.max(axis=1, keepdims=True).max(axis=2, keepdims=True)
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).swapaxes(1, 2).reshape(batch_num, n1n2, 1) + \
             (1 - alpha) * v
         n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
         v = mindspore.ops.matmul(v, 1 / n)
 
-        if mindspore.ops.norm(v - last_v, axis=None) < 1e-5:
+        if (v - last_v).sum().sqrt() < 1e-5:
             break
 
-    return v.view(batch_num, n2max, n1max).transpose(1, 2)
+    return v.view(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
 
 
 def sm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max, n2max, x0: mindspore.Tensor,
@@ -257,14 +259,14 @@ def sm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max, n
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = vlast = v0
     for i in range(max_iter):
-        v = mindspore.ops.BatchMatMul(K, v)
+        v = mindspore.ops.BatchMatMul()(K, v)
         n = mindspore.ops.norm(v, axis=1, p=2)
         v = mindspore.ops.matmul(v, (1 / n).view(batch_num, 1, 1))
-        if mindspore.ops.norm(v - vlast, axis=None) < 1e-5:
+        if (v - vlast).sum().sqrt() < 1e-5:
             break
         vlast = v
 
-    x = v.view(batch_num, n2max, n1max).swapaxes(1, 2)
+    x = v.view(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
     return x
 
 
@@ -278,10 +280,10 @@ def ipfp(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
     last_v = v
 
     def comp_obj_score(v1, K, v2):
-        return mindspore.ops.BatchMatMul(mindspore.ops.BatchMatMul(v1.view(batch_num, 1, -1), K), v2)
+        return mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(v1.view(batch_num, 1, -1), K), v2)
 
     for i in range(max_iter):
-        cost = mindspore.ops.BatchMatMul(K, v).reshape(batch_num, n2max, n1max).transpose(1, 2)
+        cost = mindspore.ops.BatchMatMul()(K, v).reshape(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
         binary_sol = hungarian(cost, n1, n2)
         binary_v = binary_sol.swapaxes(1, 2).view(batch_num, -1, 1)
         alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
@@ -289,10 +291,14 @@ def ipfp(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         t0 = alpha / beta
         v = mindspore.numpy.where(mindspore.ops.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
         last_v_sol = comp_obj_score(last_v, K, last_v)
-        if mindspore.ops.max(mindspore.ops.abs(
-                last_v_sol - mindspore.ops.BatchMatMul(cost.reshape(batch_num, 1, -1),
-                                                       binary_sol.reshape(batch_num, -1, 1))
-        ) / last_v_sol)[1] < 1e-3:
+        # print(mindspore.ops.max(mindspore.ops.abs(
+        #         last_v_sol - mindspore.ops.BatchMatMul()(cost.reshape((batch_num, 1, -1)),
+        #                                                  binary_sol.reshape((batch_num, -1, 1)))
+        # ) / last_v_sol)[1] < 1e-3)
+        if (mindspore.ops.max(mindspore.ops.abs(
+                last_v_sol - mindspore.ops.BatchMatMul()(cost.reshape((batch_num, 1, -1)),
+                                                         binary_sol.reshape((batch_num, -1, 1)))
+        ) / last_v_sol)[1] < 1e-3).any():
             break
         last_v = v
 
@@ -319,10 +325,10 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # initialize x0 (also v0)
     if x0 is None:
-        x0 = mindspore.numpy.zeros((batch_num, n1max, n2max), dtype=K.dtype)
+        x0 = mindspore.numpy.zeros((batch_num, int(n1max), int(n2max)), dtype=K.dtype)
         for b in range(batch_num):
             x0[b, 0:n1[b], 0:n2[b]] = mindspore.Tensor(1.) / (n1[b] * n2[b])
-    v0 = x0.transpose(1, 2).reshape(batch_num, n1n2, 1)
+    v0 = x0.swapaxes(1, 2).reshape(batch_num, n1n2, 1)
 
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
 
@@ -330,6 +336,13 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 #############################################
 #              Utils Functions              #
 #############################################
+
+def inner_prod_aff_fn(feat1, feat2):
+    """
+    mindspore implementation of inner product affinity function
+    """
+    return mindspore.ops.matmul(feat1, feat2.swapaxes(1, 2))
+
 
 def gaussian_aff_fn(feat1, feat2, sigma):
     """
@@ -421,9 +434,9 @@ def _aff_mat_from_node_edge_aff(node_aff: mindspore.Tensor, edge_aff: mindspore.
         dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = mindspore.ops.max(mindspore.ops.max(connectivity1, axis=-1)[1].values, axis=-1)[1].values + 1
+            n1 = mindspore.Tensor([math.sqrt(connectivity1.shape[1])] * batch_size)
         if n2 is None:
-            n2 = mindspore.ops.max(mindspore.ops.max(connectivity2, axis=-1)[1].values, axis=-1)[1].values + 1
+            n2 = mindspore.Tensor([math.sqrt(connectivity2.shape[1])] * batch_size)
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
@@ -447,16 +460,20 @@ def _aff_mat_from_node_edge_aff(node_aff: mindspore.Tensor, edge_aff: mindspore.
             conn1 = connectivity1[b][:int(ne1[b])]
             conn2 = connectivity2[b][:int(ne2[b])]
             edge_indices = mindspore.ops.concat(
-                [mindspore.ops.repeat_elements(conn1, int(ne2[b]), axis=0), mindspore.numpy.tile(conn2, (int(ne1[b]), 1))],
+                [mindspore.ops.repeat_elements(conn1, int(ne2[b]), axis=0),
+                 mindspore.numpy.tile(conn2, (int(ne1[b]), 1))],
                 axis=1)  # indices: start_g1, end_g1, start_g2, end_g2
             edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3],
                             edge_indices[:, 1])  # indices: start_g2, start_g1, end_g2, end_g1
             k[edge_indices] = edge_aff[b, :int(ne1[b]), :int(ne2[b])].reshape(-1)
-        k = k.reshape(n2max * n1max, n2max * n1max)
+        k = k.reshape((n2max * n1max, n2max * n1max))
         # node-wise affinity
         if node_aff is not None:
-            k_diag = mindspore.numpy.diagonal(k)
-            k_diag[:] = node_aff[b].transpose(0, 1).reshape(-1)
+            k[mindspore.numpy.arange(n2max * n1max), mindspore.numpy.arange(n2max * n1max)] = node_aff[b].transpose(1,
+                                                                                                                    0).reshape(
+                -1)
+            # k_diag = mindspore.numpy.diagonal(k)
+            # k_diag[:] = node_aff[b].transpose(0, 1).reshape(-1)
         ks.append(k)
 
     return mindspore.ops.stack(ks, axis=0)

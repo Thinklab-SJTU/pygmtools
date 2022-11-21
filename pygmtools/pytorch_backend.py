@@ -319,7 +319,6 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
     r"""
     Pytorch implementation of CAO solver (mode="c")
-
     :param K: affinity matrix, (m, m, n*n, n*n)
     :param X: initial matching, (m, m, n, n)
     :param num_graph: number of graphs, int
@@ -371,7 +370,6 @@ def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, la
 def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
     r"""
     Pytorch implementation of CAO solver in fast config (mode="pc")
-
     :param K: affinity matrix, (m, m, n*n, n*n)
     :param X: initial matching, (m, m, n, n)
     :param num_graph: number of graphs, int
@@ -1206,8 +1204,6 @@ def build_batch(input, return_ori_dim=False):
         pad_pattern = np.zeros(2 * len(max_shape), dtype=np.int64)
         pad_pattern[::-2] = max_shape - np.array(t.shape)
         pad_pattern = tuple(pad_pattern.tolist())
-        # print("pytorch:")
-        # print(pad_pattern)
         padded_ts.append(torch.nn.functional.pad(t, pad_pattern, 'constant', 0))
 
     if return_ori_dim:

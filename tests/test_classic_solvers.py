@@ -61,6 +61,8 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
             _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
                                           **aff_param_dict)
             if last_K is not None:
+                # print(working_backend)
+                # print(last_K)
                 assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
                     f"Incorrect affinity matrix for {working_backend}, " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
@@ -232,7 +234,7 @@ def test_sm():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy','mindspore'])
+    }, ['pytorch', 'numpy', 'mindspore'])
 
 
 def test_ipfp():
@@ -240,12 +242,12 @@ def test_ipfp():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy','mindspore'])
+    }, ['pytorch', 'mindspore'])
 
 
 if __name__ == '__main__':
     # test_hungarian()
     # test_sinkhorn()
-    test_rrwm()
+    # test_rrwm()
     # test_sm()
-    # test_ipfp()
+    test_ipfp()
