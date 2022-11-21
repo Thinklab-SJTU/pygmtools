@@ -10,7 +10,6 @@ import pygmtools.utils
 #     Linear Assignment Problem Solvers     #
 #############################################
 
-
 def hungarian(s: np.ndarray, n1: np.ndarray=None, n2: np.ndarray=None, nproc: int=1) -> np.ndarray:
     """
     numpy implementation of Hungarian algorithm
@@ -32,7 +31,6 @@ def hungarian(s: np.ndarray, n1: np.ndarray=None, n2: np.ndarray=None, nproc: in
 
     return perm_mat
 
-
 def _hung_kernel(s: np.ndarray, n1=None, n2=None):
     """
     Hungarian kernel function by calling the linear sum assignment solver from Scipy.
@@ -45,7 +43,6 @@ def _hung_kernel(s: np.ndarray, n1=None, n2=None):
     perm_mat = np.zeros_like(s)       
     perm_mat[row, col] = 1             
     return perm_mat                    
-
 
 def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
              dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> np.ndarray:
@@ -145,11 +142,9 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
 
     return np.exp(ret_log_s)
 
-
 #############################################
 #    Quadratic Assignment Problem Solvers   #
 #############################################
-
 
 def rrwm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.ndarray,
          max_iter: int, sk_iter: int, alpha: float, beta: float) -> np.ndarray:
@@ -181,9 +176,7 @@ def rrwm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
         if np.linalg.norm((v - last_v).squeeze(axis=-1), ord='fro') < 1e-5: 
             break
 
-
     return v.reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
-
 
 def sm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.ndarray,
        max_iter: int) -> np.ndarray:
@@ -203,7 +196,6 @@ def sm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.ndarr
 
     x = v.reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
     return x
-
 
 def ipfp(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.ndarray,
          max_iter) -> np.ndarray:
@@ -233,10 +225,8 @@ def ipfp(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
             break
         last_v = v
     
-    #返回匈牙利结果
     pred_x = binary_sol
     return pred_x
-
 
 def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     # get batch number
@@ -263,7 +253,6 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     v0 = x0.transpose((0, 2, 1)).reshape((batch_num, n1n2, 1))
 
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
-
 
 ############################################
 #      Multi-Graph Matching Solvers        #
