@@ -10,39 +10,67 @@ import pygmtools.utils
 #     Linear Assignment Problem Solvers     #
 #############################################
 
-def hungarian(s: np.ndarray, n1: np.ndarray=None, n2: np.ndarray=None, nproc: int=1) -> np.ndarray:
+def hungarian(s: np.ndarray, n1: np.ndarray=None, n2: np.ndarray=None,
+              unmatch1: np.ndarray=None, unmatch2: np.ndarray=None,
+              nproc: int=1) -> np.ndarray:
     """
     numpy implementation of Hungarian algorithm
     """
     batch_num = s.shape[0]
+
     perm_mat = -s
     if n1 is None:
         n1 = [None] * batch_num
     if n2 is None:
         n2 = [None] * batch_num
+    if unmatch1 is not None:
+        unmatch1 = -unmatch1
+    else:
+        unmatch1 = [None] * batch_num
+    if unmatch2 is not None:
+        unmatch2 = -unmatch2
+    else:
+        unmatch2 = [None] * batch_num
 
     if nproc > 1:
         with Pool(processes=nproc) as pool:
             perm_mat = [_ for _ in perm_mat]
-            mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2))
+            mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2, unmatch1, unmatch2))
             perm_mat = np.stack(mapresult.get())
     else:
-        perm_mat = np.stack([_hung_kernel(perm_mat[b], n1[b], n2[b]) for b in range(batch_num)])
+        perm_mat = np.stack([_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
 
     return perm_mat
 
-def _hung_kernel(s: np.ndarray, n1=None, n2=None):
+
+def _hung_kernel(s: np.ndarray, n1=None, n2=None, unmatch1=None, unmatch2=None):
     """
     Hungarian kernel function by calling the linear sum assignment solver from Scipy.
     """
-    if n1 is None:                     
-        n1 = s.shape[0]               
-    if n2 is None:                     
-        n2 = s.shape[1]              
-    row, col = scipy.optimize.linear_sum_assignment(s[:n1, :n2]) 
-    perm_mat = np.zeros_like(s)       
-    perm_mat[row, col] = 1             
-    return perm_mat                    
+    if n1 is None:
+        n1 = s.shape[0]
+    if n2 is None:
+        n2 = s.shape[1]
+    if unmatch1 is not None and unmatch2 is not None:
+        upper_left = s[:n1, :n2]
+        upper_right = np.full((n1, n1), float('inf'))
+        np.fill_diagonal(upper_right, unmatch1[:n1])
+        lower_left = np.full((n2, n2), float('inf'))
+        np.fill_diagonal(lower_left, unmatch2[:n2])
+        lower_right = np.zeros((n2, n1))
+
+        large_cost_mat = np.concatenate((np.concatenate((upper_left, upper_right), axis=1),
+                                         np.concatenate((lower_left, lower_right), axis=1)), axis=0)
+
+        row, col = scipy.optimize.linear_sum_assignment(large_cost_mat)
+        valid_idx = np.logical_and(row < n1, col < n2)
+        row = row[valid_idx]
+        col = col[valid_idx]
+    else:
+        row, col = scipy.optimize.linear_sum_assignment(s[:n1, :n2])
+    perm_mat = np.zeros_like(s)
+    perm_mat[row, col] = 1
+    return perm_mat   
 
 def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
              dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> np.ndarray:
