@@ -33,25 +33,7 @@ import networkx as nx # for plotting graphs
 pygm.BACKEND = 'jittor' # set default backend for pygmtools
 _ = jt.set_seed(1) # fix random seed
 
-# jt.flags.use_cuda = 1 # use cuda
-
-#! The following code is used for testing jittor codes.
-import numpy as np
-
-def namestr(obj):
- return [name for name in globals() if globals()[name] is obj][0]
-
-def load_var(*args):
-    ret = []
-    for var in args:
-        ret.append(jt.Var(np.load(f'../{namestr(var)}.npy')))
-    return ret
-        
-
-def compare_var(*args):
-    for var in args:
-        var_np = np.load(f'../{namestr(var)}.npy')
-        assert np.allclose(var.numpy(), var_np, rtol=1e-4)
+jt.flags.use_cuda = jt.has_cuda
 
 ##############################################################################
 # Generate the larger graph

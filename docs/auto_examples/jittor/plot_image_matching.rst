@@ -74,7 +74,7 @@ The matched images can be further processed for other downstream tasks.
     from PIL import Image
     pygm.BACKEND = 'jittor' # set default backend for pygmtools
 
-    # jt.flags.use_cuda = 1 # use cuda
+    jt.flags.use_cuda = jt.has_cuda
 
 
 
@@ -393,7 +393,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
-    <matplotlib.image.AxesImage object at 0x7f4da498f280>
+    <matplotlib.image.AxesImage object at 0x7f2e7340aa30>
 
 
 
@@ -480,7 +480,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f4da4865430>
+    <matplotlib.image.AxesImage object at 0x7f2e73345610>
 
 
 
@@ -770,7 +770,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  17.143 seconds)
+   **Total running time of the script:** ( 1 minutes  47.759 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_image_matching.py:
