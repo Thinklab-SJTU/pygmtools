@@ -328,7 +328,7 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
         x0 = mindspore.numpy.zeros((batch_num, int(n1max), int(n2max)), dtype=K.dtype)
         for b in range(batch_num):
             x0[b, 0:n1[b], 0:n2[b]] = mindspore.Tensor(1.) / (n1[b] * n2[b])
-    v0 = x0.swapaxes(1, 2).reshape(batch_num, n1n2, 1)
+    v0 = x0.swapaxes(1, 2).reshape((batch_num, n1n2, 1))
 
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
 
