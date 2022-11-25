@@ -1,8 +1,10 @@
+import itertools
+import functools
 import scipy.special
 import scipy.optimize
 import numpy as np
 from multiprocessing import Pool
-
+import pygmtools.utils
 
 #############################################
 #     Linear Assignment Problem Solvers     #
