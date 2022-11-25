@@ -210,6 +210,21 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             jt.Var([1.], dtype=float32)
 
+    .. dropdown:: Jittor Example
+        ::
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+            >>> _ = mindspore.set_seed(1)
+
+            # Generate a batch of isomorphic graphs
+import mindspore.ops            >>> batch_size = 10
+import mindspore.ops            >>> X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
+            >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
+            >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> A2 = mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> n1 = n2 = mindspore.Tensor([4] * batch_size)
+
     .. note::
         If you find this graph matching solver useful for your research, please cite:
 
