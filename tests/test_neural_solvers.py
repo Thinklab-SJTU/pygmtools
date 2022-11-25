@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from test_utils import *
 
-torch.manual_seed(0)
 
 # The testing function for quadratic assignment
 def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, mode, matrix_params, backends):
@@ -133,7 +132,7 @@ def test_ngm():
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch',])
 
 
 if __name__ == '__main__':
