@@ -132,7 +132,7 @@ def test_ngm():
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch',])
+    }, ['pytorch', 'jittor'])
 
 
 if __name__ == '__main__':
