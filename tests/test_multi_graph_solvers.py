@@ -145,7 +145,7 @@ def test_cao():
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'paddle', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
     for i in range(max_retries - 1):
         error_flag = False
         try:
@@ -170,7 +170,7 @@ def test_mgm_floyd():
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'paddle', 'jittor'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
     for i in range(max_retries - 1):
         error_flag = False
         try:
@@ -194,7 +194,7 @@ def test_gamgm():
             'sk_min_tau': [0.1, 0.05],
             'param_lambda': [0.1, 0.5],
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-        }, ['pytorch', 'paddle', 'jittor']
+        }, ['pytorch', 'numpy', 'paddle', 'jittor']
     )
     for i in range(max_retries - 1):
         error_flag = False
