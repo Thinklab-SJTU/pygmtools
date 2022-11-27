@@ -382,8 +382,6 @@ def build_batch(input, return_ori_dim=False):
             pad_list.append((0, 0))
         pad_list.reverse()
         pad_pattern = tuple(pad_list)
-        # print("mindspore:")
-        # print(pad_pattern)
         mindspore_pad = nn.Pad(pad_pattern, mode="CONSTANT")
         padded_ts.append(mindspore_pad(t))
 
@@ -417,10 +415,6 @@ def from_numpy(input, device=None):
     mindspore function from_numpy
     """
     return mindspore.Tensor(input)
-    # if device is None:
-    #     return torch.from_numpy(input)
-    # else:
-    #     return torch.from_numpy(input).to(device)
 
 
 def _aff_mat_from_node_edge_aff(node_aff: mindspore.Tensor, edge_aff: mindspore.Tensor, connectivity1: mindspore.Tensor,

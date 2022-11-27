@@ -248,6 +248,6 @@ def test_ipfp():
 if __name__ == '__main__':
     # test_hungarian()
     # test_sinkhorn()
-    test_rrwm()
+    # test_rrwm()
     # test_sm()
-    # test_ipfp()
+    test_ipfp()
