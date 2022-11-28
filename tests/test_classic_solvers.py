@@ -1,7 +1,5 @@
 import sys
-import os
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 sys.path.insert(0, '.')
 
 import numpy as np
@@ -61,8 +59,6 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
             _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
                                           **aff_param_dict)
             if last_K is not None:
-                # print(working_backend)
-                # print(last_K)
                 assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
                     f"Incorrect affinity matrix for {working_backend}, " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
@@ -154,8 +150,6 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
                 accuracy = (X_hung * X_gt).sum() / max(X_hung.sum(), X_gt.sum())
             else:
                 _X = solver_func(linear_sim, _n1, _n2, **solver_param_dict)
-                # print(values)
-                # print(_X)
                 accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
 
             assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
@@ -174,7 +168,7 @@ def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 def test_sinkhorn():
@@ -184,7 +178,7 @@ def test_sinkhorn():
         'max_iter': [10, 20, 50],
         'batched_operation': [True, False],
         'dummy_row': [True, ],
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
     # test symmetric matching
     args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -192,7 +186,7 @@ def test_sinkhorn():
         'max_iter': [10, 20, 50],
         'batched_operation': [True, False],
         'dummy_row': [True, False],
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
     # test outlier matching (non-symmetric)
     args3 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
@@ -201,7 +195,7 @@ def test_sinkhorn():
         'batched_operation': [True, False],
         'dummy_row': [True, False],
         'outlier_num': [5, 10]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
     # test outlier matching (symmetric)
     args4 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -210,7 +204,7 @@ def test_sinkhorn():
         'batched_operation': [True, False],
         'dummy_row': [True, False],
         'outlier_num': [5, 10]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
@@ -226,7 +220,7 @@ def test_rrwm():
         'max_iter': [20, 50],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 def test_sm():
@@ -234,7 +228,7 @@ def test_sm():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 def test_ipfp():
@@ -242,7 +236,7 @@ def test_ipfp():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'mindspore'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 if __name__ == '__main__':
