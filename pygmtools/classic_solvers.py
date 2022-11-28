@@ -236,15 +236,13 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             # Solve by SM. Note that X is normalized with a squared sum of 1
             >>> X = pygm.sm(K, n1, n2)
-            >>> (X ** 2).sum(dim=(1, 2))
+            >>> (X ** 2).sum(axis=(1, 2))
+            [1.         0.9999998  0.99999976 1.         0.99999976 1.
+            1.         1.0000001  1.0000001  1.        ]
 
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
-
-            # This solver supports gradient back-propogation
-            >>> K = K.requires_grad_(True)
-            >>> pygm.sm(K, n1, n2).sum().backward()
-            >>> len(torch.nonzero(K.grad))
+            1.0
 
     .. note::
         If you find this graph matching solver useful for your research, please cite:
@@ -504,7 +502,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
             >>> X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
-            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), torch.randperm(4)] = 1
+            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), mindspore.ops.Randperm(4)(mindspore.Tensor([4], dtype=mindspore.int32))] = 1
             >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
             >>> A2 = mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(X_gt.swapaxes(1, 2), A1), X_gt)
             >>> n1 = n2 = mindspore.Tensor([4] * batch_size)
@@ -518,15 +516,15 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             # Solve by RRWM. Note that X is normalized with a sum of 1
             >>> X = pygm.rrwm(K, n1, n2, beta=100)
-            >>> X.sum(dim=(1, 2))
+            >>> X.sum(axis=(1, 2))
+            [1.         0.99999994 0.99999994 1.         1.0000002  1.
+            1.         1.         1.0000001  1.0000001 ]
+
 
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
 
-            # This solver supports gradient back-propogation
-            >>> K = K.requires_grad_(True)
-            >>> pygm.rrwm(K, n1, n2, beta=100).sum().backward()
-            >>> len(torch.nonzero(K.grad))
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -771,7 +769,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
             >>> X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
-            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), torch.randperm(4)] = 1
+            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), mindspore.ops.Randperm(4)(mindspore.Tensor([4], dtype=mindspore.int32))] = 1
             >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
             >>> A2 = mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(X_gt.swapaxes(1, 2), A1), X_gt)
             >>> n1 = mindspore.Tensor([4] * batch_size)
@@ -787,9 +785,15 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Solve by IPFP
             >>> X = pygm.ipfp(K, n1, n2)
             >>> X[0]
+            [[1. 0. 0. 0.]
+             [0. 0. 0. 1.]
+             [0. 0. 1. 0.]
+             [0. 1. 0. 0.]]
+
 
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
