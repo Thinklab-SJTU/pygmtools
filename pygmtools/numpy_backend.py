@@ -375,6 +375,7 @@ def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, la
                 X[j, i] = X_upt.swapaxes(0,1)
     return X
 
+
 def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
     r"""
     Numpy implementation of CAO solver in fast config (mode="pc")
@@ -438,6 +439,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         assert np.all(X.swapaxes(0,1).swapaxes(2,3) == X)
     return X
 
+
 def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
     m, n = num_graph, num_node
 
@@ -490,6 +492,7 @@ def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
                     X[i, j] = X_combo
                     X[j, i] = X_combo.swapaxes(0,1)
     return X
+
 
 def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
     m, n = num_graph, num_node
@@ -558,6 +561,7 @@ def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
         X = X * X_mask + X.swapaxes(0,1).swapaxes(2, 3) * (1 - X_mask)
     return X
 
+
 def _get_single_pc_opt(X, i, j, Xij=None):
     """
     CAO/Floyd helper function (compute consistency)
@@ -574,6 +578,7 @@ def _get_single_pc_opt(X, i, j, Xij=None):
     X_combo = np.matmul(X1, X2)
     pair_con = 1 - np.sum(np.abs(Xij - X_combo)) / (2 * n * m)
     return pair_con
+
 
 def _get_batch_pc_opt(X):
     """
@@ -655,6 +660,7 @@ def gamgm(
         result[i] = U[start_n:end_n]
 
     return result
+
 
 def gamgm_real(
         supA, supW, ns, n_indices, n_univ, num_graphs, U0,
@@ -785,9 +791,11 @@ def gamgm_real(
 
     return U
 
+
 ############################################
 #          Neural Network Solvers          #
 ############################################
+
 
 #############################################
 #              Utils Functions              #
@@ -851,6 +859,7 @@ def dense_to_sparse(dense_adj):
     edge_weight = build_batch([dense_adj[b][(conn[b, :, 0], conn[b, :, 1])] for b in range(batch_size)])
     return conn, np.expand_dims(edge_weight, axis=-1), nedges
 
+
 def compute_affinity_score(X, K):
     """
     Numpy implementation of computing affinity score
@@ -860,6 +869,7 @@ def compute_affinity_score(X, K):
     vxt = vx.swapaxes(1, 2)  # (b, 1, n*n)
     affinity = np.squeeze(np.squeeze(np.matmul(np.matmul(vxt, K), vx),axis=-1),axis=-1)
     return affinity
+
 
 def to_numpy(input):
     """
@@ -873,6 +883,7 @@ def from_numpy(input, device):
     identity function
     """
     return input
+
 
 def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim=0):
     """
@@ -901,6 +912,8 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim=0):
         return np.stack(As,axis=0), X_gt, np.stack(Fs,axis=0)
     else:
         return np.stack(As,axis=0), X_gt
+
+
 """
 def permutation_loss(pred_dsmat:np.ndarray, gt_perm: np.ndarray, n1: np.ndarray, n2:np.ndarray) -> np.ndarray:
 
@@ -932,6 +945,8 @@ def permutation_loss(pred_dsmat:np.ndarray, gt_perm: np.ndarray, n1: np.ndarray,
 
     return loss / n_sum
 """
+
+
 def _aff_mat_from_node_edge_aff(node_aff: np.ndarray, edge_aff: np.ndarray, connectivity1: np.ndarray, connectivity2: np.ndarray,
                                 n1, n2, ne1, ne2):
     """
@@ -1019,6 +1034,7 @@ def _transpose(input: np.ndarray, dim1, dim2):
     numpy implementation of _transpose
     """
     return np.swapaxes(input, dim1, dim2)
+
 
 def _mm(input1: np.ndarray, input2: np.ndarray):
     """
