@@ -56,6 +56,53 @@ def cao(K, x0=None, qap_solver=None,
 
        Multi-graph matching methods process all graphs at once and do not support the additional batch dimension. Please
        note that this behavior is different from two-graph matching solvers in :mod:`~pygmtools.classic_solvers`.
+    
+    .. dropdown:: Numpy Example
+
+        ::
+
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10)
+            >>> As_1, As_2 = [], []
+            >>> for i in range(graph_num):
+            ...     for j in range(graph_num):
+            ...         As_1.append(As[i])
+            ...         As_2.append(As[j])
+            >>> As_1 = np.stack(As_1, axis=0)
+            >>> As_2 = np.stack(As_2, axis=0)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+            >>> K = K.reshape(graph_num, graph_num, 4*4, 4*4)
+            >>> K.shape
+            (10, 10, 16, 16)
+
+            # Solve the multi-matching problem
+            >>> X = pygm.cao(K)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            1.0
+
+            # Use the IPFP solver for two-graph matching
+            >>> ipfp_func = functools.partial(pygmtools.ipfp, n1max=4, n2max=4)
+            >>> X = pygm.cao(K, qap_solver=ipfp_func)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            1.0
+
+            # Run the faster version of CAO algorithm
+            >>> X = pygm.cao(K, mode='fast')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            1.0
+
 
     .. dropdown:: Pytorch Example
 
@@ -289,6 +336,53 @@ def mgm_floyd(K, x0=None, qap_solver=None,
     :param param_lambda: (default: 0.3) value of :math:`\lambda`, with :math:`\lambda\in[0,1]`
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(m\times m \times n \times n)` the multi-graph matching result
+
+    .. dropdown:: Numpy Example
+
+        ::
+
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10)
+            >>> As_1, As_2 = [], []
+            >>> for i in range(graph_num):
+            ...     for j in range(graph_num):
+            ...         As_1.append(As[i])
+            ...         As_2.append(As[j])
+            >>> As_1 = np.stack(As_1, axis=0)
+            >>> As_2 = np.stack(As_2, axis=0)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, None, None, None, edge_aff_fn=gaussian_aff)
+            >>> K = K.reshape(graph_num, graph_num, 4*4, 4*4)
+            >>> K.shape
+            (10, 10, 16, 16)
+
+            # Solve the multi-matching problem
+            >>> X = pygm.mgm_floyd(K)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            1.0
+
+            # Use the IPFP solver for two-graph matching
+            >>> ipfp_func = functools.partial(pygm.ipfp, n1max=4, n2max=4)
+            >>> X = pygm.mgm_floyd(K, qap_solver=ipfp_func)
+            >>> (X * X_gt).sum() / X_gt.sum()
+            1.0
+
+            # Run the faster version of CAO algorithm
+            >>> X = pygm.mgm_floyd(K, mode='fast')
+            >>> (X * X_gt).sum() / X_gt.sum()
+            1.0
+
 
     .. dropdown:: Pytorch Example
 
@@ -557,6 +651,56 @@ def gamgm(A, W,
     .. note::
 
         Setting ``verbose=True`` may help you tune the parameters.
+
+    .. dropdown:: Numpy Example
+
+        ::
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> import itertools
+            >>> import time
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate 10 isomorphic graphs
+            >>> graph_num = 10
+            >>> As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
+
+            # Compute node-wise similarity by inner-product and Sinkhorn
+            >>> W = np.matmul(np.expand_dims(Fs,axis=1), np.expand_dims(Fs.swapaxes(1, 2),axis=0))
+            >>> W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
+
+            # Solve the multi-matching problem
+            >>> X = pygm.gamgm(As, W)
+            >>> matched = 0
+            for i, j in itertools.product(range(graph_num), repeat=2):
+            ...    matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
+            >>> acc
+            1.0
+
+            # This function supports graphs with different nodes (also known as partial matching)
+            # In the following we ignore the last node from the last 5 graphs
+            >>> ns = np.array([4, 4, 4, 4, 4, 3, 3, 3, 3, 3], dtype='i4')
+            >>> for i in range(graph_num):
+            ...    As[i, ns[i]:, :] = 0
+            ...    As[i, :, ns[i]:] = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...    X_gt[i, j, ns[i]:, :] = 0
+            ...    X_gt[i, j, :, ns[j]:] = 0
+            ...    W[i, j, ns[i]:, :] = 0
+            ...    W[i, j, :, ns[j]:] = 0
+
+            # Partial matching is challenging and the following parameters are carefully tuned
+            >>> X = pygm.gamgm(As, W, ns, n_univ=4, sk_init_tau=.1, sk_min_tau=0.01, param_lambda=0.3)
+
+            # Check the partial matching result
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...    matched += (X[i,j] * X_gt[i, j, :ns[i], :ns[j]]).sum()
+            >>> matched / X_gt.sum()
+            1.0
+
 
     .. dropdown:: Pytorch Example
 
