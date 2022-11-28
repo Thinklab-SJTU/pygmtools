@@ -520,11 +520,9 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             [1.         0.99999994 0.99999994 1.         1.0000002  1.
             1.         1.         1.0000001  1.0000001 ]
 
-
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             1.0
-
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -789,7 +787,6 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
              [0. 0. 0. 1.]
              [0. 0. 1. 0.]
              [0. 1. 0. 0.]]
-
 
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()

@@ -228,7 +228,6 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
     d = K.sum(axis=2, keepdims=True)
     dmax = d.max(axis=1, keepdims=True)
     K = K / (dmax + d.min() * 1e-5)
-    # print(K.shape)
     v = v0
     for i in range(max_iter):
         # random walk
@@ -291,10 +290,6 @@ def ipfp(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         t0 = alpha / beta
         v = mindspore.numpy.where(mindspore.ops.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
         last_v_sol = comp_obj_score(last_v, K, last_v)
-        # print(mindspore.ops.max(mindspore.ops.abs(
-        #         last_v_sol - mindspore.ops.BatchMatMul()(cost.reshape((batch_num, 1, -1)),
-        #                                                  binary_sol.reshape((batch_num, -1, 1)))
-        # ) / last_v_sol)[1] < 1e-3)
         if (mindspore.ops.max(mindspore.ops.abs(
                 last_v_sol - mindspore.ops.BatchMatMul()(cost.reshape((batch_num, 1, -1)),
                                                          binary_sol.reshape((batch_num, -1, 1)))
