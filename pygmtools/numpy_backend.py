@@ -718,7 +718,6 @@ def gamgm_real(
                         n1.append(n_end - n_start)
                         n_start = n_end
                     V_batch = build_batch(V_list)
-                    n1 = np.ndarray(n1)
                     U = sinkhorn(V_batch, n1,
                                  max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
                     n_start = 0
