@@ -114,6 +114,10 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/jittor_logo.png" alt="jittor logo" width="200"/>
 
+* [Tensorflow](https://tensorflow.google.cn/) (GPU friendly, deep learning friendly)
+
+<img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
+
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
 
 ## The Deep Graph Matching Benchmark
