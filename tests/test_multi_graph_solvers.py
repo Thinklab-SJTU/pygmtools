@@ -1,3 +1,4 @@
+import copy
 import sys
 
 import random
@@ -78,7 +79,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
 
                 _K = pygm.utils.build_aff_mat(_Fs_1, _edge1, _conn1, _Fs_2, _edge2, _conn2, None, _ne1, None, _ne2,
                                               **aff_param_dict)
-                _K = _K.reshape(num_graph, num_graph, num_node**2, num_node**2)
+                _K = _K.reshape((num_graph, num_graph, num_node**2, num_node**2))
                 if last_K is not None:
                     assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
                         f"Incorrect affinity matrix for {working_backend}, " \
@@ -107,7 +108,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                 Fs2 = np.expand_dims(Fs, 0).repeat(num_graph, axis=0).reshape(num_graph**2, num_node, node_feat_dim)
                 _As, _Fs1, _Fs2, _X_gt = data_from_numpy(As, Fs1, Fs2, X_gt)
                 node_aff_mat = aff_param_dict['node_aff_fn'](_Fs1, _Fs2)
-                node_aff_mat = node_aff_mat.reshape(num_graph, num_graph, num_node, num_node)
+                node_aff_mat = node_aff_mat.reshape((num_graph, num_graph, num_node, num_node))
                 _X = solver_func(_As, node_aff_mat, **solver_param_dict)
 
                 if last_X is not None:
@@ -136,27 +137,51 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
 def test_cao():
     num_nodes = 5
     num_graphs = 10
-    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.cao, 'lawler-qap', {
-        'mode': ['fast', 'accu', 'pc', 'c'],
+    max_retries = 5
+    args = (num_graphs, num_nodes, 10, pygm.cao, 'lawler-qap', {
+        'mode': ['time', 'memory'],
         'x0': [None, 0.2, 0.5],
         'lambda_init': [0.1, 0.3],
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    for i in range(max_retries - 1):
+        error_flag = False
+        try:
+            _test_mgm_solver_on_isomorphic_graphs(*args)
+        except AssertionError as err:
+            print('Error caught (might be caused by randomness), retrying:\n', err)
+            error_flag = True
+        if not error_flag:
+            break
+    if error_flag:
+        _test_mgm_solver_on_isomorphic_graphs(*args)
 
 
 def test_mgm_floyd():
     num_nodes = 5
     num_graphs = 10
-    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.mgm_floyd, 'lawler-qap', {
-        'mode': ['fast', 'accu', 'pc', 'c'],
+    max_retries = 5
+    args = (num_graphs, num_nodes, 10, pygm.mgm_floyd, 'lawler-qap', {
+        'mode': ['time', 'memory'],
         'x0': [None, 0.2, 0.5],
         'param_lambda': [0.1, 0.3],
         'qap_solver': [functools.partial(pygm.ipfp, n1max=num_nodes, n2max=num_nodes), None],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    for i in range(max_retries - 1):
+        error_flag = False
+        try:
+            _test_mgm_solver_on_isomorphic_graphs(*args)
+        except AssertionError as err:
+            print('Error caught (might be caused by randomness), retrying:\n', err)
+            error_flag = True
+        if not error_flag:
+            break
+    if error_flag:
+        _test_mgm_solver_on_isomorphic_graphs(*args)
 
 
 def test_gamgm():
@@ -169,7 +194,7 @@ def test_gamgm():
             'sk_min_tau': [0.1, 0.05],
             'param_lambda': [0.1, 0.5],
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-        }, ['pytorch']
+        }, ['pytorch', 'numpy', 'paddle', 'jittor']
     )
     for i in range(max_retries - 1):
         error_flag = False

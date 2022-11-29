@@ -267,6 +267,7 @@ class NGMConvLayer(Module):
 
         if norm is True:
             A = jt.normalize(A, p=1, dim=2)
+            A[jt.isnan(A)] = 0
 
         x1 = self.n_func(x)
         x2 = jt.matmul((A.unsqueeze(-1) * W_new).permute(0, 3, 1, 2), x1.unsqueeze(2).permute(0, 3, 1, 2)).squeeze(-1).transpose(1, 2)

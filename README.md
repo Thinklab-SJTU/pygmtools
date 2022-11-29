@@ -102,17 +102,29 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/numpy_logo.png" alt="numpy logo" width="200"/>
 
-* [PyTorch](https://pytorch.org/) (**recommended** backend, GPU friendly, deep learning friendly)
+* [PyTorch](https://pytorch.org/) (GPU friendly, deep learning friendly)
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/pytorch_logo.png" alt="pytorch logo" width="200"/>
+
+* [Jittor](https://github.com/Jittor/Jittor) (GPU friendly, JIT support, deep learning friendly)
+
+<img src="https://pygmtools.readthedocs.io/en/latest/_images/jittor_logo.png" alt="jittor logo" width="200"/>
 
 * [PaddlePaddle](https://www.paddlepaddle.org.cn/en) (GPU friendly, deep learning friendly)
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/paddle_logo.png" alt="paddle logo" width="200"/>
 
-* [Jittor](https://github.com/Jittor/Jittor) (GPU friendly, deep learning friendly)
+### Development status
 
-<img src="https://pygmtools.readthedocs.io/en/latest/_images/jittor_logo.png" alt="jittor logo" width="200"/>
+|                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
+| ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
+| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | 🧱         | 🧱        |
+| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | 🧱         | 🧱        |
+| Multi-Graph Solvers | 🧱    | ✔       | ✔      | ✔            | 📆         | 📆        |
+| Neural Solvers      | 🧱    | ✔       | ✔      | 🧱           | 📆         | 📆        |
+| Examples Gallery    | 📆    | ✔       | ✔      | 📆           | 📆         | 📆        |
+
+✔: Supported; 🧱: Work in progress; 📆: Planned for future versions (contributions welcomed!).
 
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
 

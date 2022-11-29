@@ -62,10 +62,14 @@ following rules before you submit a pull request:
    usage presented as doctests when appropriate.
 
 -  When adding additional functionality, provide at least one
-   example script in the ``examples/`` folder. Have a look at other
-   examples for reference. Examples should demonstrate why the new
+   example script under the function's API. Have a look at other functions'
+   examples for reference. You are also encouraged to add new examples to
+   the ``examples/`` folder to demonstrate why the new
    functionality is useful in practice and, if possible, compare it
    to other methods available in ``pygmtools``.
+   
+   - If you have modified any examples, please build the documentation before
+     you commit, and please also commit any changes in ``docs/auto_examples/``.
 
 -  Documentation and high-coverage tests are necessary for enhancements to be
    accepted. Bug-fixes or new features should be provided with 
@@ -154,8 +158,10 @@ If you want to skip building the examples, please use the command
 ``make html-noplot``.
 
 For building the documentation, you will need the packages listed in
-``docs/requirements.txt``. Please use ``python>=3.7`` because the packages
-for earlier Python versions are outdated.
+``docs/requirements.txt``. Please use ``python==3.8`` to keep it consistent
+with the read-the-doc builder online. If you have modified any examples, 
+please build the documentation before you commit, and please also commit 
+any changes in ``docs/auto_examples/``.
 
 When you are writing documentation, it is important to keep a good
 compromise between mathematical and algorithmic details, and give

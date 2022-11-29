@@ -1,3 +1,5 @@
+import itertools
+import functools
 import paddle
 import numpy as np
 from multiprocessing import Pool
@@ -66,9 +68,10 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         transposed = True
 
     if nrows is None:
-        nrows = paddle.to_tensor([s.shape[1] for _ in range(batch_size)], place=s.place, dtype=paddle.int64)
+        nrows = paddle.to_tensor([s.shape[1] for _ in range(batch_size)], place=s.place, dtype=paddle.int32)
     if ncols is None:
-        ncols = paddle.to_tensor([s.shape[2] for _ in range(batch_size)], place=s.place, dtype=paddle.int64)
+        ncols = paddle.to_tensor([s.shape[2] for _ in range(batch_size)], place=s.place, dtype=paddle.int32)
+
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
@@ -266,7 +269,7 @@ def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         cost = paddle.reshape(paddle.bmm(K, v),(batch_num, n2max, n1max)).transpose((0, 2, 1))
         binary_sol = hungarian(cost, n1, n2)
         binary_v = paddle.reshape(binary_sol.transpose((0, 2, 1)),(batch_num, -1, 1))
-        alpha = comp_obj_score(v, K, binary_v - v)  
+        alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
         t0 = alpha / beta
         v = paddle.where(paddle.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
@@ -308,6 +311,512 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
 
+
+############################################
+#      Multi-Graph Matching Solvers        #
+############################################
+
+
+def cao_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
+    r"""
+    Paddle implementation of CAO solver (mode="c")
+
+    :param K: affinity matrix, (m, m, n*n, n*n)
+    :param X: initial matching, (m, m, n, n)
+    :param num_graph: number of graphs, int
+    :param num_node: number of nodes, int
+    :return: X, (m, m, n, n)
+    """
+    m, n = num_graph, num_node
+    param_lambda = lambda_init
+    device = K.place
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='paddle').unsqueeze(-1).unsqueeze(-1)
+
+    for iter in range(max_iter):
+        if iter >= iter_boost:
+            param_lambda = np.min([param_lambda * lambda_step, lambda_max])
+        # pair_con = get_batch_pc_opt(X)
+        pair_aff = _comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))).reshape((m, m))
+        pair_aff = pair_aff - paddle.to_tensor(paddle.eye(m) , place=device) * pair_aff
+        norm = paddle.max(pair_aff)
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                aff_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
+                con_ori = _get_single_pc_opt(X, i, j)
+                if iter < iter_boost:
+                    score_ori = aff_ori
+                else:
+                    score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+                X_upt = X[i, j]
+                for k in range(m):
+                    X_combo = paddle.matmul(X[i, k], X[k, j])
+                    aff_combo = _comp_aff_score(X_combo, K[i, j]) / norm
+                    con_combo = _get_single_pc_opt(X, i, j, X_combo)
+                    if iter < iter_boost:
+                        score_combo = aff_combo
+                    else:
+                        score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+                    if score_combo > score_ori:
+                        X_upt = X_combo
+                X[i, j] = X_upt
+                X[j, i] = X_upt.transpose((1, 0))
+    return X
+
+
+def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_step, lambda_max, iter_boost):
+    r"""
+    Paddle implementation of CAO solver in fast config (mode="pc")
+
+    :param K: affinity matrix, (m, m, n*n, n*n)
+    :param X: initial matching, (m, m, n, n)
+    :param num_graph: number of graphs, int
+    :param num_node: number of nodes, int
+    :return: X, (m, m, n, n)
+    """
+    m, n = num_graph, num_node
+    param_lambda = lambda_init
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='paddle').unsqueeze(-1).unsqueeze(-1)
+
+    device = K.place
+    mask1 = paddle.to_tensor(paddle.arange(m).reshape((m, 1)).tile((1, m)), place = device)
+    mask2 = paddle.to_tensor(paddle.arange(m).reshape((1, m)).tile((m, 1)), place = device)
+    mask = paddle.to_tensor((mask1 < mask2), dtype = 'float32')
+    X_mask = mask.reshape((m, m, 1, 1))
+
+    for iter in range(max_iter):
+        if iter >= iter_boost:
+            param_lambda = np.min([param_lambda * lambda_step, lambda_max])
+
+        pair_aff = _comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))).reshape((m, m))
+        pair_aff = pair_aff - paddle.to_tensor(paddle.eye(m), place=device) * pair_aff
+        norm = paddle.max(pair_aff)
+
+        X1 = X.reshape((m, 1, m, n, n)).tile((1, m, 1, 1, 1)).reshape((-1, n, n))  # X1[i,j,k] = X[i,k]
+        X2 = X.reshape((1, m, m, n, n)).tile((m, 1, 1, 1, 1)).transpose((0, 2, 1, 3, 4)).reshape((-1, n, n))  # X2[i,j,k] = X[k,j]
+        X_combo = paddle.bmm(X1, X2).reshape((m, m, m, n, n)) # X_combo[i,j,k] = X[i, k] * X[k, j]
+
+        aff_ori = (_comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))) / norm).reshape((m, m))
+        pair_con = _get_batch_pc_opt(X)
+        con_ori = paddle.sqrt(pair_con)
+
+        K_repeat = K.reshape((m, m, 1, n * n, n * n)).tile((1, 1, m, 1, 1)).reshape((-1, n * n, n * n))
+        aff_combo = (_comp_aff_score(X_combo.reshape((-1, n, n)), K_repeat) / norm).reshape((m, m, m))
+        con1 = pair_con.reshape((m, 1, m)).tile((1, m, 1))  # con1[i,j,k] = pair_con[i,k]
+        con2 = pair_con.reshape((1, m, m)).tile((m, 1, 1)).transpose((0, 2, 1))  # con2[i,j,k] = pair_con[j,k]
+        con_combo = paddle.sqrt(con1 * con2)
+
+        if iter < iter_boost:
+            score_ori = aff_ori
+            score_combo = aff_combo
+        else:
+            score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+            score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+        idx = paddle.argmax(score_combo, axis=-1)
+        score_combo = paddle.max(score_combo, axis=-1)
+
+        # assert paddle.all(score_combo >= score_ori), paddle.min(score_combo - score_ori)
+        X_upt = X_combo[mask1, mask2, idx]
+        X = X_upt * X_mask + X_upt.transpose((1, 0, 3, 2))* X_mask.transpose((1, 0, 2, 3)) + X * (1 - X_mask - X_mask.transpose((1, 0, 2, 3)))
+        assert paddle.all(X.transpose((1, 0, 3, 2)) == X)
+    return X
+
+
+def mgm_floyd_solver(K, X, num_graph, num_node, param_lambda):
+    m, n = num_graph, num_node
+    device = K.place
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='paddle').unsqueeze(-1).unsqueeze(-1)
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))).reshape((m, m))
+        pair_aff = pair_aff - paddle.to_tensor(paddle.eye(m), place=device) * pair_aff
+        norm = paddle.max(pair_aff)
+
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                score_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
+                X_combo = paddle.matmul(X[i, k], X[k, j])
+                score_combo = _comp_aff_score(X_combo, K[i, j]) / norm
+
+                if score_combo > score_ori:
+                    X[i, j] = X_combo
+                    X[j, i] = X_combo.transpose((1, 0))
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))).reshape((m, m))
+        pair_aff = pair_aff - paddle.to_tensor(paddle.eye(m), place=device) * pair_aff
+        norm = paddle.max(pair_aff)
+
+        pair_con = _get_batch_pc_opt(X)
+        for i in range(m):
+            for j in range(m):
+                if i >= j:
+                    continue
+                aff_ori = _comp_aff_score(X[i, j], K[i, j]) / norm
+                con_ori = _get_single_pc_opt(X, i, j)
+                score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+
+                X_combo = paddle.matmul(X[i, k], X[k, j])
+                aff_combo = _comp_aff_score(X_combo, K[i, j]) / norm
+                con_combo = _get_single_pc_opt(X, i, j, X_combo)
+                score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+                if score_combo > score_ori:
+                    X[i, j] = X_combo
+                    X[j, i] = X_combo.transpose((1, 0))
+    return X
+
+
+def mgm_floyd_fast_solver(K, X, num_graph, num_node, param_lambda):
+    m, n = num_graph, num_node
+    device = K.place
+
+    def _comp_aff_score(x, k):
+        return pygmtools.utils.compute_affinity_score(x, k, backend='paddle').unsqueeze(-1).unsqueeze(-1)
+
+    mask1 = paddle.arange(m).reshape((m, 1)).tile((1, m))
+    mask2 = paddle.arange(m).reshape((1, m)).tile((m, 1))
+    mask = paddle.to_tensor(paddle.to_tensor((mask1 < mask2), dtype = 'float32'), place = device)
+    X_mask = mask.reshape((m, m, 1, 1))
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))).reshape((m, m))
+        pair_aff = pair_aff - paddle.to_tensor(paddle.eye(m), place=device) * pair_aff
+        norm = paddle.max(pair_aff)
+
+        X1 = X[:, k].reshape((m, 1, n, n)).tile((1, m, 1, 1)).reshape((-1, n, n))  # X[i, j] = X[i, k]
+        X2 = X[k, :].reshape((1, m, n, n)).tile((m, 1, 1, 1)).reshape((-1, n, n))  # X[i, j] = X[j, k]
+        X_combo = paddle.bmm(X1, X2).reshape((m, m, n, n))
+
+        aff_ori = (_comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))) / norm).reshape((m, m))
+        aff_combo = (_comp_aff_score(X_combo.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))) / norm).reshape((m, m))
+
+        score_ori = aff_ori
+        score_combo = aff_combo
+
+        upt = paddle.to_tensor((score_ori < score_combo), dtype = 'float32')
+        upt = (upt * mask).reshape((m, m, 1, 1))
+        X = X * (1.0 - upt) + X_combo * upt
+        X = X * X_mask + X.transpose((1, 0, 2, 3)).transpose((0, 1, 3, 2)) * (1 - X_mask)
+
+    for k in range(m):
+        pair_aff = _comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))).reshape((m, m))
+        pair_aff = pair_aff - paddle.to_tensor(paddle.eye(m), place=device) * pair_aff
+        norm = paddle.max(pair_aff)
+
+        pair_con = _get_batch_pc_opt(X)
+
+        X1 = X[:, k].reshape((m, 1, n, n)).tile((1, m, 1, 1)).reshape((-1, n, n))  # X[i, j] = X[i, k]
+        X2 = X[k, :].reshape((1, m, n, n)).tile((m, 1, 1, 1)).reshape((-1, n, n))  # X[i, j] = X[j, k]
+        X_combo = paddle.bmm(X1, X2).reshape((m, m, n, n))
+
+        aff_ori = (_comp_aff_score(X.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))) / norm).reshape((m, m))
+        aff_combo = (_comp_aff_score(X_combo.reshape((-1, n, n)), K.reshape((-1, n * n, n * n))) / norm).reshape((m, m))
+
+        con_ori = paddle.sqrt(pair_con)
+        con1 = pair_con[:, k].reshape((m, 1)).tile((1, m))
+        con2 = pair_con[k, :].reshape((1, m)).tile((m, 1))
+        con_combo = paddle.sqrt(con1 * con2)
+
+        score_ori = aff_ori * (1 - param_lambda) + con_ori * param_lambda
+        score_combo = aff_combo * (1 - param_lambda) + con_combo * param_lambda
+
+        upt = paddle.to_tensor((score_ori < score_combo), dtype = 'float32')
+        upt = (upt * mask).reshape((m, m, 1, 1))
+        X = X * (1.0 - upt) + X_combo * upt
+        X = X * X_mask + X.transpose((1, 0, 2, 3)).transpose((0, 1, 3, 2)) * (1 - X_mask)
+    return X
+
+
+def _get_single_pc_opt(X, i, j, Xij=None):
+    """
+    CAO/Floyd helper function (compute consistency)
+    :param X: (m, m, n, n) all the matching results
+    :param i: index
+    :param j: index
+    :return: the consistency of X_ij
+    """
+    m, _, n, _ = X.shape
+    if Xij is None:
+        Xij = X[i, j]
+    X1 = X[i, :].reshape((-1, n, n))
+    X2 = X[:, j].reshape((-1, n, n))
+    X_combo = paddle.bmm(X1, X2)
+    pair_con = 1 - paddle.sum(paddle.abs(Xij - X_combo)) / (2 * n * m)
+    return pair_con
+
+
+def _get_batch_pc_opt(X):
+    """
+    CAO/Floyd-fast helper function (compute consistency in batch)
+    :param X: (m, m, n, n) all the matching results
+    :return: (m, m) the consistency of X
+    """
+    m, _, n, _ = X.shape
+    X1 = X.reshape((m, 1, m, n, n)).tile((1, m, 1, 1, 1)).reshape((-1, n, n))  # X1[i, j, k] = X[i, k]
+    X2 = X.reshape((1, m, m, n, n)).tile((m, 1, 1, 1, 1)).transpose((0, 2, 1, 3, 4))
+    X2 = paddle.reshape(X2, (-1, n, n))  # X2[i, j, k] = X[k, j]
+    X_combo = paddle.bmm(X1, X2).reshape((m, m, m, n, n))
+    X_ori = X.reshape((m, m, 1, n, n)).tile((1, 1, m, 1, 1))
+    pair_con = 1 - paddle.sum(paddle.abs(X_combo - X_ori), axis=(2, 3, 4)) / (2 * n * m)
+    return pair_con
+
+
+def gamgm(
+        A, W, ns, n_univ, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh, bb_smooth,
+        verbose,
+        cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
+):
+    """
+    Paddle implementation of Graduated Assignment for Multi-Graph Matching (with compatibility for 2GM and clustering)
+    """
+    num_graphs = A.shape[0]
+    if ns is None:
+        ns = paddle.to_tensor(paddle.full((num_graphs,), A.shape[1]), dtype=paddle.int32, place=A.place)
+    n_indices = paddle.cumsum(ns, axis=0)
+
+    # build a super adjacency matrix A
+    supA = paddle.to_tensor(paddle.zeros((n_indices[-1], n_indices[-1])), place=A.place)
+    for i in range(num_graphs):
+        start_n = n_indices[i] - ns[i]
+        end_n = n_indices[i]
+        supA[start_n:end_n, start_n:end_n] = A[i, :ns[i], :ns[i]]
+
+    # handle the type of n_univ
+    if type(n_univ) is paddle.Tensor:
+        n_univ = n_univ.item()
+
+    # randomly init U
+    if U0 is None:
+        U0 = paddle.to_tensor(paddle.full((n_indices[-1], n_univ), 1 / n_univ), place=A.place)
+        U0 += paddle.randn(U0.shape) / 1000
+
+    # init cluster_M if not given
+    if cluster_M is None:
+        cluster_M = paddle.to_tensor(paddle.ones((num_graphs, num_graphs)), place=A.place)
+
+    # reshape W into supW
+    supW = paddle.to_tensor(paddle.zeros((n_indices[-1], n_indices[-1])), place=A.place)
+    for i, j in itertools.product(range(num_graphs), repeat=2):
+        start_x = n_indices[i] - ns[i]
+        end_x = n_indices[i]
+        start_y = n_indices[j] - ns[j]
+        end_y = n_indices[j]
+        supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i], :ns[j]]
+
+    U = GAMGMPaddleFunc.apply(
+        bb_smooth,
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh,
+        verbose,
+        cluster_M, projector, hung_iter
+    )
+
+    # build MultiMatchingResult
+    result = pygmtools.utils.MultiMatchingResult(True, 'paddle')
+
+    for i in range(num_graphs):
+        start_n = n_indices[i] - ns[i]
+        end_n = n_indices[i]
+        result[i] = U[start_n:end_n]
+
+    return result
+
+
+class GAMGMPaddleFunc(paddle.autograd.PyLayer):
+    """
+    Paddle wrapper to support forward and backward pass (by black-box differentiation)
+    """
+    @staticmethod
+    def forward(ctx, bb_smooth, supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args):
+        # save parameters
+        ctx.bb_smooth = bb_smooth
+        ctx.named_args = supA, supW, ns, n_indices, n_univ, num_graphs, U0
+        ctx.list_args = args
+
+        # real solver function
+        U = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
+
+        # save result
+        ctx.U = U
+        return U
+
+    @staticmethod
+    def backward(ctx, dU):
+        epsilon = 1e-8
+        bb_smooth = ctx.bb_smooth
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0 = ctx.named_args
+        args = ctx.list_args
+        U = ctx.U
+
+        for i, j in itertools.product(range(num_graphs), repeat=2):
+            start_x = n_indices[i] - ns[i]
+            end_x = n_indices[i]
+            start_y = n_indices[j] - ns[j]
+            end_y = n_indices[j]
+            supW[start_x:end_x, start_y:end_y] += bb_smooth * paddle.mm(dU[start_x:end_x], dU[start_y:end_y].transpose((1, 0)))
+
+        U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
+
+        grad_supW = paddle.to_tensor(paddle.zeros((n_indices[-1], n_indices[-1])), place=supW.place)
+        for i, j in itertools.product(range(num_graphs), repeat=2):
+            start_x = n_indices[i] - ns[i]
+            end_x = n_indices[i]
+            start_y = n_indices[j] - ns[j]
+            end_y = n_indices[j]
+            X = paddle.mm(U[start_x:end_x], U[start_y:end_y].transpose((1, 0)))
+            X_prime = paddle.mm(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose((1, 0)))
+            grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
+
+        return_list = [None, None, grad_supW] + [None] * (len(ctx.needs_input_grad) - 3)
+        return tuple(return_list)
+
+
+def gamgm_real(
+        supA, supW, ns, n_indices, n_univ, num_graphs, U0,
+        init_tau, min_tau, sk_gamma,
+        sk_iter, max_iter, quad_weight,
+        converge_thresh, outlier_thresh,
+        verbose,
+        cluster_M, projector, hung_iter # these arguments are reserved for clustering
+        ):
+    """
+    The real forward function of GAMGM
+    """
+    U = U0
+    sinkhorn_tau = init_tau
+    iter_flag = True
+
+    while iter_flag:
+        for i in range(max_iter):
+            # compact matrix form update of V
+            UUt = paddle.mm(U, U.t())
+            lastUUt = UUt
+            cluster_weight = paddle.repeat_interleave(cluster_M, paddle.to_tensor(ns, dtype=paddle.int64), axis=0)
+            cluster_weight = paddle.repeat_interleave(cluster_weight, paddle.to_tensor(ns, dtype=paddle.int64), axis=1)
+            quad = paddle.matmul(paddle.matmul(paddle.matmul(supA, UUt * cluster_weight), supA), U) * quad_weight * 2
+
+            unary = paddle.mm(supW * cluster_weight, U)
+            if verbose:
+                if projector == 'sinkhorn':
+                    print_str = f'tau={sinkhorn_tau:.3e}'
+                else:
+                    print_str = 'hungarian'
+                print(print_str + f' #iter={i}/{max_iter} '
+                      f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
+            V = (quad + unary) / num_graphs
+
+            U_list = []
+            if projector == 'hungarian':
+                n_start = 0
+                for n_end in n_indices:
+                    U_list.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='paddle'))
+                    n_start = n_end
+            elif projector == 'sinkhorn':
+                if paddle.all(ns == ns[0]):
+                    if ns[0] <= n_univ:
+                        U_list.append(
+                            sinkhorn(
+                                V.reshape((num_graphs, -1, n_univ)),
+                                max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True
+                            ).reshape((-1, n_univ)))
+                    else:
+                        U_list.append(
+                            sinkhorn(
+                                V.reshape((num_graphs, -1, n_univ)).transpose((0, 2, 1)),
+                                max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True
+                            ).transpose((0, 2, 1)).reshape((-1, n_univ)))
+                else:
+                    V_list = []
+                    n1 = []
+                    n_start = 0
+                    for n_end in n_indices:
+                        V_list.append(V[n_start:n_end, :n_univ])
+                        n1.append(n_end - n_start)
+                        n_start = n_end
+                    V_batch = build_batch(V_list)
+                    n1 = paddle.to_tensor(n1, place=V_batch.place)
+                    U = sinkhorn(V_batch, n1,
+                                 max_iter=sk_iter, tau=sinkhorn_tau, batched_operation=True, dummy_row=True)
+                    n_start = 0
+                    for idx, n_end in enumerate(n_indices):
+                        U_list.append(U[idx, :n_end - n_start, :])
+                        n_start = n_end
+            else:
+                raise NameError('Unknown projecter name: {}'.format(projector))
+
+            U = paddle.concat(U_list, axis=0)
+            if num_graphs == 2:
+                U[:ns[0], :] = paddle.to_tensor(paddle.eye(ns[0], n_univ), place=U.place)
+
+            # calculate gap to discrete
+            if projector == 'sinkhorn' and verbose:
+                U_list_hung = []
+                n_start = 0
+                for n_end in n_indices:
+                    U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='paddle'))
+                    n_start = n_end
+                U_hung = paddle.concat(U_list_hung, axis=0)
+                diff = paddle.linalg.norm(paddle.mm(U, U.t()) - lastUUt)
+                print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
+                      f'gap to discrete: {paddle.mean(paddle.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+
+            if projector == 'hungarian' and outlier_thresh > 0:
+                U_hung = U
+                UUt = paddle.mm(U_hung, U_hung.t())
+                cluster_weight = paddle.repeat_interleave(cluster_M, paddle.to_tensor(ns, dtype=paddle.int64), axis=0)
+                cluster_weight = paddle.repeat_interleave(cluster_weight, paddle.to_tensor(ns, dtype=paddle.int64), axis=1)
+                quad = paddle.matmul(paddle.matmul(paddle.matmul(supA, UUt * cluster_weight), supA), U_hung) * quad_weight * 2
+                unary = paddle.mm(supW * cluster_weight, U_hung)
+                max_vals = (unary + quad).max(axis=1)
+                U = U * (unary + quad > outlier_thresh)
+                if verbose:
+                    print(f'hungarian #iter={i}/{max_iter} '
+                          f'unary+quad score thresh={outlier_thresh:.3f}, #>thresh={paddle.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]}'
+                          f' min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, median:{max_vals.median():.4f}, max:{max_vals.max():.4f}')
+
+            if paddle.linalg.norm(paddle.mm(U, U.t()) - lastUUt) < converge_thresh:
+                break
+
+        if verbose: print('-' * 20)
+
+        if i == max_iter - 1: # not converged
+            if hung_iter:
+                pass
+            else:
+                U_list = [pygmtools.hungarian(_, backend='paddle') for _ in U_list]
+                U = paddle.concat(U_list, axis=0)
+                break
+
+        # projection control
+        if projector == 'hungarian':
+            break
+        elif sinkhorn_tau > min_tau:
+            sinkhorn_tau *= sk_gamma
+        else:
+            if hung_iter:
+                projector = 'hungarian'
+            else:
+                U_list = [pygmtools.hungarian(_, backend='paddle') for _ in U_list]
+                U = paddle.concat(U_list, axis=0)
+                break
+
+    return U
 
 
 #############################################

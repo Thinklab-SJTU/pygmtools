@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from test_utils import *
 
+
 # The testing function for quadratic assignment
 def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, mode, matrix_params, backends):
     if mode == 'lawler-qap':
