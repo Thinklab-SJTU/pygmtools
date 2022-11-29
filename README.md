@@ -114,6 +114,10 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/paddle_logo.png" alt="paddle logo" width="200"/>
 
+* [Tensorflow](https://tensorflow.google.cn/) (GPU friendly, deep learning friendly)
+
+<img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
+
 ### Development status
 
 |                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
@@ -125,10 +129,6 @@ The following backends are available:
 | Examples Gallery    | 📆    | ✔       | ✔      | 📆           | 📆         | 📆        |
 
 ✔: Supported; 🧱: Work in progress; 📆: Planned for future versions (contributions welcomed!).
-
-* [Tensorflow](https://tensorflow.google.cn/) (GPU friendly, deep learning friendly)
-
-<img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
 
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
 
