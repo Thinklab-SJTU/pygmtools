@@ -19,8 +19,8 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     The graph matching module is composed of several intra-graph embedding layers, a cross-graph embedding layer, and
     a Sinkhorn matching layer. Only the second last layer has a cross-graph update layer.
 
-    See the following pipeline for an example, with application to visual graph matching (layers in the gray box are
-    implemented by pygmtools):
+    See the following pipeline for an example, with application to visual graph matching (layers in the gray box
+    + Affinity Metric + Sinkhorn are implemented by pygmtools):
 
     .. image:: ../../images/pca_gm.png
 

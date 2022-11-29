@@ -75,28 +75,6 @@ How to enable PyTorch backend:
     >>> import torch
     >>> pygm.BACKEND = 'pytorch'
 
-Paddle Backend
-^^^^^^^^^^^^^^^^
-
-.. image:: ../images/paddle_logo.png
-    :width: 300
-
-PaddlePaddle is an open-source deep learning platform originated from industrial practice, which is developed and
-maintained by Baidu Inc.
-The Paddle backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
-
-Please follow `the official PaddlePaddle installation guide <https://www.paddlepaddle.org.cn/en/install/quick>`_.
-
-This package is developed with ``paddlepaddle==2.3.1`` and shall work with any PaddlePaddle versions ``>=2.3.1``.
-
-How to enable Paddle backend:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> import paddle
-    >>> pygm.BACKEND = 'paddle'
-
 Jittor Backend
 ^^^^^^^^^^^^^^^^
 
@@ -118,6 +96,28 @@ How to enable Jittor backend:
     >>> import pygmtools as pygm
     >>> import jittor
     >>> pygm.BACKEND = 'jittor'
+
+Paddle Backend
+^^^^^^^^^^^^^^^^
+
+.. image:: ../images/paddle_logo.png
+    :width: 300
+
+PaddlePaddle is an open-source deep learning platform originated from industrial practice, which is developed and
+maintained by Baidu Inc.
+The Paddle backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
+
+Please follow `the official PaddlePaddle installation guide <https://www.paddlepaddle.org.cn/en/install/quick>`_.
+
+This package is developed with ``paddlepaddle==2.3.1`` and shall work with any PaddlePaddle versions ``>=2.3.1``.
+
+How to enable Paddle backend:
+
+::
+
+    >>> import pygmtools as pygm
+    >>> import paddle
+    >>> pygm.BACKEND = 'paddle'
 
 Tensorflow Backend
 ^^^^^^^^^^^^^^^^^^^
