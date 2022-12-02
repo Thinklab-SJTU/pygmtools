@@ -126,7 +126,7 @@ Tensorflow Backend
     :width: 300
 
 TensorFlow is an end-to-end open source platform for machine learning, which is developed by researchers and engineers
-working on the Google Brain team within Google's Machine Intelligence Research organization
+working on the Google Brain team within Google's Machine Intelligence Research organization.
 The TensorFlow backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
 
 Please follow `the official Tensorflow installation guide <https://tensorflow.google.cn/install>`_.
