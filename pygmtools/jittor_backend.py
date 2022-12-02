@@ -220,23 +220,27 @@ def rrwm(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
     dmax = d.max(dim=1, keepdims=True) 
     K = K / (dmax + d.min() * 1e-5)
     v = v0
-    with jt.no_grad():
-        for i in range(max_iter):
-            # random walk
-            v = jt.bmm(K, v)
-            last_v = v
-            n = jt.norm(v, p=1, dim=1, keepdim=True)
-            v = v / n
+    for i in range(max_iter):
+        # try fixing memory error caused by growing scale of
+        # computation graph when testing multi-graph solvers
+        if jt.number_of_lived_ops() > 100000:
+            jt.clean_graph() 
+            
+        # random walk
+        v = jt.bmm(K, v)
+        last_v = v
+        n = jt.norm(v, p=1, dim=1, keepdim=True)
+        v = v / n
 
-            # reweighted jump
-            s = v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
-            s = beta * s / s.max(dim=1, keepdims=True).max(dim=2, keepdims=True)
-            v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
-                (1 - alpha) * v
-            n = jt.norm(v, p=1, dim=1, keepdim=True)
-            v = jt.matmul(v, 1 / n)
-            if (v - last_v).sum().sqrt() < 1e-5:
-                break
+        # reweighted jump
+        s = v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
+        s = beta * s / s.max(dim=1, keepdims=True).max(dim=2, keepdims=True)
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
+            (1 - alpha) * v
+        n = jt.norm(v, p=1, dim=1, keepdim=True)
+        v = jt.matmul(v, 1 / n)
+        if (v - last_v).sum().sqrt() < 1e-5:
+            break
 
     return v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
 
