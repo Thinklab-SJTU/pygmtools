@@ -16,7 +16,7 @@ from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsq
 
 
 def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
-       max_iter: int = 50,
+       max_iter: int=50,
        backend=None):
     r"""
     Spectral Graph Matching solver for graph matching (QAP).
@@ -218,7 +218,6 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'mindspore'
             >>> _ = mindspore.set_seed(1)
-            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -252,6 +251,59 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> g = mindspore.ops.grad(fn)(K, n1, n2)
             >>> mindspore.ops.count_nonzero(g)
+            2560
+
+    .. dropdown:: Tensorflow Example
+
+        ::
+
+            >>> import tensorflow as tf
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'tensorflow'
+            >>> _ = tf.random.set_seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = tf.Variable(tf.zeros([batch_size, 4, 4]))
+            >>> indices = tf.stack([tf.range(4),tf.random.shuffle(tf.range(4))], axis=1)
+            >>> updates = tf.ones([4])
+            >>> for i in range(batch_size):
+            ...     _ = X_gt[i].assign(tf.tensor_scatter_nd_update(X_gt[i], indices, updates))
+            >>> A1 = tf.random.uniform([batch_size, 4, 4])
+            >>> A2 = tf.matmul(tf.matmul(tf.transpose(X_gt, perm=[0, 2, 1]), A1), X_gt)
+            >>> n1 = n2 = tf.constant([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by SM. Note that X is normalized with a squared sum of 1
+            >>> X = pygm.sm(K, n1, n2)
+            >>> (X ** 2).sum(axis=(1, 2))
+            [1.         0.9999998  0.99999976 1.         0.99999976 1.
+            1.         1.0000001  1.0000001  1.        ]
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
+            >>> tf.reduce_sum((X ** 2), axis=[1, 2])
+            <tf.Tensor: shape=(10,), dtype=float32, numpy=
+            array([1.        , 1.0000001 , 1.        , 0.9999999 , 1.        ,
+                   1.        , 1.0000001 , 0.99999994, 1.        , 0.9999998 ],
+                  dtype=float32)>
+
+            # Accuracy
+            >>> tf.reduce_sum((pygm.hungarian(X) * X_gt))/ tf.reduce_sum(X_gt)
+            <tf.Tensor: shape=(), dtype=float32, numpy=1.0>
+
+            This solver supports gradient back-propogation
+            >>> K = tf.Variable(K)
+            >>> with tf.GradientTape() as tape:
+            ...     y = tf.reduce_sum(pygm.sm(K, n1, n2))
+            ...     len(tf.where(tape.gradient(y, K)))
             2560
 
     .. note::
@@ -302,7 +354,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
-         max_iter: int = 50, sk_iter: int = 20, alpha: float = 0.2, beta: float = 30,
+         max_iter: int=50, sk_iter: int=20, alpha: float=0.2, beta: float=30,
          backend=None):
     r"""
     Reweighted Random Walk Matching (RRWM) solver for graph matching (QAP). This algorithm is implemented by power
@@ -508,7 +560,6 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'mindspore'
             >>> _ = mindspore.set_seed(1)
-            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -543,6 +594,51 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> g = mindspore.ops.grad(fn)(K, n1, n2, beta=100)
             >>> mindspore.ops.count_nonzero(g)
 
+    .. dropdown:: Tensorflow Example
+
+        ::
+
+            >>> import tensorflow as tf
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'tensorflow'
+            >>> _ = tf.random.set_seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = tf.Variable(tf.zeros([batch_size, 4, 4]))
+            >>> indices = tf.stack([tf.range(4),tf.random.shuffle(tf.range(4))], axis=1)
+            >>> updates = tf.ones([4])
+            >>> for i in range(batch_size):
+            ...     _ = X_gt[i].assign(tf.tensor_scatter_nd_update(X_gt[i], indices, updates))
+            >>> A1 = tf.random.uniform([batch_size, 4, 4])
+            >>> A2 = tf.matmul(tf.matmul(tf.transpose(X_gt, perm=[0, 2, 1]), A1), X_gt)
+            >>> n1 = n2 = tf.constant([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by RRWM. Note that X is normalized with a sum of 1
+            >>> X = pygm.rrwm(K, n1, n2, beta=100)
+            >>> tf.reduce_sum(X, axis=[1, 2])
+            <tf.Tensor: shape=(10,), dtype=float32, numpy=
+            array([1.        , 1.        , 1.        , 0.99999994, 1.        ,
+                   1.        , 1.        , 0.99999994, 0.99999994, 1.0000001 ],
+                  dtype=float32)>
+
+            # Accuracy
+            >>> tf.reduce_sum((pygm.hungarian(X) * X_gt)) / tf.reduce_sum(X_gt)
+            <tf.Tensor: shape=(), dtype=float32, numpy=1.0>
+
+            # This solver supports gradient back-propogation
+            >>> K = tf.Variable(K)
+            >>> with tf.GradientTape(persistent=True) as tape:
+            ...     y = tf.reduce_sum(pygm.rrwm(K, n1, n2, beta=100))
+            ...     len(tf.where(tape.gradient(y, K)))
+            768
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
@@ -595,7 +691,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
-         max_iter: int = 50,
+         max_iter: int=50,
          backend=None):
     r"""
     Integer Projected Fixed Point (IPFP) method for graph matching (QAP).
@@ -811,6 +907,46 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             1.0
+
+    .. dropdown:: Tensorflow Example
+
+        ::
+
+            >>> import tensorflow as tf
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'tensorflow'
+            >>> _ = tf.random.set_seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = tf.Variable(tf.zeros([batch_size, 4, 4]))
+            >>> indices = tf.stack([tf.range(4),tf.random.shuffle(tf.range(4))], axis=1)
+            >>> updates = tf.ones([4])
+            >>> for i in range(batch_size):
+            ...     _ = X_gt[i].assign(tf.tensor_scatter_nd_update(X_gt[i], indices, updates))
+            >>> A1 = tf.random.uniform([batch_size, 4, 4])
+            >>> A2 = tf.matmul(tf.matmul(tf.transpose(X_gt, perm=[0, 2, 1]), A1), X_gt)
+            >>> n1 = n2 = tf.constant([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by IPFP
+            >>> X = pygm.ipfp(K, n1, n2)
+            >>> X[0]
+            <tf.Tensor: shape=(4, 4), dtype=float32, numpy=
+            array([[0., 0., 1., 0.],
+                   [0., 1., 0., 0.],
+                   [0., 0., 0., 1.],
+                   [1., 0., 0., 0.]], dtype=float32)>
+
+            # Accuracy
+            >>> tf.reduce_sum((pygm.hungarian(X) * X_gt)) / tf.reduce_sum(X_gt)
+            <tf.Tensor: shape=(), dtype=float32, numpy=1.0>
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
