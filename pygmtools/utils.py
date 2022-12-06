@@ -246,7 +246,8 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     node_aff = node_aff_fn(node_feat1, node_feat2) if node_feat1 is not None else None
     edge_aff = edge_aff_fn(edge_feat1, edge_feat2) if edge_feat1 is not None else None
 
-    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2,
+                                         backend=backend)
     if non_batched_input:
         return _squeeze(result, 0, backend)
     else:
@@ -785,6 +786,7 @@ class MultiMatchingResult:
                 [1., 0., 0., 0.],
                 [0., 1., 0., 0.]])
     """
+
     def __init__(self, cycle_consistent=False, backend=None):
         self.match_dict = {}
         self._cycle_consistent = cycle_consistent
@@ -806,7 +808,8 @@ class MultiMatchingResult:
 
     def __setitem__(self, key, value):
         if self._cycle_consistent:
-            assert type(key) is int, "key should be the index of one graph, and value should be the matching to universe"
+            assert type(
+                key) is int, "key should be the index of one graph, and value should be the matching to universe"
             self.match_dict[key] = value
         else:
             assert len(key) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
@@ -859,7 +862,7 @@ class MultiMatchingResult:
         self.backend = new_backend
         for k, v in self.match_dict.items():
             self.match_dict[k] = from_numpy(v, device, self.backend)
-    
+
     def to_numpy_(self):
         """
         In-place operation for :func:`~pygmtools.utils.MultiMatchingResult.to_numpy`.
@@ -916,7 +919,7 @@ def get_network(nn_solver_func, **params):
     for p in sig.parameters.items():
         if p[1].default is inspect._empty:
             required_params += 1
-    _, net = nn_solver_func(*[None] * required_params, # fill the required parameters by None
+    _, net = nn_solver_func(*[None] * required_params,  # fill the required parameters by None
                             return_network=True, **params)
     return net
 
@@ -960,12 +963,14 @@ def permutation_loss(pred_dsmat, gt_perm, n1=None, n2=None, backend=None):
     elif len(dsmat_shape) == len(perm_shape) == 3:
         pass
     else:
-        raise ValueError(f'the input arguments pred_dsmat and gt_perm are expected to be 2-dimensional or 3-dimensional,'
-                         f' got pred_dsmat:{len(dsmat_shape)}, gt_perm:{len(perm_shape)}!')
+        raise ValueError(
+            f'the input arguments pred_dsmat and gt_perm are expected to be 2-dimensional or 3-dimensional,'
+            f' got pred_dsmat:{len(dsmat_shape)}, gt_perm:{len(perm_shape)}!')
 
     for d1, d2 in zip(dsmat_shape, perm_shape):
         if d1 != d2:
-            raise ValueError(f'dimension mismatch for pred_dsmat and gt_perm, got pred_dsmat:{dsmat_shape}, gt_perm:{gt_perm}!')
+            raise ValueError(
+                f'dimension mismatch for pred_dsmat and gt_perm, got pred_dsmat:{dsmat_shape}, gt_perm:{gt_perm}!')
 
     args = (pred_dsmat, gt_perm, n1, n2)
     try:
