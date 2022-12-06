@@ -218,6 +218,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'mindspore'
             >>> _ = mindspore.set_seed(1)
+            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -560,6 +561,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'mindspore'
             >>> _ = mindspore.set_seed(1)
+            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
