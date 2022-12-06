@@ -156,6 +156,37 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
 
             # The affinity matrices K, K2, K3 can be further processed by GM solvers
 
+    .. dropdown:: mindspore Example
+
+        ::
+
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+
+            # Generate a batch of graphs
+            >>> batch_size = 10
+            >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> A2 = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> n1 = n2 = mindspore.Tensor([4] * batch_size)
+
+            # Build affinity matrix by the default inner-product function
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2)
+
+            # Build affinity matrix by gaussian kernel
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
+            >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
+
+            # Build affinity matrix based on node features
+            >>> F1 = mindspore.numpy.rand((batch_size, 4, 10))
+            >>> F2 = mindspore.numpy.rand((batch_size, 4, 10))
+            >>> K3 = pygm.utils.build_aff_mat(F1, edge1, conn1, F2, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
+
+            # The affinity matrices K, K2, K3 can be further processed by GM solvers
+
     """
     if backend is None:
         backend = pygmtools.BACKEND
@@ -370,6 +401,33 @@ def build_batch(input, return_ori_dim=False, backend=None):
             >>> batched_F.shape
             [3, 5, 10]
 
+    .. dropdown:: mindspore Example
+
+        ::
+
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+
+            # batched adjacency matrices
+            >>> A1 = mindspore.numpy.rand((4, 4))
+            >>> A2 = mindspore.numpy.rand((5, 5))
+            >>> A3 = mindspore.numpy.rand((3, 3))
+            >>> batched_A, ori_shape = pygm.utils.build_batch([A1, A2, A3], return_ori_dim=True)
+            >>> batched_A.shape
+            (3, 5, 5)
+            >>> ori_shape
+            (Tensor(shape=[3], dtype=Int64, value= [4, 5, 3]),
+             Tensor(shape=[3], dtype=Int64, value= [4, 5, 3]))
+
+            # batched node features (feature dimension=10)
+            >>> F1 = mindspore.numpy.rand((4, 10))
+            >>> F2 = mindspore.numpy.rand((5, 10))
+            >>> F3 = mindspore.numpy.rand((3, 10))
+            >>> batched_F = pygm.utils.build_batch([F1, F2, F3])
+            >>> batched_F.shape
+            (3, 5, 10)
+
     """
     if backend is None:
         backend = pygmtools.BACKEND
@@ -475,6 +533,31 @@ def dense_to_sparse(dense_adj, backend=None):
             >>> ne
             Tensor(shape=[10], dtype=int64, place=Place(cpu), stop_gradient=True,
                     [16, 16, 16, 16, 16, 16, 16, 16, 16, 16])
+
+    .. dropdown:: mindspore Example
+
+        ::
+
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+            >>> _ = mindspore.set_seed(0)
+
+            >>> batch_size = 10
+            >>> A = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> mindspore.numpy.diagonal(A, axis1=1, axis2=2)[:] = 0 # remove the diagonal elements
+            >>> A.shape
+            (10, 4, 4)
+
+            >>> conn, edge, ne = pygm.utils.dense_to_sparse(A)
+            >>> conn.shape # connectivity: (batch x num_edge x 2)
+            (10, 16, 2)
+
+            >>> edge.shape # edge feature (batch x num_edge x feature_dim)
+            (10, 16, 1)
+
+            >>> ne
+            [16 16 16 16 16 16 16 16 16 16]
 
     """
     if backend is None:

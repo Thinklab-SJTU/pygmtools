@@ -218,6 +218,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'mindspore'
             >>> _ = mindspore.set_seed(1)
+            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -237,12 +238,21 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Solve by SM. Note that X is normalized with a squared sum of 1
             >>> X = pygm.sm(K, n1, n2)
             >>> (X ** 2).sum(axis=(1, 2))
-            [1.         0.9999998  0.99999976 1.         0.99999976 1.
-            1.         1.0000001  1.0000001  1.        ]
+            [1.0000002  0.9999998  1.0000002  0.99999964 1.         1.0000001
+            1.         1.         1.         0.99999994]
 
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             1.0
+
+            # This solver supports gradient back-propogation
+            >>> def fn(K, n1, n2):
+            >>>     res = pygm.sm(K, n1, n2).sum()
+            >>>     return res
+
+            >>> g = mindspore.ops.grad(fn)(K, n1, n2)
+            >>> mindspore.ops.count_nonzero(g)
+            2560
 
     .. note::
         If you find this graph matching solver useful for your research, please cite:
@@ -498,6 +508,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'mindspore'
             >>> _ = mindspore.set_seed(1)
+            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
@@ -523,6 +534,15 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             1.0
+
+            >>> # This solver supports gradient back-propogation
+            >>> def fn(K, n1, n2, beta):
+            >>>     res = pygm.rrwm(K, n1, n2, beta=beta).sum()
+            >>>     return res
+
+            >>> g = mindspore.ops.grad(fn)(K, n1, n2, beta=100)
+            >>> mindspore.ops.count_nonzero(g)
+
 
     .. note::
         If you find this graph matching solver useful in your research, please cite:
