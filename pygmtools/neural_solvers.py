@@ -63,6 +63,10 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
@@ -270,6 +274,10 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
@@ -485,6 +493,10 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
@@ -706,6 +718,10 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
