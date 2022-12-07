@@ -655,6 +655,7 @@ def gamgm(A, W,
     .. dropdown:: Numpy Example
 
         ::
+        
             >>> import numpy as np
             >>> import pygmtools as pygm
             >>> import itertools
