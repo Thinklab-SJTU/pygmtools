@@ -264,7 +264,7 @@ def sm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.ndarr
         v = np.matmul(K, v)
         n = np.linalg.norm(v, ord=2, axis=1)
         v = np.matmul(v, (1 / n).reshape((batch_num, 1, 1)))
-        if np.linalg.norm((v - vlast).squeeze(), ord='fro') < 1e-5:
+        if np.linalg.norm((v - vlast).squeeze(-1), ord='fro') < 1e-5:
             break
         vlast = v
 
