@@ -13,9 +13,9 @@ import hashlib
 import shutil
 from tqdm.auto import tqdm
 import inspect
-
+import wget
 import pygmtools
-
+import pdb
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
     'If you are a user, please use other backends as workarounds.' \
@@ -1080,12 +1080,10 @@ def _mm(input1, input2, backend=None):
         )
     return fn(*args)
 
-
 def download(filename, url, md5=None, retries=5):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
-
     :param filename: the destination file name
     :param url: the url
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
@@ -1100,27 +1098,32 @@ def download(filename, url, md5=None, retries=5):
         os.makedirs(dirs)
     filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
-        print(f'Downloading to {filename}...')
-        down_res = requests.get(url, stream=True)
-        file_size = int(down_res.headers.get('Content-Length', 0))
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-
+        try:
+            print(f'\nDownloading to {filename}...')
+            down_res = requests.get(url, stream=True)
+            file_size = int(down_res.headers.get('Content-Length', 0))
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                    shutil.copyfileobj(content, file)
+        except:
+            wget.download(url,out=filename)
     if md5 is not None:
-        hash_md5 = hashlib.md5()
-        chunk = 8192
-        with open(filename, 'rb') as file_to_check:
-            while True:
-                buffer = file_to_check.read(chunk)
-                if not buffer:
-                    break
-                hash_md5.update(buffer)
-            md5_returned = hash_md5.hexdigest()
+        md5_returned = get_md5(filename)
         if md5 != md5_returned:
             print('Warning: MD5 check failed for the downloaded content. Retrying...')
             os.remove(filename)
             time.sleep(1)
             return download(filename, url, md5, retries - 1)
-
     return filename
+
+def get_md5(filename):
+    hash_md5 = hashlib.md5()
+    chunk = 8192
+    with open(filename, 'rb') as file_to_check:
+        while True:
+            buffer = file_to_check.read(chunk)
+            if not buffer:
+                break
+            hash_md5.update(buffer)
+        md5_returned = hash_md5.hexdigest()
+        return md5_returned
