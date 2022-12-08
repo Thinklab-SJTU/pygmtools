@@ -13,4 +13,5 @@ sphinx-gallery==0.11.1
 matplotlib
 networkx
 scikit-learn
+wget
 pygmtools
