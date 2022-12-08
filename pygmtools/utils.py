@@ -1098,17 +1098,21 @@ def download(filename, url, md5=None, retries=5):
         os.makedirs(dirs)
     filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
-        try:
-            print(f'\nDownloading to {filename}...')
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except:
+        print(f'\nDownloading to {filename}...')
+        if retries % 2 == 1:
+            try:
+                down_res = requests.get(url, stream=True)
+                file_size = int(down_res.headers.get('Content-Length', 0))
+                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                    with open(filename, 'wb') as file:
+                        shutil.copyfileobj(content, file)
+            except requests.exceptions.ConnectionError as err:
+                print('Warning: Network error. Retrying...\n', err)
+                return download(filename, url, md5, retries - 1)
+        else:
             wget.download(url,out=filename)
     if md5 is not None:
-        md5_returned = get_md5(filename)
+        md5_returned = _get_md5(filename)
         if md5 != md5_returned:
             print('Warning: MD5 check failed for the downloaded content. Retrying...')
             os.remove(filename)
@@ -1116,7 +1120,7 @@ def download(filename, url, md5=None, retries=5):
             return download(filename, url, md5, retries - 1)
     return filename
 
-def get_md5(filename):
+def _get_md5(filename):
     hash_md5 = hashlib.md5()
     chunk = 8192
     with open(filename, 'rb') as file_to_check:
