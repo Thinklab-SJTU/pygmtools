@@ -101,18 +101,18 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch', 'numpy','jittor'])
 
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor'])
 
 def test_cie():
     args = (
         list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
-        }, ['pytorch', 'jittor']
+        }, ['pytorch', 'numpy', 'jittor']
     )
     max_retries = 5
     for i in range(max_retries - 1):
@@ -132,7 +132,7 @@ def test_ngm():
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor'])
 
 
 if __name__ == '__main__':
