@@ -82,8 +82,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                 raise ValueError(f'Unknown mode: {mode}!')
 
             net2 = pygm.utils.get_network(solver_func, **solver_param_dict)
-            for param1, param2 in zip(net.parameters(), net2.parameters()):
-                assert np.all(pygm.utils.to_numpy(param1) == pygm.utils.to_numpy(param2))
+            assert type(net) == type(net2)
 
             assert np.abs(pygm.utils.to_numpy(_X1) - pygm.utils.to_numpy(_X2)).sum() < 1e-4, \
                 f"GM result inconsistent for predefined network object. backend={working_backend}, " \
