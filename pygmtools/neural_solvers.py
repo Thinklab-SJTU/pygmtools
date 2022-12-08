@@ -8,6 +8,7 @@ import pygmtools
 from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
 from pygmtools.classic_solvers import __check_gm_arguments
 
+
 def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
            in_channel=1024, hidden_channel=2048, out_channel=2048, num_layers=2, sk_max_iter=20, sk_tau=0.05,
            network=None, return_network=False, pretrain='voc',
@@ -320,7 +321,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
-        .. dropdown:: Numpy Example
+    .. dropdown:: Numpy Example
 
         ::
 
@@ -899,7 +900,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> X = pygm.ngm(K, n1, n2, network=net)
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
             1.0
-            
+
 
     .. dropdown:: PyTorch Example
 
