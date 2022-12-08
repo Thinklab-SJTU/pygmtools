@@ -81,6 +81,10 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             else:
                 raise ValueError(f'Unknown mode: {mode}!')
 
+            net2 = pygm.utils.get_network(solver_func, **solver_param_dict)
+            for param1, param2 in zip(net.parameters(), net2.parameters()):
+                assert np.all(pygm.utils.to_numpy(param1) == pygm.utils.to_numpy(param2))
+
             assert np.abs(pygm.utils.to_numpy(_X1) - pygm.utils.to_numpy(_X2)).sum() < 1e-4, \
                 f"GM result inconsistent for predefined network object. backend={working_backend}, " \
                 f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
@@ -101,7 +105,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
-    }, ['pytorch', 'numpy','jittor'])
+    }, ['pytorch', 'numpy', 'jittor'])
 
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {

@@ -14,8 +14,7 @@ from test_utils import *
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
-    if backends[0] != 'pytorch':
-        backends.insert(0, 'pytorch') # force pytorch as the reference backend
+    if backends[0] != 'pytorch': backends.insert(0, 'pytorch') # force pytorch as the reference backend
 
     batch_size = len(graph_num_nodes)
 
@@ -32,7 +31,12 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
     n1 = torch.tensor(graph_num_nodes, dtype=torch.int)
     n2 = torch.tensor(graph_num_nodes, dtype=torch.int)
     A1, A2, F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, X_gt))
-    A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
+    if batch_size != 0:
+        A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
+    else:
+        A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(
+            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0), n1.squeeze(0), n2.squeeze(0), X_gt.squeeze(0)
+        )
 
     # call the solver
     total = 1
@@ -79,6 +83,7 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
 
 # The testing function for linear assignment
 def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params, backends):
+    if backends[0] != 'pytorch': backends.insert(0, 'pytorch') # force pytorch as the reference backend
     batch_size = len(num_nodes1)
 
     # iterate over matrix parameters
@@ -119,7 +124,13 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
         n1 = torch.tensor(num_nodes1, dtype=torch.int) + outlier_num
         n2 = torch.tensor(num_nodes2, dtype=torch.int) + outlier_num
         F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (F1, F2, X_gt))
-        F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
+        if batch_size != 0:
+            F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
+        else:
+            F1, F2, n1, n2, X_gt = data_to_numpy(
+                F1.squeeze(0), F2.squeeze(0), n1.squeeze(0), n2.squeeze(0), X_gt.squeeze(0)
+            )
+
         if unmatch:
             unmatch1, unmatch2 = (pygm.utils.build_batch(_) for _ in (unmatch1, unmatch2))
             unmatch1, unmatch2 = data_to_numpy(unmatch1, unmatch2)
@@ -167,6 +178,12 @@ def test_hungarian():
         'outlier_num': [0, 5, 10]
     }, ['pytorch', 'numpy', 'paddle' ,'jittor','tensorflow'])
 
+    # non-batched input
+    _test_classic_solver_on_linear_assignment([10], [30], 10, pygm.hungarian, {
+        'nproc': [1],
+        'outlier_num': [0]
+    }, ['pytorch', 'numpy', 'paddle' ,'jittor','tensorflow'])
+
 
 def test_sinkhorn():
     # test non-symmetric matching
@@ -203,10 +220,19 @@ def test_sinkhorn():
         'outlier_num': [5, 10]
     }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
 
+    # test non-batched matching
+    args5 = ([30], [10], 10, pygm.sinkhorn, {
+        'tau': [0.01],
+        'max_iter': [500],
+        'batched_operation': [True],
+        'dummy_row': [True],
+    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
     _test_classic_solver_on_linear_assignment(*args3)
     _test_classic_solver_on_linear_assignment(*args4)
+    _test_classic_solver_on_linear_assignment(*args5)
 
 
 def test_rrwm():
@@ -219,6 +245,16 @@ def test_rrwm():
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
     }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
 
+    # non-batched input
+    _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.rrwm, {
+        'alpha': [0.1],
+        'beta': [0.1],
+        'sk_iter': [10],
+        'max_iter': [20],
+        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
+    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+
 
 def test_sm():
     _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
@@ -227,12 +263,26 @@ def test_sm():
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
     }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
 
+    # non-batched input
+    _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.sm, {
+        'max_iter': [10],
+        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
+    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+
 
 def test_ipfp():
     _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.ipfp, {
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
+    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+
+    # non-batched input
+    _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.ipfp, {
+        'max_iter': [10],
+        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
     }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
 
 
