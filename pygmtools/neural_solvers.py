@@ -889,7 +889,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             1.0
 
             # You may also load other pretrained weights
-            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True, pretrain='willow')
+            >>> X, net = pygm.ngm(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True, pretrain='willow')
             Downloading to ~/.cache/pygmtools/ngm_willow_numpy.npy...
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
             1.0
