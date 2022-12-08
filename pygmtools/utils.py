@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 import inspect
 import wget
 import pygmtools
-import pdb
+
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
     'If you are a user, please use other backends as workarounds.' \
