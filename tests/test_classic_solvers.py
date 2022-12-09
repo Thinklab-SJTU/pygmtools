@@ -35,7 +35,7 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
         A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
     else:
         A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(
-            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0), n1.squeeze(0), n2.squeeze(0), X_gt.squeeze(0)
+            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0), n1, n2, X_gt.squeeze(0)
         )
 
     # call the solver
@@ -56,11 +56,16 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
         for working_backend in backends:
             pygm.BACKEND = working_backend
             _A1, _A2, _F1, _F2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, n1, n2)
-            _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_A1)
-            _conn2, _edge2, _ne2 = pygm.utils.dense_to_sparse(_A2)
-
-            _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
-                                          **aff_param_dict)
+            if batch_size > 1:
+                _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_A1)
+                _conn2, _edge2, _ne2 = pygm.utils.dense_to_sparse(_A2)
+                _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
+                                              **aff_param_dict)
+            else:
+                _conn1, _edge1 = pygm.utils.dense_to_sparse(_A1)
+                _conn2, _edge2 = pygm.utils.dense_to_sparse(_A2)
+                _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,
+                                              **aff_param_dict)
             if last_K is not None:
                 assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
                     f"Incorrect affinity matrix for {working_backend}, " \
@@ -128,7 +133,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
         else:
             F1, F2, n1, n2, X_gt = data_to_numpy(
-                F1.squeeze(0), F2.squeeze(0), n1.squeeze(0), n2.squeeze(0), X_gt.squeeze(0)
+                F1.squeeze(0), F2.squeeze(0), n1, n2, X_gt.squeeze(0)
             )
 
         if unmatch:
@@ -140,10 +145,13 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             pygm.BACKEND = working_backend
             _F1, _F2, _n1, _n2 = data_from_numpy(F1, F2, n1, n2)
 
-            linear_sim = []
-            for b in range(batch_size):
-                linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
-            linear_sim = pygm.utils.build_batch(linear_sim)
+            if batch_size > 1:
+                linear_sim = []
+                for b in range(batch_size):
+                    linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
+                linear_sim = pygm.utils.build_batch(linear_sim)
+            else:
+                linear_sim = pygm.utils._mm(_F1, pygm.utils._transpose(_F2, 0, 1))
 
             # call the solver
             if unmatch:
