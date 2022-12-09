@@ -31,7 +31,7 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
     n1 = torch.tensor(graph_num_nodes, dtype=torch.int)
     n2 = torch.tensor(graph_num_nodes, dtype=torch.int)
     A1, A2, F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, X_gt))
-    if batch_size != 0:
+    if batch_size > 1:
         A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
     else:
         A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(
@@ -124,7 +124,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
         n1 = torch.tensor(num_nodes1, dtype=torch.int) + outlier_num
         n2 = torch.tensor(num_nodes2, dtype=torch.int) + outlier_num
         F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (F1, F2, X_gt))
-        if batch_size != 0:
+        if batch_size > 1:
             F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
         else:
             F1, F2, n1, n2, X_gt = data_to_numpy(
