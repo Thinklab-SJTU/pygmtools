@@ -615,7 +615,7 @@ def gamgm(
         end_y = n_indices[j].item()
         supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i].item(), :ns[j].item()]
 
-    U = GAMGMTorchFunc.apply(
+    U = GAMGMJittorFunc.apply(
         bb_smooth,
         supA, supW, ns, n_indices, n_univ, num_graphs, U0,
         init_tau, min_tau, sk_gamma,
