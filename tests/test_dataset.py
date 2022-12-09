@@ -30,7 +30,7 @@ def _test_get_data(benchmark, num):
         perm_mat = perm_dict[(0, 1)].toarray()
         cls = benchmark.classes[0]
         pred = []
-        pred_dict = ()
+        pred_dict = dict()
         pred_dict['ids'] = ids
         pred_dict['cls'] = cls
         pred_dict['perm_mat'] = perm_mat
