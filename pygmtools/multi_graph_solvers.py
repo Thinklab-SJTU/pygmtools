@@ -829,6 +829,7 @@ def gamgm(A, W,
             >>> import itertools
             >>> import time
             >>> pygm.BACKEND = 'jittor'
+            >>> jt.set_seed(26)
 
             # Generate 10 isomorphic graphs
             >>> graph_num = 10
@@ -846,6 +847,27 @@ def gamgm(A, W,
             >>> acc = matched / X_gt.sum()
             >>> acc
             jt.Var([1.], dtype=float32)
+
+            # Backward pass via black-box trick
+            >>> from jittor import nn
+            >>> class Model(nn.Module):
+            ...     def __init__(self, W):
+            ...         self.W = W
+            ...     def execute (self, As, W) :
+            ...         X = pygm.gamgm(As, W)
+            ...         return X
+            
+            >>> model = Model(W)
+            >>> X = model(As, W)
+            >>> matched = 0
+            >>> for i, j in itertools.product(range(graph_num), repeat=2):
+            ...     matched += (X[i,j] * X_gt[i,j]).sum()
+            >>> acc = matched / X_gt.sum()
+            >>> optim = nn.SGD(model.parameters(), lr=0.1)
+            >>> optim.step(acc)
+            >>> grad = W.opt_grad(optim)
+            >>> jt.sum(grad != 0)
+            jt.Var([192], dtype=int32)
 
             # This function supports graphs with different nodes (also known as partial matching)
             # In the following we ignore the last node from the last 3 graphs
