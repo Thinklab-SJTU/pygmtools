@@ -636,7 +636,7 @@ def gamgm(
     return result
 
 
-class GAMGMTorchFunc(jt.Function):
+class GAMGMJittorFunc(jt.Function):
     """
     Jittor wrapper to support forward and backward pass (by black-box differentiation)
     """
@@ -654,7 +654,7 @@ class GAMGMTorchFunc(jt.Function):
         self.U = U
         return U
 
-    def backward(self, dU):
+    def grad(self, dU):
         epsilon = 1e-8
         bb_smooth = self.bb_smooth
         supA, supW, ns, n_indices, n_univ, num_graphs, U0 = self.named_args
@@ -662,25 +662,25 @@ class GAMGMTorchFunc(jt.Function):
         U = self.U
 
         for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
+            start_x = (n_indices[i] - ns[i]).item()
+            end_x = n_indices[i].item()
+            start_y = (n_indices[j] - ns[j]).item()
+            end_y = n_indices[j].item()
             supW[start_x:end_x, start_y:end_y] += bb_smooth * jt.matmul(dU[start_x:end_x], dU[start_y:end_y].transpose(0, 1))
 
         U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
 
-        grad_supW = jt.zeros((n_indices[-1], n_indices[-1]))
+        grad_supW = jt.zeros((n_indices[-1].item(), n_indices[-1].item()))
         for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
+            start_x = (n_indices[i] - ns[i]).item()
+            end_x = n_indices[i].item()
+            start_y = (n_indices[j] - ns[j]).item()
+            end_y = n_indices[j].item()
             X = jt.matmul(U[start_x:end_x], U[start_y:end_y].transpose(0, 1))
             X_prime = jt.matmul(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose(0, 1))
             grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
 
-        return_list = [None, None, grad_supW] + [None] * (len(self.needs_input_grad) - 3)
+        return_list = [None, None, grad_supW] + [None] * (len(args) + 8 - 3)
         return tuple(return_list)
 
 
