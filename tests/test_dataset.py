@@ -43,7 +43,7 @@ def _test_get_data(benchmark, num):
 
 # Entry function
 def test_dataset_and_benchmark():
-    dataset_name_list = ['PascalVOC', 'WillowObject', 'SPair71k', 'CUB2011', 'IMC_PT_SparseGM']
+    dataset_name_list = ['CUB2011', 'PascalVOC', 'WillowObject', 'SPair71k', 'IMC_PT_SparseGM']
     problem_type_list = ['2GM', 'MGM']
     set_list = ['train', 'test']
     filter_list = ['intersection', 'inclusion', 'unfiltered']
