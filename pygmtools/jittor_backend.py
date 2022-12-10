@@ -700,7 +700,7 @@ def gamgm_real(
     iter_flag = True
 
     while iter_flag:
-        with jt.no_grad():
+        with jt.enable_grad():
             for i in range(max_iter):
                 # compact matrix form update of V
                 UUt = jt.matmul(U, U.t())
