@@ -91,9 +91,9 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
         transposed = True
 
     if nrows is None:
-        nrows = np.array([s.shape[1] for _ in range(batch_size)], dtype=np.int)
+        nrows = np.array([s.shape[1] for _ in range(batch_size)], dtype=int)
     if ncols is None:
-        ncols = np.array([s.shape[2] for _ in range(batch_size)], dtype=np.int)
+        ncols = np.array([s.shape[2] for _ in range(batch_size)], dtype=int)
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
