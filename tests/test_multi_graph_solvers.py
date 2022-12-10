@@ -212,6 +212,7 @@ def test_gamgm():
 def test_gamgm_backward():
     # Pytorch
     pygm.BACKEND = 'pytorch'
+    torch.manual_seed(1)
 
     # Generate 10 isomorphic graphs
     graph_num = 10
