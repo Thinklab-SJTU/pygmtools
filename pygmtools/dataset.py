@@ -182,13 +182,16 @@ class PascalVOC:
 
         self.process()
 
-    def download(self, url=None, name=None):
+    def download(self, url=None, name=None, retries=5):
         r"""
         Automatically download PascalVOC dataset.
 
         :param url: str, web url of PascalVOC and PascalVOC annotation
         :param name: str, ``"PascalVOC"`` to download PascalVOC and ``"PascalVOC_anno"`` to download PascalVOC annotation
         """
+        if retries <= 0:
+            raise RuntimeError('Max Retries exceeded!')
+
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
@@ -196,12 +199,22 @@ class PascalVOC:
         if name == "PascalVOC_anno":
             print('Downloading dataset annotation...')
             filename = "data/PascalVOC.tgz"
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                        shutil.copyfileobj(content, file)
-            tar = tarfile.open(filename, "r")
+            try:
+                down_res = requests.get(url, stream=True)
+                file_size = int(down_res.headers.get('Content-Length', 0))
+                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                    with open(filename, 'wb') as file:
+                            shutil.copyfileobj(content, file)
+            except requests.exceptions.ConnectionError as err:
+                print('Warning: Network error. Retrying...\n', err)
+                return self.download(url, name, retries - 1)
+            try:
+                tar = tarfile.open(filename, "r")
+            except tarfile.ReadError as err:
+                print('Warning: Content error. Retrying...\n', err)
+                os.remove(filename)
+                return self.download(url, name, retries - 1)
+
             file_names = tar.getnames()
             print('Unzipping files...')
             sleep(0.5)
@@ -213,12 +226,22 @@ class PascalVOC:
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
             filename = "data/PascalVOC.tar"
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                        shutil.copyfileobj(content, file)
-            tar = tarfile.open(filename, "r")
+            try:
+                down_res = requests.get(url, stream=True)
+                file_size = int(down_res.headers.get('Content-Length', 0))
+                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                    with open(filename, 'wb') as file:
+                            shutil.copyfileobj(content, file)
+            except requests.exceptions.ConnectionError as err:
+                print('Warning: Network error. Retrying...\n', err)
+                return self.download(url, name, retries - 1)
+            try:
+                tar = tarfile.open(filename, "r")
+            except tarfile.ReadError as err:
+                print('Warning: Content error. Retrying...\n', err)
+                os.remove(filename)
+                return self.download(url, name, retries - 1)
+
             file_names = tar.getnames()
             print('Unzipping files...')
             sleep(0.5)
@@ -226,6 +249,7 @@ class PascalVOC:
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
             os.remove(filename)
+        return filename
 
     def __filter_list(self, a_xml_list):
         """
@@ -488,29 +512,43 @@ class WillowObject:
 
         self.process()
 
-    def download(self, url=None):
+    def download(self, url=None, retries=5):
         r"""
          Automatically download WillowObject dataset.
 
          :param url: str, web url of WillowObject
          """
+        if retries <= 0:
+            raise RuntimeError('Max Retries exceeded!')
+
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
 
         print('Downloading dataset WillowObject...')
         filename = "data/WILLOW.zip"
-        down_res = requests.get(url, stream=True)
-        file_size = 68635332
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-        fz = zipfile.ZipFile(filename, "r")
+        try:
+            down_res = requests.get(url, stream=True)
+            file_size = 68635332
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                    shutil.copyfileobj(content, file)
+        except requests.exceptions.ConnectionError as err:
+            print('Warning: Network error. Retrying...\n', err)
+            return self.download(url, retries - 1)
+        try:
+            fz = zipfile.ZipFile(filename, "r")
+        except zipfile.BadZipFile as err:
+            print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
+            return self.download(url, retries - 1)
+
         print('Unzipping files...')
         sleep(0.5)
         for file in tqdm(fz.namelist()):
             fz.extract(file, "data/WillowObject/")
         os.remove(filename)
+        return filename
 
     def process(self):
         r"""
@@ -760,23 +798,36 @@ class SPair71k:
 
         self.process()
 
-    def download(self, url=None):
+    def download(self, url=None, retries=5):
         r"""
          Automatically download SPair71k dataset.
 
          :param url: str, web url of SPair71k
          """
+        if retries <= 0:
+            raise RuntimeError('Max Retries exceeded!')
+
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
         filename = "data/SPair-71k.tgz"
-        down_res = requests.get(url, stream=True)
-        file_size = int(down_res.headers.get('Content-Length', 0))
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-        tar = tarfile.open(filename, "r")
+        try:
+            down_res = requests.get(url, stream=True)
+            file_size = int(down_res.headers.get('Content-Length', 0))
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                    shutil.copyfileobj(content, file)
+        except requests.exceptions.ConnectionError as err:
+            print('Warning: Network error. Retrying...\n', err)
+            return self.download(url, retries - 1)
+        try:
+            tar = tarfile.open(filename, "r")
+        except tarfile.ReadError as err:
+            print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
+            return self.download(url, retries - 1)
+
         file_names = tar.getnames()
         print('Unzipping files...')
         sleep(0.5)
@@ -784,6 +835,7 @@ class SPair71k:
             tar.extract(file_name, "data/")
         tar.close()
         os.remove(filename)
+        return filename
 
     def process(self):
         r"""
@@ -1027,23 +1079,36 @@ class IMC_PT_SparseGM:
 
         self.process()
 
-    def download(self, url=None):
+    def download(self, url=None, retries=5):
         r"""
          Automatically download IMC_PT_SparseGM dataset.
 
          :param url: str, web url of IMC_PT_SparseGM
          """
+        if retries <= 0:
+            raise RuntimeError('Max Retries exceeded!')
+
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         print('Downloading dataset IMC-PT-SparseGM...')
         filename = 'data/IMC-PT-SparseGM.tar.gz'
-        down_res = requests.get(url, stream=True)
-        file_size = int(down_res.headers.get('Content-Length', 0))
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-        tar = tarfile.open(filename, "r")
+        try:
+            down_res = requests.get(url, stream=True)
+            file_size = int(down_res.headers.get('Content-Length', 0))
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                    shutil.copyfileobj(content, file)
+        except requests.exceptions.ConnectionError as err:
+            print('Warning: Network error. Retrying...\n', err)
+            return self.download(url, retries - 1)
+        try:
+            tar = tarfile.open(filename, "r")
+        except tarfile.ReadError as err:
+            print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
+            return self.download(url, retries - 1)
+
         file_names = tar.getnames()
         print('Unzipping files...')
         sleep(0.5)
@@ -1051,6 +1116,7 @@ class IMC_PT_SparseGM:
             tar.extract(file_name, "data/")
         tar.close()
         os.remove(filename)
+        return filename
 
     def process(self):
         r"""
@@ -1248,23 +1314,36 @@ class CUB2011:
 
         self.process()
 
-    def download(self, url=None):
+    def download(self, url=None, retries=10):
         r"""
          Automatically download CUB2011 dataset.
 
          :param url: str, web url of CUB2011
          """
+        if retries <= 0:
+            raise RuntimeError('Max Retries exceeded!')
+
         dirs = 'data/'
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         print('Downloading dataset CUB2011...')
         filename = 'data/CUB_200_2011.tgz'
-        down_res = requests.get(url, stream=True)
-        file_size = int(down_res.headers.get('Content-Length', 0))
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-        tar = tarfile.open(filename, "r")
+        try:
+            down_res = requests.get(url, stream=True)
+            file_size = int(down_res.headers.get('Content-Length', 0))
+            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                with open(filename, 'wb') as file:
+                    shutil.copyfileobj(content, file)
+        except requests.exceptions.ConnectionError as err:
+            print('Warning: Network error. Retrying...\n', err)
+            return self.download(url, retries - 1)
+        try:
+            tar = tarfile.open(filename, "r")
+        except tarfile.ReadError as err:
+            print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
+            return self.download(url, retries - 1)
+
         file_names = tar.getnames()
         print('Unzipping files...')
         sleep(0.5)
@@ -1272,6 +1351,7 @@ class CUB2011:
             tar.extract(file_name, "data/")
         tar.close()
         os.remove(filename)
+        return filename
 
     def process(self):
         r"""
