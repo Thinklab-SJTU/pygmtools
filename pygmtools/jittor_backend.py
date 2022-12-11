@@ -1333,13 +1333,14 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
 
 
-def _check_data_type(input: Var, var_name=None):
+def _check_data_type(input: Var, var_name, raise_err):
     """
     Jittor implementation of _check_data_type
     """
-    if type(input) is not Var:
+    if raise_err and type(input) is not Var:
         raise ValueError(f'Expected Jittor Var{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is Var
 
 def _check_shape(input, dim_num):
     """
