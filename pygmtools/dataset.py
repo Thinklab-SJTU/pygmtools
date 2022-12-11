@@ -212,6 +212,7 @@ class PascalVOC:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
                 print('Warning: Content error. Retrying...\n', err)
+                os.remove(filename)
                 return self.download(url, name, retries - 1)
 
             file_names = tar.getnames()
@@ -238,6 +239,7 @@ class PascalVOC:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
                 print('Warning: Content error. Retrying...\n', err)
+                os.remove(filename)
                 return self.download(url, name, retries - 1)
 
             file_names = tar.getnames()
@@ -538,6 +540,7 @@ class WillowObject:
             fz = zipfile.ZipFile(filename, "r")
         except zipfile.BadZipFile as err:
             print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
             return self.download(url, retries - 1)
 
         print('Unzipping files...')
@@ -822,6 +825,7 @@ class SPair71k:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
             print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
             return self.download(url, retries - 1)
 
         file_names = tar.getnames()
@@ -1102,6 +1106,7 @@ class IMC_PT_SparseGM:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
             print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
             return self.download(url, retries - 1)
 
         file_names = tar.getnames()
@@ -1309,7 +1314,7 @@ class CUB2011:
 
         self.process()
 
-    def download(self, url=None, retries=5):
+    def download(self, url=None, retries=10):
         r"""
          Automatically download CUB2011 dataset.
 
@@ -1336,6 +1341,7 @@ class CUB2011:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
             print('Warning: Content error. Retrying...\n', err)
+            os.remove(filename)
             return self.download(url, retries - 1)
 
         file_names = tar.getnames()
