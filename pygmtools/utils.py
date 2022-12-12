@@ -13,7 +13,7 @@ import hashlib
 import shutil
 from tqdm.auto import tqdm
 import inspect
-
+import wget
 import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
@@ -215,7 +215,8 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     node_aff = node_aff_fn(node_feat1, node_feat2) if node_feat1 is not None else None
     edge_aff = edge_aff_fn(edge_feat1, edge_feat2) if edge_feat1 is not None else None
 
-    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2,
+                                         backend=backend)
     if non_batched_input:
         return _squeeze(result, 0, backend)
     else:
@@ -934,17 +935,38 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     return fn(*args)
 
 
-def _check_data_type(input, var_name=None, backend=None):
+def _check_data_type(input, *args):
     r"""
     Check whether the input data meets the backend. If not met, it will raise an ValueError
+    Three overloads of this function:
+    _check_data_type(input, backend)
+    _check_data_type(input, var_name, backend)
+    _check_data_type(input, var_name, raise_err, backend)
 
     :param input: input data (must be Tensor/ndarray)
     :param var_name: name of the variable
-    :return: None
+    :param raise_err: raise an error if input data not true
+    :return: True or False
     """
+    if len(args) == 3:
+        var_name, raise_err, backend = args
+    elif len(args) == 2:
+        var_name, backend = args
+        raise_err = True
+    elif len(args) == 1:
+        backend = args[0]
+        var_name = None
+        raise_err = True
+    elif len(args) == 0:
+        backend = None
+        var_name = None
+        raise_err = True
+    else:
+        raise RuntimeError(f'Unknown arguments: {args}')
+
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input, var_name)
+    args = (input, var_name, raise_err)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_data_type
@@ -1080,12 +1102,10 @@ def _mm(input1, input2, backend=None):
         )
     return fn(*args)
 
-
 def download(filename, url, md5=None, retries=5):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
-
     :param filename: the destination file name
     :param url: the url
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
@@ -1100,27 +1120,36 @@ def download(filename, url, md5=None, retries=5):
         os.makedirs(dirs)
     filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
-        print(f'Downloading to {filename}...')
-        down_res = requests.get(url, stream=True)
-        file_size = int(down_res.headers.get('Content-Length', 0))
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-
+        print(f'\nDownloading to {filename}...')
+        if retries % 2 == 1:
+            try:
+                down_res = requests.get(url, stream=True)
+                file_size = int(down_res.headers.get('Content-Length', 0))
+                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                    with open(filename, 'wb') as file:
+                        shutil.copyfileobj(content, file)
+            except requests.exceptions.ConnectionError as err:
+                print('Warning: Network error. Retrying...\n', err)
+                return download(filename, url, md5, retries - 1)
+        else:
+            wget.download(url,out=filename)
     if md5 is not None:
-        hash_md5 = hashlib.md5()
-        chunk = 8192
-        with open(filename, 'rb') as file_to_check:
-            while True:
-                buffer = file_to_check.read(chunk)
-                if not buffer:
-                    break
-                hash_md5.update(buffer)
-            md5_returned = hash_md5.hexdigest()
+        md5_returned = _get_md5(filename)
         if md5 != md5_returned:
             print('Warning: MD5 check failed for the downloaded content. Retrying...')
             os.remove(filename)
             time.sleep(1)
             return download(filename, url, md5, retries - 1)
-
     return filename
+
+def _get_md5(filename):
+    hash_md5 = hashlib.md5()
+    chunk = 8192
+    with open(filename, 'rb') as file_to_check:
+        while True:
+            buffer = file_to_check.read(chunk)
+            if not buffer:
+                break
+            hash_md5.update(buffer)
+        md5_returned = hash_md5.hexdigest()
+        return md5_returned

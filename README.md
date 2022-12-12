@@ -118,19 +118,28 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
 
-### Development status
+### Development status (master)
 
 |                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
 | ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
-| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | 🧱         | 🧱        |
-| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | 🧱         | 🧱        |
-| Multi-Graph Solvers | 🧱    | ✔       | ✔      | ✔            | 📆         | 📆        |
-| Neural Solvers      | 🧱    | ✔       | ✔      | 🧱           | 📆         | 📆        |
-| Examples Gallery    | 📆    | ✔       | ✔      | 📆           | 📆         | 📆        |
+| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | ✔         | 🧱        |
+| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | ✔         | 🧱        |
+| Multi-Graph Solvers | ✔    | ✔       | ✔      | ✔            | 📆         | 📆        |
+| Neural Solvers      | ✔    | ✔       | ✔      | 🧱           | 📆         | 📆        |
+| Examples Gallery    | 🧱    | ✔       | ✔      | 🧱           | 📆         | 📆        |
 
 ✔: Supported; 🧱: Work in progress; 📆: Planned for future versions (contributions welcomed!).
 
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
+
+## Pretrained Models
+
+The pretrained models shall be automatically downloaded upon needed from Google Drive. If you are experiencing issues 
+accessing Google Drive, please download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+Available at:
+[[google drive]](https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing)
+[[baidu drive]](https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv)
 
 ## The Deep Graph Matching Benchmark
 

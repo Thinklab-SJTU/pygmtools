@@ -23,6 +23,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
+    torch.manual_seed(0)
     X_gt, A1, A2, F1, F2, EF1, EF2 = [], [], [], [], [], [], []
     for b, num_node in enumerate(graph_num_nodes):
         As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(num_node, node_feat_dim=node_feat_dim)
@@ -81,6 +82,9 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             else:
                 raise ValueError(f'Unknown mode: {mode}!')
 
+            net2 = pygm.utils.get_network(solver_func, **solver_param_dict)
+            assert type(net) == type(net2)
+
             assert np.abs(pygm.utils.to_numpy(_X1) - pygm.utils.to_numpy(_X2)).sum() < 1e-4, \
                 f"GM result inconsistent for predefined network object. backend={working_backend}, " \
                 f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
@@ -101,38 +105,24 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor'])
 
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor'])
 
 def test_cie():
-    args = (
-        list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
+    _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
-        }, ['pytorch', 'jittor']
-    )
-    max_retries = 5
-    for i in range(max_retries - 1):
-        error_flag = False
-        try:
-            _test_neural_solver_on_isomorphic_graphs(*args)
-        except AssertionError as err:
-            print('Error caught (might be caused by randomness), retrying:\n', err)
-            error_flag = True
-        if not error_flag:
-            break
-    if error_flag:
-        _test_neural_solver_on_isomorphic_graphs(*args)
+        }, ['pytorch', 'numpy', 'jittor'])
 
 def test_ngm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ngm, 'lawler-qap', {
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor'])
 
 
 if __name__ == '__main__':

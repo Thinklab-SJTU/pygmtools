@@ -655,6 +655,7 @@ def gamgm(A, W,
     .. dropdown:: Numpy Example
 
         ::
+
             >>> import numpy as np
             >>> import pygmtools as pygm
             >>> import itertools
@@ -794,19 +795,6 @@ def gamgm(A, W,
             >>> acc = matched / X_gt.sum()
             >>> acc
             Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True, [1.])
-
-            # This function is differentiable by the black-box trick
-            >>> W.requires_grad_(True)  # tell Paddle to track the gradients
-            >>> X = pygm.gamgm(As, W)
-            >>> matched = 0
-            >>> for i, j in itertools.product(range(graph_num), repeat=2):
-            ...     matched += (X[i,j] * X_gt[i,j]).sum()
-            >>> acc = matched / X_gt.sum()
-
-            # Backward pass via black-box trick
-            >>> acc.backward()
-            >>> paddle.sum(W.grad != 0)
-            "AttributeError: 'GAMGMPaddleFunc_backward' object has no attribute 'needs_input_grad'"
 
             # This function supports graphs with different nodes (also known as partial matching)
             # In the following we ignore the last node from the last 5 graphs

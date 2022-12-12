@@ -63,9 +63,60 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. dropdown:: Numpy Example
+
+        ::
+
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype='i4'), np.random.permutation(4)] = 1
+            >>> A1 = 1. * (np.random.rand(batch_size, 4, 4) > 0.5)
+            >>> for i in np.arange(4): # discard self-loop edges
+            ...    for j in np.arange(batch_size):
+            ...        A1[j][i][i] = 0
+            >>> A2 = np.matmul(np.matmul(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> feat1 = np.random.rand(batch_size, 4, 1024) - 0.5
+            >>> feat2 = np.matmul(X_gt.swapaxes(1, 2), feat1)
+            >>> n1 = n2 = np.array([4] * batch_size)
+
+            # Match by PCA-GM (load pretrained model)
+            >>> X, net = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/pca_gm_voc_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/pca_gm_willow_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.pca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
 
     .. dropdown:: PyTorch Example
 
@@ -270,9 +321,60 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. dropdown:: Numpy Example
+
+        ::
+
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype='i4'), np.random.permutation(4)] = 1
+            >>> A1 = 1. * (np.random.rand(batch_size, 4, 4) > 0.5)
+            >>> for i in np.arange(4): # discard self-loop edges
+            ...    for j in np.arange(batch_size):
+            ...        A1[j][i][i] = 0
+            >>> A2 = np.matmul(np.matmul(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> feat1 = np.random.rand(batch_size, 4, 1024) - 0.5
+            >>> feat2 = np.matmul(X_gt.swapaxes(1, 2), feat1)
+            >>> n1 = n2 = np.array([4] * batch_size)
+
+            # Match by IPCA-GM (load pretrained model)
+            >>> X, net = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/ipca_gm_voc_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/ipca_gm_willow_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.ipca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, cross_iter=10, pretrain=False)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
 
     .. dropdown:: PyTorch Example
 
@@ -485,9 +587,62 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. dropdown:: Numpy Example
+
+        ::
+
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype='i4'), np.random.permutation(4)] = 1
+            >>> A1 = 1. * (np.random.rand(batch_size, 4, 4) > 0.5)
+            >>> for i in np.arange(4): # discard self-loop edges
+            ...    for j in np.arange(batch_size):
+            ...        A1[j][i][i] = 0
+            >>> e_feat1 = np.expand_dims(np.random.rand(batch_size, 4, 4) * A1,axis=-1) # shape: (10, 4, 4, 1)
+            >>> A2 = np.matmul(np.matmul(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> e_feat2 = np.expand_dims(np.matmul(np.matmul(X_gt.swapaxes(1, 2),np.squeeze(e_feat1,axis=-1)), X_gt),axis=-1)
+            >>> feat1 = np.random.rand(batch_size, 4, 1024) - 0.5
+            >>> feat2 = np.matmul(X_gt.swapaxes(1, 2), feat1)
+            >>> n1 = n2 = np.array([4] * batch_size)
+
+            # Match by CIE (load pretrained model)
+            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/cie_voc_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/cie_willow_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.cie, in_node_channel=1024, in_edge_channel=1, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            # feat1/feat2/e_feat1/e_feat2 may be outputs by other neural networks
+            >>> X = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+            
 
     .. dropdown:: PyTorch Example
 
@@ -706,9 +861,62 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing>`_
+        `[baidu drive] <https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv>`_
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. dropdown:: Numpy Example
+
+        ::
+
+            >>> import numpy as np
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+            >>> np.random.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = np.zeros((batch_size, 4, 4))
+            >>> X_gt[:, np.arange(0, 4, dtype='i4'), np.random.permutation(4)] = 1
+            >>> A1 = np.random.rand(batch_size, 4, 4)
+            >>> A2 = np.matmul(np.matmul(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> n1 = n2 = np.array([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by NGM
+            >>> X, net = pygm.ngm(K, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/ngm_voc_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.ngm(K, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.ngm(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/ngm_willow_numpy.npy...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.ngm, gnn_channels=(32, 64, 128, 64, 32), sk_emb=8, pretrain=False)
+            # K may be outputs by other neural networks (constructed K from node/edge features by pygm.utils.build_aff_mat)
+            >>> X = pygm.ngm(K, n1, n2, network=net)
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            1.0
+
 
     .. dropdown:: PyTorch Example
 

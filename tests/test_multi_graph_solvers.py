@@ -24,6 +24,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
     # As, Fs are for kb-qap algorithms
+    torch.manual_seed(1)
     As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(num_node, num_graph, node_feat_dim)
     # As_1, As_2, Fs_1, Fs_2 are for lawler-qap algorithms
     As_1, As_2, Fs_1, Fs_2 = [], [], [], []
@@ -137,8 +138,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
 def test_cao():
     num_nodes = 5
     num_graphs = 10
-    max_retries = 5
-    args = (num_graphs, num_nodes, 10, pygm.cao, 'lawler-qap', {
+    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.cao, 'lawler-qap', {
         'mode': ['time', 'memory'],
         'x0': [None, 0.2, 0.5],
         'lambda_init': [0.1, 0.3],
@@ -146,24 +146,12 @@ def test_cao():
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
     }, ['pytorch', 'numpy', 'paddle', 'jittor'])
-    for i in range(max_retries - 1):
-        error_flag = False
-        try:
-            _test_mgm_solver_on_isomorphic_graphs(*args)
-        except AssertionError as err:
-            print('Error caught (might be caused by randomness), retrying:\n', err)
-            error_flag = True
-        if not error_flag:
-            break
-    if error_flag:
-        _test_mgm_solver_on_isomorphic_graphs(*args)
 
 
 def test_mgm_floyd():
     num_nodes = 5
     num_graphs = 10
-    max_retries = 5
-    args = (num_graphs, num_nodes, 10, pygm.mgm_floyd, 'lawler-qap', {
+    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.mgm_floyd, 'lawler-qap', {
         'mode': ['time', 'memory'],
         'x0': [None, 0.2, 0.5],
         'param_lambda': [0.1, 0.3],
@@ -171,45 +159,47 @@ def test_mgm_floyd():
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
     }, ['pytorch', 'numpy', 'paddle', 'jittor'])
-    for i in range(max_retries - 1):
-        error_flag = False
-        try:
-            _test_mgm_solver_on_isomorphic_graphs(*args)
-        except AssertionError as err:
-            print('Error caught (might be caused by randomness), retrying:\n', err)
-            error_flag = True
-        if not error_flag:
-            break
-    if error_flag:
-        _test_mgm_solver_on_isomorphic_graphs(*args)
 
 
 def test_gamgm():
     num_nodes = 5
     num_graphs = 10
-    max_retries = 5
-    args = (
-        num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
+    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
             'sk_init_tau': [0.5, 0.1],
             'sk_min_tau': [0.1, 0.05],
             'param_lambda': [0.1, 0.5],
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-        }, ['pytorch', 'numpy', 'paddle', 'jittor']
-    )
-    for i in range(max_retries - 1):
-        error_flag = False
-        try:
-            _test_mgm_solver_on_isomorphic_graphs(*args)
-        except AssertionError as err:
-            print('Error caught (might be caused by randomness), retrying:\n', err)
-            error_flag = True
-        if not error_flag:
-            break
-    if error_flag:
-        _test_mgm_solver_on_isomorphic_graphs(*args)
+        }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+
+
+def test_gamgm_backward():
+    # Pytorch
+    pygm.BACKEND = 'pytorch'
+    torch.manual_seed(1)
+
+    # Generate 10 isomorphic graphs
+    graph_num = 10
+    As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
+
+    # Compute node-wise similarity by inner-product and Sinkhorn
+    W = torch.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
+    W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
+
+    # This function is differentiable by the black-box trick
+    W.requires_grad_(True)  # tell PyTorch to track the gradients
+    X = pygm.gamgm(As, W)
+    matched = 0
+    for i, j in itertools.product(range(graph_num), repeat=2):
+        matched += (X[i, j] * X_gt[i, j]).sum()
+    acc = matched / X_gt.sum()
+
+    # Backward pass via black-box trick
+    acc.backward()
+    assert torch.sum(W.grad != 0) > 0
 
 
 if __name__ == '__main__':
+    test_gamgm_backward()
     test_gamgm()
     test_mgm_floyd()
     test_cao()

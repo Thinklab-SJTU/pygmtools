@@ -536,13 +536,14 @@ def _aff_mat_from_node_edge_aff(node_aff: tf.Tensor, edge_aff: tf.Tensor, connec
     return tf.stack(ks, axis=0)
 
 
-def _check_data_type(input: tf.Tensor, var_name=None):
+def _check_data_type(input: tf.Tensor, var_name, raise_err):
     """
     Tensorflow implementation of _check_data_type
     """
-    if not tf.is_tensor(input):
-        raise ValueError(f'Expected Pytorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+    if raise_err and not tf.is_tensor(input):
+        raise ValueError(f'Expected TensorFlow Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return tf.is_tensor(input)
 
 
 def _check_shape(input, dim_num):

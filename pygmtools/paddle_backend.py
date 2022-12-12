@@ -617,8 +617,7 @@ def gamgm(
         end_y = n_indices[j]
         supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i], :ns[j]]
 
-    U = GAMGMPaddleFunc.apply(
-        bb_smooth,
+    U = gamgm_real(
         supA, supW, ns, n_indices, n_univ, num_graphs, U0,
         init_tau, min_tau, sk_gamma,
         sk_iter, max_iter, quad_weight,
@@ -636,55 +635,6 @@ def gamgm(
         result[i] = U[start_n:end_n]
 
     return result
-
-
-class GAMGMPaddleFunc(paddle.autograd.PyLayer):
-    """
-    Paddle wrapper to support forward and backward pass (by black-box differentiation)
-    """
-    @staticmethod
-    def forward(ctx, bb_smooth, supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args):
-        # save parameters
-        ctx.bb_smooth = bb_smooth
-        ctx.named_args = supA, supW, ns, n_indices, n_univ, num_graphs, U0
-        ctx.list_args = args
-
-        # real solver function
-        U = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
-
-        # save result
-        ctx.U = U
-        return U
-
-    @staticmethod
-    def backward(ctx, dU):
-        epsilon = 1e-8
-        bb_smooth = ctx.bb_smooth
-        supA, supW, ns, n_indices, n_univ, num_graphs, U0 = ctx.named_args
-        args = ctx.list_args
-        U = ctx.U
-
-        for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
-            supW[start_x:end_x, start_y:end_y] += bb_smooth * paddle.mm(dU[start_x:end_x], dU[start_y:end_y].transpose((1, 0)))
-
-        U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
-
-        grad_supW = paddle.to_tensor(paddle.zeros((n_indices[-1], n_indices[-1])), place=supW.place)
-        for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
-            X = paddle.mm(U[start_x:end_x], U[start_y:end_y].transpose((1, 0)))
-            X_prime = paddle.mm(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose((1, 0)))
-            grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
-
-        return_list = [None, None, grad_supW] + [None] * (len(ctx.needs_input_grad) - 3)
-        return tuple(return_list)
 
 
 def gamgm_real(
@@ -986,13 +936,14 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     return paddle.stack(ks, axis=0)
 
 
-def _check_data_type(input: paddle.Tensor, var_name=None):
+def _check_data_type(input: paddle.Tensor, var_name, raise_err):
     """
     Paddle implementation of _check_data_type
     """
-    if type(input) is not paddle.Tensor:
+    if raise_err and type(input) is not paddle.Tensor:
         raise ValueError(f'Expected Paddle Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is paddle.Tensor
 
 
 def _check_shape(input, dim_num):
