@@ -638,8 +638,8 @@ def gamgm(A, W,
 
     .. note::
 
-        In PyTorch backend, this function is differentiable through the black-box trick. See the following paper for
-        details:
+        In PyTorch and Jittor backends, this function is differentiable through the black-box trick.
+        See the following paper for details:
 
         ::
 
