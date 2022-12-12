@@ -310,9 +310,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = np.full(batch_num, n1max, dtype=np.int)
+        n1 = np.full(batch_num, n1max, dtype=int)
     if n2 is None:
-        n2 = np.full(batch_num, n2max, dtype=np.int)
+        n2 = np.full(batch_num, n2max, dtype=int)
     if n1max is None:
         n1max = np.max(n1)
     if n2max is None:
@@ -1330,13 +1330,14 @@ def _aff_mat_from_node_edge_aff(node_aff: np.ndarray, edge_aff: np.ndarray, conn
     return np.stack(ks, axis=0)
 
 
-def _check_data_type(input: np.ndarray, var_name=None):
+def _check_data_type(input: np.ndarray, var_name, raise_err):
     """
     numpy implementation of _check_data_type
     """
-    if type(input) is not np.ndarray:
+    if raise_err and type(input) is not np.ndarray:
         raise ValueError(f'Expected numpy ndarray{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is np.ndarray
 
 
 def _check_shape(input: np.ndarray, dim_num):

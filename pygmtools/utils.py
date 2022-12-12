@@ -215,7 +215,8 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     node_aff = node_aff_fn(node_feat1, node_feat2) if node_feat1 is not None else None
     edge_aff = edge_aff_fn(edge_feat1, edge_feat2) if edge_feat1 is not None else None
 
-    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2, backend=backend)
+    result = _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2, n1, n2, ne1, ne2,
+                                         backend=backend)
     if non_batched_input:
         return _squeeze(result, 0, backend)
     else:
@@ -934,17 +935,38 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     return fn(*args)
 
 
-def _check_data_type(input, var_name=None, backend=None):
+def _check_data_type(input, *args):
     r"""
     Check whether the input data meets the backend. If not met, it will raise an ValueError
+    Three overloads of this function:
+    _check_data_type(input, backend)
+    _check_data_type(input, var_name, backend)
+    _check_data_type(input, var_name, raise_err, backend)
 
     :param input: input data (must be Tensor/ndarray)
     :param var_name: name of the variable
-    :return: None
+    :param raise_err: raise an error if input data not true
+    :return: True or False
     """
+    if len(args) == 3:
+        var_name, raise_err, backend = args
+    elif len(args) == 2:
+        var_name, backend = args
+        raise_err = True
+    elif len(args) == 1:
+        backend = args[0]
+        var_name = None
+        raise_err = True
+    elif len(args) == 0:
+        backend = None
+        var_name = None
+        raise_err = True
+    else:
+        raise RuntimeError(f'Unknown arguments: {args}')
+
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input, var_name)
+    args = (input, var_name, raise_err)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_data_type
