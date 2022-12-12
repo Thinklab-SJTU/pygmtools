@@ -310,9 +310,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = np.full(batch_num, n1max, dtype=np.int)
+        n1 = np.full(batch_num, n1max, dtype=int)
     if n2 is None:
-        n2 = np.full(batch_num, n2max, dtype=np.int)
+        n2 = np.full(batch_num, n2max, dtype=int)
     if n1max is None:
         n1max = np.max(n1)
     if n2max is None:
