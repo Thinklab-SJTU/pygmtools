@@ -23,6 +23,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
+    torch.manual_seed(0)
     X_gt, A1, A2, F1, F2, EF1, EF2 = [], [], [], [], [], [], []
     for b, num_node in enumerate(graph_num_nodes):
         As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(num_node, node_feat_dim=node_feat_dim)
@@ -112,23 +113,9 @@ def test_ipca_gm():
     }, ['pytorch', 'numpy', 'jittor'])
 
 def test_cie():
-    args = (
-        list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
+    _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
-        }, ['pytorch', 'numpy', 'jittor']
-    )
-    max_retries = 5
-    for i in range(max_retries - 1):
-        error_flag = False
-        try:
-            _test_neural_solver_on_isomorphic_graphs(*args)
-        except AssertionError as err:
-            print('Error caught (might be caused by randomness), retrying:\n', err)
-            error_flag = True
-        if not error_flag:
-            break
-    if error_flag:
-        _test_neural_solver_on_isomorphic_graphs(*args)
+        }, ['pytorch', 'numpy', 'jittor'])
 
 def test_ngm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ngm, 'lawler-qap', {
