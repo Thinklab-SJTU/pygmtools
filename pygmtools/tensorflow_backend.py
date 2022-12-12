@@ -424,16 +424,16 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
     """
     Tensorflow implementation of generate_isomorphic_graphs
     """
-    X_gt = tf.Variable(tf.zeros([graph_num, node_num, node_num]))
-    f = tf.fill([node_num, node_num], 1)
-    X_gt[0, tf.range(node_num, dtype=tf.int64), tf.range(node_num, dtype=tf.int64)].assign(f)
+    indices = tf.stack([tf.fill(node_num, 0), tf.range(node_num), tf.range(node_num)], axis=1)
+    updates = tf.fill(node_num, 1.)
+    X_gt = tf.scatter_nd(indices, updates, [graph_num, node_num, node_num])
     for i in range(graph_num):
         if i > 0:
-            rand_per = tnp.random.permutation(node_num)
-            f = tf.fill([node_num, rand_per], 1)
-            X_gt[i, tf.range(node_num, dtype=tf.int64), rand_per].assign(f)
+            indices = tf.stack([tf.fill(node_num, i), tf.range(node_num), tf.random.shuffle(tf.range(node_num))], axis=1)
+            updates = tf.fill(node_num, 1.)
+            X_gt = tf.tensor_scatter_nd_update(X_gt, indices, updates)
     joint_X = tf.reshape(X_gt, [graph_num * node_num, node_num])
-    X_gt = tf.matmul(joint_X, joint_X, tranpose_b=True)
+    X_gt = tf.matmul(joint_X, joint_X, transpose_b=True)
     X_gt = tf.transpose(tf.reshape(X_gt, [graph_num, node_num, graph_num, node_num]), perm=[0, 2, 1, 3])
     A0 = tf.random.uniform(shape=[node_num, node_num])
     A0 = A0 - tf.linalg.diag(tf.linalg.diag_part(A0))
@@ -460,9 +460,9 @@ def permutation_loss(pred_dsmat: tf.Tensor, gt_perm: tf.Tensor, n1: tf.Tensor, n
 
     pred_dsmat = tf.cast(pred_dsmat, dtype=tf.float32)
 
-    if not tf.math.reduce_all(tf.greater_equal(pred_dsmat, 0) * tf.less_equal(pred_dsmat, 1)):
+    if not tf.reduce_all(tf.math.logical_and((pred_dsmat >= 0), (pred_dsmat <= 1))):
         raise ValueError("pred_dsmat contains invalid numerical entries.")
-    if not tf.math.reduce_all(tf.greater_equal(gt_perm, 0) * tf.less_equal(gt_perm, 1)):
+    if not tf.reduce_all(tf.math.logical_and((gt_perm >= 0), (gt_perm <= 1))):
         raise ValueError("gt_perm contains invalid numerical entries.")
 
     if n1 is None:
@@ -474,10 +474,10 @@ def permutation_loss(pred_dsmat: tf.Tensor, gt_perm: tf.Tensor, n1: tf.Tensor, n
     n_sum = tf.zeros_like(loss)
     for b in range(batch_num):
         batch_slice = [b, slice(n1[b]), slice(n2[b])]
-        bce=tf.losses.BinaryCrossentropy()
-        loss += tf.size(gt_perm[batch_slice]) * bce(
+        bce = tf.losses.BinaryCrossentropy()
+        loss.assign_add(tf.cast(tf.size(gt_perm[batch_slice]), dtype=tf.float32) * bce(
             gt_perm[batch_slice],
-            pred_dsmat[batch_slice])
+            pred_dsmat[batch_slice]))
         n_sum += tf.cast(n1[b], dtype=n_sum.dtype)
 
     return loss / n_sum
@@ -493,9 +493,9 @@ def _aff_mat_from_node_edge_aff(node_aff: tf.Tensor, edge_aff: tf.Tensor, connec
         dtype = edge_aff.dtype
         batch_size = edge_aff.shape[0]
         if n1 is None:
-            n1 = tf.reduce_max(tf.reduce_max(connectivity1, axis=-1).values, axis=-1).values + 1
+            n1 = tf.reduce_max(tf.reduce_max(connectivity1, axis=-1), axis=-1) + 1
         if n2 is None:
-            n2 = tf.reduce_max(tf.reduce_max(connectivity2, axsi=-1).values, axis=-1).values + 1
+            n2 = tf.reduce_max(tf.reduce_max(connectivity2, axis=-1), axis=-1) + 1
         if ne1 is None:
             ne1 = [edge_aff.shape[1]] * batch_size
         if ne2 is None:
