@@ -423,7 +423,7 @@ for i in range(X.shape[0]):
 #     all omitted in consideration of simplicity. You may refer to `ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_
 #     which is a research protocol with all these advanced features.
 #
-# Let's firstly define the neural network model. By passing ``None`` to :func:`~pygmtools.neural_solvers.pca_gm`,
+# Let's firstly define the neural network model. By calling :func:`~pygmtools.utils.get_network`,
 # it will simply return the network object.
 #
 class GMNet(jt.nn.Module):
