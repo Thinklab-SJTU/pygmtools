@@ -65,10 +65,10 @@ def test_dataset_and_benchmark():
     dict_list.append(willow_cfg_dict)
 
     spair_cfg_dict = dict()
-    spair_cfg_dict['TRAIN_DIFF_PARAMS'] = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
+    spair_cfg_dict['TRAIN_DIFF_PARAMS'] = {'mirror': 0}
     spair_cfg_dict['EVAL_DIFF_PARAMS'] = dataset_cfg.SPair.EVAL_DIFF_PARAMS
-    spair_cfg_dict['COMB_CLS'] = dataset_cfg.SPair.COMB_CLS
-    spair_cfg_dict['SIZE'] = dataset_cfg.SPair.SIZE
+    spair_cfg_dict['COMB_CLS'] = True
+    spair_cfg_dict['SIZE'] = 'small'
     spair_cfg_dict['ROOT_DIR'] = dataset_cfg.SPair.ROOT_DIR
     dict_list.append(spair_cfg_dict)
 
@@ -80,7 +80,7 @@ def test_dataset_and_benchmark():
     dict_list.append(imcpt_cfg_dict)
 
     cub_cfg_dict = dict()
-    cub_cfg_dict['CLS_SPLIT'] = dataset_cfg.CUB2011.CLASS_SPLIT
+    cub_cfg_dict['CLS_SPLIT'] = 'sup'
     cub_cfg_dict['ROOT_DIR'] = dataset_cfg.CUB2011.ROOT_DIR
     dict_list.append(cub_cfg_dict)
 
@@ -94,8 +94,11 @@ def test_dataset_and_benchmark():
                         continue
                     if filter == 'inclusion' and problem_type == 'MGM':
                         continue
-                    _test_benchmark(dataset_name, set, problem_type, filter, dict_list[-1])
-                    _test_benchmark(dataset_name, set, problem_type, filter, dict_list[i])
+                    _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[-1])
+                    _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
+                    if i == 4:
+                        dict_list[i]['CLS_SPLIT'] = 'all'
+                        _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
 
 
 if __name__ == '__main__':
