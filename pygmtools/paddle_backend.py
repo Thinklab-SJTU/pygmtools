@@ -668,7 +668,8 @@ def gamgm_real(
                 else:
                     print_str = 'hungarian'
                 print(print_str + f' #iter={i}/{max_iter} '
-                      f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
+                      f'quad score: {(quad * U).sum().numpy().squeeze():.3e}, '
+                      f'unary score: {(unary * U).sum().numpy().squeeze():.3e}')
             V = (quad + unary) / num_graphs
 
             U_list = []
@@ -724,7 +725,8 @@ def gamgm_real(
                 U_hung = paddle.concat(U_list_hung, axis=0)
                 diff = paddle.linalg.norm(paddle.mm(U, U.t()) - lastUUt)
                 print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
-                      f'gap to discrete: {paddle.mean(paddle.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+                      f'gap to discrete: {paddle.mean(paddle.abs(U - U_hung)).numpy().squeeze():.3e}, '
+                      f'iter diff: {diff.numpy().squeeze():.3e}')
 
             if projector == 'hungarian' and outlier_thresh > 0:
                 U_hung = U

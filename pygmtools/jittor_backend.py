@@ -776,12 +776,14 @@ def gamgm_real(
                     U_list_hung = []
                     n_start = 0
                     for n_end in n_indices:
+                        n_end = n_end.item()
                         U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='jittor'))
                         n_start = n_end
                     U_hung = jt.concat(U_list_hung, dim=0)
-                    diff = jt.norm(jt.matmul(U, U.t()) - lastUUt)
+                    diff = jt.norm(jt.matmul(U, U.t()) - lastUUt).sum()
                     print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
-                        f'gap to discrete: {jt.mean(jt.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+                          f'gap to discrete: {jt.mean(jt.abs(U - U_hung)).item():.3e}, '
+                          f'iter diff: {diff.item():.3e}')
 
                 if projector == 'hungarian' and outlier_thresh > 0:
                     U_hung = U

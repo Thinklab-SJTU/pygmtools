@@ -168,7 +168,8 @@ def test_gamgm():
             'sk_init_tau': [0.5, 0.1],
             'sk_min_tau': [0.1, 0.05],
             'param_lambda': [0.1, 0.5],
-            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
+            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
+            'verbose': [True]
         }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
 

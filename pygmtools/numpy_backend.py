@@ -745,13 +745,13 @@ def gamgm_real(
                     U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='numpy'))
                     n_start = n_end
                 U_hung = np.concatenate(U_list_hung, axis=0)
-                diff = np.linalg.norm(np.matmul(U, U.t()) - lastUUt)
+                diff = np.linalg.norm(np.matmul(U, U.transpose()) - lastUUt)
                 print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
                       f'gap to discrete: {np.mean(np.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
 
             if projector == 'hungarian' and outlier_thresh > 0:
                 U_hung = U
-                UUt = np.matmul(U_hung, U_hung.t())
+                UUt = np.matmul(U_hung, U_hung.transpose())
                 cluster_weight = np.repeat(cluster_M, ns.astype('i4'), axis=0)
                 cluster_weight = np.repeat(cluster_weight, ns.astype('i4'), axis=1)
                 quad = np.linalg.multi_dot(supA, UUt * cluster_weight, supA, U_hung) * quad_weight * 2
