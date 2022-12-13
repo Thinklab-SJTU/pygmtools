@@ -1,5 +1,5 @@
 import pygmtools as pygm
-from pygmtools import dataset_config as dataset_cfg
+from pygmtools.dataset_config import dataset_cfg
 
 
 # Test dataset download and preprocess, and data fetch and evaluation
