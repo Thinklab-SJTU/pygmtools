@@ -412,6 +412,39 @@ def from_numpy(input, device=None):
     return mindspore.Tensor(input)
 
 
+def permutation_loss(pred_dsmat: mindspore.Tensor, gt_perm: mindspore.Tensor, n1: mindspore.Tensor,
+                     n2: mindspore.Tensor) -> mindspore.Tensor:
+    """
+    Pytorch implementation of permutation_loss
+    """
+    batch_num = pred_dsmat.shape[0]
+
+    pred_dsmat = mindspore.Tensor(pred_dsmat, dtype=mindspore.float32)
+
+    if not mindspore.ops.logical_and(pred_dsmat >= 0, pred_dsmat <= 1).all:
+        raise ValueError("pred_dsmat contains invalid numerical entries.")
+    if not mindspore.ops.logical_and(gt_perm >= 0, gt_perm <= 1).all:
+        raise ValueError("gt_perm contains invalid numerical entries.")
+
+    if n1 is None:
+        n1 = mindspore.Tensor([pred_dsmat.shape[1] for _ in range(batch_num)])
+    if n2 is None:
+        n2 = mindspore.Tensor([pred_dsmat.shape[2] for _ in range(batch_num)])
+
+    loss = mindspore.Tensor(0.)
+    n_sum = mindspore.ops.zeros_like(loss)
+    for b in range(batch_num):
+        batch_slice = [b, slice(n1[b]), slice(n2[b])]
+        weight = mindspore.ops.ones_like(pred_dsmat[batch_slice])
+        loss += mindspore.ops.BinaryCrossEntropy(reduction='sum')(
+            pred_dsmat[batch_slice],
+            gt_perm[batch_slice], weight)
+        n1_b = mindspore.Tensor(n1[b], dtype=n_sum.dtype)
+        n_sum += n1_b
+
+    return loss / n_sum
+
+
 def _aff_mat_from_node_edge_aff(node_aff: mindspore.Tensor, edge_aff: mindspore.Tensor, connectivity1: mindspore.Tensor,
                                 connectivity2: mindspore.Tensor,
                                 n1, n2, ne1, ne2):
