@@ -200,7 +200,7 @@ class PascalVOC:
         if name == "PascalVOC_anno":
             print('Downloading dataset annotation...')
             filename = "data/PascalVOC.tgz"
-            download(filename=filename, url=url)
+            download(filename=filename, url=url, to_cache=False)
             try:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
@@ -219,7 +219,7 @@ class PascalVOC:
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
             filename = "data/PascalVOC.tar"
-            download(filename=filename, url=url)
+            download(filename=filename, url=url, to_cache=False)
             try:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
@@ -512,7 +512,7 @@ class WillowObject:
 
         print('Downloading dataset WillowObject...')
         filename = "data/WILLOW.zip"
-        download(filename=filename, url=url)
+        download(filename=filename, url=url, to_cache=False)
         try:
             fz = zipfile.ZipFile(filename, "r")
         except zipfile.BadZipFile as err:
@@ -789,7 +789,7 @@ class SPair71k:
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
         filename = "data/SPair-71k.tgz"
-        download(filename=filename, url=url)
+        download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -1062,7 +1062,7 @@ class IMC_PT_SparseGM:
             os.makedirs(dirs)
         print('Downloading dataset IMC-PT-SparseGM...')
         filename = 'data/IMC-PT-SparseGM.tar.gz'
-        download(filename=filename, url=url)
+        download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -1289,7 +1289,7 @@ class CUB2011:
             os.makedirs(dirs)
         print('Downloading dataset CUB2011...')
         filename = 'data/CUB_200_2011.tgz'
-        download(filename=filename, url=url)
+        download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
