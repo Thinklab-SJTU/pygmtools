@@ -1,9 +1,10 @@
 import pygmtools as pygm
+from pygmtools import dataset_config as dataset_cfg
 
 
 # Test dataset download and preprocess, and data fetch and evaluation
-def _test_benchmark(name, sets, problem, filter):
-    benchmark = pygm.benchmark.Benchmark(name=name, sets=sets, problem=problem, filter=filter)
+def _test_benchmark(name, sets, problem, filter, **ds_dict):
+    benchmark = pygm.benchmark.Benchmark(name=name, sets=sets, problem=problem, filter=filter, **ds_dict)
     if sets == 'test':
         num = 2 if benchmark.problem == '2GM' else 3
         _test_get_data(benchmark, num)
@@ -43,11 +44,49 @@ def _test_get_data(benchmark, num):
 
 # Entry function
 def test_dataset_and_benchmark():
-    dataset_name_list = ['CUB2011', 'PascalVOC', 'WillowObject', 'SPair71k', 'IMC_PT_SparseGM']
+    dataset_name_list = ['PascalVOC', 'WillowObject', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
     problem_type_list = ['2GM', 'MGM']
     set_list = ['train', 'test']
     filter_list = ['intersection', 'inclusion', 'unfiltered']
-    for dataset_name in dataset_name_list:
+    dict_list = []
+    voc_cfg_dict = dict()
+    voc_cfg_dict['CLS_SPLIT'] = dataset_cfg.CUB2011.CLASS_SPLIT
+    voc_cfg_dict['ROOT_DIR'] = dataset_cfg.CUB2011.ROOT_DIR
+    dict_list.append(voc_cfg_dict)
+
+    willow_cfg_dict = dict()
+    willow_cfg_dict['CLASSES'] = dataset_cfg.WillowObject.CLASSES
+    willow_cfg_dict['KPT_LEN'] = dataset_cfg.WillowObject.KPT_LEN
+    willow_cfg_dict['ROOT_DIR'] = dataset_cfg.WillowObject.ROOT_DIR
+    willow_cfg_dict['TRAIN_NUM'] = dataset_cfg.WillowObject.TRAIN_NUM
+    willow_cfg_dict['SPLIT_OFFSET'] = dataset_cfg.WillowObject.SPLIT_OFFSET
+    willow_cfg_dict['TRAIN_SAME_AS_TEST'] = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
+    willow_cfg_dict['RAND_OUTLIER'] = dataset_cfg.WillowObject.RAND_OUTLIER
+    dict_list.append(willow_cfg_dict)
+
+    spair_cfg_dict = dict()
+    spair_cfg_dict['TRAIN_DIFF_PARAMS'] = dataset_cfg.SPair.TRAIN_DIFF_PARAMS
+    spair_cfg_dict['EVAL_DIFF_PARAMS'] = dataset_cfg.SPair.EVAL_DIFF_PARAMS
+    spair_cfg_dict['COMB_CLS'] = dataset_cfg.SPair.COMB_CLS
+    spair_cfg_dict['SIZE'] = dataset_cfg.SPair.SIZE
+    spair_cfg_dict['ROOT_DIR'] = dataset_cfg.SPair.ROOT_DIR
+    dict_list.append(spair_cfg_dict)
+
+    imcpt_cfg_dict = dict()
+    imcpt_cfg_dict['MAX_KPT_NUM'] = dataset_cfg.IMC_PT_SparseGM.MAX_KPT_NUM
+    imcpt_cfg_dict['CLASSES'] = dataset_cfg.IMC_PT_SparseGM.CLASSES
+    imcpt_cfg_dict['ROOT_DIR_NPZ'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
+    imcpt_cfg_dict['ROOT_DIR_IMG'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
+    dict_list.append(imcpt_cfg_dict)
+
+    cub_cfg_dict = dict()
+    cub_cfg_dict['CLS_SPLIT'] = dataset_cfg.CUB2011.CLASS_SPLIT
+    cub_cfg_dict['ROOT_DIR'] = dataset_cfg.CUB2011.ROOT_DIR
+    dict_list.append(cub_cfg_dict)
+
+    dict_list.append(dict())
+
+    for i, dataset_name in enumerate(dataset_name_list):
         for set in set_list:
             for problem_type in problem_type_list:
                 for filter in filter_list:
@@ -55,7 +94,8 @@ def test_dataset_and_benchmark():
                         continue
                     if filter == 'inclusion' and problem_type == 'MGM':
                         continue
-                    _test_benchmark(dataset_name, set, problem_type, filter)
+                    _test_benchmark(dataset_name, set, problem_type, filter, dict_list[-1])
+                    _test_benchmark(dataset_name, set, problem_type, filter, dict_list[i])
 
 
 if __name__ == '__main__':
