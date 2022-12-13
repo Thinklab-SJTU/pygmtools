@@ -211,8 +211,8 @@ plt.imshow(feat2_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
 #
 rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
 rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 ##############################################################################
 # Call PCA-GM matching model
@@ -279,8 +279,8 @@ num_features = feat1_upsample.shape[1]
 #
 rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
 rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 ##############################################################################
 # Build edge features as edge lengths
@@ -351,8 +351,8 @@ num_features = feat1_upsample.shape[1]
 #
 rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
 rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 ##############################################################################
 # Build edge features as edge lengths
@@ -426,8 +426,8 @@ class GMNet(torch.nn.Module):
         # assign node features
         rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
         rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-        node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t()  # shape: NxC
-        node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t()  # shape: NxC
+        node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t()  # shape: NxC
+        node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t()  # shape: NxC
 
         # PCA-GM matching layers
         X = pygm.pca_gm(node1, node2, A1, A2, network=self.gm_net) # the network object is reused

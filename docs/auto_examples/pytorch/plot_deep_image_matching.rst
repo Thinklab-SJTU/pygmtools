@@ -474,7 +474,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbb2b07b400>
+    <matplotlib.image.AxesImage object at 0x7fa37e45da90>
 
 
 
@@ -489,8 +489,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
     rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -634,8 +634,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
     rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -796,8 +796,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
     rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -915,8 +915,8 @@ it will simply return the network object.
             # assign node features
             rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
             rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-            node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t()  # shape: NxC
-            node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t()  # shape: NxC
+            node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t()  # shape: NxC
+            node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t()  # shape: NxC
 
             # PCA-GM matching layers
             X = pygm.pca_gm(node1, node2, A1, A2, network=self.gm_net) # the network object is reused
@@ -1000,7 +1000,7 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 
  .. code-block:: none
 
-    loss=3.0065
+    loss=2.9596
 
 
 
@@ -1056,7 +1056,7 @@ Visualize the gradients
 
  .. code-block:: none
 
-    [0.00011908715532626957, 0.0029608565382659435, 0.00017012511671055108, 0.0030377600342035294, 0.00020068339654244483, 0.005173978395760059, 1.1832145901280455e-05, 4.26100377808325e-05, 8.97573700058274e-05, 0.0036709350533783436, 0.00012438780686352402, 0.002891749143600464, 0.00041935971239581704, 1.1433002100602607e-08, 0.0007492875447496772, 0.0005781730287708342, 0.00013572172611020505, 1.1924100817850558e-08, 0.001888411003164947, 0.0011171000078320503, 0.0002058343234239146, 1.895506862581442e-09, 0.0014144877204671502, 0.0012124218046665192, 0.00018436448590364307, 2.7581155137568203e-09, 0.0017490541795268655, 0.0009950913954526186, 0.00017240436864085495, 1.0118156312799442e-09, 0.0012079845182597637, 0.0009785910369828343, 0.00014453986659646034, 1.4291556826862006e-09, 0.001529323635622859, 0.0010984701802954078, 0.0001592772314324975, 1.7996854007051866e-09, 0.0018756857607513666, 0.001056119566783309, 0.00014463224215433002, 4.644298001732494e-10, 0.0016619234811514616, 0.001069648307748139, 0.00011188703501829877, 6.022353726820029e-10, 0.0018165427027270198, 0.001172620803117752, 0.0001110010634874925, 0.0005770740681327879, 0.0015769697492942214, 0.0008423994877375662, 8.677431469550356e-05, 2.6149316045831483e-10, 0.0013503411319106817, 0.0009622434736229479, 7.822765473974869e-05, 0.0008314586593769491]
+    [0.00011885026469826698, 0.0029175719246268272, 0.00019818654982373118, 0.0036037613172084093, 0.00021891856158617884, 0.0052183521911501884, 1.175945726572536e-05, 4.616070873453282e-05, 9.408315236214548e-05, 0.003917188383638859, 0.00014256284339353442, 0.0030622207559645176, 0.0007563129183836281, 1.1303484370728256e-08, 0.0014263251796364784, 0.000757346861064434, 0.00022194866323843598, 9.276784673772909e-09, 0.002844412112608552, 0.0013247003080323339, 0.0003046258061658591, 2.1137540606730454e-09, 0.0018143582856282592, 0.0014864230761304498, 0.00026092768530361354, 3.5917517848815805e-09, 0.002576720668002963, 0.0011540320701897144, 0.00025397728313691914, 9.356735386489845e-10, 0.0021208159159868956, 0.0014119329862296581, 0.0002105934254359454, 1.241102109972303e-09, 0.0021473790984600782, 0.0013430763501673937, 0.00021807517623528838, 1.460869869518433e-09, 0.002514177467674017, 0.0012200665660202503, 0.0001858291943790391, 4.501123640476834e-10, 0.002138981595635414, 0.0012717768549919128, 0.0001381283364025876, 5.718946427535343e-10, 0.002328375354409218, 0.001395971397869289, 0.00012986588990315795, 0.000534886319655925, 0.001846906030550599, 0.0009071533568203449, 0.00010118616773979738, 2.3786964065131144e-10, 0.0018003290751948953, 0.0011303635546937585, 8.72099626576528e-05, 0.0008648032089695334]
 
     <StemContainer object of 3 artists>
 
@@ -1092,7 +1092,7 @@ and backward pass steps until convergence.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 5 minutes  24.679 seconds)
+   **Total running time of the script:** ( 2 minutes  57.711 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_deep_image_matching.py:
