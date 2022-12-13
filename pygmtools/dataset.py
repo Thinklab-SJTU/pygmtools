@@ -20,6 +20,7 @@ import json
 import scipy.io as sio
 import glob
 import random
+from utils import download
 
 
 VOC2011_KPT_NAMES = {
@@ -199,15 +200,7 @@ class PascalVOC:
         if name == "PascalVOC_anno":
             print('Downloading dataset annotation...')
             filename = "data/PascalVOC.tgz"
-            try:
-                down_res = requests.get(url, stream=True)
-                file_size = int(down_res.headers.get('Content-Length', 0))
-                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                    with open(filename, 'wb') as file:
-                            shutil.copyfileobj(content, file)
-            except requests.exceptions.ConnectionError as err:
-                print('Warning: Network error. Retrying...\n', err)
-                return self.download(url, name, retries - 1)
+            download(filename=filename, url=url)
             try:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
@@ -226,15 +219,7 @@ class PascalVOC:
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
             filename = "data/PascalVOC.tar"
-            try:
-                down_res = requests.get(url, stream=True)
-                file_size = int(down_res.headers.get('Content-Length', 0))
-                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                    with open(filename, 'wb') as file:
-                            shutil.copyfileobj(content, file)
-            except requests.exceptions.ConnectionError as err:
-                print('Warning: Network error. Retrying...\n', err)
-                return self.download(url, name, retries - 1)
+            download(filename=filename, url=url)
             try:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
@@ -527,15 +512,7 @@ class WillowObject:
 
         print('Downloading dataset WillowObject...')
         filename = "data/WILLOW.zip"
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = 68635332
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url)
         try:
             fz = zipfile.ZipFile(filename, "r")
         except zipfile.BadZipFile as err:
@@ -812,15 +789,7 @@ class SPair71k:
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
         filename = "data/SPair-71k.tgz"
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -1093,15 +1062,7 @@ class IMC_PT_SparseGM:
             os.makedirs(dirs)
         print('Downloading dataset IMC-PT-SparseGM...')
         filename = 'data/IMC-PT-SparseGM.tar.gz'
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -1328,15 +1289,7 @@ class CUB2011:
             os.makedirs(dirs)
         print('Downloading dataset CUB2011...')
         filename = 'data/CUB_200_2011.tgz'
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
