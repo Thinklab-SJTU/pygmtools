@@ -767,7 +767,7 @@ class SPair71k:
         self.classes = list(map(lambda x: os.path.basename(x), glob.glob("%s/*" % SPair71k_image_path)))
         self.classes.sort()
         self.combine_classes = COMB_CLS
-        self.ann_files_filtered, self.ann_files_filtered_cls_dict, self.classes = self.__filter_annotations(
+        self.ann_files_filtered, self.ann_files_filtered_cls_dict, _ = self.__filter_annotations(
             self.ann_files, self.difficulty_params
         )
         self.total_size = len(self.ann_files_filtered)
