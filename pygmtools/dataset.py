@@ -20,7 +20,7 @@ import json
 import scipy.io as sio
 import glob
 import random
-from utils import download
+from pygmtools.utils import download
 
 
 VOC2011_KPT_NAMES = {
