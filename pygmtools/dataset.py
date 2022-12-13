@@ -1079,7 +1079,7 @@ class IMC_PT_SparseGM:
 
         self.process()
 
-    def download(self, url=None, retries=15):
+    def download(self, url=None, retries=5):
         r"""
          Automatically download IMC_PT_SparseGM dataset.
 
