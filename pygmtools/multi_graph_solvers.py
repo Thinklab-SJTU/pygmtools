@@ -296,7 +296,7 @@ def cao(K, x0=None, qap_solver=None,
             fn = mod.cao_solver
         else:
             raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -576,7 +576,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             fn = mod.mgm_floyd_solver
         else:
             raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -931,7 +931,7 @@ def gamgm(A, W,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gamgm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )

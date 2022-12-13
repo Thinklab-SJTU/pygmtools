@@ -309,7 +309,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.sm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -621,7 +621,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.rrwm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -889,7 +889,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.ipfp
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )

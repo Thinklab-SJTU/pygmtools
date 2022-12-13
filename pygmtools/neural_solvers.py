@@ -251,7 +251,7 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.pca_gm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -512,7 +512,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.ipca_gm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -795,7 +795,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.cie
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1055,7 +1055,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.ngm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )

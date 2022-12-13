@@ -650,7 +650,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.sinkhorn
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1142,7 +1142,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.hungarian
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
