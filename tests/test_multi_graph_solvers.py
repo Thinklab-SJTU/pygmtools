@@ -16,6 +16,7 @@ sys.path.insert(0, '.')
 
 import numpy as np
 import torch
+import jittor as jt
 import functools
 import itertools
 from tqdm import tqdm
