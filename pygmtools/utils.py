@@ -1112,7 +1112,7 @@ def _mm(input1, input2, backend=None):
         )
     return fn(*args)
 
-def download(filename, url, md5=None, retries=5):
+def download(filename, url, md5=None, retries=5, to_cache=True):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
@@ -1125,10 +1125,11 @@ def download(filename, url, md5=None, retries=5):
     if retries <= 0:
         raise RuntimeError('Max Retries exceeded!')
 
-    dirs = user_cache_dir("pygmtools")
-    if not os.path.exists(dirs):
-        os.makedirs(dirs)
-    filename = os.path.join(dirs, filename)
+    if to_cache:
+        dirs = user_cache_dir("pygmtools")
+        if not os.path.exists(dirs):
+            os.makedirs(dirs)
+        filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
         print(f'\nDownloading to {filename}...')
         if retries % 2 == 1:

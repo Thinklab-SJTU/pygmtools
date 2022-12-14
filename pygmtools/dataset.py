@@ -30,6 +30,7 @@ import json
 import scipy.io as sio
 import glob
 import random
+from pygmtools.utils import download
 
 
 VOC2011_KPT_NAMES = {
@@ -209,15 +210,7 @@ class PascalVOC:
         if name == "PascalVOC_anno":
             print('Downloading dataset annotation...')
             filename = "data/PascalVOC.tgz"
-            try:
-                down_res = requests.get(url, stream=True)
-                file_size = int(down_res.headers.get('Content-Length', 0))
-                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                    with open(filename, 'wb') as file:
-                            shutil.copyfileobj(content, file)
-            except requests.exceptions.ConnectionError as err:
-                print('Warning: Network error. Retrying...\n', err)
-                return self.download(url, name, retries - 1)
+            download(filename=filename, url=url, to_cache=False)
             try:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
@@ -236,15 +229,7 @@ class PascalVOC:
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
             filename = "data/PascalVOC.tar"
-            try:
-                down_res = requests.get(url, stream=True)
-                file_size = int(down_res.headers.get('Content-Length', 0))
-                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                    with open(filename, 'wb') as file:
-                            shutil.copyfileobj(content, file)
-            except requests.exceptions.ConnectionError as err:
-                print('Warning: Network error. Retrying...\n', err)
-                return self.download(url, name, retries - 1)
+            download(filename=filename, url=url, to_cache=False)
             try:
                 tar = tarfile.open(filename, "r")
             except tarfile.ReadError as err:
@@ -537,15 +522,7 @@ class WillowObject:
 
         print('Downloading dataset WillowObject...')
         filename = "data/WILLOW.zip"
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = 68635332
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url, to_cache=False)
         try:
             fz = zipfile.ZipFile(filename, "r")
         except zipfile.BadZipFile as err:
@@ -800,7 +777,7 @@ class SPair71k:
         self.classes = list(map(lambda x: os.path.basename(x), glob.glob("%s/*" % SPair71k_image_path)))
         self.classes.sort()
         self.combine_classes = COMB_CLS
-        self.ann_files_filtered, self.ann_files_filtered_cls_dict, self.classes = self.__filter_annotations(
+        self.ann_files_filtered, self.ann_files_filtered_cls_dict, _ = self.__filter_annotations(
             self.ann_files, self.difficulty_params
         )
         self.total_size = len(self.ann_files_filtered)
@@ -822,15 +799,7 @@ class SPair71k:
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
         filename = "data/SPair-71k.tgz"
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -855,7 +824,7 @@ class SPair71k:
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
-        if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
+        if (not os.path.exists(train_file)) or (not os.path.exists(test_file)):
             train_list = []
             test_list = []
             if self.sets == 'trn':
@@ -867,18 +836,10 @@ class SPair71k:
                     pair_tuple = (id1, id2)
                     train_list.append(pair_tuple)
 
-                ann_files_ = open(os.path.join(self.SPair71k_layout_path, self.SPair71k_dataset_size + "/test.txt"),
-                                      "r").read().split("\n")
-                ann_files_ = ann_files_[: len(ann_files_) - 1]
-                ann_files_filtered_ = self.__filter_annotations(ann_files_, self.difficulty_params)[0]
-                for x in ann_files_filtered_:
-                    tmp = x.split('-')
-                    tmp2 = tmp[2].split(':')
-                    id1 = tmp[1] + '_' + tmp2[1]
-                    id2 = tmp2[0] + '_' + tmp2[1]
-                    pair_tuple = (id1, id2)
-                    test_list.append(pair_tuple)
-
+                str1 = json.dumps(train_list)
+                f1 = open(train_file, 'w')
+                f1.write(str1)
+                f1.close()
             else:
                 for x in self.ann_files_filtered:
                     tmp = x.split('-')
@@ -888,44 +849,25 @@ class SPair71k:
                     pair_tuple = (id1, id2)
                     test_list.append(pair_tuple)
 
-                ann_files_ = open(os.path.join(self.SPair71k_layout_path, self.SPair71k_dataset_size + "/trn.txt"),
-                                      "r").read().split("\n")
-                ann_files_ = ann_files_[: len(ann_files_) - 1]
-                ann_files_filtered_ = self.__filter_annotations(ann_files_, self.difficulty_params)[0]
-                for x in ann_files_filtered_:
-                    tmp = x.split('-')
-                    tmp2 = tmp[2].split(':')
-                    id1 = tmp[1] + '_' + tmp2[1]
-                    id2 = tmp2[0] + '_' + tmp2[1]
-                    pair_tuple = (id1, id2)
-                    train_list.append(pair_tuple)
-
-            str1 = json.dumps(train_list)
-            f1 = open(train_file, 'w')
-            f1.write(str1)
-            f1.close()
-            str2 = json.dumps(test_list)
-            f2 = open(test_file, 'w')
-            f2.write(str2)
-            f2.close()
+                str2 = json.dumps(test_list)
+                f2 = open(test_file, 'w')
+                f2.write(str2)
+                f2.close()
 
             data_list = []
             data_dict = dict()
             for cls_name in self.classes:
                 cls_json_list = [p for p in (self.image_annoation / cls_name).glob('*.json')]
                 ori_len = len(cls_json_list)
-                assert ori_len > 0, 'No data found for WILLOW Object Class. Is the dataset installed correctly?'
+                assert ori_len > 0, 'No data found for SPair-71k. Is the dataset installed correctly?'
                 data_list.append(cls_json_list)
 
-            list00 = []
             for x in range(len(data_list)):
                 for name in data_list[x]:
                     tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
                     cls = tmp[3]
                     annotations = self.__get_anno_dict(name, cls)
-                    if objID in data_dict.keys():
-                        list00.append(objID)
                     ID = objID + '_' + cls
                     data_dict[ID] = annotations
 
@@ -933,7 +875,6 @@ class SPair71k:
             f3 = open(img_file, 'w')
             f3.write(data_str)
             f3.close()
-
 
     def __get_anno_dict(self, anno_file, cls):
         assert anno_file.exists(), '{} does not exist.'.format(anno_file)
@@ -1089,7 +1030,7 @@ class IMC_PT_SparseGM:
 
         self.process()
 
-    def download(self, url=None, retries=5):
+    def download(self, url=None, retries=15):
         r"""
          Automatically download IMC_PT_SparseGM dataset.
 
@@ -1103,15 +1044,7 @@ class IMC_PT_SparseGM:
             os.makedirs(dirs)
         print('Downloading dataset IMC-PT-SparseGM...')
         filename = 'data/IMC-PT-SparseGM.tar.gz'
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -1338,15 +1271,7 @@ class CUB2011:
             os.makedirs(dirs)
         print('Downloading dataset CUB2011...')
         filename = 'data/CUB_200_2011.tgz'
-        try:
-            down_res = requests.get(url, stream=True)
-            file_size = int(down_res.headers.get('Content-Length', 0))
-            with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-                with open(filename, 'wb') as file:
-                    shutil.copyfileobj(content, file)
-        except requests.exceptions.ConnectionError as err:
-            print('Warning: Network error. Retrying...\n', err)
-            return self.download(url, retries - 1)
+        download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
