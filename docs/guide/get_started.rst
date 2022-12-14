@@ -131,7 +131,7 @@ The TensorFlow backend of ``pygmtools`` is designed to support GPU devices and d
 
 Please follow `the official Tensorflow installation guide <https://tensorflow.google.cn/install>`_.
 
-This package is developed with ``Tensorflow==2.9.1`` and please mind the API compatibility among different Tensorflow
+This package is developed with ``Tensorflow==2.9.3`` and please mind the API compatibility among different Tensorflow
 versions.
 
 How to enable Tensorflow backend:
