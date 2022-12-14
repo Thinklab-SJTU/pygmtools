@@ -16,6 +16,7 @@ sys.path.insert(0, '.')
 
 import numpy as np
 import torch
+import jittor as jt
 import functools
 import itertools
 from tqdm import tqdm
@@ -206,6 +207,42 @@ def test_gamgm_backward():
     # Backward pass via black-box trick
     acc.backward()
     assert torch.sum(W.grad != 0) > 0
+
+
+    # Jittor
+    pygm.BACKEND = 'jittor'
+    jt.set_global_seed(2)
+
+    # Generate 10 isomorphic graphs
+    graph_num = 10
+    As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
+
+    # Compute node-wise similarity by inner-product and Sinkhorn
+    W = jt.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
+    W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
+
+    # This function is differentiable by the black-box trick
+    class Model(jt.nn.Module):
+        def __init__(self, W):
+            self.W = W
+        def execute (self, As) :
+            X = pygm.gamgm(As, self.W)
+            return X
+
+    W.start_grad()
+    model = Model(W)
+    X = model(As)
+    matched = 0
+    for i, j in itertools.product(range(graph_num), repeat=2):
+        matched += (X[i,j] * X_gt[i,j]).sum()
+    acc = matched / X_gt.sum()
+
+    # Backward pass via black-box trick
+    optim = jt.nn.SGD(model.parameters(), lr=0.1)
+    optim.step(acc)
+    grad = W.opt_grad(optim)
+    print(jt.sum(grad != 0))
+    assert jt.sum(grad != 0) > 0
 
 
 if __name__ == '__main__':
