@@ -902,6 +902,37 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
         return paddle.stack(As, axis=0), X_gt
 
 
+def permutation_loss(pred_dsmat, gt_perm, n1, n2):
+    """
+    Pytorch implementation of permutation_loss
+    """
+    batch_num = pred_dsmat.shape[0]
+
+    pred_dsmat = pred_dsmat.astype("float32")
+
+    if not ((pred_dsmat.numpy() >= 0) * (pred_dsmat.numpy() <= 1)).all():
+        raise ValueError("pred_dsmat contains invalid numerical entries.")
+    if not ((gt_perm.numpy() >= 0) * (gt_perm.numpy() <= 1)).all():
+        raise ValueError("gt_perm contains invalid numerical entries.")
+
+    if n1 is None:
+        n1 = paddle.to_tensor([pred_dsmat.shape[1] for _ in range(batch_num)], place=pred_dsmat.place)
+    if n2 is None:
+        n2 = paddle.to_tensor([pred_dsmat.shape[2] for _ in range(batch_num)], place=pred_dsmat.place)
+
+    loss = paddle.to_tensor(0., place=pred_dsmat.place)
+    n_sum = paddle.zeros_like(loss)
+    for b in range(batch_num):
+        batch_slice = [b, slice(n1[b]), slice(n2[b])]
+        loss += paddle.nn.functional.binary_cross_entropy(
+            pred_dsmat[batch_slice],
+            gt_perm[batch_slice],
+            reduction='sum')
+        n_sum += paddle.to_tensor(n1[b].astype(n_sum.dtype), place=pred_dsmat.place)
+
+    return loss / n_sum
+
+
 def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor, connectivity1: paddle.Tensor, connectivity2: paddle.Tensor,
                                 n1, n2, ne1, ne2):
     """
