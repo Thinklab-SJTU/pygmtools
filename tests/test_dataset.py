@@ -1,5 +1,6 @@
 import pygmtools as pygm
 from pygmtools.dataset_config import dataset_cfg
+from random import choice
 
 
 # Test dataset download and preprocess, and data fetch and evaluation
@@ -92,16 +93,16 @@ def test_dataset_and_benchmark():
     for i, dataset_name in enumerate(dataset_name_list):
         for set in set_list:
             for problem_type in problem_type_list:
-                for filter in filter_list:
-                    if dataset_name == 'SPair71k' and problem_type == 'MGM':
-                        continue
-                    if filter == 'inclusion' and problem_type == 'MGM':
-                        continue
-                    _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[-1])
+                filter = choice(filter_list)
+                if dataset_name == 'SPair71k' and problem_type == 'MGM':
+                    continue
+                if filter == 'inclusion' and problem_type == 'MGM':
+                    continue
+                _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[-1])
+                _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
+                if i == 4:
+                    dict_list[i]['CLS_SPLIT'] = 'all'
                     _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
-                    if i == 4:
-                        dict_list[i]['CLS_SPLIT'] = 'all'
-                        _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
 
 
 if __name__ == '__main__':
