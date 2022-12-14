@@ -474,7 +474,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7ff670098370>
+    <matplotlib.image.AxesImage object at 0x7fa37e45da90>
 
 
 
@@ -489,8 +489,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
     rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -634,8 +634,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
     rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -796,8 +796,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
     rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -881,7 +881,7 @@ a learnable matching module. Take the PCA-GM model as an example.
     all omitted in consideration of simplicity. You may refer to `ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_
     which is a research protocol with all these advanced features.
 
-Let's firstly define the neural network model. By passing ``None`` to :func:`~pygmtools.neural_solvers.pca_gm`,
+Let's firstly define the neural network model. By calling :func:`~pygmtools.utils.get_network`,
 it will simply return the network object.
 
 
@@ -915,8 +915,8 @@ it will simply return the network object.
             # assign node features
             rounded_kpts1 = torch.round(kpts1).to(dtype=torch.long)
             rounded_kpts2 = torch.round(kpts2).to(dtype=torch.long)
-            node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t()  # shape: NxC
-            node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t()  # shape: NxC
+            node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t()  # shape: NxC
+            node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t()  # shape: NxC
 
             # PCA-GM matching layers
             X = pygm.pca_gm(node1, node2, A1, A2, network=self.gm_net) # the network object is reused
@@ -1000,7 +1000,7 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 
  .. code-block:: none
 
-    loss=3.0000
+    loss=2.9596
 
 
 
@@ -1056,7 +1056,7 @@ Visualize the gradients
 
  .. code-block:: none
 
-    [0.0001245594903593883, 0.0029952325858175755, 0.000178572692675516, 0.003146326867863536, 0.00020447799761313945, 0.005116667598485947, 1.2198015610920265e-05, 4.8215530114248395e-05, 9.25699423532933e-05, 0.0036853067576885223, 0.00013334458344615996, 0.0028054979629814625, 0.000504517403896898, 1.371567748265079e-08, 0.0010907844407483935, 0.0007469180272892118, 0.00014585483586415648, 5.623974175250623e-09, 0.002250564517453313, 0.001367417280562222, 0.0002155907277483493, 1.8131540713284267e-09, 0.0013449988327920437, 0.0011302994098514318, 0.00019250318291597068, 3.3716673897288274e-09, 0.0018539950251579285, 0.0009537969017401338, 0.00018574569548945874, 9.887707319577999e-10, 0.0015408851904794574, 0.0012454442912712693, 0.00015845883172005415, 1.3746087601518298e-09, 0.0014980197884142399, 0.0010896348394453526, 0.00016873421554919332, 1.7852297418130547e-09, 0.0017694806447252631, 0.0010084952227771282, 0.0001535617047920823, 5.077017695143127e-10, 0.0016165454871952534, 0.001064832555130124, 0.00011833168537123129, 6.272319330591358e-10, 0.001881698495708406, 0.0012404847657307982, 0.00011741517664631829, 0.0005528752226382494, 0.0017221096204593778, 0.0009178839973174036, 9.340464021079242e-05, 2.625362427455258e-10, 0.0014712726697325706, 0.001027827151119709, 8.30746503197588e-05, 0.0008112693903967738]
+    [0.00011885026469826698, 0.0029175719246268272, 0.00019818654982373118, 0.0036037613172084093, 0.00021891856158617884, 0.0052183521911501884, 1.175945726572536e-05, 4.616070873453282e-05, 9.408315236214548e-05, 0.003917188383638859, 0.00014256284339353442, 0.0030622207559645176, 0.0007563129183836281, 1.1303484370728256e-08, 0.0014263251796364784, 0.000757346861064434, 0.00022194866323843598, 9.276784673772909e-09, 0.002844412112608552, 0.0013247003080323339, 0.0003046258061658591, 2.1137540606730454e-09, 0.0018143582856282592, 0.0014864230761304498, 0.00026092768530361354, 3.5917517848815805e-09, 0.002576720668002963, 0.0011540320701897144, 0.00025397728313691914, 9.356735386489845e-10, 0.0021208159159868956, 0.0014119329862296581, 0.0002105934254359454, 1.241102109972303e-09, 0.0021473790984600782, 0.0013430763501673937, 0.00021807517623528838, 1.460869869518433e-09, 0.002514177467674017, 0.0012200665660202503, 0.0001858291943790391, 4.501123640476834e-10, 0.002138981595635414, 0.0012717768549919128, 0.0001381283364025876, 5.718946427535343e-10, 0.002328375354409218, 0.001395971397869289, 0.00012986588990315795, 0.000534886319655925, 0.001846906030550599, 0.0009071533568203449, 0.00010118616773979738, 2.3786964065131144e-10, 0.0018003290751948953, 0.0011303635546937585, 8.72099626576528e-05, 0.0008648032089695334]
 
     <StemContainer object of 3 artists>
 
@@ -1092,7 +1092,7 @@ and backward pass steps until convergence.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 4 minutes  16.211 seconds)
+   **Total running time of the script:** ( 2 minutes  57.711 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_deep_image_matching.py:

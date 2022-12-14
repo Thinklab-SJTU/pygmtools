@@ -3,6 +3,16 @@ Classic (learning-free) **multi-graph matching** solvers. These multi-graph matc
 the joint matching problem of multiple graphs.
 """
 
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import functools
 import importlib
 import pygmtools
@@ -296,7 +306,7 @@ def cao(K, x0=None, qap_solver=None,
             fn = mod.cao_solver
         else:
             raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -576,7 +586,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             fn = mod.mgm_floyd_solver
         else:
             raise ValueError("Unknown value of mode: supported values ['time', 'memory']")
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -638,8 +648,8 @@ def gamgm(A, W,
 
     .. note::
 
-        In PyTorch backend, this function is differentiable through the black-box trick. See the following paper for
-        details:
+        In PyTorch and Jittor backends, this function is differentiable through the black-box trick.
+        See the following paper for details:
 
         ::
 
@@ -931,7 +941,7 @@ def gamgm(A, W,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gamgm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )

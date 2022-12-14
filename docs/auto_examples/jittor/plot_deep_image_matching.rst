@@ -504,7 +504,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
-    <matplotlib.image.AxesImage object at 0x7ff6561a4670>
+    <matplotlib.image.AxesImage object at 0x7f0ee3af40a0>
 
 
 
@@ -519,8 +519,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = jt.round(kpts1).long()
     rounded_kpts2 = jt.round(kpts2).long()
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -667,8 +667,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = jt.round(kpts1).long()
     rounded_kpts2 = jt.round(kpts2).long()
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -831,8 +831,8 @@ Extract node features by nearest interpolation
 
     rounded_kpts1 = jt.round(kpts1).long()
     rounded_kpts2 = jt.round(kpts2).long()
-    node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t() # shape: NxC
-    node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t() # shape: NxC
+    node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t() # shape: NxC
+    node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t() # shape: NxC
 
 
 
@@ -926,7 +926,7 @@ a learnable matching module. Take the PCA-GM model as an example.
     all omitted in consideration of simplicity. You may refer to `ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_
     which is a research protocol with all these advanced features.
 
-Let's firstly define the neural network model. By passing ``None`` to :func:`~pygmtools.neural_solvers.pca_gm`,
+Let's firstly define the neural network model. By calling :func:`~pygmtools.utils.get_network`,
 it will simply return the network object.
 
 
@@ -960,8 +960,8 @@ it will simply return the network object.
             # assign node features
             rounded_kpts1 = jt.round(kpts1).long()
             rounded_kpts2 = jt.round(kpts2).long()
-            node1 = feat1_upsample[0, :, rounded_kpts1[0], rounded_kpts1[1]].t()  # shape: NxC
-            node2 = feat2_upsample[0, :, rounded_kpts2[0], rounded_kpts2[1]].t()  # shape: NxC
+            node1 = feat1_upsample[0, :, rounded_kpts1[1], rounded_kpts1[0]].t()  # shape: NxC
+            node2 = feat2_upsample[0, :, rounded_kpts2[1], rounded_kpts2[0]].t()  # shape: NxC
 
             # PCA-GM matching layers
             X = pygm.pca_gm(node1, node2, A1, A2, network=self.gm_net) # the network object is reused
@@ -1038,7 +1038,7 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 
  .. code-block:: none
 
-    loss=3.0022
+    loss=2.9705
 
 
 
@@ -1094,7 +1094,7 @@ Visualize the gradients
 
  .. code-block:: none
 
-    [0.00011599675781326368, 0.002852421486750245, 0.0001671029021963477, 0.0030600319150835276, 0.00020000257063657045, 0.005113382823765278, 1.2366951523290481e-05, 4.314157922635786e-05, 9.330712782684714e-05, 0.0036588043440133333, 0.00012368943134788424, 0.002809596713632345, 0.0004913365701213479, 2.0924733945548724e-08, 0.0009622325887903571, 0.0006493543623946607, 0.0, 0.0, 0.0001546694984426722, 1.1330731908287817e-08, 0.0022219237871468067, 0.0009323382982984185, 0.0, 0.0, 0.0001926012773765251, 3.6917966461658125e-09, 0.001229137647897005, 0.0009362904820591211, 0.0, 0.0, 0.00016788425273261964, 5.801140456895837e-09, 0.0016838936135172844, 0.0008864239789545536, 0.0, 0.0, 0.0001618633687030524, 1.1841807534551663e-09, 0.0013197653461247683, 0.0009774400386959314, 0.0, 0.0, 0.00013659596152137965, 2.1055814869441747e-09, 0.0012697791680693626, 0.000927568064071238, 0.0, 0.0, 0.00014808376727160066, 2.6047572987408785e-09, 0.0016377979191020131, 0.0008863863768056035, 0.0, 0.0, 0.00013320244033820927, 6.586917122852753e-10, 0.00150336604565382, 0.0009883285965770483, 0.0, 0.0, 0.00010333631507819518, 1.3132273046778664e-09, 0.00166441744659096, 0.0010979282669723034, 0.0, 0.0, 0.0001033442240441218, 0.0005359002389013767, 0.0014270354295149446, 0.0007653847569599748, 0.0, 0.0, 8.239580347435549e-05, 4.0146166946364303e-10, 0.0013216815423220396, 0.0009357896633446217, 0.0, 0.0, 7.556892524007708e-05, 0.0007893395377323031]
+    [0.00012008137855445966, 0.0029865035321563482, 0.00018511232337914407, 0.0033753272145986557, 0.0002137543197022751, 0.005234790500253439, 9.73292117123492e-06, 4.477985203266144e-05, 9.332987247034907e-05, 0.0038247969932854176, 0.00013548837159760296, 0.002944774692878127, 0.0005545496242120862, 1.8891434194756584e-08, 0.0010682500433176756, 0.0005676004802808166, 0.0, 0.0, 0.00017916866636369377, 8.408768792378396e-09, 0.0021129779051989317, 0.0012607568642124534, 0.0, 0.0, 0.0002507281315047294, 3.2628841850623758e-09, 0.0015229436103254557, 0.0010184939019382, 0.0, 0.0, 0.00021608102542813867, 4.296822453397908e-09, 0.002223665826022625, 0.0010056477040052414, 0.0, 0.0, 0.0002108924527419731, 1.4684102822570821e-09, 0.0016412498662248254, 0.0010497840121388435, 0.0, 0.0, 0.0001778988225851208, 2.4535937726000157e-09, 0.0017658978467807174, 0.001085389405488968, 0.0, 0.0, 0.00018341925169806927, 3.0536160267047308e-09, 0.0021165432408452034, 0.001017216476611793, 0.0, 0.0, 0.0001568129227962345, 7.326517170724856e-10, 0.0017438650829717517, 0.001043159980326891, 0.0, 0.0, 0.00012114781566197053, 1.4319967434062164e-09, 0.001918911118991673, 0.001163581619039178, 0.0, 0.0, 0.00011734791769413278, 0.0005073942593298852, 0.0016806223429739475, 0.0008340583881363273, 0.0, 0.0, 8.978342521004379e-05, 4.2901138197493083e-10, 0.001494081923738122, 0.0009877857519313693, 0.0, 0.0, 8.40352731756866e-05, 0.000910142669454217]
 
     <StemContainer object of 3 artists>
 
@@ -1130,7 +1130,7 @@ and backward pass steps until convergence.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 8 minutes  30.326 seconds)
+   **Total running time of the script:** ( 5 minutes  36.198 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_deep_image_matching.py:

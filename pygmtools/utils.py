@@ -2,6 +2,16 @@
 Utility functions: problem formulating, data processing, and beyond.
 """
 
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import time
 import functools
 import importlib
@@ -18,7 +28,7 @@ import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
-    'If you are a user, please use other backends as workarounds.' \
+    'If you are a user, please check the spelling, and use other backends as workarounds. ' \
     'If you are a developer, it will be truly appreciated if you could develop and share your' \
     ' implementation with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
 
@@ -244,7 +254,7 @@ def inner_prod_aff_fn(feat1, feat2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.inner_prod_aff_fn
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -273,7 +283,7 @@ def gaussian_aff_fn(feat1, feat2, sigma=1., backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gaussian_aff_fn
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -494,7 +504,7 @@ def dense_to_sparse(dense_adj, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.dense_to_sparse
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -567,7 +577,7 @@ def compute_affinity_score(X, K, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.compute_affinity_score
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -599,7 +609,7 @@ def to_numpy(input, backend=None):
         try:
             mod = importlib.import_module(f'pygmtools.{backend}_backend')
             fn = mod.to_numpy
-        except ModuleNotFoundError and AttributeError:
+        except (ModuleNotFoundError, AttributeError):
             raise NotImplementedError(
                 NOT_IMPLEMENTED_MSG.format(backend)
             )
@@ -627,7 +637,7 @@ def from_numpy(input, device=None, backend=None):
         try:
             mod = importlib.import_module(f'pygmtools.{backend}_backend')
             fn = mod.from_numpy
-        except ModuleNotFoundError and AttributeError:
+        except (ModuleNotFoundError, AttributeError):
             raise NotImplementedError(
                 NOT_IMPLEMENTED_MSG.format(backend)
             )
@@ -655,7 +665,7 @@ def generate_isomorphic_graphs(node_num, graph_num=2, node_feat_dim=0, backend=N
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.generate_isomorphic_graphs
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -889,7 +899,7 @@ def permutation_loss(pred_dsmat, gt_perm, n1=None, n2=None, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.permutation_loss
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -928,7 +938,7 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._aff_mat_from_node_edge_aff
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -970,7 +980,7 @@ def _check_data_type(input, *args):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_data_type
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -991,7 +1001,7 @@ def _check_shape(input, num_dim, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_shape
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1011,7 +1021,7 @@ def _get_shape(input, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._get_shape
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1032,7 +1042,7 @@ def _squeeze(input, dim, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._squeeze
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1053,7 +1063,7 @@ def _unsqueeze(input, dim, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._unsqueeze
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1075,7 +1085,7 @@ def _transpose(input, dim1, dim2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._transpose
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1096,7 +1106,7 @@ def _mm(input1, input2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._mm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )

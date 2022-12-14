@@ -3,6 +3,16 @@
 existing deep learning pipeline (either supervised, unsupervised or reinforcement learning).
 """
 
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import importlib
 import pygmtools
 from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
@@ -251,7 +261,7 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.pca_gm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -512,7 +522,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.ipca_gm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -795,7 +805,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.cie
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1055,7 +1065,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.ngm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
