@@ -62,6 +62,7 @@ numpy >= 1.18.5
 easydict >= 1.7
 appdirs >= 1.4.4
 tqdm >= 4.64.1
+wget>=3.2
 ```
   
 ## Available Graph Matching Solvers
@@ -118,7 +119,7 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
 
-### Development status (master)
+### Development status (main)
 
 |                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
 | ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
