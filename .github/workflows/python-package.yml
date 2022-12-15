@@ -59,8 +59,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
-          clang -Xpreprocessor -fopenmp -lomp file.cxx
           pip install -r tests/requirements.txt
+          clang -Xpreprocessor -fopenmp -lomp /Users/runner/hostedtoolcache/Python/3.7.15/x64/lib/python3.7/site-packages/jittor/src/utils/str_utils.cc
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
