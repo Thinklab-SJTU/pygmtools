@@ -57,7 +57,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          brew install python@3.7 onednn libomp
+          brew install python@3.7 onednn
+          brew reinstall libomp
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
           pip install -r tests/requirements.txt
