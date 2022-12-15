@@ -57,10 +57,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+          brew install python@3.7 onednn libomp
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
           pip install -r tests/requirements.txt
-          clang -Xpreprocessor -fopenmp -lomp /Users/runner/hostedtoolcache/Python/3.7.15/x64/lib/python3.7/site-packages/jittor/src/utils/str_utils.cc
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
