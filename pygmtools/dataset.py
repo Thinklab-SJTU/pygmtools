@@ -1156,18 +1156,14 @@ class CUB2011:
 
     :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
-    :param ds_dict: settings of dataset, containing at most 2 params(keys) for CUB2011:
+    :param ds_dict: settings of dataset, containing at most 1 params(key) for CUB2011:
 
         * **ROOT_DIR**: str, directory of data
-
-        * **CLS_SPLIT**: str, ``'ori'`` (original split), ``'sup'`` (super class) or ``'all'`` (all birds as one class)
     """
     def __init__(self, sets, obj_resize, **ds_dict):
         CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
         ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
         if len(ds_dict.keys()) > 0:
-            if 'CLS_SPLIT' in ds_dict.keys():
-                CLS_SPLIT = ds_dict['CLS_SPLIT']
             if 'ROOT_DIR' in ds_dict.keys():
                 ROOT_DIR = ds_dict['ROOT_DIR']
 
@@ -1177,7 +1173,7 @@ class CUB2011:
         self._set_pairs = {}
         self._set_mask = {}
         self.cls_split = CLS_SPLIT
-        self.suffix = 'cub2011-' + CLS_SPLIT
+        self.suffix = 'cub2011'
 
         self.rootpath = ROOT_DIR
 
@@ -1219,39 +1215,37 @@ class CUB2011:
                         test_set.append(img_idx)
                 self.set_data['train'].append(train_set)
                 self.set_data['test'].append(test_set)
-        elif self.cls_split == 'sup':
-            super_classes = [v.split('_')[-1] for v in classes.values()]
-            self.classes = list(set(super_classes))
-            for cls in self.classes:
-                self.set_data['train'].append([])
-                self.set_data['test'].append([])
-            for class_idx in sorted(classes):
-                supcls_idx = self.classes.index(classes[class_idx].split('_')[-1])
-                train_set = []
-                test_set = []
-                for img_idx in class2img[class_idx]:
-                    if train_split[img_idx] == '1':
-                        train_set.append(img_idx)
-                    else:
-                        test_set.append(img_idx)
-                self.set_data['train'][supcls_idx] += train_set
-                self.set_data['test'][supcls_idx] += test_set
-        elif self.cls_split == 'all':
-            self.classes.append('cub2011')
-            self.set_data['train'].append([])
-            self.set_data['test'].append([])
-            for class_idx in sorted(classes):
-                train_set = []
-                test_set = []
-                for img_idx in class2img[class_idx]:
-                    if train_split[img_idx] == '1':
-                        train_set.append(img_idx)
-                    else:
-                        test_set.append(img_idx)
-                self.set_data['train'][0] += train_set
-                self.set_data['test'][0] += test_set
-        else:
-            raise ValueError('Unknown CUB2011.CLASS_SPLIT {}'.format(self.cls_split))
+        # elif self.cls_split == 'sup':
+        #     super_classes = [v.split('_')[-1] for v in classes.values()]
+        #     self.classes = list(set(super_classes))
+        #     for cls in self.classes:
+        #         self.set_data['train'].append([])
+        #         self.set_data['test'].append([])
+        #     for class_idx in sorted(classes):
+        #         supcls_idx = self.classes.index(classes[class_idx].split('_')[-1])
+        #         train_set = []
+        #         test_set = []
+        #         for img_idx in class2img[class_idx]:
+        #             if train_split[img_idx] == '1':
+        #                 train_set.append(img_idx)
+        #             else:
+        #                 test_set.append(img_idx)
+        #         self.set_data['train'][supcls_idx] += train_set
+        #         self.set_data['test'][supcls_idx] += test_set
+        # elif self.cls_split == 'all':
+        #     self.classes.append('cub2011')
+        #     self.set_data['train'].append([])
+        #     self.set_data['test'].append([])
+        #     for class_idx in sorted(classes):
+        #         train_set = []
+        #         test_set = []
+        #         for img_idx in class2img[class_idx]:
+        #             if train_split[img_idx] == '1':
+        #                 train_set.append(img_idx)
+        #             else:
+        #                 test_set.append(img_idx)
+        #         self.set_data['train'][0] += train_set
+        #         self.set_data['test'][0] += test_set
         self.sets = sets
         self.obj_resize = obj_resize
 

@@ -96,7 +96,6 @@ def test_dataset_and_benchmark():
     # dict_list.append(imcpt_cfg_dict)
 
     cub_cfg_dict = dict()
-    cub_cfg_dict['CLS_SPLIT'] = 'sup'
     cub_cfg_dict['ROOT_DIR'] = dataset_cfg.CUB2011.ROOT_DIR
     dict_list.append(cub_cfg_dict)
 
@@ -112,9 +111,6 @@ def test_dataset_and_benchmark():
                     continue
                 _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[-1])
                 _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
-                if i == 3:
-                    dict_list[i]['CLS_SPLIT'] = 'all'
-                    _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
 
 
 if __name__ == '__main__':
