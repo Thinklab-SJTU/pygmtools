@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew --prefix libomp
-          ln -s /usr/local/opt/libomp /usr/lib/libomp
+          export LIBRARY_PATH=/usr/local/opt/libomp/15.0.6/lib/
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
           pip install -r tests/requirements.txt
