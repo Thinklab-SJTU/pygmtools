@@ -20,6 +20,7 @@ def _test_benchmark(name, sets, problem, filter, **ds_dict):
         num = 2 if benchmark.problem == '2GM' else 3
         _test_get_data(benchmark, num)
     os.remove(benchmark.data_list_path)
+    os.remove(benchmark.data_path)
 
 
 # Test data fetch and evaluation
