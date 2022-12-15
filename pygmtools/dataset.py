@@ -1257,7 +1257,7 @@ class CUB2011:
 
         self.process()
 
-    def download(self, url=None, retries=10):
+    def download(self, url=None, retries=50):
         r"""
          Automatically download CUB2011 dataset.
 
