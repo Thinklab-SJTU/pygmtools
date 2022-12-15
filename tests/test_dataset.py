@@ -11,7 +11,7 @@
 import pygmtools as pygm
 from pygmtools.dataset_config import dataset_cfg
 from random import choice
-
+import os
 
 # Test dataset download and preprocess, and data fetch and evaluation
 def _test_benchmark(name, sets, problem, filter, **ds_dict):
@@ -19,6 +19,7 @@ def _test_benchmark(name, sets, problem, filter, **ds_dict):
     if sets == 'test':
         num = 2 if benchmark.problem == '2GM' else 3
         _test_get_data(benchmark, num)
+    os.remove(benchmark.data_list_path)
 
 
 # Test data fetch and evaluation
@@ -86,12 +87,12 @@ def test_dataset_and_benchmark():
     spair_cfg_dict['ROOT_DIR'] = dataset_cfg.SPair.ROOT_DIR
     dict_list.append(spair_cfg_dict)
 
-    imcpt_cfg_dict = dict()
-    imcpt_cfg_dict['MAX_KPT_NUM'] = dataset_cfg.IMC_PT_SparseGM.MAX_KPT_NUM
-    imcpt_cfg_dict['CLASSES'] = dataset_cfg.IMC_PT_SparseGM.CLASSES
-    imcpt_cfg_dict['ROOT_DIR_NPZ'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
-    imcpt_cfg_dict['ROOT_DIR_IMG'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-    dict_list.append(imcpt_cfg_dict)
+    # imcpt_cfg_dict = dict()
+    # imcpt_cfg_dict['MAX_KPT_NUM'] = dataset_cfg.IMC_PT_SparseGM.MAX_KPT_NUM
+    # imcpt_cfg_dict['CLASSES'] = dataset_cfg.IMC_PT_SparseGM.CLASSES
+    # imcpt_cfg_dict['ROOT_DIR_NPZ'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
+    # imcpt_cfg_dict['ROOT_DIR_IMG'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
+    # dict_list.append(imcpt_cfg_dict)
 
     cub_cfg_dict = dict()
     cub_cfg_dict['CLS_SPLIT'] = 'sup'
@@ -110,7 +111,7 @@ def test_dataset_and_benchmark():
                     continue
                 _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[-1])
                 _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
-                if i == 4:
+                if i == 3:
                     dict_list[i]['CLS_SPLIT'] = 'all'
                     _test_benchmark(dataset_name, set, problem_type, filter, **dict_list[i])
 
