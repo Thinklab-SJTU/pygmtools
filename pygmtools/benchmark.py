@@ -76,7 +76,7 @@ class Benchmark:
 
         :param ids: list of image ID, usually in ``train.json`` or ``test.json``
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
-        :param shuffle: bool, whether to shuffle the order of keypoints
+        :param shuffle: bool, whether to shuffle the order of keypoints; valid only when the class param ``sets`` is ``'train'``
         :return:
                     **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
@@ -103,7 +103,7 @@ class Benchmark:
             obj_dict['kpts'] = self.data_dict[keys]['kpts']
             obj_dict['cls'] = self.data_dict[keys]['cls']
             obj_dict['univ_size'] = self.data_dict[keys]['univ_size']
-            if shuffle:
+            if shuffle and self.sets != 'test':
                 random.shuffle(obj_dict['kpts'])
             data_list.append(obj_dict)
 
@@ -197,7 +197,7 @@ class Benchmark:
         :param cls: int or str, class of expected data. None for random class
         :param num: int, number of images; for example, 2 for 2GM
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
-        :param shuffle: bool, whether to shuffle the order of keypoints
+        :param shuffle: bool, whether to shuffle the order of keypoints; valid only when the class param ``sets`` is ``'train'``
         :return:
                     **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
@@ -547,7 +547,7 @@ class Benchmark:
 
     def rm_gt_cache(self, last_epoch=False):
         r"""
-        Remove ground truth cache.
+        Remove ground truth cache. It is recommended to call this function after evaluation in each epoch.
 
         :param last_epoch: Boolean variable, whether this epoch is last epoch; if true, the directory of cache will also be removed.
         """
