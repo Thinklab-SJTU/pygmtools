@@ -31,7 +31,7 @@ To highlight, ``pygmtools`` has the following features:
   and novel deep learning-based solvers;
 * *Support various backends*, including ``numpy`` which is universally accessible, and some state-of-the-art deep 
   learning architectures with GPU support: 
-  ``pytorch``, ``paddle``, ``jittor``, ``Tensorflow``. 
+  ``pytorch``, ``paddle``, ``jittor``, ``Tensorflow``; 
 * *Deep learning friendly*, the operations are designed to best preserve the gradient during computation and batched 
   operations support for the best performance.
   
@@ -135,8 +135,9 @@ For more details, please [read the documentation](https://pygmtools.readthedocs.
 
 ## Pretrained Models
 
-The pretrained models shall be automatically downloaded upon needed from Google Drive. If you are experiencing issues 
-accessing Google Drive, please download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+The library includes several neural network solvers. The pretrained models shall be automatically downloaded upon 
+needed from Google Drive. If you are experiencing issues accessing Google Drive, please download the pretrained models
+manually and put them at ``~/.cache/pygmtools`` (for Linux).
 
 Available at:
 [[google drive]](https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing)
