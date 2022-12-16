@@ -72,6 +72,7 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
                 _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
                                               **aff_param_dict)
             else:
+                _n1, _n2 = n1.item(), n2.item()
                 _conn1, _edge1 = pygm.utils.dense_to_sparse(_A1)
                 _conn2, _edge2 = pygm.utils.dense_to_sparse(_A2)
                 _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,

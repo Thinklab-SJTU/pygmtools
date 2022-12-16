@@ -24,6 +24,7 @@ import shutil
 from tqdm.auto import tqdm
 import inspect
 import wget
+import numpy as np
 import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
@@ -183,6 +184,8 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
         if all([_check_shape(_, 2, backend) for _ in (node_feat1, node_feat2)]):
             non_batched_input = True
             node_feat1, node_feat2 = [_unsqueeze(_, 0, backend) for _ in (node_feat1, node_feat2)]
+            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
         elif all([_check_shape(_, 3, backend) for _ in (node_feat1, node_feat2)]):
             pass
         else:
@@ -201,6 +204,8 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
             non_batched_input = True
             edge_feat1, edge_feat2, connectivity1, connectivity2 = \
                 [_unsqueeze(_, 0, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]
+            if type(ne1) is int: ne1 = from_numpy(np.array([ne1]), backend=backend)
+            if type(ne2) is int: ne2 = from_numpy(np.array([ne2]), backend=backend)
         elif all([_check_shape(_, 3, backend) for _ in (edge_feat1, edge_feat2, connectivity1, connectivity2)]):
             pass
         else:

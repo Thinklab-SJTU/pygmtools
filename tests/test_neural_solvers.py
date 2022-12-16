@@ -56,7 +56,6 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             X_gt.squeeze(0)
         )
 
-
     # call the solver
     total = 1
     for val in matrix_params.values():
@@ -83,6 +82,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                     _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
                                                   **aff_param_dict)
                 else:
+                    _n1, _n2 = _n1.item(), _n2.item()
                     _conn1, _edge1 = pygm.utils.dense_to_sparse(_A1)
                     _conn2, _edge2 = pygm.utils.dense_to_sparse(_A2)
                     _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,
@@ -169,7 +169,7 @@ def test_ngm():
     }, ['pytorch', 'numpy', 'jittor'])
 
 if __name__ == '__main__':
-    test_pca_gm()
-    test_ipca_gm()
-    test_cie()
+    # test_pca_gm()
+    # test_ipca_gm()
+    # test_cie()
     test_ngm()

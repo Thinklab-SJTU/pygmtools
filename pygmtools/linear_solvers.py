@@ -22,8 +22,10 @@ The linear assignment problem only considers nodes, and is also known as biparti
 # See the Mulan PSL v2 for more details.
 
 import importlib
+import numpy as np
 import pygmtools
-from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
+from pygmtools.utils import NOT_IMPLEMENTED_MSG, from_numpy, \
+    _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
 
 
 def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
@@ -628,6 +630,8 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     _check_data_type(s, 's', backend)
     if _check_shape(s, 2, backend):
         s = _unsqueeze(s, 0, backend)
+        if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+        if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
         non_batched_input = True
     elif _check_shape(s, 3, backend):
         non_batched_input = False
@@ -1122,6 +1126,8 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     _check_data_type(s, backend)
     if _check_shape(s, 2, backend):
         s = _unsqueeze(s, 0, backend)
+        if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+        if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
         non_batched_input = True
     elif _check_shape(s, 3, backend):
         non_batched_input = False
