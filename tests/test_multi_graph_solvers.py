@@ -83,6 +83,8 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
             pygm.BACKEND = working_backend
             if 'x0' in solver_param_dict and solver_param_dict['x0'] is not None:
                 solver_param_dict['x0'] = pygm.utils.from_numpy(solver_param_dict['x0'])
+            if 'ns' in solver_param_dict and solver_param_dict['ns'] is not None:
+                solver_param_dict['ns'] = pygm.utils.from_numpy(solver_param_dict['ns'])
             if mode == 'lawler-qap':
                 _As_1, _As_2, _Fs_1, _Fs_2, _X_gt = data_from_numpy(As_1, As_2, Fs_1, Fs_2, X_gt)
                 _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_As_1)
@@ -133,9 +135,17 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                 last_X = pygm.utils.to_numpy(_X)
 
                 matched = 0
+                total = 0
                 for i, j in itertools.product(range(num_graph), repeat=2):
-                    matched += (pygm.utils.to_numpy(_X[i, j]) * X_gt[i, j]).sum()
-                accuracy = matched / X_gt.sum()
+                    if 'ns' in solver_param_dict and solver_param_dict['ns'] is not None:
+                        nsi = pygm.utils.to_numpy(solver_param_dict['ns'][i]).item()
+                        nsj = pygm.utils.to_numpy(solver_param_dict['ns'][j]).item()
+                        matched += (pygm.utils.to_numpy(_X[i, j]) * X_gt[i, j, :nsi, :nsj]).sum()
+                        total += X_gt[i, j, :nsi, :nsj].sum()
+                    else:
+                        matched += (pygm.utils.to_numpy(_X[i, j]) * X_gt[i, j]).sum()
+                        total += X_gt[i, j].sum()
+                accuracy = matched / total
                 assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy}, " \
                                       f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                                       f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
@@ -143,7 +153,8 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                 raise ValueError(f'Unknown mode: {mode}')
             if 'x0' in solver_param_dict and solver_param_dict['x0'] is not None:
                 solver_param_dict['x0'] = pygm.utils.to_numpy(solver_param_dict['x0'])
-
+            if 'ns' in solver_param_dict and solver_param_dict['ns'] is not None:
+                solver_param_dict['ns'] = pygm.utils.to_numpy(solver_param_dict['ns'])
 
 def test_cao():
     num_nodes = 5
@@ -174,12 +185,25 @@ def test_mgm_floyd():
 def test_gamgm():
     num_nodes = 5
     num_graphs = 10
+    # test without outliers
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
             'sk_init_tau': [0.5, 0.1],
             'sk_min_tau': [0.1, 0.05],
             'param_lambda': [0.1, 0.5],
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
             'verbose': [True]
+        }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+
+    # test with outliers
+    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
+            'sk_init_tau': [0.5],
+            'sk_gamma': [0.8],
+            'sk_min_tau': [0.1],
+            'param_lambda': [0.1],
+            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
+            'verbose': [True],
+            'n_univ': [10],
+            'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes-1] * (num_graphs - num_graphs // 2))],
         }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
 
@@ -207,7 +231,6 @@ def test_gamgm_backward():
     # Backward pass via black-box trick
     acc.backward()
     assert torch.sum(W.grad != 0) > 0
-
 
     # Jittor
     pygm.BACKEND = 'jittor'
