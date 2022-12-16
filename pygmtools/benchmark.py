@@ -4,6 +4,16 @@ The Benchmark module with a unified data interface to evaluate graph matching me
 If you are interested in the performance and the deep learning framework, please refer to our `ThinkMatch project <https://github.com/Thinklab-SJTU/ThinkMatch>`_.
 """
 
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import tempfile
 import shutil
 import itertools
@@ -66,7 +76,7 @@ class Benchmark:
 
         :param ids: list of image ID, usually in ``train.json`` or ``test.json``
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
-        :param shuffle: bool, whether to shuffle the order of keypoints
+        :param shuffle: bool, whether to shuffle the order of keypoints; valid only when the class param ``sets`` is ``'train'``
         :return:
                     **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
@@ -93,7 +103,7 @@ class Benchmark:
             obj_dict['kpts'] = self.data_dict[keys]['kpts']
             obj_dict['cls'] = self.data_dict[keys]['cls']
             obj_dict['univ_size'] = self.data_dict[keys]['univ_size']
-            if shuffle:
+            if shuffle and self.sets != 'test':
                 random.shuffle(obj_dict['kpts'])
             data_list.append(obj_dict)
 
@@ -187,7 +197,7 @@ class Benchmark:
         :param cls: int or str, class of expected data. None for random class
         :param num: int, number of images; for example, 2 for 2GM
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
-        :param shuffle: bool, whether to shuffle the order of keypoints
+        :param shuffle: bool, whether to shuffle the order of keypoints; valid only when the class param ``sets`` is ``'train'``
         :return:
                     **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
@@ -537,7 +547,7 @@ class Benchmark:
 
     def rm_gt_cache(self, last_epoch=False):
         r"""
-        Remove ground truth cache.
+        Remove ground truth cache. It is recommended to call this function after evaluation in each epoch.
 
         :param last_epoch: Boolean variable, whether this epoch is last epoch; if true, the directory of cache will also be removed.
         """

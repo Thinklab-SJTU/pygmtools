@@ -119,6 +119,29 @@ How to enable Paddle backend:
     >>> import paddle
     >>> pygm.BACKEND = 'paddle'
 
+Tensorflow Backend
+^^^^^^^^^^^^^^^^^^^
+
+.. image:: ../images/tensorflow_logo.png
+    :width: 300
+
+TensorFlow is an end-to-end open source platform for machine learning, which is developed by researchers and engineers
+working on the Google Brain team within Google's Machine Intelligence Research organization.
+The TensorFlow backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
+
+Please follow `the official Tensorflow installation guide <https://tensorflow.google.cn/install>`_.
+
+This package is developed with ``Tensorflow==2.9.3`` and please mind the API compatibility among different Tensorflow
+versions.
+
+How to enable Tensorflow backend:
+
+::
+
+    >>> import pygmtools as pygm
+    >>> import tensorflow
+    >>> pygm.BACKEND = 'tensorflow'
+
 Example: Matching Isomorphic Graphs
 ------------------------------------
 

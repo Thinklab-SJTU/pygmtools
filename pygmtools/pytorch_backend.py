@@ -1,3 +1,13 @@
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import itertools
 import functools
 import torch
@@ -1359,13 +1369,14 @@ def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity
     return torch.stack(ks, dim=0)
 
 
-def _check_data_type(input: Tensor, var_name=None):
+def _check_data_type(input: Tensor, var_name, raise_err):
     """
     Pytorch implementation of _check_data_type
     """
-    if type(input) is not Tensor:
-        raise ValueError(f'Expected Pytorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+    if raise_err and type(input) is not Tensor:
+        raise ValueError(f'Expected PyTorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is Tensor
 
 
 def _check_shape(input, dim_num):

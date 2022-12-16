@@ -31,7 +31,7 @@ To highlight, ``pygmtools`` has the following features:
   and novel deep learning-based solvers;
 * *Support various backends*, including ``numpy`` which is universally accessible, and some state-of-the-art deep 
   learning architectures with GPU support: 
-  ``pytorch``, ``paddle``, ``jittor``. 
+  ``pytorch``, ``paddle``, ``jittor``, ``Tensorflow``; 
 * *Deep learning friendly*, the operations are designed to best preserve the gradient during computation and batched 
   operations support for the best performance.
   
@@ -62,6 +62,7 @@ numpy >= 1.18.5
 easydict >= 1.7
 appdirs >= 1.4.4
 tqdm >= 4.64.1
+wget>=3.2
 ```
   
 ## Available Graph Matching Solvers
@@ -114,19 +115,33 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/paddle_logo.png" alt="paddle logo" width="200"/>
 
-### Development status
+* [Tensorflow](https://tensorflow.google.cn/) (GPU friendly, deep learning friendly)
+
+<img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
+
+### Development status (main)
 
 |                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
 | ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
-| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | 🧱         | 🧱        |
-| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | 🧱         | 🧱        |
-| Multi-Graph Solvers | 🧱    | ✔       | ✔      | ✔            | 📆         | 📆        |
-| Neural Solvers      | 🧱    | ✔       | ✔      | 🧱           | 📆         | 📆        |
-| Examples Gallery    | 📆    | ✔       | ✔      | 📆           | 📆         | 📆        |
+| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | ✔         | 🧱        |
+| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | ✔         | 🧱        |
+| Multi-Graph Solvers | ✔    | ✔       | ✔      | ✔            | 📆         | 📆        |
+| Neural Solvers      | ✔    | ✔       | ✔      | 🧱           | 📆         | 📆        |
+| Examples Gallery    | 🧱    | ✔       | ✔      | 🧱           | 📆         | 📆        |
 
 ✔: Supported; 🧱: Work in progress; 📆: Planned for future versions (contributions welcomed!).
 
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
+
+## Pretrained Models
+
+The library includes several neural network solvers. The pretrained models shall be automatically downloaded upon 
+needed from Google Drive. If you are experiencing issues accessing Google Drive, please download the pretrained models
+manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+Available at:
+[[google drive]](https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing)
+[[baidu drive]](https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv)
 
 ## The Deep Graph Matching Benchmark
 

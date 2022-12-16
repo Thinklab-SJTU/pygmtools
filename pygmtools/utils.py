@@ -2,6 +2,16 @@
 Utility functions: problem formulating, data processing, and beyond.
 """
 
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import time
 import functools
 import importlib
@@ -13,12 +23,12 @@ import hashlib
 import shutil
 from tqdm.auto import tqdm
 import inspect
-
+import wget
 import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
-    'If you are a user, please use other backends as workarounds.' \
+    'If you are a user, please check the spelling, and use other backends as workarounds. ' \
     'If you are a developer, it will be truly appreciated if you could develop and share your' \
     ' implementation with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
 
@@ -275,7 +285,7 @@ def inner_prod_aff_fn(feat1, feat2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.inner_prod_aff_fn
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -304,7 +314,7 @@ def gaussian_aff_fn(feat1, feat2, sigma=1., backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.gaussian_aff_fn
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -577,7 +587,7 @@ def dense_to_sparse(dense_adj, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.dense_to_sparse
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -650,7 +660,7 @@ def compute_affinity_score(X, K, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.compute_affinity_score
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -682,7 +692,7 @@ def to_numpy(input, backend=None):
         try:
             mod = importlib.import_module(f'pygmtools.{backend}_backend')
             fn = mod.to_numpy
-        except ModuleNotFoundError and AttributeError:
+        except (ModuleNotFoundError, AttributeError):
             raise NotImplementedError(
                 NOT_IMPLEMENTED_MSG.format(backend)
             )
@@ -710,7 +720,7 @@ def from_numpy(input, device=None, backend=None):
         try:
             mod = importlib.import_module(f'pygmtools.{backend}_backend')
             fn = mod.from_numpy
-        except ModuleNotFoundError and AttributeError:
+        except (ModuleNotFoundError, AttributeError):
             raise NotImplementedError(
                 NOT_IMPLEMENTED_MSG.format(backend)
             )
@@ -738,7 +748,7 @@ def generate_isomorphic_graphs(node_num, graph_num=2, node_feat_dim=0, backend=N
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.generate_isomorphic_graphs
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -976,7 +986,7 @@ def permutation_loss(pred_dsmat, gt_perm, n1=None, n2=None, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.permutation_loss
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1015,28 +1025,49 @@ def _aff_mat_from_node_edge_aff(node_aff, edge_aff, connectivity1, connectivity2
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._aff_mat_from_node_edge_aff
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
     return fn(*args)
 
 
-def _check_data_type(input, var_name=None, backend=None):
+def _check_data_type(input, *args):
     r"""
     Check whether the input data meets the backend. If not met, it will raise an ValueError
+    Three overloads of this function:
+    _check_data_type(input, backend)
+    _check_data_type(input, var_name, backend)
+    _check_data_type(input, var_name, raise_err, backend)
 
     :param input: input data (must be Tensor/ndarray)
     :param var_name: name of the variable
-    :return: None
+    :param raise_err: raise an error if input data not true
+    :return: True or False
     """
+    if len(args) == 3:
+        var_name, raise_err, backend = args
+    elif len(args) == 2:
+        var_name, backend = args
+        raise_err = True
+    elif len(args) == 1:
+        backend = args[0]
+        var_name = None
+        raise_err = True
+    elif len(args) == 0:
+        backend = None
+        var_name = None
+        raise_err = True
+    else:
+        raise RuntimeError(f'Unknown arguments: {args}')
+
     if backend is None:
         backend = pygmtools.BACKEND
-    args = (input, var_name)
+    args = (input, var_name, raise_err)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_data_type
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1057,7 +1088,7 @@ def _check_shape(input, num_dim, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._check_shape
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1077,7 +1108,7 @@ def _get_shape(input, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._get_shape
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1098,7 +1129,7 @@ def _squeeze(input, dim, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._squeeze
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1119,7 +1150,7 @@ def _unsqueeze(input, dim, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._unsqueeze
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1141,7 +1172,7 @@ def _transpose(input, dim1, dim2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._transpose
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -1162,18 +1193,16 @@ def _mm(input1, input2, backend=None):
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod._mm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
     return fn(*args)
 
-
-def download(filename, url, md5=None, retries=5):
+def download(filename, url, md5=None, retries=5, to_cache=True):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
-
     :param filename: the destination file name
     :param url: the url
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
@@ -1183,32 +1212,42 @@ def download(filename, url, md5=None, retries=5):
     if retries <= 0:
         raise RuntimeError('Max Retries exceeded!')
 
-    dirs = user_cache_dir("pygmtools")
-    if not os.path.exists(dirs):
-        os.makedirs(dirs)
-    filename = os.path.join(dirs, filename)
+    if to_cache:
+        dirs = user_cache_dir("pygmtools")
+        if not os.path.exists(dirs):
+            os.makedirs(dirs)
+        filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
-        print(f'Downloading to {filename}...')
-        down_res = requests.get(url, stream=True)
-        file_size = int(down_res.headers.get('Content-Length', 0))
-        with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
-            with open(filename, 'wb') as file:
-                shutil.copyfileobj(content, file)
-
+        print(f'\nDownloading to {filename}...')
+        if retries % 2 == 1:
+            try:
+                down_res = requests.get(url, stream=True)
+                file_size = int(down_res.headers.get('Content-Length', 0))
+                with tqdm.wrapattr(down_res.raw, "read", total=file_size) as content:
+                    with open(filename, 'wb') as file:
+                        shutil.copyfileobj(content, file)
+            except requests.exceptions.ConnectionError as err:
+                print('Warning: Network error. Retrying...\n', err)
+                return download(filename, url, md5, retries - 1)
+        else:
+            wget.download(url,out=filename)
     if md5 is not None:
-        hash_md5 = hashlib.md5()
-        chunk = 8192
-        with open(filename, 'rb') as file_to_check:
-            while True:
-                buffer = file_to_check.read(chunk)
-                if not buffer:
-                    break
-                hash_md5.update(buffer)
-            md5_returned = hash_md5.hexdigest()
+        md5_returned = _get_md5(filename)
         if md5 != md5_returned:
             print('Warning: MD5 check failed for the downloaded content. Retrying...')
             os.remove(filename)
             time.sleep(1)
             return download(filename, url, md5, retries - 1)
-
     return filename
+
+def _get_md5(filename):
+    hash_md5 = hashlib.md5()
+    chunk = 8192
+    with open(filename, 'rb') as file_to_check:
+        while True:
+            buffer = file_to_check.read(chunk)
+            if not buffer:
+                break
+            hash_md5.update(buffer)
+        md5_returned = hash_md5.hexdigest()
+        return md5_returned

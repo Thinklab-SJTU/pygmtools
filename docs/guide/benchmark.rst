@@ -122,6 +122,31 @@ Please cite the following papers if you use IMC-PT-SparseGM dataset:
       year={2021}
     }
 
+SPair-71k Dataset
+^^^^^^^^^^^^^^^^^^^^
+
+#. Download `SPair-71k dataset <http://cvlab.postech.ac.kr/research/SPair-71k/>`_
+
+#. Unzip the dataset and make sure it looks like ``data/SPair-71k``
+
+Please cite the following papers if you use SPair-71k dataset:
+
+::
+
+    @article{min2019spair,
+       title={SPair-71k: A Large-scale Benchmark for Semantic Correspondence},
+       author={Juhong Min and Jongmin Lee and Jean Ponce and Minsu Cho},
+       journal={arXiv prepreint arXiv:1908.10543},
+       year={2019}
+    }
+
+    @InProceedings{min2019hyperpixel,
+       title={Hyperpixel Flow: Semantic Correspondence with Multi-layer Neural Features},
+       author={Juhong Min and Jongmin Lee and Jean Ponce and Minsu Cho},
+       booktitle={ICCV},
+       year={2019}
+    }
+
 API Reference
 ------------------
 See :doc:`the API doc of Benchmark module <../api/_autosummary/pygmtools.benchmark.Benchmark>` and

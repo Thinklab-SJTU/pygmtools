@@ -1,9 +1,18 @@
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import numpy as np
 import jittor as jt
 from jittor import Var
 import functools
 import itertools
-import math
 import pygmtools.utils
 from multiprocessing import Pool
 from pygmtools.numpy_backend import _hung_kernel
@@ -71,7 +80,7 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         ncols = jt.Var([s.shape[2] for _ in range(batch_size)])
 
     # ensure that in each dimension we have nrow < ncol
-    transposed_batch = jt.Var(nrows > ncols)
+    transposed_batch = nrows > ncols
     if jt.any(transposed_batch):
         s_t = s.transpose(1, 2)
         s_t = jt.concat((
@@ -220,23 +229,27 @@ def rrwm(K: Var, n1: Var, n2: Var, n1max, n2max, x0: Var,
     dmax = d.max(dim=1, keepdims=True) 
     K = K / (dmax + d.min() * 1e-5)
     v = v0
-    with jt.no_grad():
-        for i in range(max_iter):
-            # random walk
-            v = jt.bmm(K, v)
-            last_v = v
-            n = jt.norm(v, p=1, dim=1, keepdim=True)
-            v = v / n
+    for i in range(max_iter):
+        # try fixing memory error caused by growing scale of
+        # computation graph when testing multi-graph solvers
+        if jt.number_of_lived_ops() > 100000:
+            jt.clean_graph() 
+            
+        # random walk
+        v = jt.bmm(K, v)
+        last_v = v
+        n = jt.norm(v, p=1, dim=1, keepdim=True)
+        v = v / n
 
-            # reweighted jump
-            s = v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
-            s = beta * s / s.max(dim=1, keepdims=True).max(dim=2, keepdims=True)
-            v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
-                (1 - alpha) * v
-            n = jt.norm(v, p=1, dim=1, keepdim=True)
-            v = jt.matmul(v, 1 / n)
-            if (v - last_v).sum().sqrt() < 1e-5:
-                break
+        # reweighted jump
+        s = v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
+        s = beta * s / s.max(dim=1, keepdims=True).max(dim=2, keepdims=True)
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
+            (1 - alpha) * v
+        n = jt.norm(v, p=1, dim=1, keepdim=True)
+        v = jt.matmul(v, 1 / n)
+        if (v - last_v).sum().sqrt() < 1e-5:
+            break
 
     return v.view((batch_num, int(n2max), int(n1max))).transpose(1, 2)
 
@@ -611,7 +624,7 @@ def gamgm(
         end_y = n_indices[j].item()
         supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i].item(), :ns[j].item()]
 
-    U = GAMGMTorchFunc.apply(
+    U = GAMGMJittorFunc.apply(
         bb_smooth,
         supA, supW, ns, n_indices, n_univ, num_graphs, U0,
         init_tau, min_tau, sk_gamma,
@@ -632,7 +645,7 @@ def gamgm(
     return result
 
 
-class GAMGMTorchFunc(jt.Function):
+class GAMGMJittorFunc(jt.Function):
     """
     Jittor wrapper to support forward and backward pass (by black-box differentiation)
     """
@@ -650,7 +663,7 @@ class GAMGMTorchFunc(jt.Function):
         self.U = U
         return U
 
-    def backward(self, dU):
+    def grad(self, dU):
         epsilon = 1e-8
         bb_smooth = self.bb_smooth
         supA, supW, ns, n_indices, n_univ, num_graphs, U0 = self.named_args
@@ -658,25 +671,25 @@ class GAMGMTorchFunc(jt.Function):
         U = self.U
 
         for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
+            start_x = (n_indices[i] - ns[i]).item()
+            end_x = n_indices[i].item()
+            start_y = (n_indices[j] - ns[j]).item()
+            end_y = n_indices[j].item()
             supW[start_x:end_x, start_y:end_y] += bb_smooth * jt.matmul(dU[start_x:end_x], dU[start_y:end_y].transpose(0, 1))
 
         U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
 
-        grad_supW = jt.zeros((n_indices[-1], n_indices[-1]))
+        grad_supW = jt.zeros((n_indices[-1].item(), n_indices[-1].item()))
         for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
+            start_x = (n_indices[i] - ns[i]).item()
+            end_x = n_indices[i].item()
+            start_y = (n_indices[j] - ns[j]).item()
+            end_y = n_indices[j].item()
             X = jt.matmul(U[start_x:end_x], U[start_y:end_y].transpose(0, 1))
             X_prime = jt.matmul(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose(0, 1))
             grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
 
-        return_list = [None, None, grad_supW] + [None] * (len(self.needs_input_grad) - 3)
+        return_list = [None, None, grad_supW] + [None] * (len(args) + 8 - 3)
         return tuple(return_list)
 
 
@@ -696,7 +709,7 @@ def gamgm_real(
     iter_flag = True
 
     while iter_flag:
-        with jt.no_grad():
+        with jt.enable_grad():
             for i in range(max_iter):
                 # compact matrix form update of V
                 UUt = jt.matmul(U, U.t())
@@ -772,12 +785,14 @@ def gamgm_real(
                     U_list_hung = []
                     n_start = 0
                     for n_end in n_indices:
+                        n_end = n_end.item()
                         U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='jittor'))
                         n_start = n_end
                     U_hung = jt.concat(U_list_hung, dim=0)
-                    diff = jt.norm(jt.matmul(U, U.t()) - lastUUt)
+                    diff = jt.norm(jt.matmul(U, U.t()) - lastUUt).sum()
                     print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
-                        f'gap to discrete: {jt.mean(jt.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+                          f'gap to discrete: {jt.mean(jt.abs(U - U_hung)).item():.3e}, '
+                          f'iter diff: {diff.item():.3e}')
 
                 if projector == 'hungarian' and outlier_thresh > 0:
                     U_hung = U
@@ -939,9 +954,9 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
     if forward_pass:
         batch_size = feat1.shape[0]
         if n1 is None:
-            n1 = [feat1.shape[1]] * batch_size
+            n1 = jt.Var([feat1.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [feat2.shape[1]] * batch_size
+            n2 = jt.Var([feat2.shape[1]] * batch_size)
         result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
     else:
         result = None
@@ -979,9 +994,9 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
     if forward_pass:
         batch_size = feat1.shape[0]
         if n1 is None:
-            n1 = [feat1.shape[1]] * batch_size
+            n1 = jt.Var([feat1.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [feat2.shape[1]] * batch_size
+            n2 = jt.Var([feat2.shape[1]] * batch_size)
         result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
     else:
         result = None
@@ -1068,9 +1083,9 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
     if forward_pass:
         batch_size = feat_node1.shape[0]
         if n1 is None:
-            n1 = [feat_node1.shape[1]] * batch_size
+            n1 = jt.Var([feat_node1.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [feat_node1.shape[1]] * batch_size
+            n2 = jt.Var([feat_node1.shape[1]] * batch_size)
         result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
     else:
         result = None
@@ -1329,13 +1344,14 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
 
 
-def _check_data_type(input: Var, var_name=None):
+def _check_data_type(input: Var, var_name, raise_err):
     """
     Jittor implementation of _check_data_type
     """
-    if type(input) is not Var:
+    if raise_err and type(input) is not Var:
         raise ValueError(f'Expected Jittor Var{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is Var
 
 def _check_shape(input, dim_num):
     """

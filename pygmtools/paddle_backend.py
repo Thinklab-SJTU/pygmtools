@@ -1,3 +1,13 @@
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import itertools
 import functools
 import paddle
@@ -617,8 +627,7 @@ def gamgm(
         end_y = n_indices[j]
         supW[start_x:end_x, start_y:end_y] = W[i, j, :ns[i], :ns[j]]
 
-    U = GAMGMPaddleFunc.apply(
-        bb_smooth,
+    U = gamgm_real(
         supA, supW, ns, n_indices, n_univ, num_graphs, U0,
         init_tau, min_tau, sk_gamma,
         sk_iter, max_iter, quad_weight,
@@ -636,55 +645,6 @@ def gamgm(
         result[i] = U[start_n:end_n]
 
     return result
-
-
-class GAMGMPaddleFunc(paddle.autograd.PyLayer):
-    """
-    Paddle wrapper to support forward and backward pass (by black-box differentiation)
-    """
-    @staticmethod
-    def forward(ctx, bb_smooth, supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args):
-        # save parameters
-        ctx.bb_smooth = bb_smooth
-        ctx.named_args = supA, supW, ns, n_indices, n_univ, num_graphs, U0
-        ctx.list_args = args
-
-        # real solver function
-        U = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
-
-        # save result
-        ctx.U = U
-        return U
-
-    @staticmethod
-    def backward(ctx, dU):
-        epsilon = 1e-8
-        bb_smooth = ctx.bb_smooth
-        supA, supW, ns, n_indices, n_univ, num_graphs, U0 = ctx.named_args
-        args = ctx.list_args
-        U = ctx.U
-
-        for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
-            supW[start_x:end_x, start_y:end_y] += bb_smooth * paddle.mm(dU[start_x:end_x], dU[start_y:end_y].transpose((1, 0)))
-
-        U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
-
-        grad_supW = paddle.to_tensor(paddle.zeros((n_indices[-1], n_indices[-1])), place=supW.place)
-        for i, j in itertools.product(range(num_graphs), repeat=2):
-            start_x = n_indices[i] - ns[i]
-            end_x = n_indices[i]
-            start_y = n_indices[j] - ns[j]
-            end_y = n_indices[j]
-            X = paddle.mm(U[start_x:end_x], U[start_y:end_y].transpose((1, 0)))
-            X_prime = paddle.mm(U_prime[start_x:end_x], U_prime[start_y:end_y].transpose((1, 0)))
-            grad_supW[start_x:end_x, start_y:end_y] = -(X - X_prime) / (bb_smooth + epsilon)
-
-        return_list = [None, None, grad_supW] + [None] * (len(ctx.needs_input_grad) - 3)
-        return tuple(return_list)
 
 
 def gamgm_real(
@@ -718,7 +678,8 @@ def gamgm_real(
                 else:
                     print_str = 'hungarian'
                 print(print_str + f' #iter={i}/{max_iter} '
-                      f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
+                      f'quad score: {(quad * U).sum().numpy().squeeze():.3e}, '
+                      f'unary score: {(unary * U).sum().numpy().squeeze():.3e}')
             V = (quad + unary) / num_graphs
 
             U_list = []
@@ -774,7 +735,8 @@ def gamgm_real(
                 U_hung = paddle.concat(U_list_hung, axis=0)
                 diff = paddle.linalg.norm(paddle.mm(U, U.t()) - lastUUt)
                 print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
-                      f'gap to discrete: {paddle.mean(paddle.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
+                      f'gap to discrete: {paddle.mean(paddle.abs(U - U_hung)).numpy().squeeze():.3e}, '
+                      f'iter diff: {diff.numpy().squeeze():.3e}')
 
             if projector == 'hungarian' and outlier_thresh > 0:
                 U_hung = U
@@ -940,6 +902,37 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
         return paddle.stack(As, axis=0), X_gt
 
 
+def permutation_loss(pred_dsmat, gt_perm, n1, n2):
+    """
+    Pytorch implementation of permutation_loss
+    """
+    batch_num = pred_dsmat.shape[0]
+
+    pred_dsmat = pred_dsmat.astype("float32")
+
+    if not ((pred_dsmat.numpy() >= 0) * (pred_dsmat.numpy() <= 1)).all():
+        raise ValueError("pred_dsmat contains invalid numerical entries.")
+    if not ((gt_perm.numpy() >= 0) * (gt_perm.numpy() <= 1)).all():
+        raise ValueError("gt_perm contains invalid numerical entries.")
+
+    if n1 is None:
+        n1 = paddle.to_tensor([pred_dsmat.shape[1] for _ in range(batch_num)], place=pred_dsmat.place)
+    if n2 is None:
+        n2 = paddle.to_tensor([pred_dsmat.shape[2] for _ in range(batch_num)], place=pred_dsmat.place)
+
+    loss = paddle.to_tensor(0., place=pred_dsmat.place)
+    n_sum = paddle.zeros_like(loss)
+    for b in range(batch_num):
+        batch_slice = [b, slice(n1[b]), slice(n2[b])]
+        loss += paddle.nn.functional.binary_cross_entropy(
+            pred_dsmat[batch_slice],
+            gt_perm[batch_slice],
+            reduction='sum')
+        n_sum += paddle.to_tensor(n1[b].astype(n_sum.dtype), place=pred_dsmat.place)
+
+    return loss / n_sum
+
+
 def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor, connectivity1: paddle.Tensor, connectivity2: paddle.Tensor,
                                 n1, n2, ne1, ne2):
     """
@@ -986,13 +979,14 @@ def _aff_mat_from_node_edge_aff(node_aff: paddle.Tensor, edge_aff: paddle.Tensor
     return paddle.stack(ks, axis=0)
 
 
-def _check_data_type(input: paddle.Tensor, var_name=None):
+def _check_data_type(input: paddle.Tensor, var_name, raise_err):
     """
     Paddle implementation of _check_data_type
     """
-    if type(input) is not paddle.Tensor:
+    if raise_err and type(input) is not paddle.Tensor:
         raise ValueError(f'Expected Paddle Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is paddle.Tensor
 
 
 def _check_shape(input, dim_num):

@@ -26,7 +26,7 @@ AUTHOR = get_property('__author__', NAME)
 VERSION = get_property('__version__', NAME)
 
 REQUIRED = [
-     'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1'
+     'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1','wget>=3.2'
 ]
 
 EXTRAS = {}

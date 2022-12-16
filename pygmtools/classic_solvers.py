@@ -10,6 +10,16 @@ The two-graph matching problem considers both nodes and edges, formulated as a Q
     s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
 """
 
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import importlib
 import pygmtools
 from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
@@ -209,6 +219,23 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             jt.Var([1.], dtype=float32)
+            
+            # This solver supports gradient back-propogation
+            >>> from jittor import nn
+            >>> class Model(nn.Module):
+            ...     def __init__(self, K):
+            ...         self.K = K
+            ...     def execute(self, K, n1, n2):
+            ...         X = pygm.sm(K, n1, n2)
+            ...         return X
+
+            >>> model = Model(K)
+            >>> optim = nn.SGD(model.parameters(), lr=0.1)
+            >>> X = model(K, n1, n2)
+            >>> loss = X.sum()
+            >>> optim.step(loss)
+            >>> len(jt.nonzero(K.opt_grad(optim)))
+            2560
 
     .. dropdown:: mindspore Example
 
@@ -252,6 +279,22 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> g = mindspore.ops.grad(fn)(K, n1, n2)
             >>> mindspore.ops.count_nonzero(g)
+            
+            # This solver supports gradient back-propogation
+            >>> from jittor import nn
+            >>> class Model(nn.Module):
+            ...     def __init__(self, K):
+            ...         self.K = K
+            ...     def execute(self, K, n1, n2):
+            ...         X = pygm.sm(K, n1, n2)
+            ...         return X
+
+            >>> model = Model(K)
+            >>> optim = nn.SGD(model.parameters(), lr=0.1)
+            >>> X = model(K, n1, n2)
+            >>> loss = X.sum()
+            >>> optim.step(loss)
+            >>> len(jt.nonzero(K.opt_grad(optim)))
             2560
 
     .. dropdown:: Tensorflow Example
@@ -343,7 +386,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.sm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -552,6 +595,23 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             jt.Var([1.], dtype=float32)
+            
+            # This solver supports gradient back-propogation
+            >>> from jittor import nn
+            >>> class Model(nn.Module):
+            ...     def __init__(self, K):
+            ...         self.K = K
+            ...     def execute(self, K, n1, n2, beta):
+            ...         X = pygm.rrwm(K, n1, n2, beta=beta)
+            ...         return X
+
+            >>> model = Model(K)
+            >>> optim = nn.SGD(model.parameters(), lr=0.1)
+            >>> X = model(K, n1, n2, beta=100)
+            >>> loss = X.sum()
+            >>> optim.step(loss)
+            >>> len(jt.nonzero(K.opt_grad(optim)))
+            1536
 
     .. dropdown:: mindspore Example
 
@@ -685,7 +745,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.rrwm
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )
@@ -990,7 +1050,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.ipfp
-    except ModuleNotFoundError and AttributeError:
+    except (ModuleNotFoundError, AttributeError):
         raise NotImplementedError(
             NOT_IMPLEMENTED_MSG.format(backend)
         )

@@ -1,3 +1,13 @@
+# Copyright (c) 2022 Thinklab@SJTU
+# pygmtools is licensed under Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+# http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PSL v2 for more details.
+
 import itertools
 import functools
 import scipy.special
@@ -91,9 +101,9 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
         transposed = True
 
     if nrows is None:
-        nrows = np.array([s.shape[1] for _ in range(batch_size)], dtype=np.int)
+        nrows = np.array([s.shape[1] for _ in range(batch_size)], dtype=int)
     if ncols is None:
-        ncols = np.array([s.shape[2] for _ in range(batch_size)], dtype=np.int)
+        ncols = np.array([s.shape[2] for _ in range(batch_size)], dtype=int)
 
     # ensure that in each dimension we have nrow < ncol
     transposed_batch = nrows > ncols
@@ -264,7 +274,7 @@ def sm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.ndarr
         v = np.matmul(K, v)
         n = np.linalg.norm(v, ord=2, axis=1)
         v = np.matmul(v, (1 / n).reshape((batch_num, 1, 1)))
-        if np.linalg.norm((v - vlast).squeeze(), ord='fro') < 1e-5:
+        if np.linalg.norm((v - vlast).squeeze(-1), ord='fro') < 1e-5:
             break
         vlast = v
 
@@ -310,9 +320,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = np.full(batch_num, n1max, dtype=np.int)
+        n1 = np.full(batch_num, n1max, dtype=int)
     if n2 is None:
-        n2 = np.full(batch_num, n2max, dtype=np.int)
+        n2 = np.full(batch_num, n2max, dtype=int)
     if n1max is None:
         n1max = np.max(n1)
     if n2max is None:
@@ -745,13 +755,13 @@ def gamgm_real(
                     U_list_hung.append(pygmtools.hungarian(V[n_start:n_end, :n_univ], backend='numpy'))
                     n_start = n_end
                 U_hung = np.concatenate(U_list_hung, axis=0)
-                diff = np.linalg.norm(np.matmul(U, U.t()) - lastUUt)
+                diff = np.linalg.norm(np.matmul(U, U.transpose()) - lastUUt)
                 print(f'tau={sinkhorn_tau:.3e} #iter={i}/{max_iter} '
                       f'gap to discrete: {np.mean(np.abs(U - U_hung)):.3e}, iter diff: {diff:.3e}')
 
             if projector == 'hungarian' and outlier_thresh > 0:
                 U_hung = U
-                UUt = np.matmul(U_hung, U_hung.t())
+                UUt = np.matmul(U_hung, U_hung.transpose())
                 cluster_weight = np.repeat(cluster_M, ns.astype('i4'), axis=0)
                 cluster_weight = np.repeat(cluster_weight, ns.astype('i4'), axis=1)
                 quad = np.linalg.multi_dot(supA, UUt * cluster_weight, supA, U_hung) * quad_weight * 2
@@ -796,7 +806,379 @@ def gamgm_real(
 #          Neural Network Solvers          #
 ############################################
 
+from pygmtools.numpy_modules import *
 
+def add_module(self, name: str, module) -> None:
+        self._modules[name] = module
+
+class PCA_GM_Net():
+    """
+    Numpy implementation of PCA-GM and IPCA-GM network
+    """
+    def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
+        self.gnn_layer = num_layers
+        self.dict = {}
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_Gconv(in_channel, hidden_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_Gconv(hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_Gconv(hidden_channel, out_channel)
+                self.dict['affinity_{}'.format(i)] =  WeightedInnerProdAffinity(out_channel)
+            self.dict['gnn_layer_{}'.format(i)] = gnn_layer
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.dict['cross_graph_{}'.format(i)] = Linear(hidden_channel * 2, hidden_channel)
+                if cross_iter_num <= 0:
+                    self.dict['affinity_{}'.format(i)] = WeightedInnerProdAffinity(hidden_channel)
+
+    def forward(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat1, feat2
+        if cross_iter_num <= 0:
+            # Vanilla PCA-GM
+            for i in range(self.gnn_layer):
+                gnn_layer = self.dict['gnn_layer_{}'.format(i)]
+                emb1, emb2 = gnn_layer.forward([A1, emb1], [A2, emb2])
+                if i == self.gnn_layer - 2:
+                    affinity = self.dict['affinity_{}'.format(i)]
+                    s = affinity.forward(emb1, emb2)
+                    s = _sinkhorn_func(s, n1, n2)
+
+                    cross_graph = self.dict['cross_graph_{}'.format(i)]
+                    new_emb1 = cross_graph.forward(np.concatenate((emb1, np.matmul(s, emb2)), axis=-1))
+                    new_emb2 = cross_graph.forward(np.concatenate((emb2, np.matmul(s.swapaxes(1, 2), emb1)), axis=-1))
+                    emb1 = new_emb1
+                    emb2 = new_emb2
+
+            affinity = self.dict['affinity_{}'.format(self.gnn_layer - 1)]
+            s = affinity.forward(emb1, emb2)
+            s = _sinkhorn_func(s, n1, n2)
+
+        else:
+            # IPCA-GM
+            for i in range(self.gnn_layer - 1):
+                gnn_layer = self.dict['gnn_layer_{}'.format(i)]
+                emb1, emb2 = gnn_layer.forward([A1, emb1], [A2, emb2])
+
+            emb1_0, emb2_0 = emb1, emb2
+            s = np.zeros((emb1.shape[0], emb1.shape[1], emb2.shape[1]))
+
+            for x in range(cross_iter_num):
+                # cross-graph convolution in second last layer
+                i = self.gnn_layer - 2
+                cross_graph = self.dict['cross_graph_{}'.format(i)]
+                emb1 = cross_graph.forward(np.concatenate((emb1_0, np.matmul(s, emb2_0)), axis=-1))
+                emb2 = cross_graph.forward(np.concatenate((emb2_0, np.matmul(s.swapaxes(1, 2), emb1_0)), axis=-1))
+
+                # last layer
+                i = self.gnn_layer - 1
+                gnn_layer = self.dict['gnn_layer_{}'.format(i)]
+                emb1, emb2 = gnn_layer.forward([A1, emb1], [A2, emb2])
+                affinity = self.dict['affinity_{}'.format(i)]
+                s = affinity.forward(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+        return s
+
+
+pca_gm_pretrain_path = {
+    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1En_9f5Zi5rSsS-JTIce7B1BV6ijGEAPd',
+           'd85f97498157d723793b8fc1501841ce'),
+    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LAnK6ASYu0CO1fEe6WpvMbt5vskuvwLo',
+              'c32f7c8a7a6978619b8fdbb6ad5b505f'),
+    'voc-all':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1c_aw4wxEBuY7JFC4Rt8rlcise777n189',
+               '0e2725b3ac51f87f0303bbcfaae5df80')
+}
+
+def pca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Numpy implementation of PCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            if pretrain in pca_gm_pretrain_path.keys():
+                url, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_numpy.npy', url, md5)
+                pca_gm_numpy_dict = np.load(filename,allow_pickle=True)
+                for i in range(network.gnn_layer):
+                    gnn_layer = network.dict['gnn_layer_{}'.format(i)]
+                    gnn_layer.gconv.a_fc.weight = pca_gm_numpy_dict.item()['gnn_layer_{}.gconv.a_fc.weight'.format(i)]
+                    gnn_layer.gconv.a_fc.bias = pca_gm_numpy_dict.item()['gnn_layer_{}.gconv.a_fc.bias'.format(i)]
+                    gnn_layer.gconv.u_fc.weight = pca_gm_numpy_dict.item()['gnn_layer_{}.gconv.u_fc.weight'.format(i)]
+                    gnn_layer.gconv.u_fc.bias = pca_gm_numpy_dict.item()['gnn_layer_{}.gconv.u_fc.bias'.format(i)]
+                    if i == network.gnn_layer - 2:
+                        affinity = network.dict['affinity_{}'.format(i)]
+                        affinity.A = pca_gm_numpy_dict.item()['affinity_{}.A'.format(i)]
+                        cross_graph = network.dict['cross_graph_{}'.format(i)]
+                        cross_graph.weight = pca_gm_numpy_dict.item()['cross_graph_{}.weight'.format(i)]
+                        cross_graph.bias = pca_gm_numpy_dict.item()['cross_graph_{}.bias'.format(i)]
+                affinity = affinity = network.dict['affinity_{}'.format(network.gnn_layer - 1)]
+                affinity.A = pca_gm_numpy_dict.item()['affinity_{}.A'.format(network.gnn_layer - 1)]
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = np.array([feat1.shape[1]] * batch_size)
+        if n2 is None:
+            n2 = np.array([feat2.shape[1]] * batch_size)
+        result = network.forward(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+ipca_gm_pretrain_path = {
+    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13g9iBjXZ804bKo6p8wMQe8yNUZBwVGJj',
+           '4479a25558780a4b4c9891b4386659cd'),
+    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1vq0FqjPhiSR80cu9jk0qMljkC4gSFvQA',
+              'ada1df350d45cc877f08e12919993345')
+}
+
+def ipca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Numpy implementation of IPCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
+        if pretrain:
+            if pretrain in ipca_gm_pretrain_path.keys():
+                url, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_numpy.npy', url, md5)
+                ipca_gm_numpy_dict = np.load(filename,allow_pickle=True)
+                for i in range(network.gnn_layer-1):
+                    gnn_layer = network.dict['gnn_layer_{}'.format(i)]
+                    gnn_layer.gconv.a_fc.weight = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.a_fc.weight'.format(i)]
+                    gnn_layer.gconv.a_fc.bias = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.a_fc.bias'.format(i)]
+                    gnn_layer.gconv.u_fc.weight = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.u_fc.weight'.format(i)]
+                    gnn_layer.gconv.u_fc.bias = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.u_fc.bias'.format(i)]
+                
+                for x in range(cross_iter):
+                    i = network.gnn_layer - 2
+                    cross_graph = network.dict['cross_graph_{}'.format(i)]
+                    cross_graph.weight = ipca_gm_numpy_dict.item()['cross_graph_{}.weight'.format(i)]
+                    cross_graph.bias = ipca_gm_numpy_dict.item()['cross_graph_{}.bias'.format(i)]
+                    
+                    i = network.gnn_layer - 1
+                    gnn_layer = network.dict['gnn_layer_{}'.format(i)]
+                    gnn_layer.gconv.a_fc.weight = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.a_fc.weight'.format(i)]
+                    gnn_layer.gconv.a_fc.bias = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.a_fc.bias'.format(i)]
+                    gnn_layer.gconv.u_fc.weight = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.u_fc.weight'.format(i)]
+                    gnn_layer.gconv.u_fc.bias = ipca_gm_numpy_dict.item()['gnn_layer_{}.gconv.u_fc.bias'.format(i)]
+
+                    affinity = network.dict['affinity_{}'.format(i)]
+                    affinity.A = ipca_gm_numpy_dict.item()['affinity_{}.A'.format(i)]
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}') 
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = np.array([feat1.shape[1]] * batch_size)
+        if n2 is None:
+            n2 = np.array([feat2.shape[1]] * batch_size)
+        result = network.forward(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+class CIE_Net():
+    """
+    Numpy implementation of CIE graph matching network
+    """
+    def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
+        self.gnn_layer = num_layers
+        self.dict = {}
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_ChannelIndependentConv(in_node_channel, hidden_channel, in_edge_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, out_channel, hidden_channel)
+                self.dict['affinity_{}'.format(i)] = WeightedInnerProdAffinity(out_channel)
+            self.dict['gnn_layer_{}'.format(i)] = gnn_layer
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.dict['cross_graph_{}'.format(i)] = Linear(hidden_channel * 2, hidden_channel)
+                self.dict['affinity_{}'.format(i)] = WeightedInnerProdAffinity(hidden_channel)
+
+    def forward(self, feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat_node1, feat_node2
+        emb_edge1, emb_edge2 = feat_edge1, feat_edge2
+        
+        for i in range(self.gnn_layer):
+            gnn_layer = self.dict['gnn_layer_{}'.format(i)]
+            # during forward process, the network structure will not change
+            emb1, emb2, emb_edge1, emb_edge2 = gnn_layer.forward([A1, emb1, emb_edge1], [A2, emb2, emb_edge2])
+            
+            if i == self.gnn_layer - 2:
+                affinity = self.dict['affinity_{}'.format(i)]
+                s = affinity.forward(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+                cross_graph = self.dict['cross_graph_{}'.format(i)]
+                new_emb1 = cross_graph.forward(np.concatenate((emb1, np.matmul(s, emb2)), axis=-1))
+                new_emb2 = cross_graph.forward(np.concatenate((emb2, np.matmul(s.swapaxes(1, 2), emb1)), axis=-1))
+                emb1 = new_emb1
+                emb2 = new_emb2
+        
+        affinity = self.dict['affinity_{}'.format(self.gnn_layer - 1)]
+        s = affinity.forward(emb1, emb2)
+        s = _sinkhorn_func(s, n1, n2)
+        return s
+
+cie_pretrain_path = {
+    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1rP9sJY1fh493LLMWw-7RaeFAMHlbSs2D',
+           '9cbd55fa77d124b95052378643715bae'),
+    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cMiXrSQjXZ9lDxeB6194z1-luyslVTR8',
+              'bd36e1bf314503c1f1482794e1648b18')
+}
+
+def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
+        in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+        network, pretrain):
+    """
+    Numpy implementation of CIE
+    """
+    if feat_node1 is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            if pretrain in cie_pretrain_path.keys():
+                url, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_numpy.npy', url, md5)
+                cie_numpy_dict = np.load(filename,allow_pickle=True)
+                for i in range(network.gnn_layer):
+                    gnn_layer = network.dict['gnn_layer_{}'.format(i)]
+                    gnn_layer.gconv.node_fc.weight = cie_numpy_dict.item()['gnn_layer_{}.gconv.node_fc.weight'.format(i)]
+                    gnn_layer.gconv.node_fc.bias = cie_numpy_dict.item()['gnn_layer_{}.gconv.node_fc.bias'.format(i)]
+                    gnn_layer.gconv.node_sfc.weight = cie_numpy_dict.item()['gnn_layer_{}.gconv.node_sfc.weight'.format(i)]
+                    gnn_layer.gconv.node_sfc.bias = cie_numpy_dict.item()['gnn_layer_{}.gconv.node_sfc.bias'.format(i)]
+                    gnn_layer.gconv.edge_fc.weight = cie_numpy_dict.item()['gnn_layer_{}.gconv.edge_fc.weight'.format(i)]
+                    gnn_layer.gconv.edge_fc.bias = cie_numpy_dict.item()['gnn_layer_{}.gconv.edge_fc.bias'.format(i)]
+                    if i == network.gnn_layer - 2:
+                        affinity = network.dict['affinity_{}'.format(i)]
+                        affinity.A = cie_numpy_dict.item()['affinity_{}.A'.format(i)]
+                        cross_graph = network.dict['cross_graph_{}'.format(i)]
+                        cross_graph.weight = cie_numpy_dict.item()['cross_graph_{}.weight'.format(i)]
+                        cross_graph.bias = cie_numpy_dict.item()['cross_graph_{}.bias'.format(i)]
+                affinity = affinity = network.dict['affinity_{}'.format(network.gnn_layer - 1)]
+                affinity.A = cie_numpy_dict.item()['affinity_{}.A'.format(network.gnn_layer - 1)]
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
+    if forward_pass:
+        batch_size = feat_node1.shape[0]
+        if n1 is None:
+            n1 = np.array([feat_node1.shape[1]] * batch_size)
+        if n2 is None:
+            n2 = np.array([feat_node1.shape[1]] * batch_size)
+        result = network.forward(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
+    else:
+        result = None
+
+    return result, network
+
+
+class NGM_Net():
+    """
+    Numpy implementation of NGM network
+    """
+    def __init__(self, gnn_channels, sk_emb):
+        self.gnn_layer = len(gnn_channels)
+        self.dict = {}
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = NGMConvLayer(1, 1,
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb, edge_emb=False)
+            else:
+                gnn_layer = NGMConvLayer(gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb, edge_emb=False)
+            self.dict['gnn_layer_{}'.format(i)] = gnn_layer
+        self.classifier = Linear(gnn_channels[-1] + sk_emb, 1)
+
+    def forward(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb = v0
+        A = (K != 0)
+        emb_K = np.expand_dims(K,axis=-1)
+
+        # NGM qap solver
+        for i in range(self.gnn_layer):
+            gnn_layer = self.dict['gnn_layer_{}'.format(i)]
+            emb_K, emb = gnn_layer.forward(A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
+        v = self.classifier.forward(emb)
+        
+        s = v.reshape(v.shape[0], n2max, -1).swapaxes(1, 2)
+        
+        return _sinkhorn_func(s, n1, n2, dummy_row=True)
+
+ngm_pretrain_path = {
+    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR',
+           '19cd48afab71b3277d2062624934702c'),
+    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iD8FHqahRsVV_H6o3ByB6nwBHU8sEgnt',
+              '31968e30c399845f34d80733d0118b8b')
+}
+
+def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
+    """
+    Numpy implementation of NGM
+    """
+    if K is None:
+        forward_pass = False
+    else:
+        forward_pass = True
+    if network is None:
+        network = NGM_Net(gnn_channels, sk_emb)
+        if pretrain:
+            if pretrain in ngm_pretrain_path.keys():
+                url, md5 = ngm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ngm_{pretrain}_numpy.npy', url, md5)
+                ngm_numpy_dict = np.load(filename,allow_pickle=True)
+                for i in range(network.gnn_layer):
+                    gnn_layer = network.dict['gnn_layer_{}'.format(i)]
+                    gnn_layer.classifier.weight = ngm_numpy_dict.item()['gnn_layer_{}.classifier.weight'.format(i)]
+                    gnn_layer.classifier.bias = ngm_numpy_dict.item()['gnn_layer_{}.classifier.bias'.format(i)]
+                    gnn_layer.n_func.getitem(0).weight = ngm_numpy_dict.item()['gnn_layer_{}.n_func.0.weight'.format(i)]
+                    gnn_layer.n_func.getitem(0).bias = ngm_numpy_dict.item()['gnn_layer_{}.n_func.0.bias'.format(i)]
+                    gnn_layer.n_func.getitem(2).weight = ngm_numpy_dict.item()['gnn_layer_{}.n_func.2.weight'.format(i)]
+                    gnn_layer.n_func.getitem(2).bias = ngm_numpy_dict.item()['gnn_layer_{}.n_func.2.bias'.format(i)]
+                    gnn_layer.n_self_func.getitem(0).weight = ngm_numpy_dict.item()['gnn_layer_{}.n_self_func.0.weight'.format(i)]
+                    gnn_layer.n_self_func.getitem(0).bias = ngm_numpy_dict.item()['gnn_layer_{}.n_self_func.0.bias'.format(i)]
+                    gnn_layer.n_self_func.getitem(2).weight = ngm_numpy_dict.item()['gnn_layer_{}.n_self_func.2.weight'.format(i)]
+                    gnn_layer.n_self_func.getitem(2).bias = ngm_numpy_dict.item()['gnn_layer_{}.n_self_func.2.bias'.format(i)]
+                network.classifier.weight = ngm_numpy_dict.item()['classifier.weight']
+                network.classifier.bias = ngm_numpy_dict.item()['classifier.bias']
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
+    if forward_pass:
+        batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+        v0 = v0 / np.mean(v0)
+        result = network.forward(K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
 #############################################
 #              Utils Functions              #
 #############################################
@@ -913,40 +1295,6 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim=0):
     else:
         return np.stack(As,axis=0), X_gt
 
-
-"""
-def permutation_loss(pred_dsmat:np.ndarray, gt_perm: np.ndarray, n1: np.ndarray, n2:np.ndarray) -> np.ndarray:
-
-    #Numpy implementation of permutation_loss
-
-    batch_num = pred_dsmat.shape[0]
-
-    pred_dsmat = pred_dsmat.to(dtype='f')
-
-    if not np.all((pred_dsmat >= 0) * (pred_dsmat <= 1)):
-        raise ValueError("pred_dsmat contains invalid numerical entries.")
-    if not np.all((gt_perm >= 0) * (gt_perm <= 1)):
-        raise ValueError("gt_perm contains invalid numerical entries.")
-
-    if n1 is None:
-        n1 = np.array([pred_dsmat.shape[1] for _ in range(batch_num)])
-    if n2 is None:
-        n2 = np.array([pred_dsmat.shape[2] for _ in range(batch_num)])
-
-    loss = np.array(0.)
-    n_sum = np.zeros_like(loss)
-    for b in range(batch_num):
-        batch_slice = [b, slice(n1[b]), slice(n2[b])]
-        loss += array.nn.functional.binary_cross_entropy(
-            pred_dsmat[batch_slice],
-            gt_perm[batch_slice],
-            reduction='sum')
-        n_sum += n1[b].to(n_sum.dtype).to(pred_dsmat.device)
-
-    return loss / n_sum
-"""
-
-
 def _aff_mat_from_node_edge_aff(node_aff: np.ndarray, edge_aff: np.ndarray, connectivity1: np.ndarray, connectivity2: np.ndarray,
                                 n1, n2, ne1, ne2):
     """
@@ -992,13 +1340,14 @@ def _aff_mat_from_node_edge_aff(node_aff: np.ndarray, edge_aff: np.ndarray, conn
     return np.stack(ks, axis=0)
 
 
-def _check_data_type(input: np.ndarray, var_name=None):
+def _check_data_type(input: np.ndarray, var_name, raise_err):
     """
     numpy implementation of _check_data_type
     """
-    if type(input) is not np.ndarray:
+    if raise_err and type(input) is not np.ndarray:
         raise ValueError(f'Expected numpy ndarray{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is np.ndarray
 
 
 def _check_shape(input: np.ndarray, dim_num):
