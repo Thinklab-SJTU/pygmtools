@@ -236,24 +236,25 @@ class ChannelIndependentConv():
 
             return node_x, edge_x
 
-        elif mode == 2:
-            node_x = self.node_fc(emb_node)
-            node_sx = self.node_sfc(emb_node)
-            edge_x = self.edge_fc(emb_edge)
-
-            d_x = np.expand_dims(node_x,axis=-1) - np.expand_dims(node_x,axis=2)
-            d_x = np.sum(d_x ** 2, axis=3, keepdim=False)
-            d_x = np.exp(-d_x)
-
-            A = np.expand_dims(A,axis=-1)
-            A = expand_as(A,edge_x) * edge_x
-
-            node_x = np.matmul(A.swapaxes(2, 3).swapaxes(1, 2),
-                                  np.expand_dims(node_x,axis=2).swapaxes(2, 3).swapaxes(1, 2))
-            node_x = np.squeeze(node_x,axis=-1).swapaxes(1, 2)
-            node_x = relu(node_x) + relu(node_sx)
-            edge_x = relu(edge_x)
-            return node_x, edge_x
+        # The following code lines are not called in pygmtools
+        # elif mode == 2:
+        #     node_x = self.node_fc(emb_node)
+        #     node_sx = self.node_sfc(emb_node)
+        #     edge_x = self.edge_fc(emb_edge)
+        #
+        #     d_x = np.expand_dims(node_x,axis=-1) - np.expand_dims(node_x,axis=2)
+        #     d_x = np.sum(d_x ** 2, axis=3, keepdim=False)
+        #     d_x = np.exp(-d_x)
+        #
+        #     A = np.expand_dims(A,axis=-1)
+        #     A = expand_as(A,edge_x) * edge_x
+        #
+        #     node_x = np.matmul(A.swapaxes(2, 3).swapaxes(1, 2),
+        #                           np.expand_dims(node_x,axis=2).swapaxes(2, 3).swapaxes(1, 2))
+        #     node_x = np.squeeze(node_x,axis=-1).swapaxes(1, 2)
+        #     node_x = relu(node_x) + relu(node_sx)
+        #     edge_x = relu(edge_x)
+        #     return node_x, edge_x
 
         else:
             raise ValueError('Unknown mode {}. Possible options: 1 or 2'.format(mode))

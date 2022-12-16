@@ -134,24 +134,25 @@ class ChannelIndependentConv(nn.Module):
 
             return node_x, edge_x
 
-        elif mode == 2:
-            node_x = self.node_fc(emb_node)
-            node_sx = self.node_sfc(emb_node)
-            edge_x = self.edge_fc(emb_edge)
-
-            d_x = node_x.unsqueeze(1) - node_x.unsqueeze(2)
-            d_x = torch.sum(d_x ** 2, dim=3, keepdim=False)
-            d_x = torch.exp(-d_x)
-
-            A = A.unsqueeze(-1)
-            A = torch.mul(A.expand_as(edge_x), edge_x)
-
-            node_x = torch.matmul(A.transpose(2, 3).transpose(1, 2),
-                                  node_x.unsqueeze(2).transpose(2, 3).transpose(1, 2))
-            node_x = node_x.squeeze(-1).transpose(1, 2)
-            node_x = F.relu(node_x) + F.relu(node_sx)
-            edge_x = F.relu(edge_x)
-            return node_x, edge_x
+        # The following code lines are not called in pygmtools
+        # elif mode == 2:
+        #     node_x = self.node_fc(emb_node)
+        #     node_sx = self.node_sfc(emb_node)
+        #     edge_x = self.edge_fc(emb_edge)
+        #
+        #     d_x = node_x.unsqueeze(1) - node_x.unsqueeze(2)
+        #     d_x = torch.sum(d_x ** 2, dim=3, keepdim=False)
+        #     d_x = torch.exp(-d_x)
+        #
+        #     A = A.unsqueeze(-1)
+        #     A = torch.mul(A.expand_as(edge_x), edge_x)
+        #
+        #     node_x = torch.matmul(A.transpose(2, 3).transpose(1, 2),
+        #                           node_x.unsqueeze(2).transpose(2, 3).transpose(1, 2))
+        #     node_x = node_x.squeeze(-1).transpose(1, 2)
+        #     node_x = F.relu(node_x) + F.relu(node_sx)
+        #     edge_x = F.relu(edge_x)
+        #     return node_x, edge_x
 
         else:
             raise ValueError('Unknown mode {}. Possible options: 1 or 2'.format(mode))

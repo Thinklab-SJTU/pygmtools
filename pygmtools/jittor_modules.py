@@ -132,24 +132,25 @@ class ChannelIndependentConv(Module):
 
             return node_x, edge_x
 
-        elif mode == 2:
-            node_x = self.node_fc(emb_node)
-            node_sx = self.node_sfc(emb_node)
-            edge_x = self.edge_fc(emb_edge)
-
-            d_x = node_x.unsqueeze(1) - node_x.unsqueeze(2)
-            d_x = jt.sum(d_x ** 2, dim=3, keepdim=False)
-            d_x = jt.exp(-d_x)
-
-            A = A.unsqueeze(-1)
-            A = jt.multiply(A.expand_as(edge_x), edge_x)
-
-            node_x = jt.matmul(A.transpose(2, 3).transpose(1, 2),
-                                  node_x.unsqueeze(2).transpose(2, 3).transpose(1, 2))
-            node_x = node_x.squeeze(-1).transpose(1, 2)
-            node_x = nn.relu(node_x) + nn.relu(node_sx)
-            edge_x = nn.relu(edge_x)
-            return node_x, edge_x
+        # The following code lines are not called in pygmtools
+        # elif mode == 2:
+        #     node_x = self.node_fc(emb_node)
+        #     node_sx = self.node_sfc(emb_node)
+        #     edge_x = self.edge_fc(emb_edge)
+        #
+        #     d_x = node_x.unsqueeze(1) - node_x.unsqueeze(2)
+        #     d_x = jt.sum(d_x ** 2, dim=3, keepdim=False)
+        #     d_x = jt.exp(-d_x)
+        #
+        #     A = A.unsqueeze(-1)
+        #     A = jt.multiply(A.expand_as(edge_x), edge_x)
+        #
+        #     node_x = jt.matmul(A.transpose(2, 3).transpose(1, 2),
+        #                           node_x.unsqueeze(2).transpose(2, 3).transpose(1, 2))
+        #     node_x = node_x.squeeze(-1).transpose(1, 2)
+        #     node_x = nn.relu(node_x) + nn.relu(node_sx)
+        #     edge_x = nn.relu(edge_x)
+        #     return node_x, edge_x
 
         else:
             raise ValueError('Unknown mode {}. Possible options: 1 or 2'.format(mode))
