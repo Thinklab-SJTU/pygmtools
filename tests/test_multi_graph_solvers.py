@@ -199,7 +199,7 @@ def test_gamgm():
             'sk_init_tau': [0.5],
             'sk_gamma': [0.8],
             'sk_min_tau': [0.1],
-            'param_lambda': [0.1],
+            'param_lambda': [0.],
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
             'verbose': [True],
             'n_univ': [10],
