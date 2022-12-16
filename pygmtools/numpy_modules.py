@@ -314,7 +314,7 @@ class Siamese_ChannelIndependentConv():
 
 class NGMConvLayer():
     def __init__(self, in_node_features, in_edge_features, out_node_features, out_edge_features,
-                 sk_channel=0, edge_emb=False):
+                 sk_channel=0):
         self.in_nfeat = in_node_features
         self.in_efeat = in_edge_features
         self.out_efeat = out_edge_features
@@ -326,16 +326,6 @@ class NGMConvLayer():
         else:
             self.out_nfeat = out_node_features
             self.classifier = None
-
-        if edge_emb:
-            self.e_func = Sequential(
-                Linear(self.in_efeat + self.in_nfeat, self.out_efeat),
-                ReLU(),
-                Linear(self.out_efeat, self.out_efeat),
-                ReLU()
-            )
-        else:
-            self.e_func = None
 
         self.n_func = Sequential(
             Linear(self.in_nfeat, self.out_nfeat),
@@ -359,12 +349,7 @@ class NGMConvLayer():
         :param W: edge feature tensor (b x n x n x feat_dim)
         :param x: node feature tensor (b x n x feat_dim)
         """
-        if self.e_func is not None:
-            W1 = np.expand_dims(A,axis=-1) * np.expand_dims(x,axis=1)
-            W2 = np.concatenate((W, W1), axis=-1)
-            W_new = self.e_func(W2)
-        else:
-            W_new = W
+        W_new = W
 
         if norm is True:
             A = normalize_abs(A,axis=2)
