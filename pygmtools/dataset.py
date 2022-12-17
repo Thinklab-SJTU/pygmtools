@@ -465,6 +465,7 @@ class WillowObject:
         SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
         TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
         RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
+        URL = 'http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip'
         if len(ds_dict.keys()) > 0:
             if 'CLASSES' in ds_dict.keys():
                 CLASSES = ds_dict['CLASSES']
@@ -478,11 +479,13 @@ class WillowObject:
                 TRAIN_SAME_AS_TEST = ds_dict['TRAIN_SAME_AS_TEST']
             if 'RAND_OUTLIER' in ds_dict.keys():
                 RAND_OUTLIER = ds_dict['RAND_OUTLIER']
+            if 'URL' in ds_dict.keys():
+                URL = ds_dict['URL']
 
         self.dataset_dir = 'data/WillowObject'
         if not os.path.exists(ROOT_DIR):
             assert ROOT_DIR == dataset_cfg.WillowObject.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
-            self.download(url='http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip')
+            self.download(url=URL)
 
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
@@ -655,7 +658,7 @@ class WillowObject:
                 for name in data_list[x]:
                     tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
-                    cls = tmp[3]
+                    cls = os.path.split(tmp[0])[-1]
                     annotations = self.__get_anno_dict(name, cls)
                     data_dict[objID] = annotations
 
@@ -866,7 +869,7 @@ class SPair71k:
                 for name in data_list[x]:
                     tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
-                    cls = tmp[3]
+                    cls = os.path.split(tmp[0])[-1]
                     annotations = self.__get_anno_dict(name, cls)
                     ID = objID + '_' + cls
                     data_dict[ID] = annotations
