@@ -431,7 +431,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         idx = paddle.argmax(score_combo, axis=-1)
         score_combo = paddle.max(score_combo, axis=-1)
 
-        # assert paddle.all(score_combo >= score_ori), paddle.min(score_combo - score_ori)
+        assert paddle.all(score_combo + 1e-4 >= score_ori), paddle.min(score_combo - score_ori)
         X_upt = X_combo[mask1, mask2, idx]
         X = X_upt * X_mask + X_upt.transpose((1, 0, 3, 2))* X_mask.transpose((1, 0, 2, 3)) + X * (1 - X_mask - X_mask.transpose((1, 0, 2, 3)))
         assert paddle.all(X.transpose((1, 0, 3, 2)) == X)

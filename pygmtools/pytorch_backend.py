@@ -431,7 +431,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
 
         score_combo, idx = torch.max(score_combo, dim=-1)
 
-        assert torch.all(score_combo >= score_ori), torch.min(score_combo - score_ori)
+        assert torch.all(score_combo + 1e-4 >= score_ori), torch.min(score_combo - score_ori)
         X_upt = X_combo[mask1, mask2, idx, :, :]
         X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (1 - X_mask - X_mask.transpose(0, 1))
         assert torch.all(X.transpose(0, 1).transpose(2, 3) == X)
