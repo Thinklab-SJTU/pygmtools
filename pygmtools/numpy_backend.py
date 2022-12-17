@@ -1109,11 +1109,11 @@ class NGM_Net():
             if i == 0:
                 gnn_layer = NGMConvLayer(1, 1,
                                          gnn_channels[i] + sk_emb, gnn_channels[i],
-                                         sk_channel=sk_emb, edge_emb=False)
+                                         sk_channel=sk_emb)
             else:
                 gnn_layer = NGMConvLayer(gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
                                          gnn_channels[i] + sk_emb, gnn_channels[i],
-                                         sk_channel=sk_emb, edge_emb=False)
+                                         sk_channel=sk_emb)
             self.dict['gnn_layer_{}'.format(i)] = gnn_layer
         self.classifier = Linear(gnn_channels[-1] + sk_emb, 1)
 

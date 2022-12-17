@@ -236,24 +236,25 @@ class ChannelIndependentConv():
 
             return node_x, edge_x
 
-        elif mode == 2:
-            node_x = self.node_fc(emb_node)
-            node_sx = self.node_sfc(emb_node)
-            edge_x = self.edge_fc(emb_edge)
-
-            d_x = np.expand_dims(node_x,axis=-1) - np.expand_dims(node_x,axis=2)
-            d_x = np.sum(d_x ** 2, axis=3, keepdim=False)
-            d_x = np.exp(-d_x)
-
-            A = np.expand_dims(A,axis=-1)
-            A = expand_as(A,edge_x) * edge_x
-
-            node_x = np.matmul(A.swapaxes(2, 3).swapaxes(1, 2),
-                                  np.expand_dims(node_x,axis=2).swapaxes(2, 3).swapaxes(1, 2))
-            node_x = np.squeeze(node_x,axis=-1).swapaxes(1, 2)
-            node_x = relu(node_x) + relu(node_sx)
-            edge_x = relu(edge_x)
-            return node_x, edge_x
+        # The following code lines are not called in pygmtools
+        # elif mode == 2:
+        #     node_x = self.node_fc(emb_node)
+        #     node_sx = self.node_sfc(emb_node)
+        #     edge_x = self.edge_fc(emb_edge)
+        #
+        #     d_x = np.expand_dims(node_x,axis=-1) - np.expand_dims(node_x,axis=2)
+        #     d_x = np.sum(d_x ** 2, axis=3, keepdim=False)
+        #     d_x = np.exp(-d_x)
+        #
+        #     A = np.expand_dims(A,axis=-1)
+        #     A = expand_as(A,edge_x) * edge_x
+        #
+        #     node_x = np.matmul(A.swapaxes(2, 3).swapaxes(1, 2),
+        #                           np.expand_dims(node_x,axis=2).swapaxes(2, 3).swapaxes(1, 2))
+        #     node_x = np.squeeze(node_x,axis=-1).swapaxes(1, 2)
+        #     node_x = relu(node_x) + relu(node_sx)
+        #     edge_x = relu(edge_x)
+        #     return node_x, edge_x
 
         else:
             raise ValueError('Unknown mode {}. Possible options: 1 or 2'.format(mode))
@@ -313,7 +314,7 @@ class Siamese_ChannelIndependentConv():
 
 class NGMConvLayer():
     def __init__(self, in_node_features, in_edge_features, out_node_features, out_edge_features,
-                 sk_channel=0, edge_emb=False):
+                 sk_channel=0):
         self.in_nfeat = in_node_features
         self.in_efeat = in_edge_features
         self.out_efeat = out_edge_features
@@ -325,16 +326,6 @@ class NGMConvLayer():
         else:
             self.out_nfeat = out_node_features
             self.classifier = None
-
-        if edge_emb:
-            self.e_func = Sequential(
-                Linear(self.in_efeat + self.in_nfeat, self.out_efeat),
-                ReLU(),
-                Linear(self.out_efeat, self.out_efeat),
-                ReLU()
-            )
-        else:
-            self.e_func = None
 
         self.n_func = Sequential(
             Linear(self.in_nfeat, self.out_nfeat),
@@ -358,12 +349,7 @@ class NGMConvLayer():
         :param W: edge feature tensor (b x n x n x feat_dim)
         :param x: node feature tensor (b x n x feat_dim)
         """
-        if self.e_func is not None:
-            W1 = np.expand_dims(A,axis=-1) * np.expand_dims(x,axis=1)
-            W2 = np.concatenate((W, W1), axis=-1)
-            W_new = self.e_func(W2)
-        else:
-            W_new = W
+        W_new = W
 
         if norm is True:
             A = normalize_abs(A,axis=2)

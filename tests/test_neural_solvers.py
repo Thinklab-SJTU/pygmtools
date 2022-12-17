@@ -48,7 +48,13 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
     n1 = torch.tensor(graph_num_nodes, dtype=torch.int)
     n2 = torch.tensor(graph_num_nodes, dtype=torch.int)
     A1, A2, F1, F2, EF1, EF2, X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, EF1, EF2, X_gt))
-    A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt)
+    if batch_size > 1:
+        A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt)
+    else:
+        A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt = data_to_numpy(
+            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0), EF1.squeeze(0), EF2.squeeze(0), n1, n2,
+            X_gt.squeeze(0)
+        )
 
     # call the solver
     total = 1
@@ -70,11 +76,17 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             _A1, _A2, _F1, _F2, _EF1, _EF2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2)
 
             if mode == 'lawler-qap':
-                _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_A1)
-                _conn2, _edge2, _ne2 = pygm.utils.dense_to_sparse(_A2)
-
-                _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
-                                              **aff_param_dict)
+                if batch_size > 1:
+                    _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_A1)
+                    _conn2, _edge2, _ne2 = pygm.utils.dense_to_sparse(_A2)
+                    _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
+                                                  **aff_param_dict)
+                else:
+                    _n1, _n2 = _n1.item(), _n2.item()
+                    _conn1, _edge1 = pygm.utils.dense_to_sparse(_A1)
+                    _conn2, _edge2 = pygm.utils.dense_to_sparse(_A2)
+                    _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,
+                                                  **aff_param_dict)
                 if last_K is not None:
                     assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
                         f"Incorrect affinity matrix for {working_backend}, " \
@@ -117,15 +129,30 @@ def test_pca_gm():
         'pretrain': ['voc', 'willow', 'voc-all'],
     }, ['pytorch', 'numpy', 'jittor'])
 
+    # non-batched input
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
+        'pretrain': ['voc'],
+    }, ['pytorch', 'numpy', 'jittor'])
+
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow'],
+    }, ['pytorch', 'numpy', 'jittor'])
+
+    # non-batched input
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
+        'pretrain': ['voc'],
     }, ['pytorch', 'numpy', 'jittor'])
 
 def test_cie():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
         }, ['pytorch', 'numpy', 'jittor'])
+
+    # non-batched input
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
+        'pretrain': ['voc'],
+    }, ['pytorch', 'numpy', 'jittor'])
 
 def test_ngm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ngm, 'lawler-qap', {
@@ -134,9 +161,15 @@ def test_ngm():
         'pretrain': ['voc', 'willow'],
     }, ['pytorch', 'numpy', 'jittor'])
 
+    # non-batched input
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ngm, 'lawler-qap', {
+        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
+        'pretrain': ['voc'],
+    }, ['pytorch', 'numpy', 'jittor'])
 
 if __name__ == '__main__':
-    test_pca_gm()
-    test_ipca_gm()
-    test_cie()
+    # test_pca_gm()
+    # test_ipca_gm()
+    # test_cie()
     test_ngm()
