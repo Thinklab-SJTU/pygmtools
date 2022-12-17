@@ -103,8 +103,6 @@ def test_dataset_and_benchmark():
     dict_list.append(cub_cfg_dict)
 
     for i, dataset_name in enumerate(dataset_name_list):
-        if i < 3:
-            continue
         for set in set_list:
             for problem_type in problem_type_list:
                 filter = choice(filter_list)
