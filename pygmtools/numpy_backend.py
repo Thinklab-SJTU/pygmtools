@@ -764,14 +764,16 @@ def gamgm_real(
                 UUt = np.matmul(U_hung, U_hung.transpose())
                 cluster_weight = np.repeat(cluster_M, ns.astype('i4'), axis=0)
                 cluster_weight = np.repeat(cluster_weight, ns.astype('i4'), axis=1)
-                quad = np.linalg.multi_dot(supA, UUt * cluster_weight, supA, U_hung) * quad_weight * 2
+                quad = np.linalg.multi_dot((supA, UUt * cluster_weight, supA, U_hung)) * quad_weight * 2
                 unary = np.matmul(supW * cluster_weight, U_hung)
-                max_vals = (unary + quad).max(axis=1).values
+                max_vals = (unary + quad).max(axis=1)
                 U = U * (unary + quad > outlier_thresh)
                 if verbose:
                     print(f'hungarian #iter={i}/{max_iter} '
-                          f'unary+quad score thresh={outlier_thresh:.3f}, #>thresh={np.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]}'
-                          f' min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, median:{max_vals.median():.4f}, max:{max_vals.max():.4f}')
+                          f'unary+quad score thresh={outlier_thresh:.3f}, '
+                          f'#>thresh={np.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]} '
+                          f'min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, '
+                          f'median:{np.median(max_vals):.4f}, max:{max_vals.max():.4f}')
 
             if np.linalg.norm(np.matmul(U, U.T) - lastUUt) < converge_thresh:
                 break

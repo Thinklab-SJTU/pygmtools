@@ -749,8 +749,12 @@ def gamgm_real(
                 U = U * (unary + quad > outlier_thresh)
                 if verbose:
                     print(f'hungarian #iter={i}/{max_iter} '
-                          f'unary+quad score thresh={outlier_thresh:.3f}, #>thresh={paddle.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]}'
-                          f' min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, median:{max_vals.median():.4f}, max:{max_vals.max():.4f}')
+                          f'unary+quad score thresh={outlier_thresh:.3f}, '
+                          f'#>thresh={paddle.sum(max_vals > outlier_thresh).numpy().squeeze()}/{max_vals.shape[0]} '
+                          f'min:{max_vals.min().numpy().squeeze():.4f}, '
+                          f'mean:{max_vals.mean().numpy().squeeze():.4f}, '
+                          f'median:{max_vals.median().numpy().squeeze():.4f}, '
+                          f'max:{max_vals.max().numpy().squeeze():.4f}')
 
             if paddle.linalg.norm(paddle.mm(U, U.t()) - lastUUt) < converge_thresh:
                 break

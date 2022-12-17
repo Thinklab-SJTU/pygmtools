@@ -186,13 +186,13 @@ def test_gamgm():
     num_nodes = 5
     num_graphs = 10
     # test without outliers
-    _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
-            'sk_init_tau': [0.5, 0.1],
-            'sk_min_tau': [0.1, 0.05],
-            'param_lambda': [0.1, 0.5],
-            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
-            'verbose': [True]
-        }, ['pytorch', 'numpy', 'paddle', 'jittor'])
+    # _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
+    #         'sk_init_tau': [0.5, 0.1],
+    #         'sk_min_tau': [0.1, 0.05],
+    #         'param_lambda': [0.1, 0.5],
+    #         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
+    #         'verbose': [True]
+    #     }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
     # test with outliers
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
@@ -203,6 +203,7 @@ def test_gamgm():
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
             'verbose': [True],
             'n_univ': [10],
+            'outlier_thresh': [0., 0.1],
             'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes-1] * (num_graphs - num_graphs // 2))],
         }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
@@ -269,7 +270,7 @@ def test_gamgm_backward():
 
 
 if __name__ == '__main__':
-    test_gamgm_backward()
+    #test_gamgm_backward()
     test_gamgm()
     test_mgm_floyd()
     test_cao()
