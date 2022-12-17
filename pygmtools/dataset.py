@@ -998,6 +998,7 @@ class IMC_PT_SparseGM:
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
+        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B'
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
                 MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
@@ -1007,17 +1008,20 @@ class IMC_PT_SparseGM:
                 ROOT_DIR_NPZ = ds_dict['ROOT_DIR_NPZ']
             if 'ROOT_DIR_IMG' in ds_dict.keys():
                 ROOT_DIR_IMG = ds_dict['ROOT_DIR_IMG']
+            if 'URL' in ds_dict.keys():
+                URL = ds_dict['URL']
 
         self.dataset_dir = 'data/IMC-PT-SparseGM'
         if not os.path.exists(ROOT_DIR_IMG):
             assert ROOT_DIR_IMG == dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG, 'you should not change ROOT_DIR_IMG or ROOT_DIR_NPZ unless the data have been manually downloaded'
             assert ROOT_DIR_NPZ == dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ, 'you should not change ROOT_DIR_IMG or ROOT_DIR_NPZ unless the data have been manually downloaded'
-            self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B')
+            self.download(url=URL)
 
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
         self.sets = sets
         self.classes = CLASSES[sets]
+        self.class_dict = CLASSES
         self.max_kpt_num = MAX_KPT_NUM
         self.suffix = 'imcpt-' + str(MAX_KPT_NUM)
 
@@ -1081,9 +1085,9 @@ class IMC_PT_SparseGM:
 
         if not os.path.exists(img_file):
             total_cls = []
-            for cls in dataset_cfg.IMC_PT_SparseGM.CLASSES['train']:
+            for cls in self.class_dict['train']:
                 total_cls.append(cls)
-            for cls in dataset_cfg.IMC_PT_SparseGM.CLASSES['test']:
+            for cls in self.class_dict['test']:
                 total_cls.append(cls)
 
             total_img_lists = [np.load(self.root_path_npz / cls / 'img_info.npz')['img_name'].tolist()
@@ -1163,9 +1167,12 @@ class CUB2011:
     def __init__(self, sets, obj_resize, **ds_dict):
         CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
         ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
+        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'
         if len(ds_dict.keys()) > 0:
             if 'ROOT_DIR' in ds_dict.keys():
                 ROOT_DIR = ds_dict['ROOT_DIR']
+            if 'URL' in ds_dict.keys():
+                URL = ds_dict['URL']
 
         self.set_data = {'train': [], 'test': []}
         self.classes = []
@@ -1180,7 +1187,7 @@ class CUB2011:
         self.dataset_dir = 'data/CUB_200_2011'
         if not os.path.exists(ROOT_DIR):
             assert ROOT_DIR == dataset_cfg.CUB2011.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
-            self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45')
+            self.download(url=URL)
 
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
