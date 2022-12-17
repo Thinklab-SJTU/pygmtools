@@ -620,23 +620,23 @@ class WillowObject:
         if self.sets == 'train':
             for x in range(len(self.mat_list)):
                 for name in self.mat_list[x]:
-                    tmp = str(name).split('/')
+                    tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
                     train_list.append(objID)
             for x in range(len(mat_list_)):
                 for name in mat_list_[x]:
-                    tmp = str(name).split('/')
+                    tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
                     test_list.append(objID)
         else:
             for x in range(len(self.mat_list)):
                 for name in self.mat_list[x]:
-                    tmp = str(name).split('/')
+                    tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
                     test_list.append(objID)
             for x in range(len(mat_list_)):
                 for name in mat_list_[x]:
-                    tmp = str(name).split('/')
+                    tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
                     train_list.append(objID)
         str1 = json.dumps(train_list)
@@ -653,7 +653,7 @@ class WillowObject:
 
             for x in range(len(data_list)):
                 for name in data_list[x]:
-                    tmp = str(name).split('/')
+                    tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
                     cls = tmp[3]
                     annotations = self.__get_anno_dict(name, cls)
@@ -864,7 +864,7 @@ class SPair71k:
 
             for x in range(len(data_list)):
                 for name in data_list[x]:
-                    tmp = str(name).split('/')
+                    tmp = os.path.split(str(name))
                     objID = tmp[-1].split('.')[0]
                     cls = tmp[3]
                     annotations = self.__get_anno_dict(name, cls)
