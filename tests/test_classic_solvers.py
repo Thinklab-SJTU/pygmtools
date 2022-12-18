@@ -142,14 +142,16 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
         F1, F2, X_gt = (pygm.utils.build_batch(_) for _ in (F1, F2, X_gt))
         if batch_size > 1:
             F1, F2, n1, n2, X_gt = data_to_numpy(F1, F2, n1, n2, X_gt)
+            if unmatch:
+                unmatch1, unmatch2 = (pygm.utils.build_batch(_) for _ in (unmatch1, unmatch2))
+                unmatch1, unmatch2 = data_to_numpy(unmatch1, unmatch2)
         else:
             F1, F2, n1, n2, X_gt = data_to_numpy(
                 F1.squeeze(0), F2.squeeze(0), n1, n2, X_gt.squeeze(0)
             )
-
-        if unmatch:
-            unmatch1, unmatch2 = (pygm.utils.build_batch(_) for _ in (unmatch1, unmatch2))
-            unmatch1, unmatch2 = data_to_numpy(unmatch1, unmatch2)
+            if unmatch:
+                unmatch1, unmatch2 = (pygm.utils.build_batch(_) for _ in (unmatch1, unmatch2))
+                unmatch1, unmatch2 = data_to_numpy(unmatch1.squeeze(0), unmatch2.squeeze(0))
 
         last_X = None
         for working_backend in backends:
@@ -200,7 +202,7 @@ def test_hungarian():
     # non-batched input
     _test_classic_solver_on_linear_assignment([10], [30], 10, pygm.hungarian, {
         'nproc': [1],
-        'outlier_num': [0]
+        'outlier_num': [0, 5]
     }, ['pytorch', 'numpy', 'paddle' ,'jittor','tensorflow'])
 
 
@@ -245,6 +247,7 @@ def test_sinkhorn():
         'max_iter': [500],
         'batched_operation': [True],
         'dummy_row': [True],
+        'outlier_num': [0, 5]
     }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
 
     _test_classic_solver_on_linear_assignment(*args1)

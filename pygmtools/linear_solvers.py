@@ -647,7 +647,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
             unmatch1 = _unsqueeze(unmatch1, 0, backend)
             unmatch2 = _unsqueeze(unmatch2, 0, backend)
         if not _check_shape(unmatch1, 2, backend) or not _check_shape(unmatch2, 2, backend):
-            raise ValueError(f'the input argument unmatch1 and unmatch2 are illegal. They should be 2-dim'
+            raise ValueError(f'the input arguments unmatch1 and unmatch2 are illegal. They should be 2-dim'
                              f'for batched input, and 1-dim for non-batched input.')
         if not all((_get_shape(unmatch1, backend)[1] == _get_shape(s, backend)[1],
                     _get_shape(unmatch2, backend)[1] == _get_shape(s, backend)[2],
@@ -1141,7 +1141,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
             unmatch1 = _unsqueeze(unmatch1, 0, backend)
             unmatch2 = _unsqueeze(unmatch2, 0, backend)
         if not _check_shape(unmatch1, 2, backend) or not _check_shape(unmatch2, 2, backend):
-            raise ValueError(f'the input argument unmatch1 and unmatch2 are illegal. They should be 2-dim'
+            raise ValueError(f'the input arguments unmatch1 and unmatch2 are illegal. They should be 2-dim'
                              f'for batched input, and 1-dim for non-batched input.')
         if not all((_get_shape(unmatch1, backend)[1] == _get_shape(s, backend)[1],
                     _get_shape(unmatch2, backend)[1] == _get_shape(s, backend)[2],

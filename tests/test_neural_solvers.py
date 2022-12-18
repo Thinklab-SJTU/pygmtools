@@ -74,6 +74,8 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
         for working_backend in backends:
             pygm.BACKEND = working_backend
             _A1, _A2, _F1, _F2, _EF1, _EF2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2)
+            if batch_size == 1:
+                _n1, _n2 = _n1.item(), _n2.item()
 
             if mode == 'lawler-qap':
                 if batch_size > 1:
@@ -82,7 +84,6 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                     _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
                                                   **aff_param_dict)
                 else:
-                    _n1, _n2 = _n1.item(), _n2.item()
                     _conn1, _edge1 = pygm.utils.dense_to_sparse(_A1)
                     _conn2, _edge2 = pygm.utils.dense_to_sparse(_A2)
                     _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,
@@ -112,6 +113,9 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                 f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                 f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
+            if 'pretrain' in solver_param_dict and solver_param_dict['pretrain'] is None:
+                _X1 = pygm.hungarian(_X1, _n1, _n2)
+
             if last_X is not None:
                 assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 5e-3, \
                     f"Incorrect GM solution for {working_backend}, " \
@@ -124,6 +128,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                                   f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                                   f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
+
 def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
@@ -133,6 +138,13 @@ def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc'],
     }, ['pytorch', 'numpy', 'jittor'])
+
+    # test more layers
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
+        'num_layers': [3],
+        'pretrain': [None],
+    }, ['pytorch', 'numpy', 'jittor'])
+
 
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
@@ -144,6 +156,13 @@ def test_ipca_gm():
         'pretrain': ['voc'],
     }, ['pytorch', 'numpy', 'jittor'])
 
+    # test more layers
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
+        'num_layers': [3],
+        'pretrain': [None],
+    }, ['pytorch', 'numpy', 'jittor'])
+
+
 def test_cie():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
@@ -152,6 +171,12 @@ def test_cie():
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
         'pretrain': ['voc'],
+    }, ['pytorch', 'numpy', 'jittor'])
+
+    # test more layers
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
+        'num_layers': [3],
+        'pretrain': [None],
     }, ['pytorch', 'numpy', 'jittor'])
 
 def test_ngm():
@@ -168,8 +193,9 @@ def test_ngm():
         'pretrain': ['voc'],
     }, ['pytorch', 'numpy', 'jittor'])
 
+
 if __name__ == '__main__':
-    # test_pca_gm()
-    # test_ipca_gm()
-    # test_cie()
+    test_pca_gm()
+    test_ipca_gm()
+    test_cie()
     test_ngm()

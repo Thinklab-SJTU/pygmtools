@@ -203,6 +203,7 @@ def test_gamgm():
             'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
             'verbose': [True],
             'n_univ': [10],
+            'outlier_thresh': [0., 0.1],
             'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes-1] * (num_graphs - num_graphs // 2))],
         }, ['pytorch', 'numpy', 'paddle', 'jittor'])
 
