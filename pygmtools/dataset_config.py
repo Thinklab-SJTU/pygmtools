@@ -35,7 +35,7 @@ __C.WillowObject.RAND_OUTLIER = 0
 # CUB2011 dataset
 __C.CUB2011 = edict()
 __C.CUB2011.ROOT_DIR = 'data/CUB_200_2011'
-__C.CUB2011.CLASS_SPLIT = 'ori' # choose from 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class), only support 'ori'
+__C.CUB2011.CLASS_SPLIT = 'ori' # choose from 'ori' (original split), 'sup' (super class) or 'all' (all birds as one class)
 
 # SWPair-71 Dataset
 __C.SPair = edict()
