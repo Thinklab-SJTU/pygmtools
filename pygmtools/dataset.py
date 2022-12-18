@@ -1225,37 +1225,6 @@ class CUB2011:
                         test_set.append(img_idx)
                 self.set_data['train'].append(train_set)
                 self.set_data['test'].append(test_set)
-        # elif self.cls_split == 'sup':
-        #     super_classes = [v.split('_')[-1] for v in classes.values()]
-        #     self.classes = list(set(super_classes))
-        #     for cls in self.classes:
-        #         self.set_data['train'].append([])
-        #         self.set_data['test'].append([])
-        #     for class_idx in sorted(classes):
-        #         supcls_idx = self.classes.index(classes[class_idx].split('_')[-1])
-        #         train_set = []
-        #         test_set = []
-        #         for img_idx in class2img[class_idx]:
-        #             if train_split[img_idx] == '1':
-        #                 train_set.append(img_idx)
-        #             else:
-        #                 test_set.append(img_idx)
-        #         self.set_data['train'][supcls_idx] += train_set
-        #         self.set_data['test'][supcls_idx] += test_set
-        # elif self.cls_split == 'all':
-        #     self.classes.append('cub2011')
-        #     self.set_data['train'].append([])
-        #     self.set_data['test'].append([])
-        #     for class_idx in sorted(classes):
-        #         train_set = []
-        #         test_set = []
-        #         for img_idx in class2img[class_idx]:
-        #             if train_split[img_idx] == '1':
-        #                 train_set.append(img_idx)
-        #             else:
-        #                 test_set.append(img_idx)
-        #         self.set_data['train'][0] += train_set
-        #         self.set_data['test'][0] += test_set
         self.sets = sets
         self.obj_resize = obj_resize
 
