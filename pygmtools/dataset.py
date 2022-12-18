@@ -465,7 +465,6 @@ class WillowObject:
         SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
         TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
         RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
-        URL = 'http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip'
         if len(ds_dict.keys()) > 0:
             if 'CLASSES' in ds_dict.keys():
                 CLASSES = ds_dict['CLASSES']
@@ -479,13 +478,11 @@ class WillowObject:
                 TRAIN_SAME_AS_TEST = ds_dict['TRAIN_SAME_AS_TEST']
             if 'RAND_OUTLIER' in ds_dict.keys():
                 RAND_OUTLIER = ds_dict['RAND_OUTLIER']
-            if 'URL' in ds_dict.keys():
-                URL = ds_dict['URL']
 
         self.dataset_dir = 'data/WillowObject'
         if not os.path.exists(ROOT_DIR):
             assert ROOT_DIR == dataset_cfg.WillowObject.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
-            self.download(url=URL)
+            self.download(url='http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip')
 
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
@@ -623,23 +620,23 @@ class WillowObject:
         if self.sets == 'train':
             for x in range(len(self.mat_list)):
                 for name in self.mat_list[x]:
-                    tmp = os.path.split(str(name))
+                    tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
                     train_list.append(objID)
             for x in range(len(mat_list_)):
                 for name in mat_list_[x]:
-                    tmp = os.path.split(str(name))
+                    tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
                     test_list.append(objID)
         else:
             for x in range(len(self.mat_list)):
                 for name in self.mat_list[x]:
-                    tmp = os.path.split(str(name))
+                    tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
                     test_list.append(objID)
             for x in range(len(mat_list_)):
                 for name in mat_list_[x]:
-                    tmp = os.path.split(str(name))
+                    tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
                     train_list.append(objID)
         str1 = json.dumps(train_list)
@@ -656,9 +653,9 @@ class WillowObject:
 
             for x in range(len(data_list)):
                 for name in data_list[x]:
-                    tmp = os.path.split(str(name))
+                    tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
-                    cls = os.path.split(tmp[0])[-1]
+                    cls = tmp[3]
                     annotations = self.__get_anno_dict(name, cls)
                     data_dict[objID] = annotations
 
@@ -867,9 +864,9 @@ class SPair71k:
 
             for x in range(len(data_list)):
                 for name in data_list[x]:
-                    tmp = os.path.split(str(name))
+                    tmp = str(name).split('/')
                     objID = tmp[-1].split('.')[0]
-                    cls = os.path.split(tmp[0])[-1]
+                    cls = tmp[3]
                     annotations = self.__get_anno_dict(name, cls)
                     ID = objID + '_' + cls
                     data_dict[ID] = annotations
@@ -1001,7 +998,6 @@ class IMC_PT_SparseGM:
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B'
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
                 MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
@@ -1011,20 +1007,17 @@ class IMC_PT_SparseGM:
                 ROOT_DIR_NPZ = ds_dict['ROOT_DIR_NPZ']
             if 'ROOT_DIR_IMG' in ds_dict.keys():
                 ROOT_DIR_IMG = ds_dict['ROOT_DIR_IMG']
-            if 'URL' in ds_dict.keys():
-                URL = ds_dict['URL']
 
         self.dataset_dir = 'data/IMC-PT-SparseGM'
         if not os.path.exists(ROOT_DIR_IMG):
             assert ROOT_DIR_IMG == dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG, 'you should not change ROOT_DIR_IMG or ROOT_DIR_NPZ unless the data have been manually downloaded'
             assert ROOT_DIR_NPZ == dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ, 'you should not change ROOT_DIR_IMG or ROOT_DIR_NPZ unless the data have been manually downloaded'
-            self.download(url=URL)
+            self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B')
 
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
         self.sets = sets
         self.classes = CLASSES[sets]
-        self.class_dict = CLASSES
         self.max_kpt_num = MAX_KPT_NUM
         self.suffix = 'imcpt-' + str(MAX_KPT_NUM)
 
@@ -1088,9 +1081,9 @@ class IMC_PT_SparseGM:
 
         if not os.path.exists(img_file):
             total_cls = []
-            for cls in self.class_dict['train']:
+            for cls in dataset_cfg.IMC_PT_SparseGM.CLASSES['train']:
                 total_cls.append(cls)
-            for cls in self.class_dict['test']:
+            for cls in dataset_cfg.IMC_PT_SparseGM.CLASSES['test']:
                 total_cls.append(cls)
 
             total_img_lists = [np.load(self.root_path_npz / cls / 'img_info.npz')['img_name'].tolist()
@@ -1163,19 +1156,20 @@ class CUB2011:
 
     :param sets: str, problem set, ``'train'`` for training set and ``'test'`` for testing set
     :param obj_resize: tuple, resized image size
-    :param ds_dict: settings of dataset, containing at most 1 params(key) for CUB2011:
+    :param ds_dict: settings of dataset, containing at most 2 params(keys) for CUB2011:
 
         * **ROOT_DIR**: str, directory of data
+
+        * **CLS_SPLIT**: str, ``'ori'`` (original split), ``'sup'`` (super class) or ``'all'`` (all birds as one class)
     """
     def __init__(self, sets, obj_resize, **ds_dict):
         CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
         ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
-        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'
         if len(ds_dict.keys()) > 0:
+            if 'CLS_SPLIT' in ds_dict.keys():
+                CLS_SPLIT = ds_dict['CLS_SPLIT']
             if 'ROOT_DIR' in ds_dict.keys():
                 ROOT_DIR = ds_dict['ROOT_DIR']
-            if 'URL' in ds_dict.keys():
-                URL = ds_dict['URL']
 
         self.set_data = {'train': [], 'test': []}
         self.classes = []
@@ -1183,14 +1177,14 @@ class CUB2011:
         self._set_pairs = {}
         self._set_mask = {}
         self.cls_split = CLS_SPLIT
-        self.suffix = 'cub2011'
+        self.suffix = 'cub2011-' + CLS_SPLIT
 
         self.rootpath = ROOT_DIR
 
         self.dataset_dir = 'data/CUB_200_2011'
         if not os.path.exists(ROOT_DIR):
             assert ROOT_DIR == dataset_cfg.CUB2011.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
-            self.download(url=URL)
+            self.download(url='https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45')
 
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
@@ -1225,12 +1219,45 @@ class CUB2011:
                         test_set.append(img_idx)
                 self.set_data['train'].append(train_set)
                 self.set_data['test'].append(test_set)
+        elif self.cls_split == 'sup':
+            super_classes = [v.split('_')[-1] for v in classes.values()]
+            self.classes = list(set(super_classes))
+            for cls in self.classes:
+                self.set_data['train'].append([])
+                self.set_data['test'].append([])
+            for class_idx in sorted(classes):
+                supcls_idx = self.classes.index(classes[class_idx].split('_')[-1])
+                train_set = []
+                test_set = []
+                for img_idx in class2img[class_idx]:
+                    if train_split[img_idx] == '1':
+                        train_set.append(img_idx)
+                    else:
+                        test_set.append(img_idx)
+                self.set_data['train'][supcls_idx] += train_set
+                self.set_data['test'][supcls_idx] += test_set
+        elif self.cls_split == 'all':
+            self.classes.append('cub2011')
+            self.set_data['train'].append([])
+            self.set_data['test'].append([])
+            for class_idx in sorted(classes):
+                train_set = []
+                test_set = []
+                for img_idx in class2img[class_idx]:
+                    if train_split[img_idx] == '1':
+                        train_set.append(img_idx)
+                    else:
+                        test_set.append(img_idx)
+                self.set_data['train'][0] += train_set
+                self.set_data['test'][0] += test_set
+        else:
+            raise ValueError('Unknown CUB2011.CLASS_SPLIT {}'.format(self.cls_split))
         self.sets = sets
         self.obj_resize = obj_resize
 
         self.process()
 
-    def download(self, url=None, retries=50):
+    def download(self, url=None, retries=10):
         r"""
          Automatically download CUB2011 dataset.
 
