@@ -431,7 +431,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         idx = paddle.argmax(score_combo, axis=-1)
         score_combo = paddle.max(score_combo, axis=-1)
 
-        # assert paddle.all(score_combo >= score_ori), paddle.min(score_combo - score_ori)
+        assert paddle.all(score_combo + 1e-4 >= score_ori), paddle.min(score_combo - score_ori)
         X_upt = X_combo[mask1, mask2, idx]
         X = X_upt * X_mask + X_upt.transpose((1, 0, 3, 2))* X_mask.transpose((1, 0, 2, 3)) + X * (1 - X_mask - X_mask.transpose((1, 0, 2, 3)))
         assert paddle.all(X.transpose((1, 0, 3, 2)) == X)
@@ -749,8 +749,12 @@ def gamgm_real(
                 U = U * (unary + quad > outlier_thresh)
                 if verbose:
                     print(f'hungarian #iter={i}/{max_iter} '
-                          f'unary+quad score thresh={outlier_thresh:.3f}, #>thresh={paddle.sum(max_vals > outlier_thresh)}/{max_vals.shape[0]}'
-                          f' min:{max_vals.min():.4f}, mean:{max_vals.mean():.4f}, median:{max_vals.median():.4f}, max:{max_vals.max():.4f}')
+                          f'unary+quad score thresh={outlier_thresh:.3f}, '
+                          f'#>thresh={paddle.sum(max_vals > outlier_thresh).numpy().squeeze()}/{max_vals.shape[0]} '
+                          f'min:{max_vals.min().numpy().squeeze():.4f}, '
+                          f'mean:{max_vals.mean().numpy().squeeze():.4f}, '
+                          f'median:{max_vals.median().numpy().squeeze():.4f}, '
+                          f'max:{max_vals.max().numpy().squeeze():.4f}')
 
             if paddle.linalg.norm(paddle.mm(U, U.t()) - lastUUt) < converge_thresh:
                 break

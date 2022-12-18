@@ -76,7 +76,7 @@ class Benchmark:
 
         :param ids: list of image ID, usually in ``train.json`` or ``test.json``
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
-        :param shuffle: bool, whether to shuffle the order of keypoints; valid only when the class param ``sets`` is ``'train'``
+        :param shuffle: bool, whether to shuffle the order of keypoints
         :return:
                     **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
@@ -103,7 +103,7 @@ class Benchmark:
             obj_dict['kpts'] = self.data_dict[keys]['kpts']
             obj_dict['cls'] = self.data_dict[keys]['cls']
             obj_dict['univ_size'] = self.data_dict[keys]['univ_size']
-            if shuffle and self.sets != 'test':
+            if shuffle:
                 random.shuffle(obj_dict['kpts'])
             data_list.append(obj_dict)
 
@@ -197,7 +197,7 @@ class Benchmark:
         :param cls: int or str, class of expected data. None for random class
         :param num: int, number of images; for example, 2 for 2GM
         :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
-        :param shuffle: bool, whether to shuffle the order of keypoints; valid only when the class param ``sets`` is ``'train'``
+        :param shuffle: bool, whether to shuffle the order of keypoints
         :return:
                     **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
 
@@ -365,14 +365,24 @@ class Benchmark:
 
         return num_list
 
-    def eval(self, prediction, classes, verbose=False):
+    def eval(self, prediction, classes, verbose=False, rm_gt_cache=True):
         r"""
         Evaluate test results and compute matching accuracy and coverage.
 
         :param prediction: list, prediction result, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse}, ...]``
         :param classes: list of evaluated classes
         :param verbose: bool, whether to print the result
+        :param rm_gt_cache: bool, whether to remove ground truth cache
         :return: evaluation result in each class and their averages, including p, r, f1 and their standard deviation and coverage
+
+        .. note::
+            If there are duplicate data pair in ``prediction``, this function will only evaluate the first pair and
+            expect that this pair is also the first fetched pair. Therefore, it is recommended that ``prediction`` is
+            built in an ordered manner, and not shuffled.
+
+        .. note::
+            Ground truth cache is saved when data pairs are fetched, and should be removed after evaluation. Make sure
+            all data pairs are evaluated at once, i.e., ``prediction`` should contain all fetched data pairs.
         """
 
         with open(self.data_list_path) as f1:
@@ -472,6 +482,8 @@ class Benchmark:
                                                         result['mean']['recall'], result['mean']['recall_std'],
                                                         result['mean']['f1'], result['mean']['f1_std']
                                                         )))
+        if rm_gt_cache:
+            self.rm_gt_cache(last_epoch=False)
         return result
 
     def eval_cls(self, prediction, cls, verbose=False):
@@ -482,6 +494,15 @@ class Benchmark:
         :param cls: str, evaluated class
         :param verbose: bool, whether to print the result
         :return: evaluation result on the specified class, including p, r, f1 and their standard deviation and coverage
+
+        .. note::
+            If there are duplicate data pair in ``prediction``, this function will only evaluate the first pair and
+            expect that this pair is also the first fetched pair. Therefore, it is recommended that ``prediction`` is
+            built in an ordered manner, and not shuffled. Same as the function ``eval``.
+
+        .. note::
+            This function will not automatically remove ground truth cache. However, you can still mannually call the
+            class function ``rm_gt_cache`` to remove groud truth cache after evaluation.
         """
 
         with open(self.data_list_path) as f1:
@@ -547,9 +568,9 @@ class Benchmark:
 
     def rm_gt_cache(self, last_epoch=False):
         r"""
-        Remove ground truth cache. It is recommended to call this function after evaluation in each epoch.
+        Remove ground truth cache. It is recommended to call this function after evaluation.
 
-        :param last_epoch: Boolean variable, whether this epoch is last epoch; if true, the directory of cache will also be removed.
+        :param last_epoch: bool, whether this epoch is last epoch; if true, the directory of cache will also be removed, and no more data should be evaluated
         """
         if os.path.exists(self.gt_cache_path):
             shutil.rmtree(self.gt_cache_path)
