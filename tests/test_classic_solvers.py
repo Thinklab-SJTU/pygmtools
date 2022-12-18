@@ -25,7 +25,7 @@ from test_utils import *
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
-    if backends[0] != 'pytorch': backends.insert(0, 'pytorch') # force pytorch as the reference backend
+    if backends[0] != 'pytorch': backends.insert(0, 'pytorch')  # force pytorch as the reference backend
 
     batch_size = len(graph_num_nodes)
 
@@ -98,8 +98,9 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
 
 
 # The testing function for linear assignment
-def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params, backends):
-    if backends[0] != 'pytorch': backends.insert(0, 'pytorch') # force pytorch as the reference backend
+def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params,
+                                              backends):
+    if backends[0] != 'pytorch': backends.insert(0, 'pytorch')  # force pytorch as the reference backend
     batch_size = len(num_nodes1)
 
     # iterate over matrix parameters
@@ -202,7 +203,7 @@ def test_hungarian():
     _test_classic_solver_on_linear_assignment([10], [30], 10, pygm.hungarian, {
         'nproc': [1],
         'outlier_num': [0]
-    }, ['pytorch', 'numpy', 'paddle' ,'jittor','tensorflow'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 def test_sinkhorn():
@@ -246,7 +247,7 @@ def test_sinkhorn():
         'max_iter': [500],
         'batched_operation': [True],
         'dummy_row': [True],
-    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
@@ -273,7 +274,7 @@ def test_rrwm():
         'max_iter': [20],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
-    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 def test_sm():
@@ -288,7 +289,7 @@ def test_sm():
         'max_iter': [10],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
-    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 def test_ipfp():
@@ -303,7 +304,7 @@ def test_ipfp():
         'max_iter': [10],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
-    }, ['pytorch', 'numpy', 'paddle', 'jittor','tensorflow'])
+    }, ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow', 'mindspore'])
 
 
 if __name__ == '__main__':
