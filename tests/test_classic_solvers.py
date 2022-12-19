@@ -159,12 +159,23 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             _F1, _F2, _n1, _n2 = data_from_numpy(F1, F2, n1, n2)
 
             if batch_size > 1:
-                linear_sim = []
-                for b in range(batch_size):
-                    linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
-                linear_sim = pygm.utils.build_batch(linear_sim)
+                reshape_size = (batch_size, max(n2), max(n1))
             else:
-                linear_sim = pygm.utils._mm(_F1, pygm.utils._transpose(_F2, 0, 1))
+                reshape_size = (max(n2), max(n1))
+            quad_sim = pygm.utils.build_aff_mat(_F1, None, None, _F2, None, None)
+            linear_sim = pygm.utils.from_numpy(
+                np.diagonal(pygm.utils.to_numpy(quad_sim), axis1=-2, axis2=-1).
+                    reshape(reshape_size).\
+                    swapaxes(-1, -2)
+            )
+
+            # if batch_size > 1:
+            #     linear_sim = []
+            #     for b in range(batch_size):
+            #         linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
+            #     linear_sim = pygm.utils.build_batch(linear_sim)
+            # else:
+            #     linear_sim = pygm.utils._mm(_F1, pygm.utils._transpose(_F2, 0, 1))
 
             # call the solver
             if unmatch:
