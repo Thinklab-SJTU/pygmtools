@@ -9,7 +9,5 @@ torch
 tqdm
 jittor
 appdirs>=1.4.4
-mindspore
 tensorflow==2.9.3
 wget
-onednn
