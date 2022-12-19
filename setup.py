@@ -101,7 +101,7 @@ setup(
     extras_require=EXTRAS,
     include_package_data=True,
     license='Mulan PSL v2',
-    python_requires='>=3.7'
+    python_requires='>=3.7',
     classifiers=(
         'License :: OSI Approved :: Mulan Permissive Software License v2 (MulanPSL-2.0)',
         'Programming Language :: Python :: 3 :: Only',
