@@ -75,21 +75,13 @@ def test_multi_matching_result():
     num_graphs = 5
     pygm.BACKEND = 'numpy'
     As, X = pygm.utils.generate_isomorphic_graphs(num_nodes, num_graphs)
-    As_1, As_2, Fs_1, Fs_2 = [], [], [], []
-    for i in range(num_graphs):
-        for j in range(num_graphs):
-            As_1.append(pygm.utils.to_numpy(As[i]))
-            As_2.append(pygm.utils.to_numpy(As[j]))
-    As_1 = pygm.utils.from_numpy(np.stack(As_1, axis=0))
-    As_2 = pygm.utils.from_numpy(np.stack(As_2, axis=0))
-    conn1, edge1, ne1 = pygm.utils.dense_to_sparse(As_1)
-    conn2, edge2, ne2 = pygm.utils.dense_to_sparse(As_2)
-    K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, None, ne1, None, ne2)
-    K = K.reshape((num_graphs, num_graphs, num_nodes ** 2, num_nodes ** 2))
-    X = pygm.cao(K) # X is multi-matching result
+    mmX = pygm.utils.MultiMatchingResult()
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            mmX[i, j] = X[i, j]
 
     for backend in ['numpy', 'pytorch', 'paddle', 'jittor']:
-        newX = pygm.utils.from_numpy(X, backend=backend)
+        newX = pygm.utils.from_numpy(mmX, backend=backend)
         newX.__repr__()
         newX.__str__()
 

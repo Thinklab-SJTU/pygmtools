@@ -429,7 +429,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
 
         score_combo, idx = torch.max(score_combo, dim=-1)
 
-        assert torch.all(score_combo >= score_ori), torch.min(score_combo - score_ori)
+        assert torch.all(score_combo + 1e-4 >= score_ori), torch.min(score_combo - score_ori)
         X_upt = X_combo[mask1, mask2, idx, :, :]
         X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (1 - X_mask - X_mask.transpose(0, 1))
         assert torch.all(X.transpose(0, 1).transpose(2, 3) == X)
@@ -1104,11 +1104,11 @@ class NGM_Net(torch.nn.Module):
             if i == 0:
                 gnn_layer = NGMConvLayer(1, 1,
                                          gnn_channels[i] + sk_emb, gnn_channels[i],
-                                         sk_channel=sk_emb, edge_emb=False)
+                                         sk_channel=sk_emb)
             else:
                 gnn_layer = NGMConvLayer(gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
                                          gnn_channels[i] + sk_emb, gnn_channels[i],
-                                         sk_channel=sk_emb, edge_emb=False)
+                                         sk_channel=sk_emb)
             self.add_module('gnn_layer_{}'.format(i), gnn_layer)
         self.classifier = nn.Linear(gnn_channels[-1] + sk_emb, 1)
 

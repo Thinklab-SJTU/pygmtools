@@ -15,7 +15,9 @@ existing deep learning pipeline (either supervised, unsupervised or reinforcemen
 
 import importlib
 import pygmtools
-from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
+import numpy as np
+from pygmtools.utils import NOT_IMPLEMENTED_MSG, from_numpy, \
+    _check_shape, _get_shape, _unsqueeze, _squeeze, _check_data_type
 from pygmtools.classic_solvers import __check_gm_arguments
 
 
@@ -239,6 +241,8 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
         if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
             feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
+            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
             non_batched_input = False
@@ -255,6 +259,8 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
             raise ValueError(
                 f'the input dimensions do not match. Got feat1:{_get_shape(feat1, backend)}, '
                 f'feat2:{_get_shape(feat2, backend)}, A1:{_get_shape(A1, backend)}, A2:{_get_shape(A2, backend)}!')
+    if n1 is not None: _check_data_type(n1, 'n1', backend)
+    if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (feat1, feat2, A1, A2, n1, n2, in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
            network, pretrain)
@@ -500,6 +506,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
         if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
             feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
+            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
             non_batched_input = False
@@ -516,6 +524,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
             raise ValueError(
                 f'the input dimensions do not match. Got feat1:{_get_shape(feat1, backend)}, '
                 f'feat2:{_get_shape(feat2, backend)}, A1:{_get_shape(A1, backend)}, A2:{_get_shape(A2, backend)}!')
+    if n1 is not None: _check_data_type(n1, 'n1', backend)
+    if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (feat1, feat2, A1, A2, n1, n2, in_channel, hidden_channel, out_channel, num_layers, cross_iter,
             sk_max_iter, sk_tau, network, pretrain)
@@ -774,6 +784,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
                 and all([_check_shape(_, 3, backend) for _ in (feat_edge1, feat_edge2)]):
             feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2 =\
                 [_unsqueeze(_, 0, backend) for _ in (feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2)]
+            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat_node1, feat_node2, A1, A2)]) \
                 and all([_check_shape(_, 4, backend) for _ in (feat_edge1, feat_edge2)]):
@@ -798,6 +810,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
                 f'the input dimensions do not match. Got feat_node1:{_get_shape(feat_node1, backend)}, '
                 f'feat_node2:{_get_shape(feat_node2, backend)}, A1:{_get_shape(A1, backend)}, A2:{_get_shape(A2, backend)},'
                 f'feat_edge1:{_get_shape(feat_edge1, backend)}, feat_edge2:{_get_shape(feat_edge2, backend)}!')
+    if n1 is not None: _check_data_type(n1, 'n1', backend)
+    if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
             in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers,
