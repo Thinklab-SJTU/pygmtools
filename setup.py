@@ -100,14 +100,16 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
-    license='GPL',
+    license='Mulan PSL v2',
+    python_requires='>=3.7',
     classifiers=(
-        'License :: OSI Approved :: GNU General Public License (GPL)',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'License :: OSI Approved :: Mulan Permissive Software License v2 (MulanPSL-2.0)',
+        'Programming Language :: Python :: 3 :: Only',
         'Operating System :: OS Independent',
+        'Environment :: GPU :: NVIDIA CUDA',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Image Recognition',
+        'Topic :: Scientific/Engineering :: Mathematics',
     ),
     # $ setup.py publish support.
     cmdclass={
