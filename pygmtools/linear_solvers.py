@@ -804,11 +804,11 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
             array([ 1.86755896,  0.90604466, -0.86122569,  1.91006495, -0.26800337])
             >>> x = pygm.hungarian(s_2d, unmatch1=unmatch1, unmatch2=unmatch2)
             >>> x
-            array([[0., 0., 0., 0., 1.],
-                   [1., 0., 0., 0., 0.],
-                   [0., 1., 0., 0., 0.],
+            array([[0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 1.],
                    [0., 0., 1., 0., 0.],
-                   [0., 0., 0., 1., 0.]])
+                   [0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0.]])
 
     .. dropdown:: Pytorch Example
 

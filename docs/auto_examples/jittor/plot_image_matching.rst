@@ -335,8 +335,8 @@ Up-sample the features to the original image size
 
 .. code-block:: default
 
-    feat1_upsample = jt.nn.interpolate(feat1, obj_resize, mode='bilinear')
-    feat2_upsample = jt.nn.interpolate(feat2, obj_resize, mode='bilinear')
+    feat1_upsample = jt.nn.interpolate(feat1, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_upsample = jt.nn.interpolate(feat2, (obj_resize[1], obj_resize[0]), mode='bilinear')
 
 
 
@@ -369,11 +369,11 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     plt.subplot(1, 2, 1)
     plt.title('Image 1 with CNN features')
     plot_image_with_graph(img1, kpts1, A1)
-    plt.imshow(feat1_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+    plt.imshow(feat1_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
     plt.subplot(1, 2, 2)
     plt.title('Image 2 with CNN features')
     plot_image_with_graph(img2, kpts2, A2)
-    plt.imshow(feat2_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+    plt.imshow(feat2_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 
 
 
@@ -393,7 +393,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
-    <matplotlib.image.AxesImage object at 0x7f0f43801df0>
+    <matplotlib.image.AxesImage object at 0x7fb123a2f160>
 
 
 
@@ -480,7 +480,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0f431445b0>
+    <matplotlib.image.AxesImage object at 0x7fb1239948e0>
 
 
 
@@ -770,7 +770,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  26.585 seconds)
+   **Total running time of the script:** ( 3 minutes  4.371 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_image_matching.py:

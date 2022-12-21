@@ -174,10 +174,10 @@ feat2_global = l2norm(feat2_global)
 ##############################################################################
 # Up-sample the features to the original image size and concatenate
 #
-feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
 feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
 feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
 num_features = feat1_upsample.shape[1]
@@ -200,11 +200,11 @@ plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
 plt.title('Image 1 with CNN features')
 plot_image_with_graph(img1, kpts1, A1)
-plt.imshow(feat1_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+plt.imshow(feat1_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 plt.subplot(1, 2, 2)
 plt.title('Image 2 with CNN features')
 plot_image_with_graph(img2, kpts2, A2)
-plt.imshow(feat2_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+plt.imshow(feat2_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 
 ##############################################################################
 # Extract node features by nearest interpolation
@@ -266,10 +266,10 @@ feat2_global = l2norm(feat2_global)
 ##############################################################################
 # Up-sample the features to the original image size and concatenate
 #
-feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
 feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
 feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
 num_features = feat1_upsample.shape[1]
@@ -338,10 +338,10 @@ feat2_global = l2norm(feat2_global)
 ##############################################################################
 # Up-sample the features to the original image size and concatenate
 #
-feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
 feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
 feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
 num_features = feat1_upsample.shape[1]
@@ -416,10 +416,10 @@ class GMNet(torch.nn.Module):
         feat2_global = l2norm(feat2_global)
 
         # upsample feature map
-        feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-        feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-        feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-        feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+        feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+        feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+        feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+        feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
         feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
         feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
 

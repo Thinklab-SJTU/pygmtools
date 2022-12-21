@@ -408,10 +408,10 @@ Up-sample the features to the original image size and concatenate
 
 .. code-block:: default
 
-    feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-    feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-    feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-    feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+    feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
     feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
     feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
     num_features = feat1_upsample.shape[1]
@@ -454,11 +454,11 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     plt.subplot(1, 2, 1)
     plt.title('Image 1 with CNN features')
     plot_image_with_graph(img1, kpts1, A1)
-    plt.imshow(feat1_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+    plt.imshow(feat1_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
     plt.subplot(1, 2, 2)
     plt.title('Image 2 with CNN features')
     plot_image_with_graph(img2, kpts2, A2)
-    plt.imshow(feat2_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+    plt.imshow(feat2_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 
 
 
@@ -474,7 +474,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa37e45da90>
+    <matplotlib.image.AxesImage object at 0x7fb13c32e3d0>
 
 
 
@@ -601,10 +601,10 @@ Up-sample the features to the original image size and concatenate
 
 .. code-block:: default
 
-    feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-    feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-    feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-    feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+    feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
     feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
     feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
     num_features = feat1_upsample.shape[1]
@@ -763,10 +763,10 @@ Up-sample the features to the original image size and concatenate
 
 .. code-block:: default
 
-    feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-    feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-    feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-    feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+    feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
     feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
     feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
     num_features = feat1_upsample.shape[1]
@@ -905,10 +905,10 @@ it will simply return the network object.
             feat2_global = l2norm(feat2_global)
 
             # upsample feature map
-            feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, obj_resize, mode='bilinear')
-            feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, obj_resize, mode='bilinear')
-            feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, obj_resize, mode='bilinear')
-            feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, obj_resize, mode='bilinear')
+            feat1_local_upsample = torch.nn.functional.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+            feat1_global_upsample = torch.nn.functional.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+            feat2_local_upsample = torch.nn.functional.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+            feat2_global_upsample = torch.nn.functional.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
             feat1_upsample = torch.cat((feat1_local_upsample, feat1_global_upsample), dim=1)
             feat2_upsample = torch.cat((feat2_local_upsample, feat2_global_upsample), dim=1)
 
@@ -1000,7 +1000,7 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 
  .. code-block:: none
 
-    loss=2.9596
+    loss=2.9670
 
 
 
@@ -1056,7 +1056,7 @@ Visualize the gradients
 
  .. code-block:: none
 
-    [0.00011885026469826698, 0.0029175719246268272, 0.00019818654982373118, 0.0036037613172084093, 0.00021891856158617884, 0.0052183521911501884, 1.175945726572536e-05, 4.616070873453282e-05, 9.408315236214548e-05, 0.003917188383638859, 0.00014256284339353442, 0.0030622207559645176, 0.0007563129183836281, 1.1303484370728256e-08, 0.0014263251796364784, 0.000757346861064434, 0.00022194866323843598, 9.276784673772909e-09, 0.002844412112608552, 0.0013247003080323339, 0.0003046258061658591, 2.1137540606730454e-09, 0.0018143582856282592, 0.0014864230761304498, 0.00026092768530361354, 3.5917517848815805e-09, 0.002576720668002963, 0.0011540320701897144, 0.00025397728313691914, 9.356735386489845e-10, 0.0021208159159868956, 0.0014119329862296581, 0.0002105934254359454, 1.241102109972303e-09, 0.0021473790984600782, 0.0013430763501673937, 0.00021807517623528838, 1.460869869518433e-09, 0.002514177467674017, 0.0012200665660202503, 0.0001858291943790391, 4.501123640476834e-10, 0.002138981595635414, 0.0012717768549919128, 0.0001381283364025876, 5.718946427535343e-10, 0.002328375354409218, 0.001395971397869289, 0.00012986588990315795, 0.000534886319655925, 0.001846906030550599, 0.0009071533568203449, 0.00010118616773979738, 2.3786964065131144e-10, 0.0018003290751948953, 0.0011303635546937585, 8.72099626576528e-05, 0.0008648032089695334]
+    [0.0001227282773470506, 0.003040335141122341, 0.0001896190515253693, 0.0034308950416743755, 0.00021543321781791747, 0.005138866603374481, 1.2598753528436646e-05, 4.578279549605213e-05, 9.522285836283118e-05, 0.004016467835754156, 0.00014070030010771006, 0.0031587285920977592, 0.0004610202740877867, 1.4639404355420993e-08, 0.0009665255201980472, 0.0006234237225726247, 0.00020113243954256177, 7.138502233772215e-09, 0.0021082924213260412, 0.0016475241864100099, 0.00027456594398245215, 2.01706651381528e-09, 0.0016008421080186963, 0.0014249632367864251, 0.00023908323782961816, 3.3148239708680194e-09, 0.002197765512391925, 0.0011695653665810823, 0.00023168331244960427, 8.486971125876153e-10, 0.0019853017292916775, 0.0012748268200084567, 0.00019266769231762737, 1.335916266498316e-09, 0.0020791292190551758, 0.001345170894637704, 0.0001976600760826841, 1.3868429737939891e-09, 0.0023205357138067484, 0.0011126245371997356, 0.00016860962205100805, 4.378821749639883e-10, 0.0018639140762388706, 0.001127779483795166, 0.00012950212112627923, 5.596142993447017e-10, 0.0021403534337878227, 0.0012846613535657525, 0.00012542786134872586, 0.0005222341860644519, 0.0018912885570898652, 0.000948647444602102, 9.727572614792734e-05, 2.2188027803959898e-10, 0.0017690283711999655, 0.0011767615796998143, 8.774998423177749e-05, 0.0009649939020164311]
 
     <StemContainer object of 3 artists>
 
@@ -1092,7 +1092,7 @@ and backward pass steps until convergence.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  57.711 seconds)
+   **Total running time of the script:** ( 3 minutes  6.731 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_deep_image_matching.py:
