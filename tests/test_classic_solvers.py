@@ -169,14 +169,6 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
                     swapaxes(-1, -2)
             )
 
-            # if batch_size > 1:
-            #     linear_sim = []
-            #     for b in range(batch_size):
-            #         linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
-            #     linear_sim = pygm.utils.build_batch(linear_sim)
-            # else:
-            #     linear_sim = pygm.utils._mm(_F1, pygm.utils._transpose(_F2, 0, 1))
-
             # call the solver
             if unmatch:
                 _unmatch1, _unmatch2 = data_from_numpy(unmatch1, unmatch2)
