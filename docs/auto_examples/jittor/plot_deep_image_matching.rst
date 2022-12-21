@@ -441,10 +441,10 @@ Up-sample the features to the original image size and concatenate
 
 .. code-block:: default
 
-    feat1_local_upsample = jt.nn.interpolate(feat1_local, obj_resize, mode='bilinear')
-    feat1_global_upsample = jt.nn.interpolate(feat1_global, obj_resize, mode='bilinear')
-    feat2_local_upsample = jt.nn.interpolate(feat2_local, obj_resize, mode='bilinear')
-    feat2_global_upsample = jt.nn.interpolate(feat2_global, obj_resize, mode='bilinear')
+    feat1_local_upsample = jt.nn.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat1_global_upsample = jt.nn.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_local_upsample = jt.nn.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_global_upsample = jt.nn.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
     feat1_upsample = jt.concat((feat1_local_upsample, feat1_global_upsample), dim=1)
     feat2_upsample = jt.concat((feat2_local_upsample, feat2_global_upsample), dim=1)
     num_features = feat1_upsample.shape[1]
@@ -480,11 +480,11 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     plt.subplot(1, 2, 1)
     plt.title('Image 1 with CNN features')
     plot_image_with_graph(img1, kpts1, A1)
-    plt.imshow(feat1_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+    plt.imshow(feat1_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
     plt.subplot(1, 2, 2)
     plt.title('Image 2 with CNN features')
     plot_image_with_graph(img2, kpts2, A2)
-    plt.imshow(feat2_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+    plt.imshow(feat2_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 
 
 
@@ -504,7 +504,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
     /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
-    <matplotlib.image.AxesImage object at 0x7f0ee3af40a0>
+    <matplotlib.image.AxesImage object at 0x7fb12011af10>
 
 
 
@@ -641,10 +641,10 @@ Up-sample the features to the original image size and concatenate
 
 .. code-block:: default
 
-    feat1_local_upsample = jt.nn.interpolate(feat1_local, obj_resize, mode='bilinear')
-    feat1_global_upsample = jt.nn.interpolate(feat1_global, obj_resize, mode='bilinear')
-    feat2_local_upsample = jt.nn.interpolate(feat2_local, obj_resize, mode='bilinear')
-    feat2_global_upsample = jt.nn.interpolate(feat2_global, obj_resize, mode='bilinear')
+    feat1_local_upsample = jt.nn.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat1_global_upsample = jt.nn.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_local_upsample = jt.nn.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_global_upsample = jt.nn.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
     feat1_upsample = jt.concat((feat1_local_upsample, feat1_global_upsample), dim=1)
     feat2_upsample = jt.concat((feat2_local_upsample, feat2_global_upsample), dim=1)
     num_features = feat1_upsample.shape[1]
@@ -805,10 +805,10 @@ Up-sample the features to the original image size and concatenate
 
 .. code-block:: default
 
-    feat1_local_upsample = jt.nn.interpolate(feat1_local, obj_resize, mode='bilinear')
-    feat1_global_upsample = jt.nn.interpolate(feat1_global, obj_resize, mode='bilinear')
-    feat2_local_upsample = jt.nn.interpolate(feat2_local, obj_resize, mode='bilinear')
-    feat2_global_upsample = jt.nn.interpolate(feat2_global, obj_resize, mode='bilinear')
+    feat1_local_upsample = jt.nn.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat1_global_upsample = jt.nn.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_local_upsample = jt.nn.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+    feat2_global_upsample = jt.nn.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
     feat1_upsample = jt.concat((feat1_local_upsample, feat1_global_upsample), dim=1)
     feat2_upsample = jt.concat((feat2_local_upsample, feat2_global_upsample), dim=1)
     num_features = feat1_upsample.shape[1]
@@ -950,10 +950,10 @@ it will simply return the network object.
             feat2_global = l2norm(feat2_global)
 
             # upsample feature map
-            feat1_local_upsample = jt.nn.interpolate(feat1_local, obj_resize, mode='bilinear')
-            feat1_global_upsample = jt.nn.interpolate(feat1_global, obj_resize, mode='bilinear')
-            feat2_local_upsample = jt.nn.interpolate(feat2_local, obj_resize, mode='bilinear')
-            feat2_global_upsample = jt.nn.interpolate(feat2_global, obj_resize, mode='bilinear')
+            feat1_local_upsample = jt.nn.interpolate(feat1_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+            feat1_global_upsample = jt.nn.interpolate(feat1_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
+            feat2_local_upsample = jt.nn.interpolate(feat2_local, (obj_resize[1], obj_resize[0]), mode='bilinear')
+            feat2_global_upsample = jt.nn.interpolate(feat2_global, (obj_resize[1], obj_resize[0]), mode='bilinear')
             feat1_upsample = jt.concat((feat1_local_upsample, feat1_global_upsample), dim=1)
             feat2_upsample = jt.concat((feat2_local_upsample, feat2_global_upsample), dim=1)
 
@@ -1038,7 +1038,7 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 
  .. code-block:: none
 
-    loss=2.9705
+    loss=2.9581
 
 
 
@@ -1094,7 +1094,7 @@ Visualize the gradients
 
  .. code-block:: none
 
-    [0.00012008137855445966, 0.0029865035321563482, 0.00018511232337914407, 0.0033753272145986557, 0.0002137543197022751, 0.005234790500253439, 9.73292117123492e-06, 4.477985203266144e-05, 9.332987247034907e-05, 0.0038247969932854176, 0.00013548837159760296, 0.002944774692878127, 0.0005545496242120862, 1.8891434194756584e-08, 0.0010682500433176756, 0.0005676004802808166, 0.0, 0.0, 0.00017916866636369377, 8.408768792378396e-09, 0.0021129779051989317, 0.0012607568642124534, 0.0, 0.0, 0.0002507281315047294, 3.2628841850623758e-09, 0.0015229436103254557, 0.0010184939019382, 0.0, 0.0, 0.00021608102542813867, 4.296822453397908e-09, 0.002223665826022625, 0.0010056477040052414, 0.0, 0.0, 0.0002108924527419731, 1.4684102822570821e-09, 0.0016412498662248254, 0.0010497840121388435, 0.0, 0.0, 0.0001778988225851208, 2.4535937726000157e-09, 0.0017658978467807174, 0.001085389405488968, 0.0, 0.0, 0.00018341925169806927, 3.0536160267047308e-09, 0.0021165432408452034, 0.001017216476611793, 0.0, 0.0, 0.0001568129227962345, 7.326517170724856e-10, 0.0017438650829717517, 0.001043159980326891, 0.0, 0.0, 0.00012114781566197053, 1.4319967434062164e-09, 0.001918911118991673, 0.001163581619039178, 0.0, 0.0, 0.00011734791769413278, 0.0005073942593298852, 0.0016806223429739475, 0.0008340583881363273, 0.0, 0.0, 8.978342521004379e-05, 4.2901138197493083e-10, 0.001494081923738122, 0.0009877857519313693, 0.0, 0.0, 8.40352731756866e-05, 0.000910142669454217]
+    [0.0001199533071485348, 0.002954673022031784, 0.0001995397760765627, 0.0035838705953210592, 0.00021476371330209076, 0.0051430100575089455, 1.056072778737871e-05, 4.610946052707732e-05, 9.389538172399625e-05, 0.003878202987834811, 0.0001400674955220893, 0.002866513794288039, 0.0005463351844809949, 2.2233997754028678e-08, 0.0012985587818548083, 0.0007555188494734466, 0.0, 0.0, 0.00021106125495862216, 9.05505892490055e-09, 0.002585197100415826, 0.0014427793212234974, 0.0, 0.0, 0.0002860959793906659, 4.1658143601353e-09, 0.001676707062870264, 0.0012680538929998875, 0.0, 0.0, 0.0002429721353109926, 4.656211416431688e-09, 0.0024633018765598536, 0.0012120225001126528, 0.0, 0.0, 0.00024018361000344157, 1.6435366401168494e-09, 0.001967686228454113, 0.0012748421868309379, 0.0, 0.0, 0.00020026101265102625, 2.7222770704327104e-09, 0.001985798357054591, 0.0013350958470255136, 0.0, 0.0, 0.00020813984156120569, 3.3714027125597568e-09, 0.0025058812461793423, 0.0011963403085246682, 0.0, 0.0, 0.0001787360815797001, 7.699645365732977e-10, 0.0020427736453711987, 0.001233900897204876, 0.0, 0.0, 0.00013476412277668715, 1.642223024234113e-09, 0.0021973922848701477, 0.0013051985297352076, 0.0, 0.0, 0.00012914356193505228, 0.0005296255694702268, 0.001851076609455049, 0.0009443209855817258, 0.0, 0.0, 9.92462009890005e-05, 4.881272608336928e-10, 0.0016755511751398444, 0.001104077324271202, 0.0, 0.0, 8.900236571207643e-05, 0.0008968470501713455]
 
     <StemContainer object of 3 artists>
 
@@ -1130,7 +1130,7 @@ and backward pass steps until convergence.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 5 minutes  36.198 seconds)
+   **Total running time of the script:** ( 5 minutes  51.633 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_deep_image_matching.py:

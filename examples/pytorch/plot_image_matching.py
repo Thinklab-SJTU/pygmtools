@@ -139,8 +139,8 @@ feat2 = l2norm(feat2)
 ##############################################################################
 # Up-sample the features to the original image size
 #
-feat1_upsample = torch.nn.functional.interpolate(feat1, obj_resize, mode='bilinear')
-feat2_upsample = torch.nn.functional.interpolate(feat2, obj_resize, mode='bilinear')
+feat1_upsample = torch.nn.functional.interpolate(feat1, (obj_resize[1], obj_resize[0]), mode='bilinear')
+feat2_upsample = torch.nn.functional.interpolate(feat2, (obj_resize[1], obj_resize[0]), mode='bilinear')
 
 ##############################################################################
 # Visualize the extracted CNN feature (dimensionality reduction via principle component analysis)
@@ -160,11 +160,11 @@ plt.figure(figsize=(8, 4))
 plt.subplot(1, 2, 1)
 plt.title('Image 1 with CNN features')
 plot_image_with_graph(img1, kpts1, A1)
-plt.imshow(feat1_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+plt.imshow(feat1_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 plt.subplot(1, 2, 2)
 plt.title('Image 2 with CNN features')
 plot_image_with_graph(img2, kpts2, A2)
-plt.imshow(feat2_dim_reduc.reshape(obj_resize[0], obj_resize[1], 3), alpha=0.5)
+plt.imshow(feat2_dim_reduc.reshape(obj_resize[1], obj_resize[0], 3), alpha=0.5)
 
 ##############################################################################
 # Extract node features by nearest interpolation
