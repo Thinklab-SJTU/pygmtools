@@ -33,6 +33,11 @@ class Benchmark:
        ``'inclusion'`` is only for 2GM and refers to filtering only one graph to make its nodes a subset of the other graph,
        and ``'unfiltered'`` refers to retaining all nodes in all graphs
     :param args: keyword settings for specific dataset
+
+    .. note::
+            Ground truth cache is saved only when the parameter ``sets`` is ``'test'``, so
+            the functions ``eval()`` and ``eval_cls()`` are only for ``'test'`` set.
+
     """
 
     def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', **args):
