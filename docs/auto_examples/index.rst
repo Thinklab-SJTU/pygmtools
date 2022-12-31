@@ -36,10 +36,10 @@ Jittor Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_isomorphic_graphs_thumb.png
+  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_isomorphic_graphs_jittor_thumb.png
     :alt: Introduction: Matching Isomorphic Graphs
 
-  :ref:`sphx_glr_auto_examples_jittor_plot_isomorphic_graphs.py`
+  :ref:`sphx_glr_auto_examples_jittor_plot_isomorphic_graphs_jittor.py`
 
 .. raw:: html
 
@@ -53,10 +53,10 @@ Jittor Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_seed_graph_match_thumb.png
+  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_seed_graph_match_jittor_thumb.png
     :alt: Seeded Graph Matching
 
-  :ref:`sphx_glr_auto_examples_jittor_plot_seed_graph_match.py`
+  :ref:`sphx_glr_auto_examples_jittor_plot_seed_graph_match_jittor.py`
 
 .. raw:: html
 
@@ -70,10 +70,10 @@ Jittor Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_subgraphs_thumb.png
+  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_subgraphs_jittor_thumb.png
     :alt: Discovering Subgraphs
 
-  :ref:`sphx_glr_auto_examples_jittor_plot_subgraphs.py`
+  :ref:`sphx_glr_auto_examples_jittor_plot_subgraphs_jittor.py`
 
 .. raw:: html
 
@@ -87,10 +87,10 @@ Jittor Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_image_matching_thumb.png
+  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_image_matching_jittor_thumb.png
     :alt: Matching Image Keypoints by QAP Solvers
 
-  :ref:`sphx_glr_auto_examples_jittor_plot_image_matching.py`
+  :ref:`sphx_glr_auto_examples_jittor_plot_image_matching_jittor.py`
 
 .. raw:: html
 
@@ -104,10 +104,10 @@ Jittor Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_deep_image_matching_thumb.png
+  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_deep_image_matching_jittor_thumb.png
     :alt: Matching Image Keypoints by Graph Matching Neural Networks
 
-  :ref:`sphx_glr_auto_examples_jittor_plot_deep_image_matching.py`
+  :ref:`sphx_glr_auto_examples_jittor_plot_deep_image_matching_jittor.py`
 
 .. raw:: html
 
@@ -121,10 +121,10 @@ Jittor Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_model_fusion_thumb.png
+  .. image:: /auto_examples/jittor/images/thumb/sphx_glr_plot_model_fusion_jittor_thumb.png
     :alt: Model Fusion by Graph Matching
 
-  :ref:`sphx_glr_auto_examples_jittor_plot_model_fusion.py`
+  :ref:`sphx_glr_auto_examples_jittor_plot_model_fusion_jittor.py`
 
 .. raw:: html
 
@@ -140,12 +140,12 @@ Jittor Backend Examples
 .. toctree::
    :hidden:
 
-   /auto_examples/jittor/plot_isomorphic_graphs
-   /auto_examples/jittor/plot_seed_graph_match
-   /auto_examples/jittor/plot_subgraphs
-   /auto_examples/jittor/plot_image_matching
-   /auto_examples/jittor/plot_deep_image_matching
-   /auto_examples/jittor/plot_model_fusion
+   /auto_examples/jittor/plot_isomorphic_graphs_jittor
+   /auto_examples/jittor/plot_seed_graph_match_jittor
+   /auto_examples/jittor/plot_subgraphs_jittor
+   /auto_examples/jittor/plot_image_matching_jittor
+   /auto_examples/jittor/plot_deep_image_matching_jittor
+   /auto_examples/jittor/plot_model_fusion_jittor
 
 Numpy Backend Examples
 -----------------------
@@ -163,10 +163,10 @@ Numpy Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_isomorphic_graphs_thumb.png
+  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_isomorphic_graphs_numpy_thumb.png
     :alt: Introduction: Matching Isomorphic Graphs
 
-  :ref:`sphx_glr_auto_examples_numpy_plot_isomorphic_graphs.py`
+  :ref:`sphx_glr_auto_examples_numpy_plot_isomorphic_graphs_numpy.py`
 
 .. raw:: html
 
@@ -180,10 +180,10 @@ Numpy Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_seed_graph_match_thumb.png
+  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_seed_graph_match_numpy_thumb.png
     :alt: Seeded Graph Matching
 
-  :ref:`sphx_glr_auto_examples_numpy_plot_seed_graph_match.py`
+  :ref:`sphx_glr_auto_examples_numpy_plot_seed_graph_match_numpy.py`
 
 .. raw:: html
 
@@ -197,10 +197,10 @@ Numpy Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_subgraphs_thumb.png
+  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_subgraphs_numpy_thumb.png
     :alt: Discovering Subgraphs
 
-  :ref:`sphx_glr_auto_examples_numpy_plot_subgraphs.py`
+  :ref:`sphx_glr_auto_examples_numpy_plot_subgraphs_numpy.py`
 
 .. raw:: html
 
@@ -214,10 +214,10 @@ Numpy Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_image_mathcing_thumb.png
+  .. image:: /auto_examples/numpy/images/thumb/sphx_glr_plot_image_matching_numpy_thumb.png
     :alt: Matching Image Keypoints by QAP Solvers
 
-  :ref:`sphx_glr_auto_examples_numpy_plot_image_mathcing.py`
+  :ref:`sphx_glr_auto_examples_numpy_plot_image_matching_numpy.py`
 
 .. raw:: html
 
@@ -233,10 +233,10 @@ Numpy Backend Examples
 .. toctree::
    :hidden:
 
-   /auto_examples/numpy/plot_isomorphic_graphs
-   /auto_examples/numpy/plot_seed_graph_match
-   /auto_examples/numpy/plot_subgraphs
-   /auto_examples/numpy/plot_image_mathcing
+   /auto_examples/numpy/plot_isomorphic_graphs_numpy
+   /auto_examples/numpy/plot_seed_graph_match_numpy
+   /auto_examples/numpy/plot_subgraphs_numpy
+   /auto_examples/numpy/plot_image_matching_numpy
 
 PyTorch Backend Examples
 -------------------------
@@ -254,10 +254,10 @@ PyTorch Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_isomorphic_graphs_thumb.png
+  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_isomorphic_graphs_pytorch_thumb.png
     :alt: Introduction: Matching Isomorphic Graphs
 
-  :ref:`sphx_glr_auto_examples_pytorch_plot_isomorphic_graphs.py`
+  :ref:`sphx_glr_auto_examples_pytorch_plot_isomorphic_graphs_pytorch.py`
 
 .. raw:: html
 
@@ -271,10 +271,10 @@ PyTorch Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_seed_graph_match_thumb.png
+  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_seed_graph_match_pytorch_thumb.png
     :alt: Seeded Graph Matching
 
-  :ref:`sphx_glr_auto_examples_pytorch_plot_seed_graph_match.py`
+  :ref:`sphx_glr_auto_examples_pytorch_plot_seed_graph_match_pytorch.py`
 
 .. raw:: html
 
@@ -288,10 +288,10 @@ PyTorch Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_subgraphs_thumb.png
+  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_subgraphs_pytorch_thumb.png
     :alt: Discovering Subgraphs
 
-  :ref:`sphx_glr_auto_examples_pytorch_plot_subgraphs.py`
+  :ref:`sphx_glr_auto_examples_pytorch_plot_subgraphs_pytorch.py`
 
 .. raw:: html
 
@@ -305,10 +305,10 @@ PyTorch Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_image_matching_thumb.png
+  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_image_matching_pytorch_thumb.png
     :alt: Matching Image Keypoints by QAP Solvers
 
-  :ref:`sphx_glr_auto_examples_pytorch_plot_image_matching.py`
+  :ref:`sphx_glr_auto_examples_pytorch_plot_image_matching_pytorch.py`
 
 .. raw:: html
 
@@ -322,10 +322,10 @@ PyTorch Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_deep_image_matching_thumb.png
+  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_deep_image_matching_pytorch_thumb.png
     :alt: Matching Image Keypoints by Graph Matching Neural Networks
 
-  :ref:`sphx_glr_auto_examples_pytorch_plot_deep_image_matching.py`
+  :ref:`sphx_glr_auto_examples_pytorch_plot_deep_image_matching_pytorch.py`
 
 .. raw:: html
 
@@ -339,10 +339,10 @@ PyTorch Backend Examples
 
 .. only:: html
 
-  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_model_fusion_thumb.png
+  .. image:: /auto_examples/pytorch/images/thumb/sphx_glr_plot_model_fusion_pytorch_thumb.png
     :alt: Model Fusion by Graph Matching
 
-  :ref:`sphx_glr_auto_examples_pytorch_plot_model_fusion.py`
+  :ref:`sphx_glr_auto_examples_pytorch_plot_model_fusion_pytorch.py`
 
 .. raw:: html
 
@@ -358,12 +358,12 @@ PyTorch Backend Examples
 .. toctree::
    :hidden:
 
-   /auto_examples/pytorch/plot_isomorphic_graphs
-   /auto_examples/pytorch/plot_seed_graph_match
-   /auto_examples/pytorch/plot_subgraphs
-   /auto_examples/pytorch/plot_image_matching
-   /auto_examples/pytorch/plot_deep_image_matching
-   /auto_examples/pytorch/plot_model_fusion
+   /auto_examples/pytorch/plot_isomorphic_graphs_pytorch
+   /auto_examples/pytorch/plot_seed_graph_match_pytorch
+   /auto_examples/pytorch/plot_subgraphs_pytorch
+   /auto_examples/pytorch/plot_image_matching_pytorch
+   /auto_examples/pytorch/plot_deep_image_matching_pytorch
+   /auto_examples/pytorch/plot_model_fusion_pytorch
 
 
 .. only:: html
