@@ -2,7 +2,7 @@ r"""
 Classic (learning-free) **two-graph matching** solvers. These two-graph matching solvers are recommended to solve
 matching problems with two explicit graphs, or problems formulated as Quadratic Assignment Problem (QAP).
 
-The two-graph matching problem considers both nodes and edges, formulated as a QAP:
+The two-graph matching problem considers both nodes and edges, formulated as a QAP (Lawler's):
 
 .. math::
 
@@ -29,7 +29,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
        max_iter: int=50,
        backend=None):
     r"""
-    Spectral Graph Matching solver for graph matching (QAP).
+    Spectral Graph Matching solver for graph matching (Lawler's QAP).
     This algorithm is also known as Power Iteration method, because it works by computing the leading
     eigenvector of the input affinity matrix by power iteration.
 
@@ -334,8 +334,8 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
          max_iter: int=50, sk_iter: int=20, alpha: float=0.2, beta: float=30,
          backend=None):
     r"""
-    Reweighted Random Walk Matching (RRWM) solver for graph matching (QAP). This algorithm is implemented by power
-    iteration with Sinkhorn reweighted jumps.
+    Reweighted Random Walk Matching (RRWM) solver for graph matching (Lawler's QAP). This algorithm is implemented by
+    power iteration with Sinkhorn reweighted jumps.
 
     The official matlab implementation is available at https://cv.snu.ac.kr/research/~RRWM/
 
@@ -646,7 +646,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
          max_iter: int=50,
          backend=None):
     r"""
-    Integer Projected Fixed Point (IPFP) method for graph matching (QAP).
+    Integer Projected Fixed Point (IPFP) method for graph matching (Lawler's QAP).
 
     :param K: :math:`(b\times n_1n_2 \times n_1n_2)` the input affinity matrix, :math:`b`: batch size.
     :param n1: :math:`(b)` number of nodes in graph1 (optional if n1max is given, and all n1=n1max).
