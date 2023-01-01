@@ -1,0 +1,13 @@
+coverage:
+  status:
+    project:
+      default:
+        # non-blocking checks
+        informational: true
+        target: auto
+        # allow a 1% drop from the previous base commit coverage (for exception handling in download)
+        threshold: 1%
+    patch:
+      default:
+        # non-blocking checks
+        informational: true
