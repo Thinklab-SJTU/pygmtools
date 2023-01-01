@@ -75,7 +75,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             pygm.BACKEND = working_backend
             _A1, _A2, _F1, _F2, _EF1, _EF2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2)
             if batch_size == 1:
-                _n1, _n2 = _n1.item(), _n2.item()
+                _n1, _n2 = None, None # _n1.item(), _n2.item()
 
             if mode == 'lawler-qap':
                 if batch_size > 1:
