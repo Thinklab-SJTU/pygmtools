@@ -1,7 +1,7 @@
 # pygmtools: Python Graph Matching Tools
 
 [![PyPi version](https://badgen.net/pypi/v/pygmtools/)](https://pypi.org/pypi/pygmtools/)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/pygmtools.svg)](https://pypi.python.org/pypi/pygmtools/)
+[![PyPI pyversions](https://img.shields.io/badge/dynamic/json?color=blue&label=python&query=info.requires_python&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fpygmtools%2Fjson)](https://pypi.python.org/pypi/pygmtools/)
 [![Downloads](https://pepy.tech/badge/pygmtools)](https://pepy.tech/project/pygmtools)
 [![Documentation Status](https://readthedocs.org/projects/pygmtools/badge/?version=latest)](https://pygmtools.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/Thinklab-SJTU/pygmtools/branch/main/graph/badge.svg?token=Q68XTY0N0C)](https://codecov.io/gh/Thinklab-SJTU/pygmtools)
