@@ -124,6 +124,14 @@ html_sidebars = {
     ]
 }
 
+# logo
+html_logo = 'images/pygmtools_white_logo.png'
+html_favicon = 'images/pygmtools_small_logo.svg'
+
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+}
 
 # -- Options for HTMLHelp output ------------------------------------------
 

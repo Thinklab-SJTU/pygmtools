@@ -1,4 +1,4 @@
-# pygmtools: Python Graph Matching Tools
+<img src="https://pygmtools.readthedocs.io/en/latest/_static/images/pygmtools_logo.svg" alt="pygmtools: Python Graph Matching Tools" width="800"/>
 
 [![PyPi version](https://badgen.net/pypi/v/pygmtools/)](https://pypi.org/pypi/pygmtools/)
 [![PyPI pyversions](https://img.shields.io/badge/dynamic/json?color=blue&label=python&query=info.requires_python&url=https%3A%2F%2Fpypi.org%2Fpypi%2Fpygmtools%2Fjson)](https://pypi.python.org/pypi/pygmtools/)
@@ -11,7 +11,7 @@
 
 -----------------------------------------
 
-``pygmtools`` provides graph matching solvers in Python and is easily accessible via:
+``pygmtools`` (Python Graph Matching Tools) provides graph matching solvers in Python and is easily accessible via:
 
 ```bash
 $ pip install pygmtools
