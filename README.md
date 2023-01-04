@@ -146,8 +146,10 @@ Available at:
 
 ## The Deep Graph Matching Benchmark
 
-``pygmtools`` is also featured with a standard data interface of several graph matching benchmarks. We also maintain a 
-repository containing non-trivial implementation of deep graph matching models, please check out
+``pygmtools`` is also featured with a standard data interface of several graph matching benchmarks. Please read 
+[the corresponding documentation](https://pygmtools.readthedocs.io/en/latest/guide/benchmark.html) for details.
+
+We also maintain a repository containing non-trivial implementation of deep graph matching models, please check out
 [ThinkMatch](https://thinkmatch.readthedocs.io/) if you are interested!
 
 ## Chat with the Community
@@ -156,11 +158,11 @@ If you have any questions, or if you are experiencing any issues, feel free to r
 
 We also offer the following chat rooms if you are more comfortable with them:
 
-* Discord (for English users): 
+* Discord (for English speakers): 
   
   [![discord](https://discordapp.com/api/guilds/1028701206526304317/widget.png?style=banner2)](https://discord.gg/8m6n7rRz9T)
 
-* QQ Group (for Chinese users)/QQ群(中文用户): 696401889
+* QQ Group (for Chinese speakers)/QQ群(中文用户): 696401889
   
   [![ThinkMatch/pygmtools交流群](http://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=NlPuwwvaFaHzEWD8w7jSOTzoqSLIM80V&jump_from=webapi&authKey=chI2htrWDujQed6VtVid3V1NXEoJvwz3MVwruax6x5lQIvLsC8BmpmzBJOCzhtQd)
 
