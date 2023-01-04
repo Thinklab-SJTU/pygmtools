@@ -1,3 +1,7 @@
+======================================
+Pygmtools: Python Graph Matching Tools
+======================================
+
 .. mdinclude:: ../README.md
 
 Contents of Official Documentation
