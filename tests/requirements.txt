@@ -10,5 +10,4 @@ tqdm
 jittor
 appdirs>=1.4.4
 tensorflow==2.9.3
-mindspore-gpu
 wget
