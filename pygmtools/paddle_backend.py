@@ -884,7 +884,7 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         device = 'cpu'
     else:
         forward_pass = True
-        device = 'cpu'
+        device = paddle.device.get_device()
     if network is None:
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
         network = network.to(device)
@@ -892,7 +892,6 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
             if pretrain in pca_gm_pretrain_path:
                 url, md5 = pca_gm_pretrain_path[pretrain]
                 filename = pygmtools.utils.download(f'pca_gm_{pretrain}_paddle.pdparam', url, md5)
-                # filename = f'models/pca_gm_{pretrain}_paddle.pdparams'
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
@@ -926,7 +925,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         device = 'cpu'
     else:
         forward_pass = True
-        device = 'cpu'
+        device = paddle.device.get_device()
     if network is None:
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
         network = network.to(device)
@@ -934,7 +933,6 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
             if pretrain in ipca_gm_pretrain_path:
                 url, md5 = ipca_gm_pretrain_path[pretrain]
                 filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_paddle.pdparam', url, md5)
-                # filename = f'models/ipca_gm_{pretrain}_paddle.pdparams'
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
@@ -1013,7 +1011,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         device = 'cpu'
     else:
         forward_pass = True
-        device = 'cpu'
+        device = paddle.device.get_device()
     if network is None:
         network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
         network = network.to(device)
@@ -1021,7 +1019,6 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
             if pretrain in cie_pretrain_path:
                 url, md5 = cie_pretrain_path[pretrain]
                 filename = pygmtools.utils.download(f'cie_{pretrain}_paddle.pdparam', url, md5)
-                # filename = f'models/cie_{pretrain}_paddle.pdparams'
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
@@ -1056,13 +1053,13 @@ class NGM_Net(paddle.nn.Layer):
                                          gnn_channels[i] + sk_emb, gnn_channels[i],
                                          sk_channel=sk_emb)
             self.add_sublayer('gnn_layer_{}'.format(i), gnn_layer)
-        self.add_sublayer('classifier', nn.Linear(gnn_channels[-1] + sk_emb, 1))
+        self.classifier = nn.Linear(gnn_channels[-1] + sk_emb, 1)
 
     def forward(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
         _sinkhorn_func = functools.partial(sinkhorn,
                                            dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
         emb = v0
-        A = paddle.cast((K != 0), 'float32')
+        A = paddle.cast((K != 0), K.dtype)
         emb_K = K.unsqueeze(-1)
 
         # NGM qap solver
@@ -1070,8 +1067,7 @@ class NGM_Net(paddle.nn.Layer):
             gnn_layer = getattr(self, f'gnn_layer_{i}')
             emb_K, emb = gnn_layer(A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
 
-        classifier = getattr(self, 'classifier')
-        v = classifier(emb)
+        v = self.classifier(emb)
         s = v.reshape([v.shape[0], n2max, -1]).transpose((0, 2, 1))
 
         return _sinkhorn_func(s, n1, n2, dummy_row=True)
@@ -1092,7 +1088,7 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         device = 'cpu'
     else:
         forward_pass = True
-        device = 'cpu'
+        device = paddle.device.get_device()
     if network is None:
         network = NGM_Net(gnn_channels, sk_emb)
         network = network.to(device)
@@ -1100,7 +1096,6 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
             if pretrain in ngm_pretrain_path:
                 url, md5 = ngm_pretrain_path[pretrain]
                 filename = pygmtools.utils.download(f'ngm_{pretrain}_paddle.pdparam', url, md5)
-                # filename = f'models/ngm_{pretrain}_paddle.pdparams'
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
@@ -1243,9 +1238,9 @@ def permutation_loss(pred_dsmat, gt_perm, n1, n2):
 
     pred_dsmat = pred_dsmat.astype("float32")
 
-    if not ((pred_dsmat.numpy() >= 0) * (pred_dsmat.numpy() <= 1)).all():
+    if not ((pred_dsmat >= 0) * (pred_dsmat <= 1)).all(): #TODO
         raise ValueError("pred_dsmat contains invalid numerical entries.")
-    if not ((gt_perm.numpy() >= 0) * (gt_perm.numpy() <= 1)).all():
+    if not ((gt_perm >= 0) * (gt_perm <= 1)).all():
         raise ValueError("gt_perm contains invalid numerical entries.")
 
     if n1 is None:

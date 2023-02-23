@@ -243,7 +243,6 @@ class NGMConvLayer(nn.Layer):
 
         if norm is True:
             A = nn.functional.normalize(A, p=1, axis=2)
-            A[paddle.isnan(A)] = 0
 
         x1 = self.n_func(x)
         x2 = paddle.matmul((A.unsqueeze(-1) * W_new).transpose(perm=[0, 3, 1, 2]), \
@@ -258,7 +257,7 @@ class NGMConvLayer(nn.Layer):
             n2_rep = paddle.repeat_interleave(n2, self.sk_channel, axis=0)
             x4 = x3.transpose(perm=[0, 2, 1]).reshape(
                 (x.shape[0] * self.sk_channel, n2.max().item(), n1.max().item())).transpose((0,2,1))
-            x5 = sk_func(x4, n1_rep, n2_rep, dummy_row=True).transpose((0,2,1))  # .contiguous()
+            x5 = sk_func(x4, n1_rep, n2_rep, dummy_row=True).transpose((0,2,1))
 
             x6 = x5.reshape((x.shape[0], self.sk_channel, n1.max().item() * n2.max().item())).transpose((0, 2, 1))
             x_new = paddle.concat((x2, x6), axis=-1)
