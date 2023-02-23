@@ -1238,7 +1238,7 @@ def permutation_loss(pred_dsmat, gt_perm, n1, n2):
 
     pred_dsmat = pred_dsmat.astype("float32")
 
-    if not ((pred_dsmat >= 0) * (pred_dsmat <= 1)).all(): #TODO
+    if not ((pred_dsmat >= 0) * (pred_dsmat <= 1)).all():
         raise ValueError("pred_dsmat contains invalid numerical entries.")
     if not ((gt_perm >= 0) * (gt_perm <= 1)).all():
         raise ValueError("gt_perm contains invalid numerical entries.")
