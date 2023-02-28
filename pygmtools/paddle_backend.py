@@ -891,7 +891,7 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         if pretrain:
             if pretrain in pca_gm_pretrain_path:
                 url, md5 = pca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_paddle.pdparam', url, md5)
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_paddle.pdparams', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
@@ -932,7 +932,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         if pretrain:
             if pretrain in ipca_gm_pretrain_path:
                 url, md5 = ipca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_paddle.pdparam', url, md5)
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_paddle.pdparams', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
@@ -1018,7 +1018,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         if pretrain:
             if pretrain in cie_pretrain_path:
                 url, md5 = cie_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'cie_{pretrain}_paddle.pdparam', url, md5)
+                filename = pygmtools.utils.download(f'cie_{pretrain}_paddle.pdparams', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
@@ -1095,7 +1095,7 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         if pretrain:
             if pretrain in ngm_pretrain_path:
                 url, md5 = ngm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ngm_{pretrain}_paddle.pdparam', url, md5)
+                filename = pygmtools.utils.download(f'ngm_{pretrain}_paddle.pdparams', url, md5)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
