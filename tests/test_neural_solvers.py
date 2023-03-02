@@ -33,7 +33,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
-    torch.manual_seed(0)
+    torch.manual_seed(1)
     X_gt, A1, A2, F1, F2, EF1, EF2 = [], [], [], [], [], [], []
     for b, num_node in enumerate(graph_num_nodes):
         As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(num_node, node_feat_dim=node_feat_dim)
