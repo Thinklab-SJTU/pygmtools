@@ -5,7 +5,7 @@ Introduction: Matching Isomorphic Graphs
 ========================================
 
 This example is an introduction to ``pygmtools`` which shows how to match isomorphic graphs.
-Isomorphic graphs means graphs whose structures are identical, but the node correspondence is unknown.
+Isomorphic graphs mean graphs whose structures are identical, but the node correspondence is unknown.
 """
 
 # Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
@@ -89,7 +89,7 @@ K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n
 # has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
 #
 # .. note::
-#     The diagonal elements of the affinity matrix is empty because there is no node features in this example.
+#     The diagonal elements of the affinity matrix are empty because there is no node features in this example.
 #
 plt.figure(figsize=(4, 4))
 plt.title(f'Affinity Matrix (size: {K.shape[0]}$\\times${K.shape[1]})')

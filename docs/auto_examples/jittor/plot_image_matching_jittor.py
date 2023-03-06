@@ -241,7 +241,7 @@ plt.imshow(K.numpy(), cmap='Blues')
 X = pygm.rrwm(K, kpts1.shape[1], kpts2.shape[1])
 
 ##############################################################################
-# The output of RRWM is a soft matching matrix. Hungarian algorithm is then adopted to reach a discrete matching matrix
+# The output of RRWM is a soft matching matrix. Hungarian algorithm is then adopted to reach a discrete matching matrix.
 #
 X = pygm.hungarian(X)
 
