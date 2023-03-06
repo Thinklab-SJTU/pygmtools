@@ -13,6 +13,7 @@ import functools
 import paddle
 import numpy as np
 from multiprocessing import Pool
+import os
 
 import pygmtools.utils
 from pygmtools.numpy_backend import _hung_kernel
@@ -785,6 +786,333 @@ def gamgm_real(
     return U
 
 
+############################################
+#          Neural Network Solvers          #
+############################################
+
+from pygmtools.paddle_modules import *
+
+class PCA_GM_Net(paddle.nn.Layer):
+    """
+    Paddle implementation of PCA-GM and IPCA-GM network
+    """
+    def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
+        super(PCA_GM_Net, self).__init__()
+        self.gnn_layer = num_layers
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_Gconv(in_channel, hidden_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_Gconv(hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_Gconv(hidden_channel, out_channel)
+                self.add_sublayer('affinity_{}'.format(i), WeightedInnerProdAffinity(out_channel))
+            self.add_sublayer('gnn_layer_{}'.format(i), gnn_layer)
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.add_sublayer('cross_graph_{}'.format(i), paddle.nn.Linear(hidden_channel * 2, hidden_channel, weight_attr=weight_init))
+                if cross_iter_num <= 0:
+                 self.add_sublayer('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
+
+
+    def forward(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat1, feat2
+        if cross_iter_num <= 0:
+            # Vanilla PCA-GM
+            for i in range(self.gnn_layer):
+                gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+
+                if i == self.gnn_layer - 2:
+                    affinity = getattr(self, 'affinity_{}'.format(i))
+                    s = affinity(emb1, emb2)
+                    s = _sinkhorn_func(s, n1, n2)
+                    
+                    cross_graph = getattr(self, 'cross_graph_{}'.format(i))
+                    new_emb1 = cross_graph(paddle.concat((emb1, paddle.bmm(s, emb2)), axis=-1))
+                    new_emb2 = cross_graph(paddle.concat((emb2, paddle.bmm(s.transpose([0, 2, 1]), emb1)), axis=-1))
+                    emb1 = new_emb1
+                    emb2 = new_emb2
+
+            affinity = getattr(self, 'affinity_{}'.format(self.gnn_layer - 1))
+            s = affinity(emb1, emb2)
+            s = _sinkhorn_func(s, n1, n2)
+
+        else:
+            # IPCA-GM
+            for i in range(self.gnn_layer - 1):
+                gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+
+            emb1_0, emb2_0 = emb1, emb2
+            s = paddle.zeros((emb1.shape[0], emb1.shape[1], emb2.shape[1]))
+
+            for x in range(cross_iter_num):
+                # cross-graph convolution in second last layer
+                i = self.gnn_layer - 2
+                cross_graph = getattr(self, 'cross_graph_{}'.format(i))
+                emb1 = cross_graph(paddle.concat((emb1_0, paddle.bmm(s, emb2_0)), axis=-1))
+                emb2 = cross_graph(paddle.concat((emb2_0, paddle.bmm(s.transpose([0,2, 1]), emb1_0)), axis=-1))
+
+                # last layer
+                i = self.gnn_layer - 1
+                gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+                emb1, emb2 = gnn_layer([A1, emb1], [A2, emb2])
+                affinity = getattr(self, 'affinity_{}'.format(i))
+                s = affinity(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+        return s
+
+pca_gm_pretrain_path = {
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1PoeWfa4v3n4Bk_9VlSUSd7akZf1rL8ct',
+            '03b1dedeed7195aa98431b3c561d5de3'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1hgCpvcvt5eoz1xbMbuDyBuYH6SCue6UD',
+               'ebf2dae8593a3640012832858bec3499'),
+    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=116_v4rC31T-hq3kE2d_thMKmJ65swrCD',
+                '677c03d7180fefaaee9fcc85a03c8d53')
+}
+
+def pca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Paddle implementation of PCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+        device = 'cpu'
+    else:
+        forward_pass = True
+        device = paddle.device.get_device()
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in pca_gm_pretrain_path:
+                url, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_paddle.pdparams', url, md5)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = paddle.to_tensor([feat1.shape[1]] * batch_size)
+        if n2 is None:
+            n2 = paddle.to_tensor([feat2.shape[1]] * batch_size)  
+        result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+ipca_gm_pretrain_path = { 
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1bVGl9lhhzkLeWKsjiWYHgzFV-evCo1sh',
+            '2fb842d4fbdeed60ac2846201a24f771'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17RdDzNp2SjYahRd9aep5dEbidWJNR4uu',
+               '763ea7b3c0518e27ca16c5ae987eccaa'),
+}
+
+def ipca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    Paddle implementation of IPCA-GM
+    """
+    if feat1 is None:
+        forward_pass = False
+        device = 'cpu'
+    else:
+        forward_pass = True
+        device = paddle.device.get_device()
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in ipca_gm_pretrain_path:
+                url, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_paddle.pdparams', url, md5)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = paddle.to_tensor([feat1.shape[1]] * batch_size)
+        if n2 is None:
+            n2 = paddle.to_tensor([feat2.shape[1]] * batch_size)
+        result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+class CIE_Net(paddle.nn.Layer):
+    """
+    Paddle implementation of CIE graph matching network
+    """
+    def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
+        super(CIE_Net, self).__init__()
+        self.gnn_layer = num_layers
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_ChannelIndependentConv(in_node_channel, hidden_channel, in_edge_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, out_channel, hidden_channel)
+                self.add_sublayer('affinity_{}'.format(i), WeightedInnerProdAffinity(out_channel))
+            self.add_sublayer('gnn_layer_{}'.format(i), gnn_layer)
+            if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
+                self.add_sublayer('cross_graph_{}'.format(i), paddle.nn.Linear(hidden_channel * 2, hidden_channel, weight_attr=weight_init))
+                self.add_sublayer('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
+
+    def forward(self, feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb1, emb2 = feat_node1, feat_node2
+        emb_edge1, emb_edge2 = feat_edge1, feat_edge2
+        for i in range(self.gnn_layer):
+            gnn_layer = getattr(self, 'gnn_layer_{}'.format(i))
+            # during forward process, the network structure will not change
+            emb1, emb2, emb_edge1, emb_edge2 = gnn_layer([A1, emb1, emb_edge1], [A2, emb2, emb_edge2])
+
+            if i == self.gnn_layer - 2:
+                affinity = getattr(self, 'affinity_{}'.format(i))
+                s = affinity(emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+
+                cross_graph = getattr(self, 'cross_graph_{}'.format(i))
+                new_emb1 = cross_graph(paddle.concat((emb1, paddle.bmm(s, emb2)), axis=-1))
+                new_emb2 = cross_graph(paddle.concat((emb2, paddle.bmm(s.transpose([0,2, 1]), emb1)), axis=-1))
+                emb1 = new_emb1
+                emb2 = new_emb2
+
+        affinity = getattr(self, 'affinity_{}'.format(self.gnn_layer - 1))
+        s = affinity(emb1, emb2)
+        s = _sinkhorn_func(s, n1, n2)
+        return s
+
+cie_pretrain_path = {
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13dtxDfySvfqQcYvPiTd8Pb2xgcXIesAz',
+            '2c52c70e4a8919d24fde261756d1d6c4'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_-G00V3yhJ3IL_Xp6cMcVV9N2vWgEDwk',
+               '2619383120ca67d68c40eebd9dde9d95'),
+}
+
+def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
+        in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+        network, pretrain):
+    """
+    Paddle implementation of CIE
+    """
+    if feat_node1 is None:
+        forward_pass = False
+        device = 'cpu'
+    else:
+        forward_pass = True
+        device = paddle.device.get_device()
+    if network is None:
+        network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in cie_pretrain_path:
+                url, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_paddle.pdparams', url, md5)
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_size = feat_node1.shape[0]
+        if n1 is None:
+            n1 = paddle.to_tensor([feat_node1.shape[1]] * batch_size)
+        if n2 is None:
+            n2 = paddle.to_tensor([feat_node1.shape[1]] * batch_size)
+        result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+class NGM_Net(paddle.nn.Layer):
+    """
+    Paddle implementation of NGM network
+    """
+
+    def __init__(self, gnn_channels, sk_emb):
+        super(NGM_Net, self).__init__()
+        self.gnn_layer = len(gnn_channels)
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = NGMConvLayer(1, 1,
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb)
+            else:
+                gnn_layer = NGMConvLayer(gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
+                                         gnn_channels[i] + sk_emb, gnn_channels[i],
+                                         sk_channel=sk_emb)
+            self.add_sublayer('gnn_layer_{}'.format(i), gnn_layer)
+        self.classifier = nn.Linear(gnn_channels[-1] + sk_emb, 1)
+
+    def forward(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(sinkhorn,
+                                           dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False)
+        emb = v0
+        A = paddle.cast((K != 0), K.dtype)
+        emb_K = K.unsqueeze(-1)
+
+        # NGM qap solver
+        for i in range(self.gnn_layer):
+            gnn_layer = getattr(self, f'gnn_layer_{i}')
+            emb_K, emb = gnn_layer(A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
+
+        v = self.classifier(emb)
+        s = v.reshape([v.shape[0], n2max, -1]).transpose((0, 2, 1))
+
+        return _sinkhorn_func(s, n1, n2, dummy_row=True)
+
+ngm_pretrain_path = { 
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cd5AvddQtpWmENPLEWjJ76cKG7Df43nh',
+            'bf1808dd16304e03ff33133c7ea9de90'),
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j1kXWsassE3bAVWjPy2g0jUGG2IeODc8',
+               'a5daf06cdaf6cc370928b5f8fc01c585'),
+}
+
+def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
+    """
+    Paddle implementation of NGM
+    """
+    if K is None:
+        forward_pass = False
+        device = 'cpu'
+    else:
+        forward_pass = True
+        device = paddle.device.get_device()
+    if network is None:
+        network = NGM_Net(gnn_channels, sk_emb)
+        network = network.to(device)
+        if pretrain:
+            if pretrain in ngm_pretrain_path:
+                url, md5 = ngm_pretrain_path[pretrain]
+                try:
+                    filename = pygmtools.utils.download(f'ngm_{pretrain}_paddle.pdparams', url, md5)
+                except:
+                    filename = os.path.dirname(__file__) + f'/temp/ngm_{pretrain}_paddle.pdparams'
+                _load_model(network, filename)
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
+
+    if forward_pass:
+        batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+        v0 = v0 / paddle.mean(v0)
+        result = network(K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
 #############################################
 #              Utils Functions              #
 #############################################
@@ -908,15 +1236,15 @@ def generate_isomorphic_graphs(node_num, graph_num, node_feat_dim):
 
 def permutation_loss(pred_dsmat, gt_perm, n1, n2):
     """
-    Pytorch implementation of permutation_loss
+    Paddle implementation of permutation_loss
     """
     batch_num = pred_dsmat.shape[0]
 
     pred_dsmat = pred_dsmat.astype("float32")
 
-    if not ((pred_dsmat.numpy() >= 0) * (pred_dsmat.numpy() <= 1)).all():
+    if not ((pred_dsmat >= 0) * (pred_dsmat <= 1)).all():
         raise ValueError("pred_dsmat contains invalid numerical entries.")
-    if not ((gt_perm.numpy() >= 0) * (gt_perm.numpy() <= 1)).all():
+    if not ((gt_perm >= 0) * (gt_perm <= 1)).all():
         raise ValueError("gt_perm contains invalid numerical entries.")
 
     if n1 is None:
@@ -1033,3 +1361,10 @@ def _mm(input1, input2):
     Paddle implementation of _mm
     """
     return paddle.mm(input1, input2)
+
+def _load_model(model, path):
+    """
+    Load Paddle model from a given path. Unmatched keys shall be shown in paddle warning.
+    """
+    module = model
+    module.set_dict(paddle.load(path))

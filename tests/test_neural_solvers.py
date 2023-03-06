@@ -135,66 +135,66 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
 def test_pca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
         'num_layers': [3],
         'pretrain': [None],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
 
 def test_ipca_gm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
         'num_layers': [3],
         'pretrain': [None],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
 
 def test_cie():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
-        }, ['pytorch', 'numpy', 'jittor'])
+        }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
         'pretrain': ['voc'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
         'num_layers': [3],
         'pretrain': [None],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
 def test_ngm():
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ngm, 'lawler-qap', {
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ngm, 'lawler-qap', {
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
         'pretrain': ['voc'],
-    }, ['pytorch', 'numpy', 'jittor'])
+    }, ['pytorch', 'numpy', 'jittor', 'paddle'])
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ import torch
 import numpy as np
 from multiprocessing import Pool
 from torch import Tensor
-
+import os
 import pygmtools.utils
 
 
@@ -1156,7 +1156,10 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         if pretrain:
             if pretrain in ngm_pretrain_path:
                 url, md5 = ngm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ngm_{pretrain}_pytorch.pt', url, md5)
+                try:
+                    filename = pygmtools.utils.download(f'ngm_{pretrain}_pytorch.pt', url, md5)
+                except:
+                    filename = os.path.dirname(__file__) + f'/temp/ngm_{pretrain}_pytorch.pt'
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')

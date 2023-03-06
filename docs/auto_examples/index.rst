@@ -238,6 +238,133 @@ Numpy Backend Examples
    /auto_examples/numpy/plot_subgraphs_numpy
    /auto_examples/numpy/plot_image_matching_numpy
 
+PaddlePaddle Backend Examples
+-------------------------
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example is an introduction to pygmtools which shows how to match isomorphic graphs. Isomor...">
+
+.. only:: html
+
+  .. image:: /auto_examples/paddle/images/thumb/sphx_glr_plot_isomorphic_graphs_paddle_thumb.png
+    :alt: Introduction: Matching Isomorphic Graphs
+
+  :ref:`sphx_glr_auto_examples_paddle_plot_isomorphic_graphs_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Introduction: Matching Isomorphic Graphs</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Seeded graph matching means some partial of the matching result is already known, and the known...">
+
+.. only:: html
+
+  .. image:: /auto_examples/paddle/images/thumb/sphx_glr_plot_seed_graph_match_paddle_thumb.png
+    :alt: Seeded Graph Matching
+
+  :ref:`sphx_glr_auto_examples_paddle_plot_seed_graph_match_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Seeded Graph Matching</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to match a smaller graph to a subset of a larger graph.">
+
+.. only:: html
+
+  .. image:: /auto_examples/paddle/images/thumb/sphx_glr_plot_subgraphs_paddle_thumb.png
+    :alt: Discovering Subgraphs
+
+  :ref:`sphx_glr_auto_examples_paddle_plot_subgraphs_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Discovering Subgraphs</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to match image keypoints by graph matching solvers provided by pygmtools...">
+
+.. only:: html
+
+  .. image:: /auto_examples/paddle/images/thumb/sphx_glr_plot_image_matching_paddle_thumb.png
+    :alt: Matching Image Keypoints by QAP Solvers
+
+  :ref:`sphx_glr_auto_examples_paddle_plot_image_matching_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Matching Image Keypoints by QAP Solvers</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to match image keypoints by neural network-based graph matching solvers....">
+
+.. only:: html
+
+  .. image:: /auto_examples/paddle/images/thumb/sphx_glr_plot_deep_image_matching_paddle_thumb.png
+    :alt: Matching Image Keypoints by Graph Matching Neural Networks
+
+  :ref:`sphx_glr_auto_examples_paddle_plot_deep_image_matching_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Matching Image Keypoints by Graph Matching Neural Networks</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to fuse different models into a single model by pygmtools. Model fusion ...">
+
+.. only:: html
+
+  .. image:: /auto_examples/paddle/images/thumb/sphx_glr_plot_model_fusion_paddle_thumb.png
+    :alt: Model Fusion by Graph Matching
+
+  :ref:`sphx_glr_auto_examples_paddle_plot_model_fusion_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Model Fusion by Graph Matching</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/paddle/plot_isomorphic_graphs_paddle
+   /auto_examples/paddle/plot_seed_graph_match_paddle
+   /auto_examples/paddle/plot_subgraphs_paddle
+   /auto_examples/paddle/plot_image_matching_paddle
+   /auto_examples/paddle/plot_deep_image_matching_paddle
+   /auto_examples/paddle/plot_model_fusion_paddle
+
 PyTorch Backend Examples
 -------------------------
 

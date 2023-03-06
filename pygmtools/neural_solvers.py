@@ -217,6 +217,50 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
             >>> optimizer.backward(loss)
             >>> optimizer.step()
 
+            
+    .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(4)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = paddle.zeros((batch_size, 4, 4))
+            >>> X_gt[:, paddle.arange(0, 4, dtype=paddle.int64), paddle.randperm(4)] = 1
+            >>> A1 = 1. * (paddle.rand((batch_size, 4, 4)) > 0.5)
+            >>> paddle.diagonal(A1, axis1=1, axis2=2)[:] = 0 # discard self-loop edges
+            >>> A2 = paddle.bmm(paddle.bmm(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> feat1 = paddle.rand((batch_size, 4, 1024)) - 0.5
+            >>> feat2 = paddle.bmm(X_gt.transpose((0, 2, 1)), feat1)
+            >>> n1 = n2 = paddle.to_tensor([4] * batch_size)
+
+            # Match by PCA-GM (load pretrained model)
+            >>> X, net = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/pca_gm_voc_paddle.pdparams...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True,
+                [1.])
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/pca_gm_willow_paddle.pdparams...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.pca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            >>> optimizer = paddle.optimizer.SGD(parameters=net.parameters(), learning_rate=0.001)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.pca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> loss.backward()
+            >>> optimizer.step()
+
     .. note::
 
         If you find this model useful in your research, please cite:
@@ -477,6 +521,50 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
             >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
             >>> loss = pygm.utils.permutation_loss(X, X_gt)
             >>> optimizer.backward(loss)
+            >>> optimizer.step()
+    
+    
+    .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(5)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = paddle.zeros((batch_size, 4, 4))
+            >>> X_gt[:, paddle.arange(0, 4, dtype=paddle.int64), paddle.randperm(4)] = 1
+            >>> A1 = 1. * (paddle.rand((batch_size, 4, 4)) > 0.5)
+            >>> paddle.diagonal(A1, axis1=1, axis2=2)[:] = 0 # discard self-loop edges
+            >>> A2 = paddle.bmm(paddle.bmm(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> feat1 = paddle.rand((batch_size, 4, 1024)) - 0.5
+            >>> feat2 = paddle.bmm(X_gt.transpose((0, 2, 1)), feat1)
+            >>> n1 = n2 = paddle.to_tensor([4] * batch_size)
+
+            # Match by IPCA-GM (load pretrained model)
+            >>> X, net = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/ipca_gm_voc_paddle.pdparams...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True,
+                    [1.])
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/ipca_gm_willow_paddle.pdparams...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.ipca_gm, in_channel=1024, hidden_channel=2048, out_channel=512, num_layers=3, cross_iter=10, pretrain=False)
+            >>> optimizer = paddle.optimizer.SGD(parameters=net.parameters(), learning_rate=0.001)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.ipca_gm(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> loss.backward()
             >>> optimizer.step()
 
     .. note::
@@ -754,6 +842,52 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
             >>> optimizer.backward(loss)
             >>> optimizer.step()
 
+    
+    .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = paddle.zeros((batch_size, 4, 4))
+            >>> X_gt[:, paddle.arange(0, 4, dtype=paddle.int64), paddle.randperm(4)] = 1
+            >>> A1 = 1. * (paddle.rand((batch_size, 4, 4)) > 0.5)
+            >>> paddle.diagonal(A1, axis1=1, axis2=2)[:] = 0 # discard self-loop edges
+            >>> e_feat1 = (paddle.rand((batch_size, 4, 4)) * A1).unsqueeze(-1) # shape: (10, 4, 4, 1)
+            >>> A2 = paddle.bmm(paddle.bmm(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> e_feat2 = paddle.bmm(paddle.bmm(X_gt.transpose((0, 2, 1)), e_feat1.squeeze(-1)), X_gt).unsqueeze(-1)
+            >>> feat1 = paddle.rand((batch_size, 4, 1024)) - 0.5
+            >>> feat2 = paddle.bmm(X_gt.transpose((0, 2, 1)), feat1)
+            >>> n1 = n2 = paddle.to_tensor([4] * batch_size)
+
+            # Match by CIE (load pretrained model)
+            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/cie_voc_paddle.pdparams...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True,
+                   [1.])
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/cie_willow_paddle.pdparams...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.cie, in_node_channel=1024, in_edge_channel=1, hidden_channel=2048, out_channel=512, num_layers=3, pretrain=False)
+            >>> optimizer = paddle.optimizer.SGD(parameters=net.parameters(), learning_rate=0.001)
+            # feat1/feat2/e_feat1/e_feat2 may be outputs by other neural networks
+            >>> X = pygm.cie(feat1, feat2, A1, A2, e_feat1, e_feat2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> loss.backward()
+            >>> optimizer.step()
+    
     .. note::
 
         If you find this model useful in your research, please cite:
@@ -1034,6 +1168,54 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> optimizer.backward(loss)
             >>> optimizer.step()        
 
+    
+    .. dropdown:: Paddle Example
+
+        ::
+
+            >>> import paddle
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'paddle'
+            >>> _ = paddle.seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = paddle.zeros((batch_size, 4, 4))
+            >>> X_gt[:, paddle.arange(0, 4, dtype=paddle.int64), paddle.randperm(4)] = 1
+            >>> A1 = paddle.rand((batch_size, 4, 4))
+            >>> A2 = paddle.bmm(paddle.bmm(X_gt.transpose((0, 2, 1)), A1), X_gt)
+            >>> n1 = n2 = paddle.to_tensor([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by NGM
+            >>> X, net = pygm.ngm(K, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/ngm_voc_paddle.pdparams...
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum() # accuracy
+            Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True,
+                   [1.])
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.ngm(K, n1, n2, network=net)
+
+            # You may also load other pretrained weights
+            >>> X, net = pygm.ngm(K, n1, n2, return_network=True, pretrain='willow')
+            Downloading to ~/.cache/pygmtools/ngm_willow_paddle.pdparams...
+
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.ngm, gnn_channels=(32, 64, 128, 64, 32), sk_emb=8, pretrain=False)
+            >>> optimizer = paddle.optimizer.SGD(parameters=net.parameters(), learning_rate=0.001)
+            # K may be outputs by other neural networks (constructed K from node/edge features by pygm.utils.build_aff_mat)
+            >>> X = pygm.ngm(K, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> loss.backward()
+            >>> optimizer.step()
+    
     .. note::
 
         If you find this model useful in your research, please cite:
