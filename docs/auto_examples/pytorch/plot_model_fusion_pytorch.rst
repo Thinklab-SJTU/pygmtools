@@ -248,7 +248,7 @@ Testing results (two separate models):
 
 Build the affinity matrix for graph matching
 ---------------------------------------------
-As shown in the following plot, the neural networks can be regarded as graphs. The weights corresponds to
+As shown in the following plot, the neural networks can be regarded as graphs. The weights correspond to
 the edge features, and the bias corresponds to the node features. In this example, the neural network
 does not have bias so that there are only edge features.
 
@@ -516,7 +516,7 @@ Hungarian to small blocks of ``X``, because only the channels from the same neur
 matched.
 
 .. note::
-    In this example, we assume the last FC layer is aligned and need not to be matched.
+    In this example, we assume the last FC layer is aligned and need not be matched.
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 326-336

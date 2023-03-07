@@ -23,7 +23,7 @@ Introduction: Matching Isomorphic Graphs
 ========================================
 
 This example is an introduction to ``pygmtools`` which shows how to match isomorphic graphs.
-Isomorphic graphs means graphs whose structures are identical, but the node correspondence is unknown.
+Isomorphic graphs mean graphs whose structures are identical, but the node correspondence is unknown.
 
 .. GENERATED FROM PYTHON SOURCE LINES 10-16
 
@@ -176,7 +176,7 @@ Visualization of the affinity matrix. For graph matching problem with :math:`N` 
 has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
 
 .. note::
-    The diagonal elements of the affinity matrix is empty because there is no node features in this example.
+    The diagonal elements of the affinity matrix are empty because there is no node features in this example.
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 95-99

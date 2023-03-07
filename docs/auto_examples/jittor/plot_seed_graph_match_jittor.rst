@@ -497,7 +497,7 @@ Align the nodes:
 
 Other solvers are also available
 ---------------------------------
-Only the affinity matrix is modified to encode matching priors, thus other graph matching solvers are also
+Only the affinity matrix is modified to encode matching priors. Thus, other graph matching solvers are also
 available to handle this seeded graph matching setting.
 
 Classic IPFP solver

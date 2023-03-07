@@ -413,7 +413,7 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 .. GENERATED FROM PYTHON SOURCE LINES 201-203
 
-The output of RRWM is a soft matching matrix. Hungarian algorithm is then adopted to reach a discrete matching matrix
+The output of RRWM is a soft matching matrix. Hungarian algorithm is then adopted to reach a discrete matching matrix.
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 203-205

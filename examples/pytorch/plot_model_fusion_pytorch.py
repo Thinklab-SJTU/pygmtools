@@ -123,7 +123,7 @@ print(f'model1 accuracy = {acc1}%, model2 accuracy = {acc2}%')
 ##############################################################################
 # Build the affinity matrix for graph matching
 # ---------------------------------------------
-# As shown in the following plot, the neural networks can be regarded as graphs. The weights corresponds to
+# As shown in the following plot, the neural networks can be regarded as graphs. The weights correspond to
 # the edge features, and the bias corresponds to the node features. In this example, the neural network
 # does not have bias so that there are only edge features.
 #
@@ -321,7 +321,7 @@ X = pygm.sm(K, n1, n2)
 # matched.
 #
 # .. note::
-#     In this example, we assume the last FC layer is aligned and need not to be matched.
+#     In this example, we assume the last FC layer is aligned and need not be matched.
 #
 new_X = torch.zeros_like(X)
 new_X[:params[2][0], :params[2][0]] = torch.eye(params[2][0], device=device)
