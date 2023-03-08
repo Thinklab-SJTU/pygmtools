@@ -110,15 +110,6 @@ The images are resized to 256x256.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/examples/pytorch/plot_image_matching_pytorch.py:59: DeprecationWarning: BILINEAR is deprecated and will be removed in Pillow 10 (2023-07-01). Use Resampling.BILINEAR instead.
-      img1 = img1.resize(obj_resize, resample=Image.BILINEAR)
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/examples/pytorch/plot_image_matching_pytorch.py:60: DeprecationWarning: BILINEAR is deprecated and will be removed in Pillow 10 (2023-07-01). Use Resampling.BILINEAR instead.
-      img2 = img2.resize(obj_resize, resample=Image.BILINEAR)
-
 
 
 
@@ -307,7 +298,7 @@ Up-sample the features to the original image size
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/torch/nn/functional.py:3631: UserWarning: Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/torch/nn/functional.py:3454: UserWarning: Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
       warnings.warn(
 
 
@@ -357,7 +348,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f20096da250>
+    <matplotlib.image.AxesImage object at 0x7ff2aa40b760>
 
 
 
@@ -444,7 +435,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200a441850>
+    <matplotlib.image.AxesImage object at 0x7ff21f985b80>
 
 
 
@@ -643,6 +634,28 @@ The NGM solver pretrained on Willow dataset:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_pytorch.pt...
+      0%|          | 0/23119 [00:00<?, ?it/s]    100%|##########| 22.6k/22.6k [00:00<00:00, 147kB/s]    100%|##########| 22.6k/22.6k [00:00<00:00, 146kB/s]
+
 
 
 
@@ -684,7 +697,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  29.628 seconds)
+   **Total running time of the script:** ( 0 minutes  26.986 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_image_matching_pytorch.py:

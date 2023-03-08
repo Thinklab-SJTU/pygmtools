@@ -157,7 +157,7 @@ The seed matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f20068f2fd0>
+    <matplotlib.image.AxesImage object at 0x7f8fba369ee0>
 
 
 
@@ -289,7 +289,7 @@ Visualization of the affinity matrix.
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff74cb0a0>
+    <matplotlib.image.AxesImage object at 0x7f8fbb8cf100>
 
 
 
@@ -344,7 +344,7 @@ The output of RRWM is a soft matching matrix. The matching prior is well-preserv
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200ad73970>
+    <matplotlib.image.AxesImage object at 0x7f8fbb81c8b0>
 
 
 
@@ -399,7 +399,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200aaf5b80>
+    <matplotlib.image.AxesImage object at 0x7f8fbbfa2a90>
 
 
 
@@ -515,7 +515,7 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
  .. code-block:: none
 
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/pygmtools/numpy_backend.py:303: RuntimeWarning: invalid value encountered in divide
+    /Users/guoziao/Desktop/pygmtools-git/pygmtools/numpy_backend.py:304: RuntimeWarning: invalid value encountered in true_divide
       t0 = alpha / beta
 
 
@@ -552,7 +552,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f2006a3f0a0>
+    <matplotlib.image.AxesImage object at 0x7f8fbc2730d0>
 
 
 
@@ -608,7 +608,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f2009639580>
+    <matplotlib.image.AxesImage object at 0x7f8fbb7c67c0>
 
 
 
@@ -663,14 +663,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff753c760>
+    <matplotlib.image.AxesImage object at 0x7f8fbb820d90>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.406 seconds)
+   **Total running time of the script:** ( 0 minutes  1.720 seconds)
 
 
 .. _sphx_glr_download_auto_examples_numpy_plot_seed_graph_match_numpy.py:

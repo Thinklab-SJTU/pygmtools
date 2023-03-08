@@ -113,15 +113,6 @@ The images are resized to 256x256.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/examples/jittor/plot_image_matching_jittor.py:62: DeprecationWarning: BILINEAR is deprecated and will be removed in Pillow 10 (2023-07-01). Use Resampling.BILINEAR instead.
-      img1 = img1.resize(obj_resize, resample=Image.BILINEAR)
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/examples/jittor/plot_image_matching_jittor.py:63: DeprecationWarning: BILINEAR is deprecated and will be removed in Pillow 10 (2023-07-01). Use Resampling.BILINEAR instead.
-      img2 = img2.resize(obj_resize, resample=Image.BILINEAR)
-
 
 
 
@@ -242,9 +233,9 @@ Visualize the graphs
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
 
@@ -272,6 +263,12 @@ Let's adopt the VGG16 CNN model to extract node features.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Downloading https://cg.cs.tsinghua.edu.cn/jittor/assets/build/checkpoints/vgg16_bn.pkl to /Users/guoziao/.cache/jittor/jt1.3.6/clang13.0.0/py3.8.3/macOS-10.16-x8x37/IntelRCoreTMi5x39/default/checkpoints/vgg16_bn.pkl
+    0.00B [00:00, ?B/s]      0%|          | 0.00/528M [00:00<?, ?B/s]      0%|          | 56.0k/528M [00:00<16:33, 557kB/s]      0%|          | 328k/528M [00:00<05:02, 1.83MB/s]      0%|          | 1.66M/528M [00:00<01:16, 7.23MB/s]      1%|          | 3.70M/528M [00:00<00:43, 12.7MB/s]      1%|          | 4.81M/528M [00:00<01:03, 8.62MB/s]      1%|1         | 5.73M/528M [00:00<01:02, 8.77MB/s]      2%|1         | 8.96M/528M [00:01<00:35, 15.5MB/s]      2%|2         | 11.5M/528M [00:01<00:29, 18.4MB/s]      3%|2         | 13.5M/528M [00:01<00:28, 19.1MB/s]      3%|2         | 15.8M/528M [00:01<00:26, 20.3MB/s]      3%|3         | 17.9M/528M [00:01<00:25, 20.9MB/s]      4%|3         | 20.0M/528M [00:01<00:25, 20.9MB/s]      4%|4         | 22.4M/528M [00:01<00:24, 22.0MB/s]      5%|4         | 24.7M/528M [00:01<00:23, 22.6MB/s]      5%|5         | 27.0M/528M [00:01<00:22, 23.1MB/s]      6%|5         | 29.3M/528M [00:01<00:22, 23.1MB/s]      6%|6         | 31.8M/528M [00:02<00:21, 24.0MB/s]      6%|6         | 34.1M/528M [00:02<00:21, 23.9MB/s]      7%|6         | 36.4M/528M [00:02<00:21, 23.6MB/s]      7%|7         | 39.1M/528M [00:02<00:20, 24.7MB/s]      8%|7         | 41.5M/528M [00:02<00:21, 24.2MB/s]      8%|8         | 44.2M/528M [00:02<00:20, 25.3MB/s]      9%|8         | 46.7M/528M [00:02<00:19, 25.5MB/s]      9%|9         | 49.4M/528M [00:02<00:19, 25.6MB/s]     10%|9         | 51.8M/528M [00:02<00:19, 25.7MB/s]     10%|#         | 54.3M/528M [00:02<00:19, 25.4MB/s]     11%|#         | 57.0M/528M [00:03<00:18, 26.3MB/s]     11%|#1        | 59.7M/528M [00:03<00:18, 26.7MB/s]     12%|#1        | 62.2M/528M [00:03<00:19, 25.1MB/s]     12%|#2        | 64.6M/528M [00:03<00:19, 25.0MB/s]     13%|#2        | 67.4M/528M [00:03<00:18, 26.0MB/s]     13%|#3        | 70.1M/528M [00:03<00:18, 26.6MB/s]     14%|#3        | 72.6M/528M [00:03<00:18, 26.1MB/s]     14%|#4        | 75.1M/528M [00:03<00:18, 26.1MB/s]     15%|#4        | 77.7M/528M [00:03<00:18, 26.0MB/s]     15%|#5        | 80.8M/528M [00:04<00:17, 27.5MB/s]     16%|#5        | 83.6M/528M [00:04<00:16, 28.0MB/s]     16%|#6        | 86.3M/528M [00:04<00:16, 27.9MB/s]     17%|#6        | 89.0M/528M [00:04<00:16, 27.6MB/s]     17%|#7        | 91.7M/528M [00:04<00:16, 27.9MB/s]     18%|#7        | 94.4M/528M [00:04<00:16, 26.8MB/s]     18%|#8        | 97.0M/528M [00:04<00:16, 27.0MB/s]     19%|#8        | 99.7M/528M [00:04<00:16, 26.7MB/s]     19%|#9        | 102M/528M [00:04<00:16, 26.8MB/s]      20%|#9        | 105M/528M [00:04<00:16, 27.0MB/s]     20%|##        | 107M/528M [00:05<00:16, 26.2MB/s]     21%|##        | 110M/528M [00:05<00:16, 26.8MB/s]     21%|##1       | 113M/528M [00:05<00:15, 27.5MB/s]     22%|##1       | 116M/528M [00:05<00:16, 25.9MB/s]     22%|##2       | 118M/528M [00:05<00:17, 24.9MB/s]     23%|##2       | 120M/528M [00:05<00:17, 24.6MB/s]     23%|##3       | 123M/528M [00:05<00:16, 25.5MB/s]     24%|##3       | 126M/528M [00:05<00:16, 25.9MB/s]     24%|##4       | 128M/528M [00:05<00:16, 25.8MB/s]     25%|##4       | 131M/528M [00:06<00:16, 26.0MB/s]     25%|##5       | 134M/528M [00:06<00:15, 26.8MB/s]     26%|##5       | 136M/528M [00:06<00:15, 26.2MB/s]     26%|##6       | 139M/528M [00:06<00:16, 24.8MB/s]     27%|##6       | 141M/528M [00:06<00:16, 23.9MB/s]     27%|##7       | 143M/528M [00:06<00:17, 23.6MB/s]     28%|##7       | 146M/528M [00:06<00:16, 23.9MB/s]     28%|##8       | 148M/528M [00:06<00:16, 24.6MB/s]     29%|##8       | 151M/528M [00:06<00:16, 24.0MB/s]     29%|##8       | 153M/528M [00:06<00:16, 23.4MB/s]     29%|##9       | 155M/528M [00:07<00:16, 23.7MB/s]     30%|##9       | 158M/528M [00:07<00:16, 23.9MB/s]     30%|###       | 160M/528M [00:07<00:15, 24.1MB/s]     31%|###       | 162M/528M [00:07<00:15, 24.2MB/s]     31%|###1      | 165M/528M [00:07<00:15, 24.9MB/s]     32%|###1      | 168M/528M [00:07<00:14, 25.7MB/s]     32%|###2      | 170M/528M [00:07<00:16, 23.4MB/s]     33%|###2      | 172M/528M [00:07<00:15, 23.4MB/s]     33%|###3      | 175M/528M [00:07<00:15, 23.6MB/s]     34%|###3      | 177M/528M [00:08<00:15, 24.1MB/s]     34%|###3      | 179M/528M [00:08<00:15, 23.9MB/s]     34%|###4      | 182M/528M [00:08<00:16, 22.6MB/s]     35%|###4      | 184M/528M [00:08<00:15, 23.0MB/s]     35%|###5      | 186M/528M [00:08<00:17, 20.1MB/s]     36%|###5      | 188M/528M [00:08<00:19, 17.9MB/s]     36%|###6      | 190M/528M [00:08<00:22, 15.8MB/s]     37%|###6      | 194M/528M [00:08<00:16, 21.8MB/s]     37%|###7      | 196M/528M [00:09<00:16, 21.6MB/s]     38%|###7      | 198M/528M [00:09<00:17, 19.2MB/s]     38%|###8      | 201M/528M [00:09<00:16, 20.6MB/s]     39%|###8      | 203M/528M [00:09<00:15, 21.9MB/s]     39%|###8      | 206M/528M [00:09<00:15, 21.7MB/s]     39%|###9      | 208M/528M [00:09<00:15, 21.8MB/s]     40%|###9      | 210M/528M [00:09<00:14, 23.1MB/s]     40%|####      | 212M/528M [00:09<00:14, 22.2MB/s]     41%|####      | 216M/528M [00:09<00:12, 26.2MB/s]     41%|####1     | 219M/528M [00:10<00:12, 25.9MB/s]     42%|####1     | 221M/528M [00:10<00:13, 24.1MB/s]     42%|####2     | 224M/528M [00:10<00:12, 24.7MB/s]     43%|####2     | 226M/528M [00:10<00:13, 23.9MB/s]     43%|####3     | 228M/528M [00:10<00:22, 14.1MB/s]     44%|####3     | 231M/528M [00:10<00:19, 16.1MB/s]     44%|####4     | 234M/528M [00:10<00:16, 18.8MB/s]     45%|####4     | 236M/528M [00:11<00:15, 19.9MB/s]     45%|####5     | 238M/528M [00:11<00:14, 21.0MB/s]     46%|####5     | 240M/528M [00:11<00:14, 21.4MB/s]     46%|####5     | 243M/528M [00:11<00:13, 22.5MB/s]     46%|####6     | 245M/528M [00:11<00:13, 22.3MB/s]     47%|####6     | 247M/528M [00:11<00:14, 20.6MB/s]     47%|####7     | 250M/528M [00:11<00:13, 22.0MB/s]     48%|####7     | 252M/528M [00:11<00:12, 22.3MB/s]     48%|####8     | 255M/528M [00:11<00:12, 23.6MB/s]     49%|####8     | 257M/528M [00:11<00:11, 24.6MB/s]     49%|####9     | 260M/528M [00:12<00:11, 24.3MB/s]     50%|####9     | 262M/528M [00:12<00:11, 24.9MB/s]     50%|#####     | 264M/528M [00:12<00:11, 24.7MB/s]     51%|#####     | 267M/528M [00:12<00:10, 25.5MB/s]     51%|#####1    | 270M/528M [00:12<00:10, 26.1MB/s]     52%|#####1    | 272M/528M [00:12<00:10, 26.1MB/s]     52%|#####2    | 275M/528M [00:12<00:10, 25.0MB/s]     53%|#####2    | 277M/528M [00:12<00:11, 22.8MB/s]     53%|#####2    | 279M/528M [00:12<00:11, 22.6MB/s]     53%|#####3    | 282M/528M [00:13<00:10, 23.6MB/s]     54%|#####3    | 284M/528M [00:13<00:10, 24.1MB/s]     54%|#####4    | 287M/528M [00:13<00:10, 24.0MB/s]     55%|#####4    | 289M/528M [00:13<00:10, 24.0MB/s]     55%|#####5    | 292M/528M [00:13<00:09, 25.5MB/s]     56%|#####5    | 294M/528M [00:13<00:09, 25.3MB/s]     56%|#####6    | 297M/528M [00:13<00:09, 26.4MB/s]     57%|#####6    | 300M/528M [00:13<00:09, 24.5MB/s]     57%|#####7    | 302M/528M [00:13<00:09, 25.4MB/s]     58%|#####7    | 305M/528M [00:13<00:08, 26.4MB/s]     58%|#####8    | 308M/528M [00:14<00:08, 27.5MB/s]     59%|#####8    | 310M/528M [00:14<00:08, 26.7MB/s]     59%|#####9    | 313M/528M [00:14<00:08, 26.0MB/s]     60%|#####9    | 316M/528M [00:14<00:09, 24.5MB/s]     60%|######    | 318M/528M [00:14<00:09, 23.0MB/s]     61%|######    | 320M/528M [00:14<00:09, 22.2MB/s]     61%|######1   | 322M/528M [00:14<00:09, 22.4MB/s]     61%|######1   | 324M/528M [00:14<00:09, 21.4MB/s]     62%|######1   | 327M/528M [00:14<00:09, 22.3MB/s]     62%|######2   | 329M/528M [00:15<00:09, 21.5MB/s]     63%|######2   | 331M/528M [00:15<00:09, 22.1MB/s]     63%|######3   | 333M/528M [00:15<00:09, 22.5MB/s]     64%|######3   | 336M/528M [00:15<00:08, 22.4MB/s]     64%|######3   | 338M/528M [00:15<00:08, 22.4MB/s]     65%|######4   | 340M/528M [00:15<00:08, 23.9MB/s]     65%|######4   | 343M/528M [00:15<00:08, 24.0MB/s]     65%|######5   | 345M/528M [00:15<00:07, 24.0MB/s]     66%|######5   | 347M/528M [00:15<00:08, 23.0MB/s]     66%|######6   | 350M/528M [00:16<00:07, 24.3MB/s]     67%|######6   | 353M/528M [00:16<00:07, 25.4MB/s]     67%|######7   | 356M/528M [00:16<00:06, 26.2MB/s]     68%|######7   | 358M/528M [00:16<00:07, 25.4MB/s]     68%|######8   | 361M/528M [00:16<00:06, 25.7MB/s]     69%|######8   | 363M/528M [00:16<00:06, 25.4MB/s]     69%|######9   | 366M/528M [00:16<00:06, 25.1MB/s]     70%|######9   | 368M/528M [00:16<00:06, 24.5MB/s]     70%|#######   | 370M/528M [00:16<00:07, 23.4MB/s]     71%|#######   | 373M/528M [00:16<00:06, 24.3MB/s]     71%|#######1  | 375M/528M [00:17<00:06, 23.7MB/s]     72%|#######1  | 378M/528M [00:17<00:06, 24.5MB/s]     72%|#######2  | 380M/528M [00:17<00:06, 24.7MB/s]     72%|#######2  | 383M/528M [00:17<00:06, 22.9MB/s]     73%|#######2  | 385M/528M [00:17<00:07, 21.4MB/s]     73%|#######3  | 387M/528M [00:17<00:06, 23.0MB/s]     74%|#######3  | 390M/528M [00:17<00:06, 21.1MB/s]     74%|#######4  | 392M/528M [00:17<00:06, 22.4MB/s]     75%|#######4  | 395M/528M [00:17<00:05, 23.9MB/s]     75%|#######5  | 397M/528M [00:18<00:05, 23.4MB/s]     76%|#######5  | 399M/528M [00:18<00:05, 22.9MB/s]     76%|#######6  | 402M/528M [00:18<00:05, 23.1MB/s]     77%|#######6  | 404M/528M [00:18<00:05, 23.9MB/s]     77%|#######7  | 407M/528M [00:18<00:06, 20.6MB/s]     77%|#######7  | 409M/528M [00:18<00:05, 21.5MB/s]     78%|#######7  | 412M/528M [00:18<00:05, 22.5MB/s]     78%|#######8  | 414M/528M [00:18<00:05, 21.6MB/s]     79%|#######8  | 416M/528M [00:19<00:04, 23.4MB/s]     79%|#######9  | 419M/528M [00:19<00:05, 20.5MB/s]     80%|#######9  | 421M/528M [00:19<00:05, 22.0MB/s]     80%|########  | 424M/528M [00:19<00:04, 22.8MB/s]     81%|########  | 426M/528M [00:19<00:04, 23.4MB/s]     81%|########1 | 428M/528M [00:19<00:04, 23.7MB/s]     82%|########1 | 431M/528M [00:19<00:04, 24.6MB/s]     82%|########2 | 434M/528M [00:19<00:03, 24.8MB/s]     83%|########2 | 436M/528M [00:19<00:03, 25.7MB/s]     83%|########3 | 439M/528M [00:19<00:03, 24.5MB/s]     84%|########3 | 442M/528M [00:20<00:03, 26.1MB/s]     84%|########4 | 444M/528M [00:20<00:03, 25.7MB/s]     85%|########4 | 447M/528M [00:20<00:03, 25.3MB/s]     85%|########5 | 449M/528M [00:20<00:03, 25.7MB/s]     86%|########5 | 452M/528M [00:20<00:03, 25.5MB/s]     86%|########6 | 454M/528M [00:20<00:03, 25.7MB/s]     87%|########6 | 457M/528M [00:20<00:02, 25.9MB/s]     87%|########6 | 459M/528M [00:21<00:04, 14.7MB/s]     87%|########7 | 461M/528M [00:21<00:04, 14.5MB/s]     88%|########7 | 463M/528M [00:21<00:05, 13.1MB/s]     88%|########8 | 467M/528M [00:21<00:03, 19.1MB/s]     89%|########8 | 469M/528M [00:21<00:03, 20.3MB/s]     89%|########9 | 472M/528M [00:21<00:02, 21.8MB/s]     90%|########9 | 474M/528M [00:21<00:02, 22.2MB/s]     90%|######### | 477M/528M [00:21<00:02, 21.8MB/s]     91%|######### | 479M/528M [00:22<00:02, 22.5MB/s]     91%|#########1| 481M/528M [00:22<00:02, 22.7MB/s]     92%|#########1| 484M/528M [00:22<00:01, 23.4MB/s]     92%|#########2| 486M/528M [00:22<00:01, 23.1MB/s]     93%|#########2| 488M/528M [00:22<00:01, 23.5MB/s]     93%|#########2| 491M/528M [00:22<00:01, 24.1MB/s]     93%|#########3| 493M/528M [00:22<00:01, 23.8MB/s]     94%|#########3| 495M/528M [00:22<00:01, 22.5MB/s]     94%|#########4| 498M/528M [00:22<00:01, 23.4MB/s]     95%|#########4| 500M/528M [00:22<00:01, 21.5MB/s]     95%|#########5| 502M/528M [00:23<00:01, 21.9MB/s]     96%|#########5| 505M/528M [00:23<00:01, 22.1MB/s]     96%|#########6| 507M/528M [00:23<00:00, 22.8MB/s]     96%|#########6| 509M/528M [00:23<00:00, 23.3MB/s]     97%|#########6| 512M/528M [00:23<00:00, 23.6MB/s]     97%|#########7| 514M/528M [00:23<00:00, 24.3MB/s]     98%|#########7| 516M/528M [00:23<00:00, 24.1MB/s]     98%|#########8| 519M/528M [00:23<00:00, 24.9MB/s]     99%|#########8| 521M/528M [00:23<00:00, 24.1MB/s]     99%|#########9| 524M/528M [00:24<00:00, 24.6MB/s]    100%|#########9| 526M/528M [00:24<00:00, 24.6MB/s]
 
 
 
@@ -388,12 +385,12 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+    528MB [00:40, 24.6MB/s]                           /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
-    <matplotlib.image.AxesImage object at 0x7f2006acf910>
+    <matplotlib.image.AxesImage object at 0x7feef60ab370>
 
 
 
@@ -480,7 +477,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f2006a094f0>
+    <matplotlib.image.AxesImage object at 0x7feef68bfd00>
 
 
 
@@ -560,9 +557,9 @@ ordered by their ground truth classes (i.e. the ground truth matching matrix is 
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
 
@@ -611,9 +608,9 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
 
@@ -659,10 +656,11 @@ See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
+    528MB [00:56, 9.78MB/s]
 
 
 
@@ -714,9 +712,20 @@ The NGM solver pretrained on Willow dataset:
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_jittor.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_jittor.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7 (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_jittor.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_jittor.pt...
+      0%|          | 0/23238 [00:00<?, ?it/s]    100%|##########| 22.7k/22.7k [00:00<00:00, 341kB/s]
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
 
@@ -759,9 +768,9 @@ The NGM solver pretrained on VOC dataset:
 
  .. code-block:: none
 
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: FutureWarning: The input object of type 'jittor_core.Var' is an array-like implementing one of the corresponding protocols (`__array__`, `__array_interface__` or `__array_struct__`); but not a sequence (or 0-D). In the future, this object will be coerced as if it was first converted using `np.array(obj)`. To retain the old behaviour, you have to either modify the type 'jittor_core.Var', or assign to an empty array created with `np.empty(correct_shape, dtype=object)`.
       ary = asanyarray(ary)
-    /home/roger/.local/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy/core/shape_base.py:65: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
       ary = asanyarray(ary)
 
 
@@ -770,7 +779,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  23.225 seconds)
+   **Total running time of the script:** ( 1 minutes  25.141 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_image_matching_jittor.py:

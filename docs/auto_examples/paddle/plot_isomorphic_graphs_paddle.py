@@ -8,7 +8,8 @@ This example is an introduction to ``pygmtools`` which shows how to match isomor
 Isomorphic graphs mean graphs whose structures are identical, but the node correspondence is unknown.
 """
 
-# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>, Qi Liu <purewhite@sjtu.edu.cn>
+# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
+#         Qi Liu <purewhite@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 6

@@ -200,7 +200,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f20096c7610>
+    <matplotlib.image.AxesImage object at 0x7fd867606220>
 
 
 
@@ -255,7 +255,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff753e520>
+    <matplotlib.image.AxesImage object at 0x7fd867b2c8e0>
 
 
 
@@ -310,7 +310,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff752efa0>
+    <matplotlib.image.AxesImage object at 0x7fd8679e0b20>
 
 
 
@@ -441,7 +441,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200976d220>
+    <matplotlib.image.AxesImage object at 0x7fd868243940>
 
 
 
@@ -497,7 +497,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f20096afb80>
+    <matplotlib.image.AxesImage object at 0x7fd86838c850>
 
 
 
@@ -519,6 +519,34 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='doc-0o-cc-docs.googleusercontent.com', port=443): Max retries exceeded with url: /docs/securesc/ha0ro937gcuc7l7deffksulhg5h7mbp1/bvf212d39oou09ftriha793afe8790s1/1678197975000/06552463500435400376/*/1POvy6J-9UDNy93qJCKu-czh2FCYkykMK?e=download&uuid=d8fb3ca2-24d4-4a1a-aacb-fd9773fedefe (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_pytorch.pt...
+      0%|          | 0/23119 [00:00<?, ?it/s]    100%|##########| 22.6k/22.6k [00:00<00:00, 60.9kB/s]    100%|##########| 22.6k/22.6k [00:00<00:00, 60.7kB/s]
 
 
 
@@ -553,14 +581,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff7457550>
+    <matplotlib.image.AxesImage object at 0x7fd8682f2820>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  6.209 seconds)
+   **Total running time of the script:** ( 0 minutes  32.533 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_isomorphic_graphs_pytorch.py:

@@ -156,7 +156,7 @@ The seed matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff745b3a0>
+    <matplotlib.image.AxesImage object at 0x7fd868091af0>
 
 
 
@@ -288,7 +288,7 @@ Visualization of the affinity matrix.
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200979dcd0>
+    <matplotlib.image.AxesImage object at 0x7fd868b07730>
 
 
 
@@ -343,7 +343,7 @@ The output of RRWM is a soft matching matrix. The matching prior is well-preserv
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff74bd9a0>
+    <matplotlib.image.AxesImage object at 0x7fd8680bcfd0>
 
 
 
@@ -398,7 +398,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f201bc30400>
+    <matplotlib.image.AxesImage object at 0x7fd867a161f0>
 
 
 
@@ -544,7 +544,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200a4b5a90>
+    <matplotlib.image.AxesImage object at 0x7fd868234af0>
 
 
 
@@ -600,7 +600,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff74a0550>
+    <matplotlib.image.AxesImage object at 0x7fd8678679d0>
 
 
 
@@ -656,14 +656,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff74826a0>
+    <matplotlib.image.AxesImage object at 0x7fd8688888e0>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  5.845 seconds)
+   **Total running time of the script:** ( 0 minutes  2.452 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_seed_graph_match_pytorch.py:

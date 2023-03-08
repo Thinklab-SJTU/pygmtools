@@ -201,7 +201,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff7529e50>
+    <matplotlib.image.AxesImage object at 0x7f8fbbf5dd90>
 
 
 
@@ -256,7 +256,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f200aaf5490>
+    <matplotlib.image.AxesImage object at 0x7f8fbbd048e0>
 
 
 
@@ -311,7 +311,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f2006926850>
+    <matplotlib.image.AxesImage object at 0x7f8fbb87afd0>
 
 
 
@@ -412,7 +412,7 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
  .. code-block:: none
 
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/pygmtools/numpy_backend.py:303: RuntimeWarning: invalid value encountered in divide
+    /Users/guoziao/Desktop/pygmtools-git/pygmtools/numpy_backend.py:304: RuntimeWarning: invalid value encountered in true_divide
       t0 = alpha / beta
 
 
@@ -449,7 +449,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1ff741b070>
+    <matplotlib.image.AxesImage object at 0x7f8fbb9126a0>
 
 
 
@@ -505,7 +505,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f1feaf31460>
+    <matplotlib.image.AxesImage object at 0x7f8fbbf41d60>
 
 
 
@@ -526,6 +526,40 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='doc-10-4c-docs.googleusercontent.com', port=443): Max retries exceeded with url: /docs/securesc/ha0ro937gcuc7l7deffksulhg5h7mbp1/4oelpku25cc7uqakv0so3e5qaahk12gj/1678173600000/11502893918615205786/*/1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR?e=download&uuid=5950de61-0e48-4a5c-aa10-fa05d0a65945 (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /u/0/uc?export=download&confirm=Z-AR&id=1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='doc-10-4c-docs.googleusercontent.com', port=443): Max retries exceeded with url: /docs/securesc/ha0ro937gcuc7l7deffksulhg5h7mbp1/4oelpku25cc7uqakv0so3e5qaahk12gj/1678173600000/11502893918615205786/*/1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR?e=download&uuid=021d0f2e-5f7f-4d72-b6d7-25ea4bad4087 (Caused by ProxyError('Cannot connect to proxy.', OSError(0, 'Error')))
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_voc_numpy.npy...
+      0%|          | 0/14319 [00:00<?, ?it/s]    100%|##########| 14.0k/14.0k [00:00<00:00, 4.04MB/s]
 
 
 
@@ -560,14 +594,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f20068c2820>
+    <matplotlib.image.AxesImage object at 0x7f8fbbcf2130>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.326 seconds)
+   **Total running time of the script:** ( 0 minutes  41.920 seconds)
 
 
 .. _sphx_glr_download_auto_examples_numpy_plot_isomorphic_graphs_numpy.py:

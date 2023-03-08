@@ -151,6 +151,17 @@ Load the trained models to be fused
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Downloading https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz to ../data/mnist_data_jittor/t10k-images-idx3-ubyte.gz
+    0.00B [00:00, ?B/s]      0%|          | 0.00/1.57M [00:02<?, ?B/s]      5%|5         | 88.0k/1.57M [00:02<00:01, 808kB/s]     16%|#6        | 264k/1.57M [00:02<00:01, 1.34MB/s]     41%|####      | 656k/1.57M [00:02<00:00, 2.41MB/s]Downloading https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz to ../data/mnist_data_jittor/t10k-labels-idx1-ubyte.gz
+
+    0.00B [00:00, ?B/s]
+      0%|          | 0.00/4.44k [00:03<?, ?B/s]    1.58MB [00:06, 254kB/s]                            
+    8.00kB [00:03, 2.26kB/s]                   
+
 
 
 
@@ -683,15 +694,15 @@ the fused model = 80% model1 + 20% model2.
 
     Graph Matching Fusion
     1.00 model1 + 0.00 model2 -> fused model accuracy: 84.18%
-    0.90 model1 + 0.10 model2 -> fused model accuracy: 85.12%
-    0.80 model1 + 0.20 model2 -> fused model accuracy: 85.21%
-    0.70 model1 + 0.30 model2 -> fused model accuracy: 82.52%
-    0.60 model1 + 0.40 model2 -> fused model accuracy: 71.11%
-    0.50 model1 + 0.50 model2 -> fused model accuracy: 53.74%
-    0.40 model1 + 0.60 model2 -> fused model accuracy: 63.26%
-    0.30 model1 + 0.70 model2 -> fused model accuracy: 78.51%
-    0.20 model1 + 0.80 model2 -> fused model accuracy: 82.81%
-    0.10 model1 + 0.90 model2 -> fused model accuracy: 83.97%
+    0.90 model1 + 0.10 model2 -> fused model accuracy: 85.35%
+    0.80 model1 + 0.20 model2 -> fused model accuracy: 85.82%
+    0.70 model1 + 0.30 model2 -> fused model accuracy: 84.44%
+    0.60 model1 + 0.40 model2 -> fused model accuracy: 77.02%
+    0.50 model1 + 0.50 model2 -> fused model accuracy: 61.29%
+    0.40 model1 + 0.60 model2 -> fused model accuracy: 68.53%
+    0.30 model1 + 0.70 model2 -> fused model accuracy: 79.25%
+    0.20 model1 + 0.80 model2 -> fused model accuracy: 82.66%
+    0.10 model1 + 0.90 model2 -> fused model accuracy: 83.88%
     0.00 model1 + 1.00 model2 -> fused model accuracy: 83.81%
 
 
@@ -772,9 +783,9 @@ Print the result summary
 
  .. code-block:: none
 
-    time consumed for model fusion: 793.24 seconds
+    time consumed for model fusion: 304.79 seconds
     model1 accuracy = 84.18%, model2 accuracy = 83.81%
-    best fused model accuracy: 85.21%
+    best fused model accuracy: 85.82%
 
 
 
@@ -789,7 +800,7 @@ Print the result summary
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 13 minutes  52.165 seconds)
+   **Total running time of the script:** ( 5 minutes  29.726 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_model_fusion_jittor.py:

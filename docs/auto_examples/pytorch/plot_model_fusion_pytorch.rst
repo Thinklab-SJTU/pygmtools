@@ -772,7 +772,7 @@ Print the result summary
 
  .. code-block:: none
 
-    time consumed for model fusion: 283.20 seconds
+    time consumed for model fusion: 102.27 seconds
     model1 accuracy = 84.18%, model2 accuracy = 83.81%
     best fused model accuracy: 85.21%
 
@@ -789,7 +789,7 @@ Print the result summary
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 5 minutes  10.084 seconds)
+   **Total running time of the script:** ( 1 minutes  50.463 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pytorch_plot_model_fusion_pytorch.py:

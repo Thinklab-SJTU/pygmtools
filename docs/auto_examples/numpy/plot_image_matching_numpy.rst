@@ -110,15 +110,6 @@ The images are resized to 256x256.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/examples/numpy/plot_image_matching_numpy.py:59: DeprecationWarning: BILINEAR is deprecated and will be removed in Pillow 10 (2023-07-01). Use Resampling.BILINEAR instead.
-      img1 = img1.resize(obj_resize, resample=Image.BILINEAR)
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/examples/numpy/plot_image_matching_numpy.py:60: DeprecationWarning: BILINEAR is deprecated and will be removed in Pillow 10 (2023-07-01). Use Resampling.BILINEAR instead.
-      img2 = img2.resize(obj_resize, resample=Image.BILINEAR)
-
 
 
 
@@ -387,7 +378,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f20096c6b20>
+    <matplotlib.image.AxesImage object at 0x7f8fbbfb17f0>
 
 
 
@@ -507,7 +498,7 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
  .. code-block:: none
 
-    /mnt/c/Users/liber/OneDrive/Documents/2022/pygmtools/pygmtools/numpy_backend.py:303: RuntimeWarning: invalid value encountered in divide
+    /Users/guoziao/Desktop/pygmtools-git/pygmtools/numpy_backend.py:304: RuntimeWarning: invalid value encountered in true_divide
       t0 = alpha / beta
 
 
@@ -593,6 +584,16 @@ The NGM solver pretrained on Willow dataset:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_numpy.npy...
+
+    Downloading to /Users/guoziao/Library/Caches/pygmtools/ngm_willow_numpy.npy...
+      0%|          | 0/14319 [00:00<?, ?it/s]    100%|##########| 14.0k/14.0k [00:00<00:00, 2.66MB/s]
+
 
 
 
@@ -634,7 +635,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.895 seconds)
+   **Total running time of the script:** ( 0 minutes  9.602 seconds)
 
 
 .. _sphx_glr_download_auto_examples_numpy_plot_image_matching_numpy.py:

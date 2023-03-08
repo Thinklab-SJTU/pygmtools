@@ -155,9 +155,7 @@ class CNNNet(paddle.nn.Layer):
 # load the weights and then extract the CNN features
 #
 cnn = CNNNet(vgg16_cnn)
-path = '../data/vgg16_pca_voc_paddle.pdparams'
-# download url:
-# path = pygm.utils.download('vgg16_pca_voc_paddle.pdparams', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1rIb_fPx20a4Q1GGlUsF8lAY1XNCyGO6L')
+path = pygm.utils.download('vgg16_pca_voc_paddle.pdparams', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1rIb_fPx20a4Q1GGlUsF8lAY1XNCyGO6L')
 cnn.set_dict(paddle.load(path))
 with paddle.set_grad_enabled(False):
     feat1_local, feat1_global = cnn(paddle_img1)
@@ -249,9 +247,7 @@ for i in range(X.shape[0]):
 # ^^^^^^^^^^^^^^^^^^^^^^^^^
 # See :func:`~pygmtools.neural_solvers.ipca_gm` for the API reference.
 #
-path = '../data/vgg16_ipca_voc_paddle.pdparams'
-# download url:
-# path = pygm.utils.download('vgg16_ipca_voc_paddle.pdparams', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1h_VEmlfMAeBszoR0DvMr6EPXdNVTfTgf')
+path = pygm.utils.download('vgg16_ipca_voc_paddle.pdparams', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1h_VEmlfMAeBszoR0DvMr6EPXdNVTfTgf')
 cnn.set_dict(paddle.load(path))
 
 with paddle.set_grad_enabled(False):
@@ -324,9 +320,7 @@ for i in range(X.shape[0]):
 # ^^^^^^^^^^^^^^^^^^^^^^
 # See :func:`~pygmtools.neural_solvers.cie` for the API reference.
 #
-path = '../data/vgg16_cie_voc_paddle.pdparams'
-# download url:
-# path = pygm.utils.download('vgg16_cie_voc_paddle.pdparams', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=18MwP3nuMkqDiiwRd_y6rlFmtjKi9THb-')
+path = pygm.utils.download('vgg16_cie_voc_paddle.pdparams', 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=18MwP3nuMkqDiiwRd_y6rlFmtjKi9THb-')
 cnn.set_dict(paddle.load(path))
 
 with paddle.set_grad_enabled(False):

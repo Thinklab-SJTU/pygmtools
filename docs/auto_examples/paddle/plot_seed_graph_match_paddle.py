@@ -8,7 +8,8 @@ Seeded graph matching means some partial of the matching result is already known
 results are called "seeds". In this example, we show how to exploit such prior with ``pygmtools``.
 """
 
-# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>, Qi Liu <purewhite@sjtu.edu.cn>
+# Author: Runzhong Wang <runzhong.wang@sjtu.edu.cn>
+#         Qi Liu <purewhite@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 6

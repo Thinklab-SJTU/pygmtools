@@ -122,11 +122,9 @@ plot_image_with_graph(img2, kpts2, A2)
 # Let's adopt the VGG16 CNN model to extract node features.
 #
 vgg16_cnn = vgg16(pretrained=False, batch_norm=True) # no official pretrained paddle weight for vgg16_bn provided yet
-path = '../data/vgg16_bn.pdparams'
-# download url:
-# path = pygm.utils.download(filename='vgg16_bn.pdparams', \
-#                            url='https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11AGmtBrIZJLXJMk4Um9xQPai2EH7KjRY', \
-#                            md5='cf6079f3c8d16f42a93fc8f8b62e20d1') 
+path = pygm.utils.download(filename='vgg16_bn.pdparams', \
+                           url='https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11AGmtBrIZJLXJMk4Um9xQPai2EH7KjRY', \
+                           md5='cf6079f3c8d16f42a93fc8f8b62e20d1') 
 vgg16_cnn.set_dict(paddle.load(path))
 paddle_img1 = paddle.to_tensor(np.array(img1, dtype=np.float32) / 256).transpose((2, 0, 1)).unsqueeze(0) # shape: BxCxHxW
 paddle_img2 = paddle.to_tensor(np.array(img2, dtype=np.float32) / 256).transpose((2, 0, 1)).unsqueeze(0) # shape: BxCxHxW

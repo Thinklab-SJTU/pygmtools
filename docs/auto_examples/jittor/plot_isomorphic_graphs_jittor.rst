@@ -203,7 +203,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f2030024700>
+    <matplotlib.image.AxesImage object at 0x7feef6f66820>
 
 
 
@@ -258,7 +258,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f201bc41070>
+    <matplotlib.image.AxesImage object at 0x7feef71d4430>
 
 
 
@@ -313,7 +313,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f201b7634f0>
+    <matplotlib.image.AxesImage object at 0x7feef6946b20>
 
 
 
@@ -444,7 +444,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f201978f1f0>
+    <matplotlib.image.AxesImage object at 0x7feef5a85940>
 
 
 
@@ -500,7 +500,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f2018a806a0>
+    <matplotlib.image.AxesImage object at 0x7feef6b3e160>
 
 
 
@@ -556,14 +556,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f201acf5b50>
+    <matplotlib.image.AxesImage object at 0x7feef3e7e280>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  29.870 seconds)
+   **Total running time of the script:** ( 0 minutes  16.270 seconds)
 
 
 .. _sphx_glr_download_auto_examples_jittor_plot_isomorphic_graphs_jittor.py:
