@@ -107,6 +107,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Operating System :: OS Independent',
         'Environment :: GPU :: NVIDIA CUDA',
+        'Environment :: Console',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Image Recognition',
         'Topic :: Scientific/Engineering :: Mathematics',
