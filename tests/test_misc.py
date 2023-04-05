@@ -14,13 +14,15 @@ import pygmtools as pygm
 import itertools
 import numpy as np
 
+import platform
+os_name = platform.system()
+backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle', 'tensorflow']
 
 def test_env_report():
     pygm.env_report()
 
 
 def test_generate_isomorphic_graphs():
-    backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow']
     for backend in backends:
         pygm.BACKEND = backend
         A, X = pygm.utils.generate_isomorphic_graphs(10)
@@ -49,7 +51,6 @@ def test_generate_isomorphic_graphs():
 
 def test_permutation_loss():
     num_nodes = 10
-    backends = ['pytorch', 'paddle', 'jittor', 'tensorflow']
     for backend in backends:
         pygm.BACKEND = backend
         A, X_gt = pygm.utils.generate_isomorphic_graphs(num_nodes)
@@ -80,7 +81,7 @@ def test_multi_matching_result():
         for j in range(X.shape[1]):
             mmX[i, j] = X[i, j]
 
-    for backend in ['numpy', 'pytorch', 'paddle', 'jittor']:
+    for backend in backends:
         newX = pygm.utils.from_numpy(mmX, backend=backend)
         newX.__repr__()
         newX.__str__()
