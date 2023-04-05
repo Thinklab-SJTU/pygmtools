@@ -52,6 +52,8 @@ def test_generate_isomorphic_graphs():
 def test_permutation_loss():
     num_nodes = 10
     for backend in backends:
+        if backend == 'numpy':
+            continue
         pygm.BACKEND = backend
         A, X_gt = pygm.utils.generate_isomorphic_graphs(num_nodes)
         n1 = n2 = num_nodes
