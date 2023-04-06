@@ -9,14 +9,13 @@ on:
   pull_request:
     branches: [ main ]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   linux:
 
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-group-1
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -48,6 +47,9 @@ jobs:
   macos:
 
     runs-on: macos-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-group-2
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -77,6 +79,9 @@ jobs:
   windows:
 
     runs-on: windows-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-group-3
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
