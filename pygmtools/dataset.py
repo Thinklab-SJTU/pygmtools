@@ -225,8 +225,10 @@ class PascalVOC:
             for file_name in tqdm(file_names):
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
-            if not is_file_in_use(filename):
+            try:
                 os.remove(filename)
+            except PermissionError:
+                pass
 
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
@@ -245,8 +247,10 @@ class PascalVOC:
             for file_name in tqdm(file_names):
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
-            if not is_file_in_use(filename):
+            try:
                 os.remove(filename)
+            except PermissionError:
+                pass
         return filename
 
     def __filter_list(self, a_xml_list):
@@ -540,8 +544,10 @@ class WillowObject:
         sleep(0.5)
         for file in tqdm(fz.namelist()):
             fz.extract(file, "data/WillowObject/")
-        if not is_file_in_use(filename):
+        try:
             os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -820,8 +826,10 @@ class SPair71k:
         for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
-        if not is_file_in_use(filename):
+        try:
             os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -1070,8 +1078,10 @@ class IMC_PT_SparseGM:
         for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
-        if not is_file_in_use(filename):
+        try:
             os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -1264,8 +1274,10 @@ class CUB2011:
         for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
-        if not is_file_in_use(filename):
+        try:
             os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -1351,17 +1363,17 @@ class CUB2011:
         return ans
 
 
-def is_file_in_use(file_path):
-    """
-    Check if a file is currently in use by any process
-    """
-    abs_path = os.path.abspath(file_path)
-
-    for proc in psutil.process_iter():
-        try:
-            for item in proc.open_files():
-                if abs_path == item.path:
-                    return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-    return False
+# def is_file_in_use(file_path):
+#     """
+#     Check if a file is currently in use by any process
+#     """
+#     abs_path = os.path.abspath(file_path)
+#
+#     for proc in psutil.process_iter():
+#         try:
+#             for item in proc.open_files():
+#                 if abs_path == item.path:
+#                     return True
+#         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+#             pass
+#     return False
