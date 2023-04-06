@@ -524,7 +524,9 @@ class WillowObject:
             os.makedirs(dirs)
 
         print('Downloading dataset WillowObject...')
-        filename = "data/WILLOW.zip"
+        import random
+        rand_number = random.randint(0,10000)
+        filename = "data/WILLOW_{}.zip".format(rand_number)
         download(filename=filename, url=url, to_cache=False)
         try:
             fz = zipfile.ZipFile(filename, "r")
