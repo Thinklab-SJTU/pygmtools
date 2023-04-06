@@ -22,7 +22,7 @@ from test_utils import *
 
 import platform
 os_name = platform.system()
-backends = ['pytorch', 'numpy', 'paddle', 'jittor'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle']
+backends = ['pytorch', 'numpy', 'jittor', 'paddle'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle']
 
 
 # The testing function for quadratic assignment
