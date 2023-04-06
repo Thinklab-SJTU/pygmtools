@@ -57,9 +57,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-#          brew reinstall libomp
-#          brew --prefix libomp
-#          export LIBRARY_PATH=/usr/local/opt
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
           pip install -r tests/requirements_win.txt
