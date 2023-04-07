@@ -30,7 +30,6 @@ import json
 import scipy.io as sio
 import glob
 import random
-import psutil
 from pygmtools.utils import download
 
 
@@ -1361,19 +1360,3 @@ class CUB2011:
             else:
                 ans[keys[idx]] = [val_i]
         return ans
-
-
-# def is_file_in_use(file_path):
-#     """
-#     Check if a file is currently in use by any process
-#     """
-#     abs_path = os.path.abspath(file_path)
-#
-#     for proc in psutil.process_iter():
-#         try:
-#             for item in proc.open_files():
-#                 if abs_path == item.path:
-#                     return True
-#         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-#             pass
-#     return False
