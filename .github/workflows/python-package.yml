@@ -29,8 +29,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest-cov
         if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
-        ldd /opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/site-packages/mindspore/lib/libmindspore_backend.so
-        nm -D /opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/site-packages/mindspore/lib/libdnnl.so.2 | grep dnnl_threadpool_interop_stream_create
+        python -c "import mindspore"
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
