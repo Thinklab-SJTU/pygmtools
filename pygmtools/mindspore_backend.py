@@ -308,9 +308,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
 
     # get values of n1, n2, n1max, n2max and check
     if n1 is None:
-        n1 = mindspore.numpy.full((batch_num,), n1max, dtype=mindspore.int_)
+        n1 = mindspore.numpy.full((batch_num,), n1max, dtype=mindspore.numpy.int_)
     if n2 is None:
-        n2 = mindspore.numpy.full((batch_num,), n2max, dtype=mindspore.int_)
+        n2 = mindspore.numpy.full((batch_num,), n2max, dtype=mindspore.numpy.int_)
     if n1max is None:
         n1max = mindspore.ops.max(n1)[1]
     if n2max is None:
@@ -501,13 +501,14 @@ def _aff_mat_from_node_edge_aff(node_aff: mindspore.Tensor, edge_aff: mindspore.
     return mindspore.ops.stack(ks, axis=0)
 
 
-def _check_data_type(input: mindspore.Tensor, var_name=None):
+def _check_data_type(input: mindspore.Tensor, var_name, raise_err):
     """
     mindspore implementation of _check_data_type
     """
-    if type(input) is not mindspore.Tensor:
-        raise ValueError(f'Expected Pytorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+    if raise_err and type(input) is not mindspore.Tensor:
+        raise ValueError(f'Expected mindspore Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
                          f'but got {type(input)}. Perhaps the wrong backend?')
+    return type(input) is mindspore.Tensor
 
 
 def _check_shape(input, dim_num):

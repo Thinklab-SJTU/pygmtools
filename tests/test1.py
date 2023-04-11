@@ -1,13 +1,8 @@
+import sys
+
+sys.path.insert(0, '.')
+
 import importlib
-# import numpy as np
-# import torch
-# import functools
-# import itertools
-# from tqdm import tqdm
-#
-# from test_utils import *
-#
-# import pygmtools as pygm
 
 # def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params,
 #                                               backends):
