@@ -110,6 +110,6 @@ import importlib
 #     'outlier_num': [0, 5, 10]
 # }, ['pytorch', 'numpy', 'mindspore'])
 
-a = importlib.import_module('mindspore')
+a = importlib.import_module(f'pygmtools.mindspore_backend')
 
 print(a)
