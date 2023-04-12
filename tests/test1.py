@@ -1,9 +1,7 @@
 import sys
 
-import pygmtools
-
 sys.path.insert(0, '.')
-
+import pygmtools
 import importlib
 
 # def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params,
