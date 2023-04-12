@@ -29,7 +29,6 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest-cov
         if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
-        python tests/test1.py
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -38,7 +37,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        python tests/test1.py
         pytest --cov=pygmtools --cov-report=xml
     - name: Upload to codecov
       uses: codecov/codecov-action@v3
