@@ -1,0 +1,12 @@
+requests>=2.25.1
+scipy>=1.4.1
+Pillow>=7.2.0
+numpy>=1.18.5
+easydict>=1.7
+paddlepaddle==2.4.1
+protobuf==3.19.5
+torch
+tqdm
+appdirs>=1.4.4
+tensorflow==2.9.3
+wget

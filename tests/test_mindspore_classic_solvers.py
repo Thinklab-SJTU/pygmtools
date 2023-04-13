@@ -1,24 +1,3 @@
-# # import os
-# #
-# # os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-# import sys
-#
-# sys.path.insert(0, '.')
-#
-# import numpy as np
-# import torch
-# import functools
-# import itertools
-# from tqdm import tqdm
-#
-# from test_utils import *
-#
-# pygm.BACKEND = 'mindspore'
-# a = np.array([0])
-# b = data_from_numpy(a)
-# print(type(a))
-# print(type(b))
-
 # Copyright (c) 2022 Thinklab@SJTU
 # pygmtools is licensed under Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -28,9 +7,7 @@
 # EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
-import os
 
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import sys
 
 sys.path.insert(0, '.')
@@ -43,12 +20,14 @@ from tqdm import tqdm
 
 from test_utils import *
 
+backends = ['mindspore']
+
 
 # The testing function for quadratic assignment
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
-    if backends[0] != 'pytorch': backends.insert(0, 'pytorch')  # force pytorch as the reference backend
+    if backends[0] != 'pytorch': backends.insert(0, 'pytorch') # force pytorch as the reference backend
 
     batch_size = len(graph_num_nodes)
 
@@ -122,9 +101,8 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
 
 
 # The testing function for linear assignment
-def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params,
-                                              backends):
-    if backends[0] != 'pytorch': backends.insert(0, 'pytorch')  # force pytorch as the reference backend
+def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_dim, solver_func, matrix_params, backends):
+    if backends[0] != 'pytorch': backends.insert(0, 'pytorch') # force pytorch as the reference backend
     batch_size = len(num_nodes1)
 
     # iterate over matrix parameters
@@ -148,9 +126,8 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
         for b, (num_node1, num_node2) in enumerate(zip(num_nodes1, num_nodes2)):
             outlier_num = prob_param_dict['outlier_num'] if 'outlier_num' in prob_param_dict else 0
             max_inlier_index = max(num_node1, num_node2)
-            As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(max_inlier_index + outlier_num * 2,
-                                                                       node_feat_dim=node_feat_dim)
-            Fs_b = Fs_b / torch.norm(Fs_b, dim=-1, p='fro', keepdim=True)  # normalize features
+            As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(max_inlier_index + outlier_num * 2, node_feat_dim=node_feat_dim)
+            Fs_b = Fs_b / torch.norm(Fs_b, dim=-1, p='fro', keepdim=True) # normalize features
             outlier_indices_1 = list(range(max_inlier_index, max_inlier_index + outlier_num))
             outlier_indices_2 = list(range(max_inlier_index + outlier_num, max_inlier_index + outlier_num * 2))
             idx1 = list(set(list(range(num_node1)) + outlier_indices_1))
@@ -185,12 +162,15 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             _F1, _F2, _n1, _n2 = data_from_numpy(F1, F2, n1, n2)
 
             if batch_size > 1:
-                linear_sim = []
-                for b in range(batch_size):
-                    linear_sim.append(pygm.utils._mm(_F1[b], pygm.utils._transpose(_F2[b], 0, 1)))
-                linear_sim = pygm.utils.build_batch(linear_sim)
+                reshape_size = (batch_size, max(n2), max(n1))
             else:
-                linear_sim = pygm.utils._mm(_F1, pygm.utils._transpose(_F2, 0, 1))
+                reshape_size = (max(n2), max(n1))
+            quad_sim = pygm.utils.build_aff_mat(_F1, None, None, _F2, None, None)
+            linear_sim = pygm.utils.from_numpy(
+                np.diagonal(pygm.utils.to_numpy(quad_sim), axis1=-2, axis2=-1).
+                    reshape(reshape_size).\
+                    swapaxes(-1, -2)
+            )
 
             # call the solver
             if unmatch:
@@ -223,23 +203,23 @@ def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
-    }, ['pytorch', 'numpy', 'tensorflow', 'mindspore'])
+    }, backends)
 
     # non-batched input
     _test_classic_solver_on_linear_assignment([10], [30], 10, pygm.hungarian, {
         'nproc': [1],
         'outlier_num': [0, 5]
-    }, ['pytorch', 'numpy', 'tensorflow', 'mindspore'])
+    }, backends)
 
 
 def test_sinkhorn():
     # test non-symmetric matching
     args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
-        'tau': [0.1, 0.01],
-        'max_iter': [10, 20, 50],
-        'batched_operation': [True, False],
-        'dummy_row': [True, ],
-    }, ['pytorch', 'numpy', 'mindspore'])
+            'tau': [0.1, 0.01],
+            'max_iter': [10, 20, 50],
+            'batched_operation': [True, False],
+            'dummy_row': [True, ],
+    }, backends)
 
     # test symmetric matching
     args2 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -247,7 +227,7 @@ def test_sinkhorn():
         'max_iter': [10, 20, 50],
         'batched_operation': [True, False],
         'dummy_row': [True, False],
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     # test outlier matching (non-symmetric)
     args3 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
@@ -256,7 +236,7 @@ def test_sinkhorn():
         'batched_operation': [True, False],
         'dummy_row': [True, False],
         'outlier_num': [5, 10]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     # test outlier matching (symmetric)
     args4 = (list(range(10, 30, 2)), list(range(10, 30, 2)), 10, pygm.sinkhorn, {
@@ -265,7 +245,7 @@ def test_sinkhorn():
         'batched_operation': [True, False],
         'dummy_row': [True, False],
         'outlier_num': [5, 10]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     # test non-batched matching
     args5 = ([30], [10], 10, pygm.sinkhorn, {
@@ -274,7 +254,7 @@ def test_sinkhorn():
         'batched_operation': [True],
         'dummy_row': [True],
         'outlier_num': [0, 5]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     _test_classic_solver_on_linear_assignment(*args1)
     _test_classic_solver_on_linear_assignment(*args2)
@@ -291,7 +271,7 @@ def test_rrwm():
         'max_iter': [20, 50],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     # non-batched input
     _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.rrwm, {
@@ -301,7 +281,7 @@ def test_rrwm():
         'max_iter': [20],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
 
 def test_sm():
@@ -309,14 +289,14 @@ def test_sm():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     # non-batched input
     _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.sm, {
         'max_iter': [10],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
 
 def test_ipfp():
@@ -324,19 +304,19 @@ def test_ipfp():
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
     # non-batched input
     _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.ipfp, {
         'max_iter': [10],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
-    }, ['pytorch', 'numpy', 'mindspore'])
+    }, backends)
 
 
 if __name__ == '__main__':
     test_hungarian()
-    # test_sinkhorn()
-    # test_rrwm()
-    # test_sm()
-    # test_ipfp()
+    test_sinkhorn()
+    test_rrwm()
+    test_sm()
+    test_ipfp()
