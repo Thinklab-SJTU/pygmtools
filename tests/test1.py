@@ -223,13 +223,13 @@ def test_hungarian():
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
-    }, ['pytorch', 'numpy', 'paddle', 'mindspore'])
+    }, ['pytorch', 'numpy', 'tensorflow', 'mindspore'])
 
     # non-batched input
     _test_classic_solver_on_linear_assignment([10], [30], 10, pygm.hungarian, {
         'nproc': [1],
         'outlier_num': [0, 5]
-    }, ['pytorch', 'numpy', 'paddle', 'mindspore'])
+    }, ['pytorch', 'numpy', 'tensorflow', 'mindspore'])
 
 
 def test_sinkhorn():
