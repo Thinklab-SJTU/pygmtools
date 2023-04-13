@@ -15,6 +15,7 @@ import functools
 import itertools
 import pygmtools.utils
 from multiprocessing import Pool
+import os
 from pygmtools.numpy_backend import _hung_kernel
 
 #############################################
@@ -1152,7 +1153,10 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         if pretrain:
             if pretrain in ngm_pretrain_path:
                 url, md5 = ngm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url, md5)
+                try:
+                    filename = pygmtools.utils.download(f'ngm_{pretrain}_jittor.pt', url, md5)
+                except:
+                    filename = os.path.dirname(__file__) + f'/temp/ngm_{pretrain}_jittor.pt'
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ngm_pretrain_path.keys()}')
@@ -1372,16 +1376,16 @@ def _aff_mat_from_node_edge_aff(node_aff: Var, edge_aff: Var, connectivity1: Var
         if n2 is None:
             n2 = jt.max(jt.max(connectivity2, dim=-1), dim=-1) + 1
         if ne1 is None:
-            ne1 = [edge_aff.shape[1]] * batch_size
+            ne1 = jt.Var([edge_aff.shape[1]] * batch_size)
         if ne2 is None:
-            ne2 = [edge_aff.shape[2]] * batch_size
+            ne2 = jt.Var([edge_aff.shape[2]] * batch_size)
     else:
         dtype = node_aff.dtype
         batch_size = node_aff.shape[0]
         if n1 is None:
-            n1 = [node_aff.shape[1]] * batch_size
+            n1 = jt.Var([node_aff.shape[1]] * batch_size)
         if n2 is None:
-            n2 = [node_aff.shape[2]] * batch_size
+            n2 = jt.Var([node_aff.shape[2]] * batch_size)
 
     n1max = int(max(n1).item())
     n2max = int(max(n2).item())

@@ -224,7 +224,10 @@ class PascalVOC:
             for file_name in tqdm(file_names):
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
-            os.remove(filename)
+            try:
+                os.remove(filename)
+            except PermissionError:
+                pass
 
         if name == "PascalVOC":
             print('Downloading dataset PascalVOC...')
@@ -243,7 +246,10 @@ class PascalVOC:
             for file_name in tqdm(file_names):
                 tar.extract(file_name, "data/PascalVOC/")
             tar.close()
-            os.remove(filename)
+            try:
+                os.remove(filename)
+            except PermissionError:
+                pass
         return filename
 
     def __filter_list(self, a_xml_list):
@@ -537,7 +543,10 @@ class WillowObject:
         sleep(0.5)
         for file in tqdm(fz.namelist()):
             fz.extract(file, "data/WillowObject/")
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -816,7 +825,10 @@ class SPair71k:
         for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -1065,7 +1077,10 @@ class IMC_PT_SparseGM:
         for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):
@@ -1258,7 +1273,10 @@ class CUB2011:
         for file_name in tqdm(file_names):
             tar.extract(file_name, "data/")
         tar.close()
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except PermissionError:
+            pass
         return filename
 
     def process(self):

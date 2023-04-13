@@ -1204,7 +1204,7 @@ def _mm(input1, input2, backend=None):
         )
     return fn(*args)
 
-def download(filename, url, md5=None, retries=5, to_cache=True):
+def download(filename, url, md5=None, retries=10, to_cache=True):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
@@ -1235,7 +1235,10 @@ def download(filename, url, md5=None, retries=5, to_cache=True):
                 print('Warning: Network error. Retrying...\n', err)
                 return download(filename, url, md5, retries - 1)
         else:
-            wget.download(url,out=filename)
+            try:
+                wget.download(url,out=filename)
+            except:
+                return download(filename, url, md5, retries - 1)
     if md5 is not None:
         md5_returned = _get_md5(filename)
         if md5 != md5_returned:

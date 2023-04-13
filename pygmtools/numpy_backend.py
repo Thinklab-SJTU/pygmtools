@@ -13,6 +13,7 @@ import functools
 import scipy.special
 import scipy.optimize
 import numpy as np
+import os
 from multiprocessing import Pool
 import pygmtools.utils
 
@@ -1156,8 +1157,11 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         if pretrain:
             if pretrain in ngm_pretrain_path.keys():
                 url, md5 = ngm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ngm_{pretrain}_numpy.npy', url, md5)
-                ngm_numpy_dict = np.load(filename,allow_pickle=True)
+                try:
+                    filename = pygmtools.utils.download(f'ngm_{pretrain}_numpy.npy', url, md5)
+                except:
+                    filename = os.path.dirname(__file__) + f'/temp/ngm_{pretrain}_numpy.npy'
+                ngm_numpy_dict = np.load(filename, allow_pickle=True)
                 for i in range(network.gnn_layer):
                     gnn_layer = network.dict['gnn_layer_{}'.format(i)]
                     gnn_layer.classifier.weight = ngm_numpy_dict.item()['gnn_layer_{}.classifier.weight'.format(i)]
