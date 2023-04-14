@@ -37,7 +37,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest --cov=pygmtools --cov-report=xml tests/test_mindspore_classic_solvers.py
         pytest --cov=pygmtools --cov-report=xml
     - name: Upload to codecov
       uses: codecov/codecov-action@v3
