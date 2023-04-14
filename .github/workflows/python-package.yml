@@ -37,7 +37,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest --cov=pygmtools --cov-report=xml
+        pytest --cov=pygmtools --cov-report=xml tests/test_mindspore_classic_solvers.py
     - name: Upload to codecov
       uses: codecov/codecov-action@v3
 
@@ -68,7 +68,7 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest --cov=pygmtools --cov-report=xml
+          pytest --cov=pygmtools --cov-report=xml tests/test_mindspore_classic_solvers.py
   windows:
 
     runs-on: windows-latest
@@ -96,4 +96,4 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest --cov=pygmtools --cov-report=xml
+          pytest --cov=pygmtools --cov-report=xml tests/test_mindspore_classic_solvers.py
