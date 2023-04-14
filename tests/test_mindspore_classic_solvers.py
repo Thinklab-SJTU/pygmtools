@@ -91,7 +91,8 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
                 assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 1e-4, \
                     f"Incorrect GM solution for {working_backend}, " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
-                    f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+                    f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}" \
+                    f"np.abs: {np.abs(pygm.utils.to_numpy(_X) - last_X).sum()}"
             last_X = pygm.utils.to_numpy(_X)
 
             accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X, _n1, _n2)) * X_gt).sum() / X_gt.sum()
