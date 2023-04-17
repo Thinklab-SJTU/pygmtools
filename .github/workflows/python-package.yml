@@ -13,6 +13,8 @@ jobs:
   linux:
 
     runs-on: ubuntu-latest
+    container:
+      options: --memory=16G
     strategy:
       fail-fast: false
       matrix:
@@ -29,7 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest-cov
         if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
-        python tests/test_classic_solvers.py
+        python tests/test_mindspore_classic_solvers.py
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
