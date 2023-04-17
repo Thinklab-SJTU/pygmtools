@@ -13,13 +13,11 @@ jobs:
   linux:
 
     runs-on: ubuntu-latest
-    container:
-      image: docker://ubuntu:latest
-      options: --memory=16g
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9"]
+        memory: ["16GB"]
 
     steps:
     - uses: actions/checkout@v2
