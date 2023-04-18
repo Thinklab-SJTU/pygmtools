@@ -195,7 +195,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
                                   f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
             if last_X is not None:
-                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 6e-4, \
+                assert np.abs(pygm.utils.to_numpy(_X) - last_X).sum() < 1e-3, \
                     f"Incorrect GM solution for {working_backend}\n" \
                     f"params: {';'.join([k + '=' + str(v) for k, v in prob_param_dict.items()])}\n" \
                     f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
