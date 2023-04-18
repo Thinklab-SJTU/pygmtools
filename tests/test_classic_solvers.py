@@ -25,6 +25,7 @@ import platform
 os_name = platform.system()
 backends = ['pytorch', 'numpy', 'mindspore', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch',
                                                                                                            'numpy',
+                                                                                                           'mindspore',
                                                                                                            'paddle',
                                                                                                            'tensorflow']
 
