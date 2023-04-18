@@ -23,10 +23,11 @@ from test_utils import *
 import platform
 
 os_name = platform.system()
-backends = ['pytorch', 'numpy', 'mindspore', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch',
-                                                                                                 'numpy',
-                                                                                                 'mindspore',
-                                                                                                 'tensorflow']
+backends = ['pytorch', 'numpy', 'mindspore', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch',
+                                                                                                           'numpy',
+                                                                                                           'mindspore',
+                                                                                                           'paddle',
+                                                                                                           'tensorflow']
 
 
 # The testing function for quadratic assignment
