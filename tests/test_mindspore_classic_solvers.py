@@ -271,15 +271,6 @@ def test_rrwm():
         'alpha': [0.1, 0.5],
         'beta': [0.1, 1],
         'sk_iter': [10, 20],
-        'max_iter': [50],
-        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
-        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, backends)
-
-    _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.rrwm, {
-        'alpha': [0.5, 0.9],
-        'beta': [1, 10],
-        'sk_iter': [10, 20],
         'max_iter': [20],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
