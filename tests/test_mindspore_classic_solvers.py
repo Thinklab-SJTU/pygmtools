@@ -271,7 +271,7 @@ def test_rrwm():
         'alpha': [0.1, 0.5],
         'beta': [0.1, 1],
         'sk_iter': [10, 20],
-        'max_iter': [20, 50],
+        'max_iter': [50],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
     }, backends)
@@ -318,8 +318,8 @@ def test_ipfp():
 
 
 if __name__ == '__main__':
-    # test_hungarian()
-    # test_sinkhorn()
+    test_hungarian()
+    test_sinkhorn()
     test_rrwm()
-    # test_sm()
-    # test_ipfp()
+    test_sm()
+    test_ipfp()
