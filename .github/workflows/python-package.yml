@@ -100,4 +100,3 @@ jobs:
       - name: Test with pytest
         run: |
           pytest --cov=pygmtools --cov-report=xml tests/test_mindspore_classic_solvers.py
-        ram: '16 GB'
