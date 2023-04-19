@@ -13,9 +13,6 @@ jobs:
   linux:
 
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-      options: --memory=32g
     strategy:
       fail-fast: false
       matrix:
