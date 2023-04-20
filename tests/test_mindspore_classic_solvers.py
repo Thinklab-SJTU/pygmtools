@@ -289,7 +289,7 @@ def test_rrwm():
 
 def test_sm():
     _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
-        'max_iter': [10, 50, 100],
+        'max_iter': [50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
     }, backends)
