@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9"]
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
     - uses: actions/checkout@v2
@@ -71,6 +71,7 @@ jobs:
         run: |
           pytest --cov=pygmtools --cov-report=xml tests/test_mindspore_classic_solvers.py
           pytest --cov=pygmtools --cov-report=xml --ignore=tests/test_mindspore_classic_solvers.py
+
   windows:
 
     runs-on: windows-latest

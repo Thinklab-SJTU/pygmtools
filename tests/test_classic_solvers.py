@@ -21,12 +21,8 @@ from tqdm import tqdm
 from test_utils import *
 
 import platform
-
 os_name = platform.system()
-backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch',
-                                                                                              'numpy',
-                                                                                              'paddle',
-                                                                                              'tensorflow']
+backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle', 'tensorflow']
 
 
 # The testing function for quadratic assignment
@@ -176,8 +172,8 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             quad_sim = pygm.utils.build_aff_mat(_F1, None, None, _F2, None, None)
             linear_sim = pygm.utils.from_numpy(
                 np.diagonal(pygm.utils.to_numpy(quad_sim), axis1=-2, axis2=-1).
-                reshape(reshape_size). \
-                swapaxes(-1, -2)
+                    reshape(reshape_size).\
+                    swapaxes(-1, -2)
             )
 
             # call the solver
