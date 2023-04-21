@@ -801,7 +801,6 @@ class MultiMatchingResult:
                 [1., 0., 0., 0.],
                 [0., 1., 0., 0.]])
     """
-
     def __init__(self, cycle_consistent=False, backend=None):
         self.match_dict = {}
         self._cycle_consistent = cycle_consistent
