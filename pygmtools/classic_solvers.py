@@ -26,7 +26,7 @@ from pygmtools.utils import NOT_IMPLEMENTED_MSG, _check_shape, _get_shape, _unsq
 
 
 def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
-       max_iter: int = 50,
+       max_iter: int=50,
        backend=None):
     r"""
     Spectral Graph Matching solver for graph matching (Lawler's QAP).
@@ -398,7 +398,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
-         max_iter: int = 50, sk_iter: int = 20, alpha: float = 0.2, beta: float = 30,
+         max_iter: int=50, sk_iter: int=20, alpha: float=0.2, beta: float=30,
          backend=None):
     r"""
     Reweighted Random Walk Matching (RRWM) solver for graph matching (Lawler's QAP). This algorithm is implemented by
@@ -757,7 +757,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
-         max_iter: int = 50,
+         max_iter: int=50,
          backend=None):
     r"""
     Integer Projected Fixed Point (IPFP) method for graph matching (Lawler's QAP).
