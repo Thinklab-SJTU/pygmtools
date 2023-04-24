@@ -23,11 +23,9 @@ from test_utils import *
 import platform
 
 os_name = platform.system()
-backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch',
-                                                                                              'numpy',
-                                                                                              'paddle',
-                                                                                              'tensorflow']
 
+
+# backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle', 'tensorflow']
 
 # The testing function for quadratic assignment
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
@@ -207,7 +205,8 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             last_X = pygm.utils.to_numpy(_X)
 
 
-def test_hungarian():
+def test_hungarian(get_backend):
+    backends = ["pytorch", get_backend]
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
@@ -220,7 +219,8 @@ def test_hungarian():
     }, backends)
 
 
-def test_sinkhorn():
+def test_sinkhorn(get_backend):
+    backends = ["pytorch", get_backend]
     # test non-symmetric matching
     args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
         'tau': [0.1, 0.01],
@@ -271,15 +271,26 @@ def test_sinkhorn():
     _test_classic_solver_on_linear_assignment(*args5)
 
 
-def test_rrwm():
-    _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.rrwm, {
-        'alpha': [0.1, 0.5, 0.9],
-        'beta': [0.1, 1, 10],
-        'sk_iter': [10, 20],
-        'max_iter': [20, 50],
-        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
-        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, backends)
+def test_rrwm(get_backend):
+    backends = ["pytorch", get_backend]
+    if "mindspore" in backends:
+        _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.rrwm, {
+            'alpha': [0.1, 0.5],
+            'beta': [0.1, 1],
+            'sk_iter': [10, 20],
+            'max_iter': [20],
+            'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
+            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
+        }, backends)
+    else:
+        _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.rrwm, {
+            'alpha': [0.1, 0.5, 0.9],
+            'beta': [0.1, 1, 10],
+            'sk_iter': [10, 20],
+            'max_iter': [20, 50],
+            'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
+            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
+        }, backends)
 
     # non-batched input
     _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.rrwm, {
@@ -292,12 +303,20 @@ def test_rrwm():
     }, backends)
 
 
-def test_sm():
-    _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
-        'max_iter': [10, 50, 100],
-        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
-        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
-    }, backends)
+def test_sm(get_backend):
+    backends = ["pytorch", get_backend]
+    if "mindspore" in backends:
+        _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
+            'max_iter': [50, 100],
+            'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
+            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
+        }, backends)
+    else:
+        _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
+            'max_iter': [10, 50, 100],
+            'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
+            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn]
+        }, backends)
 
     # non-batched input
     _test_classic_solver_on_isomorphic_graphs([10], 10, pygm.sm, {
@@ -307,7 +326,8 @@ def test_sm():
     }, backends)
 
 
-def test_ipfp():
+def test_ipfp(get_backend):
+    backends = ["pytorch", get_backend]
     _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.ipfp, {
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
@@ -323,8 +343,8 @@ def test_ipfp():
 
 
 if __name__ == '__main__':
-    test_hungarian()
-    test_sinkhorn()
-    test_rrwm()
-    test_sm()
-    test_ipfp()
+    test_hungarian('')
+    test_sinkhorn('')
+    test_rrwm('')
+    test_sm('')
+    test_ipfp('')
