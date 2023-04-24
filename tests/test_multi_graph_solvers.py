@@ -22,10 +22,12 @@ from tqdm import tqdm
 
 from test_utils import *
 import platform
+
 os_name = platform.system()
 backends = ['pytorch', 'numpy', 'paddle', 'jittor'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle']
 if os_name == 'Linux':
     import jittor as jt
+
 
 # The testing function
 def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, solver_func, mode, matrix_params,
@@ -193,25 +195,25 @@ def test_gamgm():
     num_graphs = 10
     # test without outliers
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
-            'sk_init_tau': [0.5, 0.1],
-            'sk_min_tau': [0.1, 0.05],
-            'param_lambda': [0.1, 0.5],
-            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
-            'verbose': [True]
-        }, backends)
+        'sk_init_tau': [0.5, 0.1],
+        'sk_min_tau': [0.1, 0.05],
+        'param_lambda': [0.1, 0.5],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
+        'verbose': [True]
+    }, backends)
 
     # test with outliers
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
-            'sk_init_tau': [0.5],
-            'sk_gamma': [0.8],
-            'sk_min_tau': [0.1],
-            'param_lambda': [0.],
-            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
-            'verbose': [True],
-            'n_univ': [10],
-            'outlier_thresh': [0., 0.1],
-            'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes-1] * (num_graphs - num_graphs // 2))],
-        }, backends)
+        'sk_init_tau': [0.5],
+        'sk_gamma': [0.8],
+        'sk_min_tau': [0.1],
+        'param_lambda': [0.],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
+        'verbose': [True],
+        'n_univ': [10],
+        'outlier_thresh': [0., 0.1],
+        'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes - 1] * (num_graphs - num_graphs // 2))],
+    }, backends)
 
 
 def test_gamgm_backward():
@@ -243,15 +245,15 @@ def test_gamgm_backward():
     if os_name == 'Linux':
         pygm.BACKEND = 'jittor'
         jt.set_global_seed(2)
-    
+
         # Generate 10 isomorphic graphs
         graph_num = 10
         As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
-    
+
         # Compute node-wise similarity by inner-product and Sinkhorn
         W = jt.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
         W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
-    
+
         # This function is differentiable by the black-box trick
         class Model(jt.nn.Module):
             def __init__(self, W):

@@ -801,6 +801,7 @@ class MultiMatchingResult:
                 [1., 0., 0., 0.],
                 [0., 1., 0., 0.]])
     """
+
     def __init__(self, cycle_consistent=False, backend=None):
         self.match_dict = {}
         self._cycle_consistent = cycle_consistent
@@ -822,7 +823,8 @@ class MultiMatchingResult:
 
     def __setitem__(self, key, value):
         if self._cycle_consistent:
-            assert type(key) is int, "key should be the index of one graph, and value should be the matching to universe"
+            assert type(
+                key) is int, "key should be the index of one graph, and value should be the matching to universe"
             self.match_dict[key] = value
         else:
             assert len(key) == 2, "key should be the indices of two graphs, e.g. (0, 1)"
