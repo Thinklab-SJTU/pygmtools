@@ -43,6 +43,7 @@ jobs:
         pytest --cov=pygmtools --cov-report=xml --cov-append
     - name: Upload to codecov
       uses: codecov/codecov-action@v3
+      if: matrix.python-version == 3.8
 
   macos:
 
