@@ -38,6 +38,7 @@ jobs:
     - name: Test with pytest
       run: |
         pytest --cov=pygmtools --cov-report=xml --backend=mindspore tests/test_classic_solvers.py
+        pytest --cov=pygmtools --cov-report=xml --cov-append
     - name: Upload to codecov
       uses: codecov/codecov-action@v3
 
@@ -69,6 +70,7 @@ jobs:
       - name: Test with pytest
         run: |
           pytest --cov=pygmtools --cov-report=xml --backend=mindspore tests/test_classic_solvers.py
+          pytest --cov=pygmtools --cov-report=xml --cov-append
   windows:
 
     runs-on: windows-latest
@@ -97,3 +99,4 @@ jobs:
       - name: Test with pytest
         run: |
           pytest --cov=pygmtools --cov-report=xml --backend=mindspore tests/test_classic_solvers.py
+          pytest --cov=pygmtools --cov-report=xml --cov-append

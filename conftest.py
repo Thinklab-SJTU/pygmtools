@@ -5,7 +5,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--backend",
         action="store",
-        default="",
+        default="all",
         choices=["numpy", "paddle", "jittor", "tensorflow", "mindspore"],
         help="The backend that need to be tested in classic solvers."
     )

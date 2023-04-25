@@ -26,6 +26,13 @@ os_name = platform.system()
 
 
 # backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle', 'tensorflow']
+def get_backends(backend):
+    if backend == "all":
+        backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch', 'numpy',  'paddle', 'tensorflow']
+    else:
+        backends = ["pytorch", backend]
+    return backends
+
 
 # The testing function for quadratic assignment
 def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
@@ -206,7 +213,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
 
 
 def test_hungarian(get_backend):
-    backends = ["pytorch", get_backend]
+    backends = get_backends(get_backend)
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
@@ -220,7 +227,7 @@ def test_hungarian(get_backend):
 
 
 def test_sinkhorn(get_backend):
-    backends = ["pytorch", get_backend]
+    backends = get_backends(get_backend)
     # test non-symmetric matching
     args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
         'tau': [0.1, 0.01],
@@ -272,7 +279,7 @@ def test_sinkhorn(get_backend):
 
 
 def test_rrwm(get_backend):
-    backends = ["pytorch", get_backend]
+    backends = get_backends(get_backend)
     if "mindspore" in backends:
         _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.rrwm, {
             'alpha': [0.1, 0.5],
@@ -304,7 +311,7 @@ def test_rrwm(get_backend):
 
 
 def test_sm(get_backend):
-    backends = ["pytorch", get_backend]
+    backends = get_backends(get_backend)
     if "mindspore" in backends:
         _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
             'max_iter': [10, 50],
@@ -327,7 +334,7 @@ def test_sm(get_backend):
 
 
 def test_ipfp(get_backend):
-    backends = ["pytorch", get_backend]
+    backends = get_backends(get_backend)
     _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.ipfp, {
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
