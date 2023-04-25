@@ -30,8 +30,7 @@ if os_name == 'Linux':
 
 
 # The testing function
-def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, solver_func, mode, matrix_params,
-                                          backends):
+def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, solver_func, mode, matrix_params, backends):
     if mode == 'lawler-qap':
         assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
