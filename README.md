@@ -120,17 +120,17 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
 
-### Development status (0.3.6)
+### Development status (0.3.7)
 
 |                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
 | ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
-| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | ✔         | 🧱        |
-| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | ✔         | 🧱        |
+| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | ✔         | ✔        |
+| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | ✔         | ✔        |
 | Multi-Graph Solvers | ✔    | ✔       | ✔      | ✔            | 📆         | 📆        |
 | Neural Solvers      | ✔    | ✔       | ✔      | ✔           | 📆         | 📆        |
 | Examples Gallery    | ✔    | ✔       | ✔      | ✔           | 📆         | 📆        |
 
-✔: Supported; 🧱: Work in progress; 📆: Planned for future versions (contributions welcomed!).
+✔: Supported; 📆: Planned for future versions (contributions welcomed!).
 
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
 
