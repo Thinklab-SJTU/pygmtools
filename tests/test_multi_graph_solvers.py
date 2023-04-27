@@ -22,10 +22,12 @@ from tqdm import tqdm
 
 from test_utils import *
 import platform
+
 os_name = platform.system()
 backends = ['pytorch', 'numpy', 'paddle', 'jittor'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle']
 if os_name == 'Linux':
     import jittor as jt
+
 
 # The testing function
 def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, solver_func, mode, matrix_params, backends):
@@ -33,7 +35,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
         assert 'edge_aff_fn' in matrix_params
     assert 'node_aff_fn' in matrix_params
     if backends[0] != 'pytorch':
-        backends.insert(0, 'pytorch') # force pytorch as the reference backend
+        backends.insert(0, 'pytorch')  # force pytorch as the reference backend
 
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
@@ -60,8 +62,8 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
     for val in matrix_params.values():
         total *= len(val)
     for values in tqdm(itertools.product(*matrix_params.values()), total=total):
-        aff_param_dict = {} # for affinity functions (supported keys: 'node_aff_fn', 'edge_aff_fn')
-        solver_param_dict = {} # for solvers
+        aff_param_dict = {}  # for affinity functions (supported keys: 'node_aff_fn', 'edge_aff_fn')
+        solver_param_dict = {}  # for solvers
         for k, v in zip(matrix_params.keys(), values):
             if k in ['node_aff_fn', 'edge_aff_fn']:
                 aff_param_dict[k] = v
@@ -96,7 +98,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
 
                 _K = pygm.utils.build_aff_mat(_Fs_1, _edge1, _conn1, _Fs_2, _edge2, _conn2, None, _ne1, None, _ne2,
                                               **aff_param_dict)
-                _K = _K.reshape((num_graph, num_graph, num_node**2, num_node**2))
+                _K = _K.reshape((num_graph, num_graph, num_node ** 2, num_node ** 2))
                 if last_K is not None:
                     assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
                         f"Incorrect affinity matrix for {working_backend}, " \
@@ -121,8 +123,8 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                                                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                                                     f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
             elif mode == 'kb-qap':
-                Fs1 = np.expand_dims(Fs, 1).repeat(num_graph, axis=1).reshape(num_graph**2, num_node, node_feat_dim)
-                Fs2 = np.expand_dims(Fs, 0).repeat(num_graph, axis=0).reshape(num_graph**2, num_node, node_feat_dim)
+                Fs1 = np.expand_dims(Fs, 1).repeat(num_graph, axis=1).reshape(num_graph ** 2, num_node, node_feat_dim)
+                Fs2 = np.expand_dims(Fs, 0).repeat(num_graph, axis=0).reshape(num_graph ** 2, num_node, node_feat_dim)
                 _As, _Fs1, _Fs2, _X_gt = data_from_numpy(As, Fs1, Fs2, X_gt)
                 node_aff_mat = aff_param_dict['node_aff_fn'](_Fs1, _Fs2)
                 node_aff_mat = node_aff_mat.reshape((num_graph, num_graph, num_node, num_node))
@@ -160,6 +162,7 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
             if 'ns' in solver_param_dict and solver_param_dict['ns'] is not None:
                 solver_param_dict['ns'] = pygm.utils.to_numpy(solver_param_dict['ns'])
 
+
 def test_cao():
     num_nodes = 5
     num_graphs = 10
@@ -191,25 +194,25 @@ def test_gamgm():
     num_graphs = 10
     # test without outliers
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
-            'sk_init_tau': [0.5, 0.1],
-            'sk_min_tau': [0.1, 0.05],
-            'param_lambda': [0.1, 0.5],
-            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
-            'verbose': [True]
-        }, backends)
+        'sk_init_tau': [0.5, 0.1],
+        'sk_min_tau': [0.1, 0.05],
+        'param_lambda': [0.1, 0.5],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
+        'verbose': [True]
+    }, backends)
 
     # test with outliers
     _test_mgm_solver_on_isomorphic_graphs(num_graphs, num_nodes, 10, pygm.gamgm, 'kb-qap', {
-            'sk_init_tau': [0.5],
-            'sk_gamma': [0.8],
-            'sk_min_tau': [0.1],
-            'param_lambda': [0.],
-            'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
-            'verbose': [True],
-            'n_univ': [10],
-            'outlier_thresh': [0., 0.1],
-            'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes-1] * (num_graphs - num_graphs // 2))],
-        }, backends)
+        'sk_init_tau': [0.5],
+        'sk_gamma': [0.8],
+        'sk_min_tau': [0.1],
+        'param_lambda': [0.],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
+        'verbose': [True],
+        'n_univ': [10],
+        'outlier_thresh': [0., 0.1],
+        'ns': [np.array([num_nodes] * (num_graphs // 2) + [num_nodes - 1] * (num_graphs - num_graphs // 2))],
+    }, backends)
 
 
 def test_gamgm_backward():
@@ -241,31 +244,32 @@ def test_gamgm_backward():
     if os_name == 'Linux':
         pygm.BACKEND = 'jittor'
         jt.set_global_seed(2)
-    
+
         # Generate 10 isomorphic graphs
         graph_num = 10
         As, X_gt, Fs = pygm.utils.generate_isomorphic_graphs(node_num=4, graph_num=10, node_feat_dim=20)
-    
+
         # Compute node-wise similarity by inner-product and Sinkhorn
         W = jt.matmul(Fs.unsqueeze(1), Fs.transpose(1, 2).unsqueeze(0))
         W = pygm.sinkhorn(W.reshape(graph_num ** 2, 4, 4)).reshape(graph_num, graph_num, 4, 4)
-    
+
         # This function is differentiable by the black-box trick
         class Model(jt.nn.Module):
             def __init__(self, W):
                 self.W = W
-            def execute (self, As) :
+
+            def execute(self, As):
                 X = pygm.gamgm(As, self.W)
                 return X
-    
+
         W.start_grad()
         model = Model(W)
         X = model(As)
         matched = 0
         for i, j in itertools.product(range(graph_num), repeat=2):
-            matched += (X[i,j] * X_gt[i,j]).sum()
+            matched += (X[i, j] * X_gt[i, j]).sum()
         acc = matched / X_gt.sum()
-    
+
         # Backward pass via black-box trick
         optim = jt.nn.SGD(model.parameters(), lr=0.1)
         optim.step(acc)

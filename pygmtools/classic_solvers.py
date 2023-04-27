@@ -237,6 +237,66 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(jt.nonzero(K.opt_grad(optim)))
             2560
 
+    .. dropdown:: mindspore Example
+
+        ::
+
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+            >>> _ = mindspore.set_seed(1)
+            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
+            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), mindspore.ops.Randperm(4)(mindspore.Tensor([4], dtype=mindspore.int32))] = 1
+            >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> A2 = mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> n1 = n2 = mindspore.Tensor([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by SM. Note that X is normalized with a squared sum of 1
+            >>> X = pygm.sm(K, n1, n2)
+            >>> (X ** 2).sum(axis=(1, 2))
+            [1.0000002  0.9999998  1.0000002  0.99999964 1.         1.0000001
+            1.         1.         1.         0.99999994]
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
+
+            # This solver supports gradient back-propogation
+            >>> def fn(K, n1, n2):
+            >>>     res = pygm.sm(K, n1, n2).sum()
+            >>>     return res
+
+            >>> g = mindspore.ops.grad(fn)(K, n1, n2)
+            >>> mindspore.ops.count_nonzero(g)
+            
+            # This solver supports gradient back-propogation
+            >>> from jittor import nn
+            >>> class Model(nn.Module):
+            ...     def __init__(self, K):
+            ...         self.K = K
+            ...     def execute(self, K, n1, n2):
+            ...         X = pygm.sm(K, n1, n2)
+            ...         return X
+
+            >>> model = Model(K)
+            >>> optim = nn.SGD(model.parameters(), lr=0.1)
+            >>> X = model(K, n1, n2)
+            >>> loss = X.sum()
+            >>> optim.step(loss)
+            >>> len(jt.nonzero(K.opt_grad(optim)))
+            2560
+
     .. dropdown:: Tensorflow Example
 
         ::
@@ -266,6 +326,13 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             # Solve by SM. Note that X is normalized with a squared sum of 1
             >>> X = pygm.sm(K, n1, n2)
+            >>> (X ** 2).sum(axis=(1, 2))
+            [1.         0.9999998  0.99999976 1.         0.99999976 1.
+            1.         1.0000001  1.0000001  1.        ]
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
             >>> tf.reduce_sum((X ** 2), axis=[1, 2])
             <tf.Tensor: shape=(10,), dtype=float32, numpy=
             array([1.        , 1.0000001 , 1.        , 0.9999999 , 1.        ,
@@ -546,6 +613,53 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(jt.nonzero(K.opt_grad(optim)))
             1536
 
+    .. dropdown:: mindspore Example
+
+        ::
+
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+            >>> _ = mindspore.set_seed(1)
+            >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
+            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), mindspore.ops.Randperm(4)(mindspore.Tensor([4], dtype=mindspore.int32))] = 1
+            >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> A2 = mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> n1 = n2 = mindspore.Tensor([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by RRWM. Note that X is normalized with a sum of 1
+            >>> X = pygm.rrwm(K, n1, n2, beta=100)
+            >>> X.sum(axis=(1, 2))
+            [1.         0.99999994 0.99999994 1.         1.0000002  1.
+            1.         1.         1.0000001  1.0000001 ]
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
+
+            # This solver supports gradient back-propogation
+            >>> def fn(K, n1, n2, beta):
+            >>>     X = pygm.rrwm(K, n1, n2, beta=beta)
+            >>>     X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
+            >>>     X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64),mindspore.ops.Randperm(4)(mindspore.Tensor([4], dtype=mindspore.int32))] = 1
+            >>>     res = pygm.utils.permutation_loss(X, X_gt)
+            >>>     return res
+
+            >>> g = mindspore.ops.grad(fn)(K, n1, n2, beta=100)
+            >>> mindspore.ops.count_nonzero(g)
+            2560
+
     .. dropdown:: Tensorflow Example
 
         ::
@@ -822,6 +936,43 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             # Accuracy
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             jt.Var([1.], dtype=float32)
+
+    .. dropdown:: mindspore Example
+
+        ::
+
+            >>> import mindspore
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'mindspore'
+            >>> _ = mindspore.set_seed(1)
+
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> X_gt = mindspore.numpy.zeros((batch_size, 4, 4))
+            >>> X_gt[:, mindspore.numpy.arange(0, 4, dtype=mindspore.int64), mindspore.ops.Randperm(4)(mindspore.Tensor([4], dtype=mindspore.int32))] = 1
+            >>> A1 = mindspore.numpy.rand((batch_size, 4, 4))
+            >>> A2 = mindspore.ops.BatchMatMul()(mindspore.ops.BatchMatMul()(X_gt.swapaxes(1, 2), A1), X_gt)
+            >>> n1 = mindspore.Tensor([4] * batch_size)
+            >>> n2 = mindspore.Tensor([4] * batch_size)
+
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by IPFP
+            >>> X = pygm.ipfp(K, n1, n2)
+            >>> X[0]
+            [[1. 0. 0. 0.]
+             [0. 0. 0. 1.]
+             [0. 0. 1. 0.]
+             [0. 1. 0. 0.]]
+
+            # Accuracy
+            >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
+            1.0
 
     .. dropdown:: Tensorflow Example
 
