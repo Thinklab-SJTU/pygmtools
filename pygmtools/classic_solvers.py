@@ -237,7 +237,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(jt.nonzero(K.opt_grad(optim)))
             2560
 
-    .. dropdown:: mindspore Example
+    .. dropdown:: MindSpore Example
 
         ::
 
@@ -613,7 +613,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> len(jt.nonzero(K.opt_grad(optim)))
             1536
 
-    .. dropdown:: mindspore Example
+    .. dropdown:: MindSpore Example
 
         ::
 
@@ -937,7 +937,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> (pygm.hungarian(X) * X_gt).sum() / X_gt.sum()
             jt.Var([1.], dtype=float32)
 
-    .. dropdown:: mindspore Example
+    .. dropdown:: MindSpore Example
 
         ::
 
