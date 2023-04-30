@@ -145,7 +145,7 @@ How to enable Tensorflow backend:
 Mindspore Backend
 ^^^^^^^^^^^^^^^^^^^
 
-.. image:: ../images/mindspore_logo.pn
+.. image:: ../images/mindspore_logo.png
     :width: 300
 
 Mindspore is an open source deep learning platform developed and maintained by Huawei.
