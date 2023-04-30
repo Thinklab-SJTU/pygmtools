@@ -142,6 +142,27 @@ How to enable Tensorflow backend:
     >>> import tensorflow
     >>> pygm.BACKEND = 'tensorflow'
 
+Mindspore Backend
+^^^^^^^^^^^^^^^^^^^
+
+.. image:: ../images/mindspore_logo.png
+    :width: 300
+
+Mindspore is an open source deep learning platform developed and maintained by Huawei.
+The Mindspore backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
+
+Please follow `the official Mindspore installation guide <https://www.mindspore.cn/install>`_.
+
+This package is developed with ``mindspore==1.10.0`` and shall work with any Mindspore versions ``>=1.10.0``.
+
+How to enable Mindspore backend:
+
+::
+
+    >>> import pygmtools as pygm
+    >>> import tensorflow
+    >>> pygm.BACKEND = 'mindspore'
+
 Example: Matching Isomorphic Graphs
 ------------------------------------
 
