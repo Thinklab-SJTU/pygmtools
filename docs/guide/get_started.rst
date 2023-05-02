@@ -160,7 +160,7 @@ How to enable Mindspore backend:
 ::
 
     >>> import pygmtools as pygm
-    >>> import tensorflow
+    >>> import mindspore
     >>> pygm.BACKEND = 'mindspore'
 
 Example: Matching Isomorphic Graphs
