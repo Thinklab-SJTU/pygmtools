@@ -1076,11 +1076,11 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None,network=None,
     :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
     :param return_network: (default: False) Return the network object (saving model construction time if calling the
         model multiple times).
-    :param pretrain: (default: 'voc') If ``network==None``, the pretrained model weights to be loaded. Available
-        pretrained weights: ``voc`` (on Pascal VOC Keypoint dataset), ``willow`` (on Willow Object Class dataset),
+    :param pretrain: (default: 'AIDS700nef') If ``network==None``, the pretrained model weights to be loaded. Available
+        pretrained weights: ``AIDS700nef`` (feature_num=36), ``LINUX`` (feature_num=8),
         or ``False`` (no pretraining).
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-        :feature_num: (default: 36) The feature dimension of the node, if feat1 is not entered.
+    :param feature_num: (default: 36) The feature dimension of the node, if feat1 is not entered.
         defaults to 36. If feat1 is given, it will be obtained by feat1. If specified by the user,
         it needs to be determined whether the feature dimension of feat1 is equal to the user input.
     :param filters_1: (default: 64) Filters (neurons) in 1st convolution.
