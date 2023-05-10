@@ -1172,6 +1172,198 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         result = None
     return result, network
 
+#############################################
+#              GENN-A* Solvers              #
+#############################################
+
+from pytorch_astar_modules import GENN,Graph_pair
+from a_star_function import default_parameter,check_layer_parameter
+import warnings
+
+astar_pretrain_path = {
+    'AIDS700nef': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1QWGgpt4C4XjFZSEcIZmQF-84XtpfXope',
+               'b2516aea4c8d730704a48653a5ca94ba'),
+    'LINUX': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1EGVSejxsgSefIBquZtDftpe3Ize1Vw1P',
+            'fd3b2a8dfa3edb20607da2e2b96d2e96'),
+}
+
+def a_star(feat1,feat2,A1,A2,n1,n2,network,pretrain,**kwargs):
+    
+    r"""
+    :param feat1: :math:`(b\times n_1 \times d)` input feature of graph1
+    :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
+    :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
+    :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
+    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
+    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
+    :param return_network: (default: False) Return the network object (saving model construction time if calling the
+        model multiple times).
+    :param pretrain: (default: 'voc') If ``network==None``, the pretrained model weights to be loaded. Available
+        pretrained weights: ``voc`` (on Pascal VOC Keypoint dataset), ``willow`` (on Willow Object Class dataset),
+        or ``False`` (no pretraining).
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+        :feature_num: (default: 36) The feature dimension of the node, if feat1 is not entered.
+        defaults to 36. If feat1 is given, it will be obtained by feat1. If specified by the user,
+        it needs to be determined whether the feature dimension of feat1 is equal to the user input.
+    :param filters_1: (default: 64) Filters (neurons) in 1st convolution.
+    :param filters_2: (default: 32) Filters (neurons) in 2nd convolution.
+    :param filters_3: (default: 16) Filters (neurons) in 2nd convolution.
+    :param tensor_neurons: (default: 16) Neurons in tensor network layer.
+    :param bottle_neck_neurons: (default: 16) Bottle neck layer neurons.
+    :param bins: (default: 16) Similarity score bins.
+    :param dropout: (default: 0) Dropout probability
+    :param histogram: (default: False) 
+    :param diffpool: (default: False) 
+    :param use_net: (default: True) Whether to use neural networks to obtain heuristic prediction
+    :return: if ``return_network==False``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix
+
+        if ``return_network==True``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix,
+        the network object
+
+    .. note::
+        You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1mUpwHeW1RbMHaNxX_PZvD5HrWvyCQG8y>`_
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. dropdown:: PyTorch Example
+
+        ::
+
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
+            >>> _ = torch.manual_seed(1)
+            
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> nodes_num = 4
+            >>> feature_num = 36
+
+            >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
+            >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
+            >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
+            >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> feat1 = torch.rand(batch_size, nodes_num, feature_num) - 0.5
+            >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
+
+            # Match by PCA-GM (load pretrained model)
+            >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/best_genn_AIDS700nef_gcn_astar.pt...
+            >>> (X * X_gt).sum() / X_gt.sum()# accuracy
+            tensor(1.)
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, network=net)
+            
+            # This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+            >>> part_f1 = feat1[0]
+            >>> part_f2 = feat2[0]
+            >>> part_A1 = A1[0]
+            >>> part_A2 = A2[0]
+            >>> part_X_gt = X_gt[0]
+            >>> part_X = pygm.a_star(part_f1, part_f2, part_A1, part_A2, return_network=False)
+            
+            >>> part_X.shape
+            torch.Size([4, 4])
+            
+            >>> (part_X * part_X_gt).sum() / part_X_gt.sum()# accuracy
+            tensor(1.)
+            
+            # You can also use traditional heuristic methods to solve without using neural networks
+            >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, use_net=False)
+            >>> (X * X_gt).sum() / X_gt.sum()# accuracy
+            tensor(1.)            
+            
+            # You may also load other pretrained weights
+            # However, it should be noted that each pretrained set supports different node feature dimensions
+            # AIDS700nef(Default): feature_num = 36
+            # LINUX: feature_num = 8
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> nodes_num = 4
+            >>> feature_num = 8
+
+            >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
+            >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
+            >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
+            >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> feat1 = torch.rand(batch_size, nodes_num, feature_num) - 0.5
+            >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
+            
+            >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, pretrain='LINUX',return_network=True)
+            Downloading to ~/.cache/pygmtools/best_genn_LINUX_gcn_astar.pt...
+
+            >>> (X * X_gt).sum() / X_gt.sum()# accuracy
+            tensor(1.)
+            
+            # When the input node feature dimension is different from the one supported by pre training, 
+            # you can still use the solver, but the solver will provide a warning
+            >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='AIDS700nef')
+            UserWarning: Pretrain AIDS700nef does not support the feature_num = 8 you entered
+            
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.a_star, feature_num = 1000, filters_1 = 1024,filters_2 = 256,filters_3 = 128,pretrain=False)
+            >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> loss.backward()
+            >>> optimizer.step()
+    """
+    
+    args = default_parameter()
+    if pretrain == 'LINUX':
+        args['feature_num'] = 8
+    elif pretrain == 'AIDS700nef':
+        args['feature_num'] = 36
+    args['pretrain'] = pretrain
+    
+    if feat1 is None:
+        forward_pass = False
+        device = torch.device('cpu')
+    else:
+        forward_pass = True
+        args['feature_num'] = feat1.shape[-1]
+        device = feat1.device      
+              
+    for key,value in kwargs.items():
+        if not key in args.keys():
+            raise TypeError("got an unexpected keyword argument" + key)
+        if key == 'feature_num' and forward_pass:
+            assert feat1.shape[-1] == value
+            assert feat2.shape[-1] == value            
+        args[key] = value    
+        
+    if network is None:
+        network = GENN(args)
+        network = network.to(device)
+        if pretrain and args['use_net']:
+            if pretrain in astar_pretrain_path:
+                if(check_layer_parameter(args)):
+                    url, md5 = astar_pretrain_path[pretrain]
+                    filename = pygmtools.utils.download(f'best_genn_{pretrain}_gcn_astar.pt', url, md5)
+                    _load_model(network, filename, device)
+                else:
+                    message = 'Pretrain {} does not support the feature_num = {} you entered'.format(pretrain,args['feature_num'])
+                    warnings.warn(message)                    
+            else:
+                raise ValueError(f'Unknown pretrain tag. Available tags: {astar_pretrain_path.keys()}')
+    
+    if forward_pass:
+        assert A1.shape[0] == A2.shape[0]
+        data = Graph_pair(feat1,feat2,A1,A2,n1,n2)
+        result = network(data) 
+    else:
+        result = None
+    return result, network
 
 #############################################
 #              Utils Functions              #
