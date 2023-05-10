@@ -1,18 +1,19 @@
 import torch
 import pygmtools.utils
 import os
-if not os.path.exists("a_star.cpp"):
-    command = "python a_star_setup.py build_ext --inplace"
-    os.system(command)
-from a_star import a_star
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch import Tensor
 from torch_scatter import scatter
-from a_star_function import hungarian_ged,to_dense_batch, to_dense_adj
+from pytorch_backend import hungarian_ged,to_dense_adj,to_dense_batch
 VERY_LARGE_INT = 65536
 
+if not os.path.exists("a_star.cpp"):
+    command = "python a_star_setup.py build_ext --inplace"
+    os.system(command)
+    
+from a_star import a_star
 
 ############################################
 #              GENN-A*  Modules            #
