@@ -1130,7 +1130,7 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None,network=None,
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
 
-            # Match by PCA-GM (load pretrained model)
+            # Match by A_STAR (load pretrained model)
             >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, return_network=True)
             Downloading to ~/.cache/pygmtools/best_genn_AIDS700nef_gcn_astar.pt...
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy

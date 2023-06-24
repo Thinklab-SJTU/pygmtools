@@ -5,8 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch import Tensor
-from torch_scatter import scatter
-from pytorch_backend import hungarian_ged,to_dense_adj,to_dense_batch
+from pytorch_backend import hungarian_ged,to_dense_adj,to_dense_batch,scatter_sum,scatter_mean
 VERY_LARGE_INT = 65536
 
 if not os.path.exists("a_star.cpp"):
@@ -103,13 +102,13 @@ class AttentionModule(torch.nn.Module):
         :return representation: A graph level representation matrix. 
         """
         size = batch[-1].item() + 1 if size is None else size
-        mean = scatter(x, batch, dim=0, dim_size=size, reduce='mean')
+        mean = scatter_mean(x, batch, dim=0, dim_size=size)
         transformed_global = torch.tanh(torch.mm(mean, self.weight_matrix))
         
         coefs = torch.sigmoid((x * transformed_global[batch] * 10).sum(dim=1))
         weighted = coefs.unsqueeze(-1) * x
         
-        return scatter(weighted, batch, dim=0, dim_size=size, reduce='add')
+        return scatter_sum(weighted, batch, dim=0, dim_size=size)
         
     def get_coefs(self, x):
         mean = x.mean(dim=0)

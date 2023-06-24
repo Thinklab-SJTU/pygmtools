@@ -20,7 +20,6 @@ from pytorch_astar_modules import *
 import warnings
 from typing import Optional, Tuple
 from torch import Tensor
-from torch_scatter import scatter_add,scatter
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -933,7 +932,7 @@ def check_layer_parameter(params):
     if params['bottle_neck_neurons'] != 16:
         return False
     return True
-import pdb
+
 def hungarian_ged(node_cost_mat, n1, n2):
     assert node_cost_mat.shape[-2] == n1+1
     assert node_cost_mat.shape[-1] == n2+1
@@ -956,6 +955,56 @@ def hungarian_ged(node_cost_mat, n1, n2):
     ged_lower_bound = torch.sum(pred_x * node_cost_mat)
     return pred_x, ged_lower_bound
 
+def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int):
+    if dim < 0:
+        dim = other.dim() + dim
+    if src.dim() == 1:
+        for _ in range(0, dim):
+            src = src.unsqueeze(0)
+    for _ in range(src.dim(), other.dim()):
+        src = src.unsqueeze(-1)
+    src = src.expand(other.size())
+    return src
+
+def scatter_sum(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+                out: Optional[torch.Tensor] = None,
+                dim_size: Optional[int] = None) -> torch.Tensor:
+    index = broadcast(index, src, dim)
+    if out is None:
+        size = list(src.size())
+        if dim_size is not None:
+            size[dim] = dim_size
+        elif index.numel() == 0:
+            size[dim] = 0
+        else:
+            size[dim] = int(index.max()) + 1
+        out = torch.zeros(size, dtype=src.dtype, device=src.device)
+        return out.scatter_add_(dim, index, src)
+    else:
+        return out.scatter_add_(dim, index, src)
+
+def scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
+                 out: Optional[torch.Tensor] = None,
+                 dim_size: Optional[int] = None) -> torch.Tensor:
+    out = scatter_sum(src, index, dim, out, dim_size)
+    dim_size = out.size(dim)
+
+    index_dim = dim
+    if index_dim < 0:
+        index_dim = index_dim + src.dim()
+    if index.dim() <= index_dim:
+        index_dim = index.dim() - 1
+
+    ones = torch.ones(index.size(), dtype=src.dtype, device=src.device)
+    count = scatter_sum(ones, index, index_dim, None, dim_size)
+    count[count < 1] = 1
+    count = broadcast(count, out, dim)
+    if out.is_floating_point():
+        out.true_divide_(count)
+    else:
+        out.div_(count, rounding_mode='floor')
+    return out 
+
 def to_dense_batch(x: Tensor, batch: Optional[Tensor] = None,
                    fill_value: float = 0., max_num_nodes: Optional[int] = None,
                    batch_size: Optional[int] = None) -> Tuple[Tensor, Tensor]:
@@ -969,7 +1018,7 @@ def to_dense_batch(x: Tensor, batch: Optional[Tensor] = None,
     if batch_size is None:
         batch_size = int(batch.max()) + 1
 
-    num_nodes = scatter_add(batch.new_ones(x.size(0)), batch, dim=0,
+    num_nodes = scatter_sum(batch.new_ones(x.size(0)), batch, dim=0,
                             dim_size=batch_size)
     cum_nodes = torch.cat([batch.new_zeros(1), num_nodes.cumsum(dim=0)])
 
@@ -998,7 +1047,7 @@ def to_dense_adj(edge_index: Tensor,batch=None,edge_attr=None,max_num_nodes: Opt
 
     batch_size = int(batch.max()) + 1 if batch.numel() > 0 else 1
     one = batch.new_ones(batch.size(0))
-    num_nodes = scatter(one, batch, dim=0, dim_size=batch_size, reduce='add')
+    num_nodes = scatter_sum(one, batch, dim=0, dim_size=batch_size)
     cum_nodes = torch.cat([batch.new_zeros(1), num_nodes.cumsum(dim=0)])
 
     idx0 = batch[edge_index[0]]
@@ -1026,10 +1075,11 @@ def to_dense_adj(edge_index: Tensor,batch=None,edge_attr=None,max_num_nodes: Opt
     flattened_size = batch_size * max_num_nodes * max_num_nodes
     adj = adj.view([flattened_size] + list(adj.size())[3:])
     idx = idx0 * max_num_nodes * max_num_nodes + idx1 * max_num_nodes + idx2
-    scatter(edge_attr, idx, dim=0, out=adj, reduce='add')
+    adj = scatter_sum(edge_attr, idx, dim=0, dim_size=flattened_size)
     adj = adj.view(size)
 
     return adj
+
 
 
 ############################################
