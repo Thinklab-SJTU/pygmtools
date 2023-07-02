@@ -346,8 +346,8 @@ def test_ipfp(get_backend):
 
 
 if __name__ == '__main__':
-    test_hungarian('')
-    test_sinkhorn('')
-    test_rrwm('')
-    test_sm('')
-    test_ipfp('')
+    test_hungarian('all')
+    test_sinkhorn('all')
+    test_rrwm('all')
+    test_sm('all')
+    test_ipfp('all')
