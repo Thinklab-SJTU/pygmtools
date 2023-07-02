@@ -11,6 +11,17 @@ from shutil import rmtree
 import re
 import platform
 from setuptools import find_packages, setup, Command
+import tarfile
+import zipfile
+import os
+
+def unzip_file(zip_file_path, extract_folder_path):
+    with zipfile.ZipFile(zip_file_path, 'r') as zipObj:
+        zipObj.extractall(extract_folder_path)
+
+def untar_file(tar_file_path, extract_folder_path):
+    with tarfile.open(tar_file_path, 'r:gz') as tarObj:
+        tarObj.extractall(extract_folder_path)
 
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
@@ -28,22 +39,6 @@ def get_os_and_python_version():
     else:
         os_version = "unknown"
     return os_version, python_version
-
-os_version, python_version = get_os_and_python_version()
-
-filename={  'windows':{ '3.7':'a_star.cp37-win_amd64.pyd',
-                        '3.8':'a_star.cp38-win_amd64.pyd',
-                        '3.9':'a_star.cp37-win_amd64.pyd',
-                        '3.10':'a_star.cp310-win_amd64.pyd'},
-            'macos'  :{ '3.7':'a_star.cpython-37m-darwin.so',
-                        '3.8':'a_star.cpython-38-darwin.so',
-                        '3.9':'a_star.cpython-39-darwin.so'},
-            'ubuntu' :{ '3.7':'a_star.cpython-37m-x86_64-linux-gnu.so',
-                        '3.8':'a_star.cpython-38-x86_64-linux-gnu.so',
-                        '3.9':'a_star.cpython-39-x86_64-linux-gnu.so'}}
-
-lib = filename[os_version][python_version]
-
 
 # Package meta-data.
 NAME = 'pygmtools'
@@ -78,6 +73,26 @@ if not VERSION:
 else:
     about['__version__'] = VERSION
 
+
+os_version, python_version = get_os_and_python_version()
+
+filename={  'windows':{ '3.7':'a_star.cp37-win_amd64.pyd',
+                        '3.8':'a_star.cp38-win_amd64.pyd',
+                        '3.9':'a_star.cp37-win_amd64.pyd',
+                        '3.10':'a_star.cp310-win_amd64.pyd'},
+            'macos'  :{ '3.7':'a_star.cpython-37m-darwin.so',
+                        '3.8':'a_star.cpython-38-darwin.so',
+                        '3.9':'a_star.cpython-39-darwin.so'},
+            'ubuntu' :{ '3.7':'a_star.cpython-37m-x86_64-linux-gnu.so',
+                        '3.8':'a_star.cpython-38-x86_64-linux-gnu.so',
+                        '3.9':'a_star.cpython-39-x86_64-linux-gnu.so'}}
+
+if os_version == 'windows':
+    unzip_file(os.path.join(NAME,'a_star.zip'),NAME)
+else:
+    untar_file(os.path.join(NAME,'a_star.tar.gz'),NAME)
+
+lib = filename[os_version][python_version]
 
 class UploadCommand(Command):
     """Support setup.py upload."""
