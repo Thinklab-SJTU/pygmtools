@@ -9,12 +9,40 @@ import os
 import sys
 from shutil import rmtree
 import re
-
+import platform
 from setuptools import find_packages, setup, Command
 
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
     return result.group(1)
+
+def get_os_and_python_version():
+    system = platform.system()
+    python_version = ".".join(map(str, sys.version_info[:2]))
+    if system.lower() == "windows":
+        os_version = "windows"
+    elif system.lower() == "darwin":
+        os_version = "macos"
+    elif system.lower() == "linux":
+        os_version = platform.linux_distribution()[0].lower()
+    else:
+        os_version = "unknown"
+    return os_version, python_version
+
+os_version, python_version = get_os_and_python_version()
+
+filename={  'windows':{ '3.7':'a_star.cp37-win_amd64.pyd',
+                        '3.8':'a_star.cp38-win_amd64.pyd',
+                        '3.9':'a_star.cp37-win_amd64.pyd',
+                        '3.10':'a_star.cp310-win_amd64.pyd'},
+            'macos'  :{ '3.7':'a_star.cpython-37m-darwin.so',
+                        '3.8':'a_star.cpython-38-darwin.so',
+                        '3.9':'a_star.cpython-39-darwin.so'},
+            'ubuntu' :{ '3.7':'a_star.cpython-37m-x86_64-linux-gnu.so',
+                        '3.8':'a_star.cpython-38-x86_64-linux-gnu.so',
+                        '3.9':'a_star.cpython-39-x86_64-linux-gnu.so'}}
+
+lib = filename[os_version][python_version]
 
 
 # Package meta-data.
@@ -97,6 +125,7 @@ setup(
     author=AUTHOR,
     url=URL,
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+    package_data={NAME: [lib]},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
