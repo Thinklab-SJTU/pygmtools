@@ -29,14 +29,14 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest-cov
         if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
-        if [ "${{ matrix.python-version }}" != "3.10" ]; then pip install mindspore==1.10.0; fi
+        if [ "${{ matrix.python-version }}" != "3.10" ]; then pip install mindspore==1.10.1; fi
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+    - name: Test with pytest. They are divided into two runs because MindSpore will interfer with Paddle.
       run: |
         if [ "${{ matrix.python-version }}" != "3.10" ]; then 
           pytest --cov=pygmtools --cov-report=xml --backend=mindspore tests/test_classic_solvers.py; fi
@@ -63,7 +63,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
-          pip install -r tests/requirements_win.txt
+          pip install -r tests/requirements_win_mac.txt
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -92,14 +92,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
-          python -m pip install -r tests\requirements_win.txt
+          python -m pip install -r tests\requirements_win_mac.txt
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Test with pytest
+      - name: Test with pytest. They are divided into two runs because MindSpore will interfer with Paddle.
         run: |
           pytest --cov=pygmtools --cov-report=xml --backend=mindspore tests/test_classic_solvers.py
           pytest --cov=pygmtools --cov-report=xml --cov-append
