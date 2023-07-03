@@ -32,7 +32,7 @@ To highlight, ``pygmtools`` has the following features:
   and novel deep learning-based solvers;
 * *Support various backends*, including ``numpy`` which is universally accessible, and some state-of-the-art deep 
   learning architectures with GPU support: 
-  ``pytorch``, ``paddle``, ``jittor``, ``Tensorflow``; 
+  ``pytorch``, ``paddle``, ``jittor``, ``tensorflow``, ``mindspore``; 
 * *Deep learning friendly*, the operations are designed to best preserve the gradient during computation and batched 
   operations support for the best performance.
   
