@@ -32,7 +32,7 @@ jobs:
         if [ "${{ matrix.python-version }}" != "3.10" ]; then pip install mindspore==1.10.0; fi
     - name: preparation for tests
       run: |
-        python tests/prepare_for_test.py
+        python tests/tests_a_star/prepare_for_test.py
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -69,7 +69,7 @@ jobs:
           pip install -r tests/requirements_win_mac.txt
       - name: preparation for tests
         run: |
-          python tests/prepare_for_test.py
+          python tests/tests_a_star/prepare_for_test.py
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -101,7 +101,7 @@ jobs:
           python -m pip install -r tests\requirements_win_mac.txt
       - name: preparation for tests
         run: |
-          python tests/prepare_for_test.py
+          python tests/tests_a_star/prepare_for_test.py
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
