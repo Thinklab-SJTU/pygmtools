@@ -21,7 +21,7 @@ from .pytorch_astar_modules import GCNConv,AttentionModule,TensorNetworkModule,\
     Graph_pair,VERY_LARGE_INT,to_dense_adj,to_dense_batch,default_parameter,check_layer_parameter
 import warnings
 from torch import Tensor
-from pygmtools.a_star import a_star
+from a_star import a_star
 
 #############################################
 #     Linear Assignment Problem Solvers     #
