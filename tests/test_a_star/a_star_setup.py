@@ -3,7 +3,7 @@ from Cython.Build import cythonize
 import numpy as np
 from glob import glob
 setup(
-    name='A-star function',
+    name='a-star function',
     ext_modules=cythonize(
         Extension(
             'a_star',
