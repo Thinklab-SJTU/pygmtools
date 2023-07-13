@@ -47,7 +47,7 @@ cdef extern from "priority_queue.hpp":
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def A_star(
+def a_star(
         data,
         k,
         vector[long] ns_1,
