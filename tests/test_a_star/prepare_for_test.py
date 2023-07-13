@@ -2,9 +2,11 @@ import os
 import glob
 import shutil
 
-
-os.system("python a_star_setup.py build_ext --inplace")
-
+try:
+    os.system("python a_star_setup.py build_ext --inplace")
+except:
+    os.system("python3 a_star_setup.py build_ext --inplace")
+    
 current_dir = os.getcwd()
 
 ext_files = glob.glob(os.path.join(current_dir, '*.pyd')) + \
