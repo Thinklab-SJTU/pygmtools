@@ -1062,11 +1062,16 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         return result
 
 
-def a_star(feat1, feat2, A1, A2, n1=None, n2=None,network=None, 
-           return_network=False, pretrain='AIDS700nef',backend=None,**kwargs):
+def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None, 
+           return_network=False, pretrain='AIDS700nef',use_net=True, backend=None):
 
     r"""
-    GENN-A* solver for graph matching  based on Graph Neural Network.
+    GENN-A* solver for graph matching based on Graph Neural Network, which aims to accelerate 
+    the A* solver for graph edit distance problem.
+    The algorithm combines traditional A* algorithm and neural network techniques to learn the heuristic function, 
+    thereby improving the efficiency and accuracy of path search.
+    
+    cite from: https://github.com/Thinklab-SJTU/GENN-Astar/
     
     :param feat1: :math:`(b\times n_1 \times d)` input feature of graph1
     :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
@@ -1080,9 +1085,8 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None,network=None,
         pretrained weights: ``AIDS700nef`` (feature_num=36), ``LINUX`` (feature_num=8),
         or ``False`` (no pretraining).
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :param feature_num: (default: 36) The feature dimension of the node, if feat1 is not entered.
-        defaults to 36. If feat1 is given, it will be obtained by feat1. If specified by the user,
-        it needs to be determined whether the feature dimension of feat1 is equal to the user input.
+    :param channel: (default: 36)  Channel size of the input layer. lt must matchthe feature dimension (d) of feat1, feat2. 
+        lgnored if the network object isgiven (ignored if network!=None)
     :param filters_1: (default: 64) Filters (neurons) in 1st convolution.
     :param filters_2: (default: 32) Filters (neurons) in 2nd convolution.
     :param filters_3: (default: 16) Filters (neurons) in 2nd convolution.
@@ -1227,7 +1231,7 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None,network=None,
     if n1 is not None: _check_data_type(n1, 'n1', backend)
     if n2 is not None: _check_data_type(n2, 'n2', backend)
 
-    args = (feat1, feat2, A1, A2, n1, n2, network, pretrain)
+    args = (feat1, feat2, A1, A2, n1, n2, channel, network, pretrain, use_net)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.astar
@@ -1236,7 +1240,7 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None,network=None,
             NOT_IMPLEMENTED_MSG.format(backend)
         )
 
-    result = fn(*args,**kwargs)
+    result = fn(*args)
     match_mat = _squeeze(result[0], 0, backend) if non_batched_input else result[0]
     if return_network:
         return match_mat, result[1]
