@@ -17,8 +17,8 @@ from torch import Tensor
 import os
 import pygmtools.utils
 
-from .pytorch_astar_modules import GCNConv,AttentionModule,TensorNetworkModule,\
-    Graph_pair,VERY_LARGE_INT,to_dense_adj,to_dense_batch,default_parameter,check_layer_parameter
+from .pytorch_astar_modules import GCNConv,AttentionModule,TensorNetworkModule,Graph_pair,\
+    VERY_LARGE_INT, to_dense_adj,to_dense_batch,default_parameter, check_layer_parameter
 import warnings
 from torch import Tensor
 from pygmtools.a_star import a_star
@@ -868,26 +868,15 @@ class GENN(torch.nn.Module):
         self.gnn_2_cache = dict()
         self.heuristic_cache = dict()
 
-    def calculate_bottleneck_features(self):
-        """
-        Deciding the shape of the bottleneck layer.
-        """
-        if self.args['histogram']:
-            self.feature_count = self.args['tensor_neurons'] + self.args['bins']
-        else:
-            self.feature_count = self.args['tensor_neurons']
-
     def setup_layers(self):
         """
         Creating the layers.
         """
-        self.calculate_bottleneck_features()
+        self.feature_count = self.args['tensor_neurons']
         self.convolution_1 = GCNConv(self.number_labels, self.args['filters_1'])
         self.convolution_2 = GCNConv(self.args['filters_1'], self.args['filters_2'])
         self.convolution_3 = GCNConv(self.args['filters_2'], self.args['filters_3'])
-        
         self.attention = AttentionModule(self.args)
-
         self.tensor_network = TensorNetworkModule(self.args)
         self.scoring_layer = torch.nn.Sequential(
             torch.nn.Linear(self.feature_count, 16),
@@ -895,37 +884,6 @@ class GENN(torch.nn.Module):
             torch.nn.Linear(16, 1),
             torch.nn.Sigmoid()
         )
-
-    def calculate_histogram(self, abstract_features_1, abstract_features_2, batch_1, batch_2):
-        """
-        Calculate histogram from similarity matrix.
-        :param abstract_features_1: Feature matrix for target graphs.
-        :param abstract_features_2: Feature matrix for source graphs.
-        :param batch_1: Batch vector for source graphs, which assigns each node to a specific example
-        :param batch_1: Batch vector for target graphs, which assigns each node to a specific example
-        :return hist: Histogram of similarity scores.
-        """
-        abstract_features_1, mask_1 = to_dense_batch(abstract_features_1, batch_1)
-        abstract_features_2, mask_2 = to_dense_batch(abstract_features_2, batch_2)
-
-        B1, N1, _ = abstract_features_1.size()
-        B2, N2, _ = abstract_features_2.size()
-
-        mask_1 = mask_1.view(B1, N1)
-        mask_2 = mask_2.view(B2, N2)
-        num_nodes = torch.max(mask_1.sum(dim=1), mask_2.sum(dim=1))
-
-        scores = torch.matmul(abstract_features_1, abstract_features_2.permute([0, 2, 1])).detach()
-
-        hist_list = []
-        for i, mat in enumerate(scores):
-            mat = torch.sigmoid(mat[:num_nodes[i], :num_nodes[i]]).view(-1)
-            hist = torch.histc(mat, bins=self.args['bins'])
-            hist = hist / torch.sum(hist)
-            hist = hist.view(1, -1)
-            hist_list.append(hist)
-
-        return torch.stack(hist_list).view(-1, self.args['bins'])
 
     def convolutional_pass(self, A, x, edge_weight=None):
         """
@@ -944,17 +902,6 @@ class GENN(torch.nn.Module):
         features = self.convolution_3(A, features, edge_weight)
         return features
 
-    def diffpool(self, abstract_features, edge_index, batch):
-        """
-        Making differentiable pooling.
-        :param abstract_features: Node feature matrix.
-        :param batch: Batch vector, which assigns each node to a specific example
-        :return pooled_features: Graph feature matrix.
-        """
-        x, mask = to_dense_batch(abstract_features, batch)
-        adj = to_dense_adj(edge_index, batch)
-        return self.attention(x, adj, mask)
-
     def forward(self,data:Graph_pair):
         """
         Forward pass with graphs.
@@ -962,16 +909,19 @@ class GENN(torch.nn.Module):
         :return score: Similarity score.
         """
         num = data.g1.num_graphs
+        max_nodes_num_1 = torch.max(data.g1.nodes_num) + 1
+        max_nodes_num_2 = torch.max(data.g2.nodes_num) + 1
+        x_pred = torch.zeros(num, max_nodes_num_1,max_nodes_num_2)
         for i in range(num):
             cur_data = Graph_pair(data.g1.x[i],data.g2.x[i],data.g1.Adj[i],data.g2.Adj[i],
-                                data.g1.nodes_num[i],data.g2.nodes_num[i])   
-            if(i == 0):
-                x_pred = self.A_star(cur_data)
-            else:
-                x_pred = torch.cat([x_pred,self.A_star(cur_data)],dim=0)
+                                data.g1.nodes_num[i],data.g2.nodes_num[i])
+            num_nodes_1 = data.g1.nodes_num[i] + 1
+            num_nodes_2 = data.g2.nodes_num[i] + 1
+            x_pred[i][:num_nodes_1,:num_nodes_2] = self.A_star(cur_data)
         return x_pred[:,:-1,:-1]
 
     def A_star(self,data:Graph_pair):
+
         if self.args['cuda']:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
@@ -1030,7 +980,7 @@ class GENN(torch.nn.Module):
             k_diag_view[:] = k_diag[b].reshape(-1)
 
         self.reset_cache()
-        
+
         x_pred, _ = a_star(
             data, k, ns_1.cpu().numpy(), ns_2.cpu().numpy(),
             self.net_prediction_cache,
@@ -1057,8 +1007,6 @@ class GENN(torch.nn.Module):
         :param data: Data dictionary.
         :return score: Similarity score.
         """
-        edge_index_1 = data.g1.edge_index.squeeze()
-        edge_index_2 = data.g2.edge_index.squeeze()
         features_1 = data.g1.x.squeeze()
         features_2 = data.g2.x.squeeze()
         batch_1 = data.g1.batch
@@ -1078,31 +1026,24 @@ class GENN(torch.nn.Module):
     
         graph_1_mask = torch.ones_like(batch_1)
         graph_2_mask = torch.ones_like(batch_2)
+        
         graph_1_matched = partial_pmat.sum(dim=-1).to(dtype=torch.bool)[:graph_1_mask.shape[0]]
         graph_2_matched = partial_pmat.sum(dim=-2).to(dtype=torch.bool)[:graph_2_mask.shape[0]]
+
         graph_1_mask = torch.logical_not(graph_1_matched)
         graph_2_mask = torch.logical_not(graph_2_matched)
+        
         abstract_features_1 = abstract_features_1[graph_1_mask]
         abstract_features_2 = abstract_features_2[graph_2_mask]
-        
+
         batch_1 = batch_1[graph_1_mask]
         batch_2 = batch_2[graph_2_mask]
         
-        if self.args['histogram']:
-            hist = self.calculate_histogram(abstract_features_1, abstract_features_2, batch_1, batch_2)
-
-        if self.args['diffpool']:
-            pooled_features_1 = self.diffpool(abstract_features_1, edge_index_1, batch_1)
-            pooled_features_2 = self.diffpool(abstract_features_2, edge_index_2, batch_2)
-        else:
-            pooled_features_1 = self.attention(abstract_features_1, batch_1)
-            pooled_features_2 = self.attention(abstract_features_2, batch_2)
+        pooled_features_1 = self.attention(abstract_features_1, batch_1)
+        pooled_features_2 = self.attention(abstract_features_2, batch_2)
 
         scores = self.tensor_network(pooled_features_1, pooled_features_2)
         
-        if self.args['histogram']:
-            scores = torch.cat((scores, hist), dim=1)
-
         score = self.scoring_layer(scores).view(-1)
         
         if return_ged_norm:
@@ -1129,6 +1070,7 @@ class GENN(torch.nn.Module):
         _, ged = hungarian_ged(node_cost_mat, torch.sum(graph_1_mask[:-1]), torch.sum(graph_2_mask[:-1]))
     
         return ged
+    
 def hungarian_ged(node_cost_mat, n1, n2):
     assert node_cost_mat.shape[-2] == n1+1
     assert node_cost_mat.shape[-1] == n2+1
@@ -1151,31 +1093,33 @@ def hungarian_ged(node_cost_mat, n1, n2):
     ged_lower_bound = torch.sum(pred_x * node_cost_mat)
     return pred_x, ged_lower_bound
 
-def astar(feat1,feat2,A1,A2,n1,n2,network,pretrain,**kwargs):
-    args = default_parameter()
-    if pretrain == 'LINUX':
-        args['feature_num'] = 8
-    elif pretrain == 'AIDS700nef':
-        args['feature_num'] = 36
-    args['pretrain'] = pretrain
+def astar(feat1,feat2,A1,A2,n1,n2,channel,network,pretrain,use_net):
     
     if feat1 is None:
         forward_pass = False
         device = torch.device('cpu')
     else:
         forward_pass = True
-        args['feature_num'] = feat1.shape[-1]
-        device = feat1.device      
-              
-    for key,value in kwargs.items():
-        if not key in args.keys():
-            raise TypeError("got an unexpected keyword argument" + key)
-        if key == 'feature_num' and forward_pass:
-            assert feat1.shape[-1] == value
-            assert feat2.shape[-1] == value            
-        args[key] = value    
+        device = feat1.device       
         
     if network is None:
+        args = default_parameter()
+        if forward_pass:
+            if channel is None:
+                args['feature_num'] = feat1.shape[-1]
+            else:
+                assert feat1.shape[-1] == channel, 'the channel {} must match the feature dimension of feat1\n'.format(channel)
+                assert feat2.shape[-1] == channel, 'the channel {} must match the feature dimension of feat2\n'.format(channel)
+                args['feature_num'] = channel
+        else:
+            if pretrain == 'LINUX':
+                args['feature_num'] = 8
+            elif pretrain == 'AIDS700nef':
+                args['feature_num'] = 36
+            else:
+                raise ValueError("You must specify the channel (the feature dimension of feat)\n")
+        args['use_net'] = use_net
+        
         network = GENN(args)
         network = network.to(device)
         if pretrain and args['use_net']:
