@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch import Tensor
 from typing import Optional, Tuple
+
 VERY_LARGE_INT = 65536
 
 ###############################################################
@@ -27,9 +28,8 @@ def default_parameter():
     params['astar_trustfact'] = 1
     params['astar_nopred'] = 0
     params['use_net'] = True
-    params['histogram'] = False
-    params['diffpool'] = False 
     return params
+
 
 def check_layer_parameter(params):
     if(params['pretrain'] == 'AIDS700nef'):
@@ -50,6 +50,7 @@ def check_layer_parameter(params):
         return False
     return True
 
+
 def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int):
     if dim < 0:
         dim = other.dim() + dim
@@ -60,6 +61,7 @@ def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int):
         src = src.unsqueeze(-1)
     src = src.expand(other.size())
     return src
+
 
 def scatter_sum(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
                 out: Optional[torch.Tensor] = None,
@@ -77,6 +79,7 @@ def scatter_sum(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
         return out.scatter_add_(dim, index, src)
     else:
         return out.scatter_add_(dim, index, src)
+
 
 def scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
                  out: Optional[torch.Tensor] = None,
@@ -99,6 +102,7 @@ def scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
     else:
         out.div_(count, rounding_mode='floor')
     return out 
+
 
 def to_dense_batch(x: Tensor, batch: Optional[Tensor] = None,
                    fill_value: float = 0., max_num_nodes: Optional[int] = None,
@@ -134,6 +138,7 @@ def to_dense_batch(x: Tensor, batch: Optional[Tensor] = None,
     mask = mask.view(batch_size, max_num_nodes)
 
     return out, mask
+
 
 def to_dense_adj(edge_index: Tensor,batch=None,edge_attr=None,max_num_nodes: Optional[int] = None) -> Tensor:
     if batch is None:
@@ -175,6 +180,7 @@ def to_dense_adj(edge_index: Tensor,batch=None,edge_attr=None,max_num_nodes: Opt
 
     return adj
 
+
 ###############################################################
 #                       GENN-A*  Modules                      #
 ###############################################################
@@ -191,6 +197,7 @@ class Graph_pair():
         data['g1'] = self.g1
         data['g2'] = self.g2
         return data
+   
     
 class Graphs():
     def __init__(self,x,Adj,nodes_num=None):
@@ -204,14 +211,20 @@ class Graphs():
         self.Adj = Adj
         self.num_graphs = Adj.shape[0]
         if nodes_num is not None:
-            self.nodes_num = nodes_num  
+            self.nodes_num = nodes_num 
         else:
             self.nodes_num = torch.tensor([x.shape[1]]*x.shape[0])
+        if self.x.shape[0] == 1:
+            if (self.x.shape[1] != nodes_num):
+                self.x = self.x[:,:nodes_num,:]
+                self.Adj = self.Adj[:,:nodes_num,:nodes_num]
+            
         self.graph_process()
         
     def graph_process(self):
         edge_index,edge_weight,_ = pygmtools.utils.dense_to_sparse(self.Adj)
-        self.edge_index = torch.cat([edge_index[:,:,0].unsqueeze(dim=1),edge_index[:,:,1].unsqueeze(dim=1)],dim=1)
+        self.edge_index = torch.cat([edge_index[:,:,0].unsqueeze(dim=1),
+                                     edge_index[:,:,1].unsqueeze(dim=1)],dim=1)
         self.edge_weight = edge_weight.view(-1)
         if(self.nodes_num.shape == torch.Size([])):
             batch = torch.tensor([0] * self.nodes_num)
@@ -223,12 +236,14 @@ class Graphs():
                     cur_batch = torch.tensor([i] * self.nodes_num[i])
                     batch = torch.cat([batch,cur_batch])
         self.batch = batch
+        
     def __repr__(self):
         messgae = "x = {}, Adj = {}".format(list(self.x.shape),list(self.Adj.shape))
         messgae += " edge_index = {}, edge_weight = {}".format(list(self.edge_index.shape),list(self.edge_weight.shape))
         messgae += " nodes_num = {}, num_graphs = {})".format(self.nodes_num.shape,self.num_graphs)
         self.message = messgae
         return f"{self.__class__.__name__}({self.message})"
+   
                 
 class AttentionModule(torch.nn.Module):
     """
@@ -277,55 +292,6 @@ class AttentionModule(torch.nn.Module):
 
         return torch.sigmoid(torch.matmul(x, transformed_global))
 
-class DenseAttentionModule(torch.nn.Module):
-    """
-    SimGNN Dense Attention Module to make a pass on graph.
-    """
-    def __init__(self, args):
-        """
-        :param args: Arguments object.
-        """
-        super(DenseAttentionModule, self).__init__()
-        self.args = args
-        self.setup_weights()
-        self.init_parameters()
-
-    def setup_weights(self):
-        """
-        Defining weights.
-        """
-        self.weight_matrix = torch.nn.Parameter(torch.Tensor(self.args['filters_3'], self.args['filters_3'])) 
-        
-    def init_parameters(self):
-        """
-        Initializing weights.
-        """
-        torch.nn.init.xavier_uniform_(self.weight_matrix)
-
-    def forward(self, x, mask=None):
-        """
-        Making a forward propagation pass to create a graph level representation.
-        :param x: Result of the GNN.
-        :param mask: Mask matrix indicating the valid nodes for each graph. 
-        :return representation: A graph level representation matrix. 
-        """
-        B, N, _ = x.size()
-        
-        if mask is not None:
-            num_nodes = mask.view(B, N).sum(dim=1).unsqueeze(-1)
-            mean = x.sum(dim=1)/num_nodes.to(x.dtype)
-        else:
-            mean = x.mean(dim=1)
-        
-        transformed_global = torch.tanh(torch.mm(mean, self.weight_matrix))
-        
-        koefs = torch.sigmoid(torch.matmul(x, transformed_global.unsqueeze(-1)))
-        weighted = koefs * x
-        
-        if mask is not None:
-            weighted = weighted * mask.view(B, N, 1).to(x.dtype)
-        
-        return weighted.sum(dim=1)
 
 class TensorNetworkModule(torch.nn.Module):
     """
@@ -371,6 +337,7 @@ class TensorNetworkModule(torch.nn.Module):
         block_scoring = torch.t(torch.mm(self.weight_matrix_block, torch.t(combined_representation)))
         scores = F.relu(scoring + block_scoring + self.bias.view(-1))
         return scores
+
 
 class GCNConv(nn.Module):
 
