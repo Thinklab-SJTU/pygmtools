@@ -858,7 +858,7 @@ class GENN(torch.nn.Module):
         super(GENN, self).__init__()
         self.args = args
         if self.args['use_net']:
-            self.number_labels = self.args['feature_num']
+            self.number_labels = self.args['channel']
             self.setup_layers()
 
         self.reset_cache()
@@ -1093,31 +1093,32 @@ def hungarian_ged(node_cost_mat, n1, n2):
     ged_lower_bound = torch.sum(pred_x * node_cost_mat)
     return pred_x, ged_lower_bound
 
-def astar(feat1,feat2,A1,A2,n1,n2,channel,network,pretrain,use_net):
-    
+def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
+          tensor_neurons, dropout, network, pretrain, use_net):
     if feat1 is None:
         forward_pass = False
         device = torch.device('cpu')
     else:
+        assert feat1.shape[-1] == feat2.shape[-1], 'The feature dimensions of feat1 and feat2 must be consistent'
         forward_pass = True
         device = feat1.device       
         
     if network is None:
         args = default_parameter()
+        
         if forward_pass:
             if channel is None:
-                args['feature_num'] = feat1.shape[-1]
+                args['channel'] = feat1.shape[-1]
             else:
                 assert feat1.shape[-1] == channel, 'the channel {} must match the feature dimension of feat1\n'.format(channel)
-                assert feat2.shape[-1] == channel, 'the channel {} must match the feature dimension of feat2\n'.format(channel)
-                args['feature_num'] = channel
         else:
-            if pretrain == 'LINUX':
-                args['feature_num'] = 8
-            elif pretrain == 'AIDS700nef':
-                args['feature_num'] = 36
-            else:
-                raise ValueError("You must specify the channel (the feature dimension of feat)\n")
+            args['channel'] = 8 if pretrain == "LINUX" else 36
+                
+        args['filters_1'] = filters_1
+        args['filters_2'] = filters_2
+        args['filters_3'] = filters_3
+        args['tensor_neurons'] = tensor_neurons
+        args['dropout'] = dropout
         args['use_net'] = use_net
         
         network = GENN(args)
@@ -1129,7 +1130,11 @@ def astar(feat1,feat2,A1,A2,n1,n2,channel,network,pretrain,use_net):
                     filename = pygmtools.utils.download(f'best_genn_{pretrain}_gcn_astar.pt', url, md5)
                     _load_model(network, filename, device)
                 else:
-                    message = 'Pretrain {} does not support the feature_num = {} you entered'.format(pretrain,args['feature_num'])
+                    message = 'Pretrain {} does not support the parameters you entered\n'.format(pretrain)
+                    if args['pretrain'] == 'AIDS700nef':
+                        message += "Supported parameters: ( channel: 36, filters:(64,32,16) )\n"
+                    elif args['pretrain'] == 'LINUX':
+                        message += "Supported parameters: ( channel: 8, filters:(64,32,16) )\n"
                     warnings.warn(message)                    
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {astar_pretrain_path.keys()}')

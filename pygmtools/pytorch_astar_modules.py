@@ -16,13 +16,11 @@ def default_parameter():
     params = {}
     params['cuda'] = False
     params['pretrain'] = False
-    params['feature_num'] = 36
+    params['channel'] = 36
     params['filters_1'] = 64
     params['filters_2'] = 32
     params['filters_3'] = 16
     params['tensor_neurons'] = 16
-    params['bottle_neck_neurons'] = 16
-    params['bins'] = 16
     params['dropout'] = 0
     params['astar_beamwidth'] = 0
     params['astar_trustfact'] = 1
@@ -33,10 +31,10 @@ def default_parameter():
 
 def check_layer_parameter(params):
     if(params['pretrain'] == 'AIDS700nef'):
-        if params['feature_num'] != 36:
+        if params['channel'] != 36:
             return False
     elif(params['pretrain'] == 'LINUX'):
-        if params['feature_num'] != 8:
+        if params['channel'] != 8:
             return False
     if params['filters_1'] != 64:
         return False
@@ -45,8 +43,6 @@ def check_layer_parameter(params):
     if params['filters_3'] != 16:
         return False
     if params['tensor_neurons'] != 16:
-        return False
-    if params['bottle_neck_neurons'] != 16:
         return False
     return True
 

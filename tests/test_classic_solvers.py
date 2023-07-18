@@ -210,6 +210,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             last_X = pygm.utils.to_numpy(_X)
 
 
+# The testing function for a_star
 def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     if backends[0] != 'pytorch':
         backends.insert(0, 'pytorch') # force pytorch as the reference backend
@@ -258,8 +259,8 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
         for working_backend in backends:
             pygm.BACKEND = working_backend
             _A1, _A2, _F1, _F2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, n1, n2)
-            _X1, net = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, channel=node_feat_dim, return_network=True, **solver_param_dict)
-            _X2 = solver_func(_F1, _F2, _A1, _A2, _n1, _n2,channel=node_feat_dim, network=net, **solver_param_dict)
+            _X1, net = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, return_network=True, **solver_param_dict)
+            _X2 = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, network=net, **solver_param_dict)
             net2 = pygm.utils.get_network(solver_func, **solver_param_dict)
             assert type(net) == type(net2)
 

@@ -1062,12 +1062,12 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         return result
 
 
-def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None, 
-           return_network=False, pretrain='AIDS700nef',use_net=True, backend=None):
+def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
+           tensor_neurons=16, dropout=0, network=None, return_network=False, pretrain='AIDS700nef',use_net=True, backend=None):
 
     r"""
-    GENN-A* solver for graph matching based on Graph Neural Network, which aims to accelerate 
-    the A* solver for graph edit distance problem.
+    GENN-A* solver for graph matching based on Graph Neural Network.
+    GENN-A* solver aims to accelerate the A* solver for graph edit distance problem.
     The algorithm combines traditional A* algorithm and neural network techniques to learn the heuristic function, 
     thereby improving the efficiency and accuracy of path search.
     
@@ -1079,24 +1079,23 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None,
     :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
     :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
     :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
-    :param return_network: (default: False) Return the network object (saving model construction time if calling the
-        model multiple times).
-    :param pretrain: (default: 'AIDS700nef') If ``network==None``, the pretrained model weights to be loaded. Available
-        pretrained weights: ``AIDS700nef`` (feature_num=36), ``LINUX`` (feature_num=8),
-        or ``False`` (no pretraining).
-    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
-    :param channel: (default: 36)  Channel size of the input layer. lt must matchthe feature dimension (d) of feat1, feat2. 
-        lgnored if the network object isgiven (ignored if network!=None)
+    :param channel: (default: None)  Channel size of the input layer. If given, it must match the feature dimension (d) of feat1, feat2. 
+        If not given, it will be defined by the feature dimension (d) of feat1, feat2. 
+        Ignored if the network object isgiven (ignored if network!=None)
     :param filters_1: (default: 64) Filters (neurons) in 1st convolution.
     :param filters_2: (default: 32) Filters (neurons) in 2nd convolution.
     :param filters_3: (default: 16) Filters (neurons) in 2nd convolution.
     :param tensor_neurons: (default: 16) Neurons in tensor network layer.
-    :param bottle_neck_neurons: (default: 16) Bottle neck layer neurons.
-    :param bins: (default: 16) Similarity score bins.
     :param dropout: (default: 0) Dropout probability
-    :param histogram: (default: False) 
-    :param diffpool: (default: False) 
+    :param network: (default: None) The network object. If None, a new network object will be created, and load the
+        model weights specified in ``pretrain`` argument.
+    :param return_network: (default: False) Return the network object (saving model construction time if calling the
+        model multiple times).
+    :param pretrain: (default: 'AIDS700nef') If ``network==None``, the pretrained model weights to be loaded. Available
+        pretrained weights: ``AIDS700nef`` (channel=36), ``LINUX`` (channel=8),
+        or ``False`` (no pretraining).
     :param use_net: (default: True) Whether to use neural networks to obtain heuristic prediction
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: if ``return_network==False``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix
 
         if ``return_network==True``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix,
@@ -1123,14 +1122,14 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None,
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
             >>> nodes_num = 4
-            >>> feature_num = 36
+            >>> channel = 36
 
             >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
             >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
             >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
             >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
             >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
-            >>> feat1 = torch.rand(batch_size, nodes_num, feature_num) - 0.5
+            >>> feat1 = torch.rand(batch_size, nodes_num, channel) - 0.5
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
 
@@ -1164,19 +1163,19 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None,
             
             # You may also load other pretrained weights
             # However, it should be noted that each pretrained set supports different node feature dimensions
-            # AIDS700nef(Default): feature_num = 36
-            # LINUX: feature_num = 8
+            # AIDS700nef(Default): channel = 36
+            # LINUX: channel = 8
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
             >>> nodes_num = 4
-            >>> feature_num = 8
+            >>> channel = 8
 
             >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
             >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
             >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
             >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
             >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
-            >>> feat1 = torch.rand(batch_size, nodes_num, feature_num) - 0.5
+            >>> feat1 = torch.rand(batch_size, nodes_num, channel) - 0.5
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
             
@@ -1189,10 +1188,10 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None,
             # When the input node feature dimension is different from the one supported by pre training, 
             # you can still use the solver, but the solver will provide a warning
             >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='AIDS700nef')
-            UserWarning: Pretrain AIDS700nef does not support the feature_num = 8 you entered
+            UserWarning: Pretrain AIDS700nef does not support the channel = 8 you entered
             
             # You may configure your own model and integrate the model into a deep learning pipeline. For example:
-            >>> net = pygm.utils.get_network(pygm.a_star, feature_num = 1000, filters_1 = 1024,filters_2 = 256,filters_3 = 128,pretrain=False)
+            >>> net = pygm.utils.get_network(pygm.a_star, channel = 1000, filters_1 = 1024,filters_2 = 256,filters_3 = 128,pretrain=False)
             >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
             # feat1/feat2 may be outputs by other neural networks
             >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, network=net)
@@ -1231,7 +1230,8 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, network=None,
     if n1 is not None: _check_data_type(n1, 'n1', backend)
     if n2 is not None: _check_data_type(n2, 'n2', backend)
 
-    args = (feat1, feat2, A1, A2, n1, n2, channel, network, pretrain, use_net)
+    args = (feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3, 
+            tensor_neurons, dropout, network, pretrain, use_net)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.astar
