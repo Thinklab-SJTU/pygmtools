@@ -83,6 +83,8 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
             if batch_size > 1:
                 _conn1, _edge1, _ne1 = pygm.utils.dense_to_sparse(_A1)
                 _conn2, _edge2, _ne2 = pygm.utils.dense_to_sparse(_A2)
+                import pdb
+                pdb.set_trace()
                 _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, _ne1, _n2, _ne2,
                                               **aff_param_dict)
             else:
@@ -440,12 +442,20 @@ def test_astar(get_backend):
         "trustfact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
     }, backends)
-
+    
+    # non-batched input
+    args4 = ([10], 10, pygm.astar,{
+        "use_net":   [False],
+        "beam_width": [0, 1, 2],
+        "trustfact": [0.9, 0.95, 1.0],
+        "no_pred_size": [0, 1],
+    }, backends)
+    
     _test_astar(*args1)
     _test_astar(*args2)
     _test_astar(*args3)
+    _test_astar(*args4)
     
-
 if __name__ == '__main__':
     test_hungarian('all')
     test_sinkhorn('all')
