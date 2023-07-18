@@ -95,7 +95,8 @@ def test_multi_matching_result():
 
 
 if __name__ == '__main__':
-    test_env_report()
-    test_generate_isomorphic_graphs()
-    test_permutation_loss()
-    test_multi_matching_result()
+    # test_env_report()
+    # test_generate_isomorphic_graphs()
+    # test_permutation_loss()
+    # test_multi_matching_result()
+    pass
