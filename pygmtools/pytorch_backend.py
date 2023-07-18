@@ -1094,7 +1094,7 @@ def hungarian_ged(node_cost_mat, n1, n2):
     return pred_x, ged_lower_bound
 
 def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
-          tensor_neurons, dropout, network, pretrain, use_net):
+          tensor_neurons, dropout, beam_width, trustfact, no_pred_size, network, pretrain, use_net):
     if feat1 is None:
         forward_pass = False
         device = torch.device('cpu')
@@ -1119,6 +1119,9 @@ def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3
         args['filters_3'] = filters_3
         args['tensor_neurons'] = tensor_neurons
         args['dropout'] = dropout
+        args['astar_beamwidth'] = beam_width
+        args['astar_trustfact'] = trustfact
+        args['astar_nopred'] = no_pred_size
         args['use_net'] = use_net
         
         network = GENN(args)

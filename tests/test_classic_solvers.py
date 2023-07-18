@@ -214,7 +214,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
 def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     if backends[0] != 'pytorch':
         backends.insert(0, 'pytorch') # force pytorch as the reference backend
-
+    backends = ['pytorch'] # Due to currently only supporting pytorch, testing is only conducted under pytorch
     batch_size = len(graph_num_nodes)
     
     # Generate isomorphic graphs
@@ -425,19 +425,29 @@ def test_astar(get_backend):
     backends = get_backends(get_backend)
     # test pretrained by AIDS700nef
     args1 = (list(range(10, 30, 2)), 36, pygm.a_star,{
-        "pretrain":  ["AIDS700nef"],
-        "use_net":   [True],
+        "pretrain": ["AIDS700nef"],
+        "use_net": [True],
+        "beam_width": [0, 1],
+        "trustfact": [0.9, 0.95, 1.0],
+        "no_pred_size": [0, 1],
+    
     }, backends)
 
     # test pretrained by LINUX
     args2 = (list(range(10, 30, 2)), 8, pygm.a_star,{
         'pretrain':  ['LINUX'],
         "use_net":   [True],
+        "beam_width": [0, 1],
+        "trustfact": [0.9, 0.95, 1.0],
+        "no_pred_size": [0, 1],
     }, backends)
 
     # heuristic_prediction
     args3 = (list(range(10, 16, 2)), 10, pygm.a_star,{
         "use_net":   [False],
+        "beam_width": [0, 1],
+        "trustfact": [0.9, 0.95, 1.0],
+        "no_pred_size": [0, 1],
     }, backends)
 
     _test_astar(*args1)
