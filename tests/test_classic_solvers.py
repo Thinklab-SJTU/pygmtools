@@ -415,7 +415,7 @@ def test_ipfp(get_backend):
 def test_astar(get_backend):
     backends = get_backends(get_backend)
     # test pretrained by AIDS700nef
-    args1 = (list(range(10, 30, 2)), 36, pygm.astar,{
+    args1 = ([10], 36, pygm.astar,{
         "pretrain": ["AIDS700nef"],
         "use_net": [True],
         "beam_width": [0, 1, 2],
@@ -447,9 +447,9 @@ def test_astar(get_backend):
     
 
 if __name__ == '__main__':
-    # test_hungarian('all')
-    # test_sinkhorn('all')
-    # test_rrwm('all')
-    # test_sm('all')
-    # test_ipfp('all')
+    test_hungarian('all')
+    test_sinkhorn('all')
+    test_rrwm('all')
+    test_sm('all')
+    test_ipfp('all')
     test_astar('')
