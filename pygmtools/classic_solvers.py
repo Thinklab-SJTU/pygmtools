@@ -1067,13 +1067,21 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, fi
            network=None, return_network=False, pretrain='AIDS700nef',use_net=True, backend=None):
 
     r"""
-    GENN-A* solver for graph matching based on Graph Neural Network.
-    GENN-A* solver aims to accelerate the A* solver for graph edit distance problem.
-    The algorithm combines traditional A* algorithm and neural network techniques to learn the heuristic function, 
-    thereby improving the efficiency and accuracy of path search.
+    The **GENN-ASTAR** (Graph Edit Neural Network Astar) solver for graph matching based on the combination of traditional A-star and Neural Network.    
+    This algorithm replaces the heuristic prediction module in the traditional A-star algorithm with **GNN** (Graph Neural Network) model, 
+    greatly improving the efficiency of A-star algorithm while ensuring a certain degree of accuracy.
+    During the search process, the algorithm prioritizes the next search direction based on the distance between the current state and the target state. 
+    At each step of the search, the algorithm uses a predicted probability distribution of node pairs for matching. 
     
-    cite from: https://github.com/Thinklab-SJTU/GENN-Astar/
-    
+    See the following picture to better understand the workflow of the algorithm:
+
+    .. image:: ../../images/astar.png
+
+    See the following paper for more technical details:
+    `"Combinatorial Learning of Graph Edit Distance via Dynamic Embedding"
+    <https://ieeexplore.ieee.org/document/9578389/>`_
+
+ 
     :param feat1: :math:`(b\times n_1 \times d)` input feature of graph1
     :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
     :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
@@ -1202,6 +1210,20 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, fi
             >>> loss = pygm.utils.permutation_loss(X, X_gt)
             >>> loss.backward()
             >>> optimizer.step()
+
+    .. note::
+
+        If you find this model useful in your research, please cite:
+
+        ::
+
+            @ARTICLE{WangPAMI22,
+              author={Runzhong Wang, Tianqi Zhang, Tianshu Yu, Junchi Yan, Xiaokang Yang},
+              journal={2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+              title={Combinatorial Learning of Graph Edit Distance via Dynamic Embedding},
+              year={2021},
+              doi={10.1109/CVPR46437.2021.00520}
+            }
     """
     
     if backend is None:
