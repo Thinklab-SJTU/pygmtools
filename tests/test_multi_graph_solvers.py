@@ -279,8 +279,7 @@ def test_gamgm_backward():
 
 
 if __name__ == '__main__':
-    # test_gamgm_backward()
-    # test_gamgm()
-    # test_mgm_floyd()
-    # test_cao()
-    pass
+    test_gamgm_backward()
+    test_gamgm()
+    test_mgm_floyd()
+    test_cao()
