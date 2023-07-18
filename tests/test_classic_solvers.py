@@ -220,7 +220,7 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
     # Generate isomorphic graphs
     pygm.BACKEND = 'pytorch'
     torch.manual_seed(0)
-    X_gt, A1, A2, F1, F2, EF1, EF2 = [], [], [], [], [], [], []
+    X_gt, A1, A2, F1, F2, = [], [], [], [], [],
     for b, num_node in enumerate(graph_num_nodes):
         As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(num_node, node_feat_dim=node_feat_dim)
         Fs_b = Fs_b - 0.5
@@ -229,17 +229,14 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
         A2.append(As_b[1])
         F1.append(Fs_b[0])
         F2.append(Fs_b[1])
-        EF1.append((torch.rand(num_node, num_node) * As_b[0]).unsqueeze(-1) / 10)
-        EF2.append(torch.mm(torch.mm(X_gt_b.t(), EF1[-1].squeeze(-1)), X_gt_b).unsqueeze(-1))
     n1 = torch.tensor(graph_num_nodes, dtype=torch.int)
     n2 = torch.tensor(graph_num_nodes, dtype=torch.int)
-    A1, A2, F1, F2, EF1, EF2, X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, EF1, EF2, X_gt))
+    A1, A2, F1, F2,  X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, X_gt))
     if batch_size > 1:
-        A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt)
+        A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
     else:
-        A1, A2, F1, F2, EF1, EF2, n1, n2, X_gt = data_to_numpy(
-            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0), EF1.squeeze(0), EF2.squeeze(0), n1, n2,
-            X_gt.squeeze(0)
+        A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(
+            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0),  n1, n2, X_gt.squeeze(0)
         )
     
     # call the solver
@@ -247,13 +244,9 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
     for val in matrix_params.values():
         total *= len(val)
     for values in tqdm(itertools.product(*matrix_params.values()), total=total):
-        aff_param_dict = {}
         solver_param_dict = {}
         for k, v in zip(matrix_params.keys(), values):
-            if k in ['node_aff_fn', 'edge_aff_fn']:
-                aff_param_dict[k] = v
-            else:
-                solver_param_dict[k] = v
+            solver_param_dict[k] = v
             
         last_X = None
         for working_backend in backends:
@@ -265,8 +258,7 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
             assert type(net) == type(net2)
 
             assert np.abs(pygm.utils.to_numpy(_X1) - pygm.utils.to_numpy(_X2)).sum() < 1e-4, \
-                f"GM result inconsistent for predefined network object. backend={working_backend}, " \
-                f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
+                f"GM result inconsistent for predefined network object. backend={working_backend}; " \
                 f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
             if 'pretrain' in solver_param_dict and solver_param_dict['pretrain'] is None:
@@ -274,13 +266,12 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
 
             if last_X is not None:
                 assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 5e-3, \
-                    f"Incorrect GM solution for {working_backend}, " \
-                    f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
+                    f"Incorrect GM solution for {working_backend}; " \
                     f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+                    
             last_X = pygm.utils.to_numpy(_X1)
             accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X1, _n1, _n2)) * X_gt).sum() / X_gt.sum()
-            assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
-                                  f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
+            assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}; " \
                                   f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
 
@@ -427,7 +418,7 @@ def test_astar(get_backend):
     args1 = (list(range(10, 30, 2)), 36, pygm.astar,{
         "pretrain": ["AIDS700nef"],
         "use_net": [True],
-        "beam_width": [0, 1],
+        "beam_width": [0, 1, 2],
         "trustfact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
     
@@ -437,7 +428,7 @@ def test_astar(get_backend):
     args2 = (list(range(10, 30, 2)), 8, pygm.astar,{
         'pretrain':  ['LINUX'],
         "use_net":   [True],
-        "beam_width": [0, 1],
+        "beam_width": [0, 1, 2],
         "trustfact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
     }, backends)
@@ -445,7 +436,7 @@ def test_astar(get_backend):
     # heuristic_prediction
     args3 = (list(range(10, 16, 2)), 10, pygm.astar,{
         "use_net":   [False],
-        "beam_width": [0, 1],
+        "beam_width": [0, 1, 2],
         "trustfact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
     }, backends)
@@ -456,9 +447,9 @@ def test_astar(get_backend):
     
 
 if __name__ == '__main__':
-    test_hungarian('all')
-    test_sinkhorn('all')
-    test_rrwm('all')
-    test_sm('all')
-    test_ipfp('all')
+    # test_hungarian('all')
+    # test_sinkhorn('all')
+    # test_rrwm('all')
+    # test_sm('all')
+    # test_ipfp('all')
     test_astar('')
