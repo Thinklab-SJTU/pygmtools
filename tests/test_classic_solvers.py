@@ -424,7 +424,7 @@ def test_ipfp(get_backend):
 def test_astar(get_backend):
     backends = get_backends(get_backend)
     # test pretrained by AIDS700nef
-    args1 = (list(range(10, 30, 2)), 36, pygm.a_star,{
+    args1 = (list(range(10, 30, 2)), 36, pygm.astar,{
         "pretrain": ["AIDS700nef"],
         "use_net": [True],
         "beam_width": [0, 1],
@@ -434,7 +434,7 @@ def test_astar(get_backend):
     }, backends)
 
     # test pretrained by LINUX
-    args2 = (list(range(10, 30, 2)), 8, pygm.a_star,{
+    args2 = (list(range(10, 30, 2)), 8, pygm.astar,{
         'pretrain':  ['LINUX'],
         "use_net":   [True],
         "beam_width": [0, 1],
@@ -443,7 +443,7 @@ def test_astar(get_backend):
     }, backends)
 
     # heuristic_prediction
-    args3 = (list(range(10, 16, 2)), 10, pygm.a_star,{
+    args3 = (list(range(10, 16, 2)), 10, pygm.astar,{
         "use_net":   [False],
         "beam_width": [0, 1],
         "trustfact": [0.9, 0.95, 1.0],

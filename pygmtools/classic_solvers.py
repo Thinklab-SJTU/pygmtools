@@ -1062,7 +1062,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         return result
 
 
-def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
+def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
            tensor_neurons=16, dropout=0, beam_width=0, trustfact=1, no_pred_size=0,
            network=None, return_network=False, pretrain='AIDS700nef',use_net=True, backend=None):
 
@@ -1137,14 +1137,14 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, f
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
 
-            # Match by A_STAR (load pretrained model)
-            >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            # Match by ASTAR (load pretrained model)
+            >>> X, net = pygm.astar(feat1, feat2, A1, A2, n1, n2, return_network=True)
             Downloading to ~/.cache/pygmtools/best_genn_AIDS700nef_gcn_astar.pt...
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy
             tensor(1.)
 
             # Pass the net object to avoid rebuilding the model agian
-            >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> X = pygm.astar(feat1, feat2, A1, A2, n1, n2, network=net)
             
             # This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
             >>> part_f1 = feat1[0]
@@ -1152,7 +1152,7 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, f
             >>> part_A1 = A1[0]
             >>> part_A2 = A2[0]
             >>> part_X_gt = X_gt[0]
-            >>> part_X = pygm.a_star(part_f1, part_f2, part_A1, part_A2, return_network=False)
+            >>> part_X = pygm.astar(part_f1, part_f2, part_A1, part_A2, return_network=False)
             
             >>> part_X.shape
             torch.Size([4, 4])
@@ -1161,7 +1161,7 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, f
             tensor(1.)
             
             # You can also use traditional heuristic methods to solve without using neural networks
-            >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, use_net=False)
+            >>> X = pygm.astar(feat1, feat2, A1, A2, n1, n2, use_net=False)
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy
             tensor(1.)            
             
@@ -1183,7 +1183,7 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, f
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
             
-            >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, pretrain='LINUX',return_network=True)
+            >>> X, net = pygm.astar(feat1, feat2, A1, A2, n1, n2, pretrain='LINUX',return_network=True)
             Downloading to ~/.cache/pygmtools/best_genn_LINUX_gcn_astar.pt...
 
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy
@@ -1191,14 +1191,14 @@ def a_star(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, f
             
             # When the input node feature dimension is different from the one supported by pre training, 
             # you can still use the solver, but the solver will provide a warning
-            >>> X, net = pygm.a_star(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='AIDS700nef')
+            >>> X, net = pygm.astar(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='AIDS700nef')
             UserWarning: Pretrain AIDS700nef does not support the channel = 8 you entered
             
             # You may configure your own model and integrate the model into a deep learning pipeline. For example:
-            >>> net = pygm.utils.get_network(pygm.a_star, channel = 1000, filters_1 = 1024,filters_2 = 256,filters_3 = 128,pretrain=False)
+            >>> net = pygm.utils.get_network(pygm.astar, channel = 1000, filters_1 = 1024,filters_2 = 256,filters_3 = 128,pretrain=False)
             >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
             # feat1/feat2 may be outputs by other neural networks
-            >>> X = pygm.a_star(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> X = pygm.astar(feat1, feat2, A1, A2, n1, n2, network=net)
             >>> loss = pygm.utils.permutation_loss(X, X_gt)
             >>> loss.backward()
             >>> optimizer.step()
