@@ -17,8 +17,8 @@ from torch import Tensor
 import os
 import pygmtools.utils
 
-from .pytorch_astar_modules import GCNConv,AttentionModule,TensorNetworkModule,Graph_pair,\
-    VERY_LARGE_INT, to_dense_adj,to_dense_batch,default_parameter, check_layer_parameter
+from .pytorch_astar_modules import GCNConv, AttentionModule, TensorNetworkModule, GraphPair, \
+    VERY_LARGE_INT, to_dense_adj, to_dense_batch, default_parameter, check_layer_parameter, node_metric
 import warnings
 from torch import Tensor
 from pygmtools.a_star import a_star
@@ -30,9 +30,9 @@ from pygmtools.a_star import a_star
 from pygmtools.numpy_backend import _hung_kernel
 
 
-def hungarian(s: Tensor, n1: Tensor=None, n2: Tensor=None,
-              unmatch1: Tensor=None, unmatch2: Tensor=None,
-              nproc: int=1) -> Tensor:
+def hungarian(s: Tensor, n1: Tensor = None, n2: Tensor = None,
+              unmatch1: Tensor = None, unmatch2: Tensor = None,
+              nproc: int = 1) -> Tensor:
     """
     Pytorch implementation of Hungarian algorithm
     """
@@ -62,16 +62,17 @@ def hungarian(s: Tensor, n1: Tensor=None, n2: Tensor=None,
             mapresult = pool.starmap_async(_hung_kernel, zip(perm_mat, n1, n2, unmatch1, unmatch2))
             perm_mat = np.stack(mapresult.get())
     else:
-        perm_mat = np.stack([_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
+        perm_mat = np.stack(
+            [_hung_kernel(perm_mat[b], n1[b], n2[b], unmatch1[b], unmatch2[b]) for b in range(batch_num)])
 
     perm_mat = torch.from_numpy(perm_mat).to(device)
 
     return perm_mat
 
 
-def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
-             unmatchrows: Tensor=None, unmatchcols: Tensor=None,
-             dummy_row: bool=False, max_iter: int=10, tau: float=1., batched_operation: bool=False) -> Tensor:
+def sinkhorn(s: Tensor, nrows: Tensor = None, ncols: Tensor = None,
+             unmatchrows: Tensor = None, unmatchcols: Tensor = None,
+             dummy_row: bool = False, max_iter: int = 10, tau: float = 1., batched_operation: bool = False) -> Tensor:
     """
     Pytorch implementation of Sinkhorn algorithm
     """
@@ -96,7 +97,7 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         s_t = s.transpose(1, 2)
         s_t = torch.cat((
             s_t[:, :s.shape[1], :],
-            torch.full((batch_size, s.shape[1], s.shape[2]-s.shape[1]), -float('inf'), device=s.device)), dim=2)
+            torch.full((batch_size, s.shape[1], s.shape[2] - s.shape[1]), -float('inf'), device=s.device)), dim=2)
         s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, s)
 
         new_nrows = torch.where(transposed_batch, ncols, nrows)
@@ -108,8 +109,9 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
             unmatchrows_pad = torch.cat((
                 unmatchrows,
                 torch.full((batch_size, unmatchcols.shape[1] - unmatchrows.shape[1]), -float('inf'), device=s.device)),
-            dim=1)
-            new_unmatchrows = torch.where(transposed_batch.view(batch_size, 1), unmatchcols, unmatchrows_pad)[:, :unmatchrows.shape[1]]
+                dim=1)
+            new_unmatchrows = torch.where(transposed_batch.view(batch_size, 1), unmatchcols, unmatchrows_pad)[:,
+                              :unmatchrows.shape[1]]
             new_unmatchcols = torch.where(transposed_batch.view(batch_size, 1), unmatchrows_pad, unmatchcols)
             unmatchrows = new_unmatchrows
             unmatchcols = new_unmatchcols
@@ -126,15 +128,19 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
         nrows = ncols.clone()
-        log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)), dim=1)
+        log_s = torch.cat((log_s, torch.full(dummy_shape, -float('inf'), device=log_s.device, dtype=log_s.dtype)),
+                          dim=1)
         if unmatchrows is not None:
-            unmatchrows = torch.cat((unmatchrows, torch.full((dummy_shape[0], dummy_shape[1]), -float('inf'), device=log_s.device, dtype=log_s.dtype)), dim=1)
+            unmatchrows = torch.cat((unmatchrows,
+                                     torch.full((dummy_shape[0], dummy_shape[1]), -float('inf'), device=log_s.device,
+                                                dtype=log_s.dtype)), dim=1)
         for b in range(batch_size):
             log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -100
 
     # assign the unmatch weights
     if unmatchrows is not None and unmatchcols is not None:
-        new_log_s = torch.full((log_s.shape[0], log_s.shape[1]+1, log_s.shape[2]+1), -float('inf'), device=log_s.device, dtype=log_s.dtype)
+        new_log_s = torch.full((log_s.shape[0], log_s.shape[1] + 1, log_s.shape[2] + 1), -float('inf'),
+                               device=log_s.device, dtype=log_s.dtype)
         new_log_s[:, :-1, :-1] = log_s
         log_s = new_log_s
         for b in range(batch_size):
@@ -166,7 +172,8 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
 
         ret_log_s = log_s
     else:
-        ret_log_s = torch.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), device=log_s.device, dtype=log_s.dtype)
+        ret_log_s = torch.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), device=log_s.device,
+                               dtype=log_s.dtype)
 
         for b in range(batch_size):
             row_slice = slice(0, nrows[b])
@@ -203,7 +210,8 @@ def sinkhorn(s: Tensor, nrows: Tensor=None, ncols: Tensor=None,
         s_t = ret_log_s.transpose(1, 2)
         s_t = torch.cat((
             s_t[:, :ret_log_s.shape[1], :],
-            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2]-ret_log_s.shape[1]), -float('inf'), device=log_s.device)), dim=2)
+            torch.full((batch_size, ret_log_s.shape[1], ret_log_s.shape[2] - ret_log_s.shape[1]), -float('inf'),
+                       device=log_s.device)), dim=2)
         ret_log_s = torch.where(transposed_batch.view(batch_size, 1, 1), s_t, ret_log_s)
 
     if transposed:
@@ -415,7 +423,7 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
 
         X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i,j,k] = X[i,k]
         X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i,j,k] = X[k,j]
-        X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n) # X_combo[i,j,k] = X[i, k] * X[k, j]
+        X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n)  # X_combo[i,j,k] = X[i, k] * X[k, j]
 
         aff_ori = (_comp_aff_score(X.reshape(-1, n, n), K.reshape(-1, n * n, n * n)) / norm).reshape(m, m)
         pair_con = _get_batch_pc_opt(X)
@@ -438,7 +446,8 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
 
         assert torch.all(score_combo + 1e-4 >= score_ori), torch.min(score_combo - score_ori)
         X_upt = X_combo[mask1, mask2, idx, :, :]
-        X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (1 - X_mask - X_mask.transpose(0, 1))
+        X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (
+                    1 - X_mask - X_mask.transpose(0, 1))
         assert torch.all(X.transpose(0, 1).transpose(2, 3) == X)
     return X
 
@@ -602,7 +611,7 @@ def gamgm(
         sk_iter, max_iter, quad_weight,
         converge_thresh, outlier_thresh, bb_smooth,
         verbose,
-        cluster_M=None, projector='sinkhorn', hung_iter=True # these arguments are reserved for clustering
+        cluster_M=None, projector='sinkhorn', hung_iter=True  # these arguments are reserved for clustering
 ):
     """
     Pytorch implementation of Graduated Assignment for Multi-Graph Matching (with compatibility for 2GM and clustering)
@@ -666,6 +675,7 @@ class GAMGMTorchFunc(torch.autograd.Function):
     """
     Torch wrapper to support forward and backward pass (by black-box differentiation)
     """
+
     @staticmethod
     def forward(ctx, bb_smooth, supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args):
         # save parameters
@@ -693,7 +703,8 @@ class GAMGMTorchFunc(torch.autograd.Function):
             end_x = n_indices[i]
             start_y = n_indices[j] - ns[j]
             end_y = n_indices[j]
-            supW[start_x:end_x, start_y:end_y] += bb_smooth * torch.mm(dU[start_x:end_x], dU[start_y:end_y].transpose(0, 1))
+            supW[start_x:end_x, start_y:end_y] += bb_smooth * torch.mm(dU[start_x:end_x],
+                                                                       dU[start_y:end_y].transpose(0, 1))
 
         U_prime = gamgm_real(supA, supW, ns, n_indices, n_univ, num_graphs, U0, *args)
 
@@ -717,8 +728,8 @@ def gamgm_real(
         sk_iter, max_iter, quad_weight,
         converge_thresh, outlier_thresh,
         verbose,
-        cluster_M, projector, hung_iter # these arguments are reserved for clustering
-        ):
+        cluster_M, projector, hung_iter  # these arguments are reserved for clustering
+):
     """
     The real forward function of GAMGM
     """
@@ -741,7 +752,7 @@ def gamgm_real(
                 else:
                     print_str = 'hungarian'
                 print(print_str + f' #iter={i}/{max_iter} '
-                      f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
+                                  f'quad score: {(quad * U).sum():.3e}, unary score: {(unary * U).sum():.3e}')
             V = (quad + unary) / num_graphs
 
             U_list = []
@@ -818,7 +829,7 @@ def gamgm_real(
 
         if verbose: print('-' * 20)
 
-        if i == max_iter - 1: # not converged
+        if i == max_iter - 1:  # not converged
             if hung_iter:
                 pass
             else:
@@ -844,10 +855,11 @@ def gamgm_real(
 
 astar_pretrain_path = {
     'AIDS700nef': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1QWGgpt4C4XjFZSEcIZmQF-84XtpfXope',
-               'b2516aea4c8d730704a48653a5ca94ba'),
+                   'b2516aea4c8d730704a48653a5ca94ba'),
     'LINUX': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1EGVSejxsgSefIBquZtDftpe3Ize1Vw1P',
-            'fd3b2a8dfa3edb20607da2e2b96d2e96'),
+              'fd3b2a8dfa3edb20607da2e2b96d2e96'),
 }
+
 
 class GENN(torch.nn.Module):
     def __init__(self, args):
@@ -885,24 +897,25 @@ class GENN(torch.nn.Module):
             torch.nn.Sigmoid()
         )
 
-    def convolutional_pass(self, A, x, edge_weight=None):
+    def convolutional_pass(self, edge_index, x, edge_weight=None):
         """
         Making convolutional pass.
         :param edge_index: Edge indices.
-        :param features: Feature matrix.
+        :param x: Feature matrix.
+        :param edge_weight: Edge weights.
         :return features: Abstract feature matrix.
         """
 
-        features = self.convolution_1(A, x, edge_weight)
+        features = self.convolution_1(edge_index, x, edge_weight)
         features = F.relu(features)
         features = F.dropout(features, p=self.args['dropout'], training=self.training)
-        features = self.convolution_2(A, features, edge_weight)
+        features = self.convolution_2(edge_index, features, edge_weight)
         features = F.relu(features)
         features = F.dropout(features, p=self.args['dropout'], training=self.training)
-        features = self.convolution_3(A, features, edge_weight)
+        features = self.convolution_3(edge_index, features, edge_weight)
         return features
 
-    def forward(self,data:Graph_pair):
+    def forward(self, data: GraphPair):
         """
         Forward pass with graphs.
         :param data: Data dictionary.
@@ -911,16 +924,16 @@ class GENN(torch.nn.Module):
         num = data.g1.num_graphs
         max_nodes_num_1 = torch.max(data.g1.nodes_num) + 1
         max_nodes_num_2 = torch.max(data.g2.nodes_num) + 1
-        x_pred = torch.zeros(num, max_nodes_num_1,max_nodes_num_2)
+        x_pred = torch.zeros(num, max_nodes_num_1, max_nodes_num_2)
         for i in range(num):
-            cur_data = Graph_pair(data.g1.x[i],data.g2.x[i],data.g1.Adj[i],data.g2.Adj[i],
-                                data.g1.nodes_num[i],data.g2.nodes_num[i])
+            cur_data = GraphPair(data.g1.x[i], data.g2.x[i], data.g1.adj[i], data.g2.adj[i],
+                                 data.g1.nodes_num[i], data.g2.nodes_num[i])
             num_nodes_1 = data.g1.nodes_num[i] + 1
             num_nodes_2 = data.g2.nodes_num[i] + 1
-            x_pred[i][:num_nodes_1,:num_nodes_2] = self.A_star(cur_data)
-        return x_pred[:,:-1,:-1]
+            x_pred[i][:num_nodes_1, :num_nodes_2] = self._a_star(cur_data)
+        return x_pred[:, :-1, :-1]
 
-    def A_star(self,data:Graph_pair):
+    def _a_star(self, data: GraphPair):
 
         if self.args['cuda']:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -938,24 +951,24 @@ class GENN(torch.nn.Module):
 
         ns_1 = torch.bincount(data.g1.batch)
         ns_2 = torch.bincount(data.g2.batch)
-        
+
         adj_1 = to_dense_adj(edge_index_1, batch=batch_1, edge_attr=edge_attr_1)
-        
+
         dummy_adj_1 = torch.zeros(adj_1.shape[0], adj_1.shape[1] + 1, adj_1.shape[2] + 1, device=device)
         dummy_adj_1[:, :-1, :-1] = adj_1
         adj_2 = to_dense_adj(edge_index_2, batch=batch_2, edge_attr=edge_attr_2)
         dummy_adj_2 = torch.zeros(adj_2.shape[0], adj_2.shape[1] + 1, adj_2.shape[2] + 1, device=device)
         dummy_adj_2[:, :-1, :-1] = adj_2
-        
+
         node_1, _ = to_dense_batch(node_1, batch=batch_1)
         node_2, _ = to_dense_batch(node_2, batch=batch_2)
-        
+
         dummy_node_1 = torch.zeros(adj_1.shape[0], node_1.shape[1] + 1, node_1.shape[-1], device=device)
         dummy_node_1[:, :-1, :] = node_1
         dummy_node_2 = torch.zeros(adj_2.shape[0], node_2.shape[1] + 1, node_2.shape[-1], device=device)
         dummy_node_2[:, :-1, :] = node_2
-        k_diag = self.node_metric(dummy_node_1, dummy_node_2)
-        
+        k_diag = node_metric(dummy_node_1, dummy_node_2)
+
         mask_1 = torch.zeros_like(dummy_adj_1)
         mask_2 = torch.zeros_like(dummy_adj_2)
         for b in range(batch_num):
@@ -963,7 +976,7 @@ class GENN(torch.nn.Module):
             mask_1[b, :ns_1[b], :ns_1[b]] -= torch.eye(ns_1[b], device=mask_1.device)
             mask_2[b, :ns_2[b] + 1, :ns_2[b] + 1] = 1
             mask_2[b, :ns_2[b], :ns_2[b]] -= torch.eye(ns_2[b], device=mask_2.device)
-        
+
         a1 = dummy_adj_1.reshape(batch_num, -1, 1)
         a2 = dummy_adj_2.reshape(batch_num, 1, -1)
         m1 = mask_1.reshape(batch_num, -1, 1)
@@ -972,9 +985,10 @@ class GENN(torch.nn.Module):
         k[torch.logical_not(torch.bmm(m1, m2).to(dtype=torch.bool))] = VERY_LARGE_INT
         k = k.reshape(batch_num, dummy_adj_1.shape[1], dummy_adj_1.shape[2], dummy_adj_2.shape[1], dummy_adj_2.shape[2])
         k = k.permute([0, 1, 3, 2, 4])
-        k = k.reshape(batch_num, dummy_adj_1.shape[1] * dummy_adj_2.shape[1], dummy_adj_1.shape[2] * dummy_adj_2.shape[2])
+        k = k.reshape(batch_num, dummy_adj_1.shape[1] * dummy_adj_2.shape[1],
+                      dummy_adj_1.shape[2] * dummy_adj_2.shape[2])
         k = k / 2
-        
+
         for b in range(batch_num):
             k_diag_view = torch.diagonal(k[b])
             k_diag_view[:] = k_diag[b].reshape(-1)
@@ -986,78 +1000,66 @@ class GENN(torch.nn.Module):
             self.net_prediction_cache,
             self.heuristic_prediction_hun,
             net_pred=self.args['use_net'],
-            beam_width=self.args['astar_beamwidth'],
-            trust_fact=self.args['astar_trustfact'],
-            no_pred_size=self.args['astar_nopred'],
+            beam_width=self.args['astar_beam_width'],
+            trust_fact=self.args['astar_trust_fact'],
+            no_pred_size=self.args['astar_no_pred'],
         )
-        
+
         return x_pred
-    
-    def node_metric(self,node1,node2):
-        
-        encoding = torch.sum(torch.abs(node1.unsqueeze(2) - node2.unsqueeze(1)), dim=-1)
-        non_zero = torch.nonzero(encoding)
-        for i in range(non_zero.shape[0]):
-            encoding[non_zero[i][0],non_zero[i][1],non_zero[i][2]] = 1
-        return encoding
-  
-    def net_prediction_cache(self, data:Graph_pair, partial_pmat=None, return_ged_norm=False):
+
+    def net_prediction_cache(self, data: GraphPair, partial_pmat=None, return_ged_norm=False):
         """
         Forward pass with graphs.
-        :param data: Data dictionary.
+        :param data: Data class.
+        :param partial_pmat: Matched matrix.
+        :param return_ged_norm: Whether to return to Normal Graph Edit Distance.
         :return score: Similarity score.
         """
         features_1 = data.g1.x.squeeze()
         features_2 = data.g2.x.squeeze()
         batch_1 = data.g1.batch
         batch_2 = data.g2.batch
-        Adj1 = data.g1.Adj.squeeze()
-        Adj2 = data.g2.Adj.squeeze()
+        adj1 = data.g1.adj.squeeze()
+        adj2 = data.g2.adj.squeeze()
+
         if 'gnn_feat' not in self.gnn_1_cache:
-            abstract_features_1 = self.convolutional_pass(Adj1,features_1)
+            abstract_features_1 = self.convolutional_pass(adj1, features_1)
             self.gnn_1_cache['gnn_feat'] = abstract_features_1
         else:
             abstract_features_1 = self.gnn_1_cache['gnn_feat']
         if 'gnn_feat' not in self.gnn_2_cache:
-            abstract_features_2 = self.convolutional_pass(Adj2,features_2)
+            abstract_features_2 = self.convolutional_pass(adj2, features_2)
             self.gnn_2_cache['gnn_feat'] = abstract_features_2
         else:
             abstract_features_2 = self.gnn_2_cache['gnn_feat']
-    
+
         graph_1_mask = torch.ones_like(batch_1)
         graph_2_mask = torch.ones_like(batch_2)
-        
         graph_1_matched = partial_pmat.sum(dim=-1).to(dtype=torch.bool)[:graph_1_mask.shape[0]]
         graph_2_matched = partial_pmat.sum(dim=-2).to(dtype=torch.bool)[:graph_2_mask.shape[0]]
-
         graph_1_mask = torch.logical_not(graph_1_matched)
         graph_2_mask = torch.logical_not(graph_2_matched)
-        
         abstract_features_1 = abstract_features_1[graph_1_mask]
         abstract_features_2 = abstract_features_2[graph_2_mask]
-
         batch_1 = batch_1[graph_1_mask]
         batch_2 = batch_2[graph_2_mask]
-        
         pooled_features_1 = self.attention(abstract_features_1, batch_1)
         pooled_features_2 = self.attention(abstract_features_2, batch_2)
-
         scores = self.tensor_network(pooled_features_1, pooled_features_2)
-        
         score = self.scoring_layer(scores).view(-1)
-        
+
         if return_ged_norm:
             return score
         else:
             ged = - torch.log(score) * (batch_1.shape[0] + batch_2.shape[0]) / 2
             return ged
 
-    def heuristic_prediction_hun(self, k, n1, n2, partial_pmat):
-        k_prime = k.reshape(-1, n1+1, n2+1)
+    def heuristic_prediction_hun(self, k: torch.Tensor, n1, n2, partial_pmat):
+        k_prime = k.reshape(-1, n1 + 1, n2 + 1)
         node_costs = torch.empty(k_prime.shape[0])
         for i in range(k_prime.shape[0]):
             _, node_costs[i] = hungarian_ged(k_prime[i], n1, n2)
-        node_cost_mat = node_costs.reshape(n1+1, n2+1)
+        node_cost_mat = node_costs.reshape(n1 + 1, n2 + 1)
         self.heuristic_cache['node_cost'] = node_cost_mat
 
         graph_1_mask = ~partial_pmat.sum(dim=-1).to(dtype=torch.bool)
@@ -1068,12 +1070,13 @@ class GENN(torch.nn.Module):
         node_cost_mat = node_cost_mat[:, graph_2_mask]
 
         _, ged = hungarian_ged(node_cost_mat, torch.sum(graph_1_mask[:-1]), torch.sum(graph_2_mask[:-1]))
-    
+
         return ged
-    
-def hungarian_ged(node_cost_mat, n1, n2):
-    assert node_cost_mat.shape[-2] == n1+1
-    assert node_cost_mat.shape[-1] == n2+1
+
+
+def hungarian_ged(node_cost_mat: torch.Tensor, n1, n2):
+    assert node_cost_mat.shape[-2] == n1 + 1
+    assert node_cost_mat.shape[-1] == n2 + 1
     device = node_cost_mat.device
     upper_left = node_cost_mat[:n1, :n2]
     upper_right = torch.full((n1, n1), float('inf'), device=device)
@@ -1083,7 +1086,7 @@ def hungarian_ged(node_cost_mat, n1, n2):
     lower_right = torch.zeros((n2, n1), device=device)
     large_cost_mat = torch.cat((torch.cat((upper_left, upper_right), dim=1),
                                 torch.cat((lower_left, lower_right), dim=1)), dim=0)
-    
+
     large_pred_x = hungarian(-large_cost_mat.unsqueeze(dim=0)).squeeze()
     pred_x = torch.zeros_like(node_cost_mat)
     pred_x[:n1, :n2] = large_pred_x[:n1, :n2]
@@ -1093,42 +1096,44 @@ def hungarian_ged(node_cost_mat, n1, n2):
     ged_lower_bound = torch.sum(pred_x * node_cost_mat)
     return pred_x, ged_lower_bound
 
+
 def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
-          tensor_neurons, dropout, beam_width, trustfact, no_pred_size, network, pretrain, use_net):
+          tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain, use_net):
     if feat1 is None:
         forward_pass = False
         device = torch.device('cpu')
     else:
         assert feat1.shape[-1] == feat2.shape[-1], 'The feature dimensions of feat1 and feat2 must be consistent'
         forward_pass = True
-        device = feat1.device       
-        
+        device = feat1.device
+
     if network is None:
         args = default_parameter()
-        
+
         if forward_pass:
             if channel is None:
                 args['channel'] = feat1.shape[-1]
             else:
-                assert feat1.shape[-1] == channel, 'the channel {} must match the feature dimension of feat1\n'.format(channel)
+                assert feat1.shape[-1] == channel, 'the channel {} must match the feature dimension of feat1\n'.format(
+                    channel)
         else:
             args['channel'] = 8 if pretrain == "LINUX" else 36
-                
+
         args['filters_1'] = filters_1
         args['filters_2'] = filters_2
         args['filters_3'] = filters_3
         args['tensor_neurons'] = tensor_neurons
         args['dropout'] = dropout
-        args['astar_beamwidth'] = beam_width
-        args['astar_trustfact'] = trustfact
-        args['astar_nopred'] = no_pred_size
+        args['astar_beam_width'] = beam_width
+        args['astar_trust_fact'] = trust_fact
+        args['astar_no_pred'] = no_pred_size
         args['use_net'] = use_net
-        
+
         network = GENN(args)
         network = network.to(device)
         if pretrain and args['use_net']:
             if pretrain in astar_pretrain_path:
-                if(check_layer_parameter(args)):
+                if check_layer_parameter(args):
                     url, md5 = astar_pretrain_path[pretrain]
                     filename = pygmtools.utils.download(f'best_genn_{pretrain}_gcn_astar.pt', url, md5)
                     _load_model(network, filename, device)
@@ -1138,17 +1143,18 @@ def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3
                         message += "Supported parameters: ( channel: 36, filters:(64,32,16) )\n"
                     elif args['pretrain'] == 'LINUX':
                         message += "Supported parameters: ( channel: 8, filters:(64,32,16) )\n"
-                    warnings.warn(message)                    
+                    warnings.warn(message)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {astar_pretrain_path.keys()}')
-    
+
     if forward_pass:
         assert A1.shape[0] == A2.shape[0]
-        data = Graph_pair(feat1,feat2,A1,A2,n1,n2)
-        result = network(data) 
+        data = GraphPair(feat1, feat2, A1, A2, n1, n2)
+        result = network(data)
     else:
         result = None
     return result, network
+
 
 ############################################
 #          Neural Network Solvers          #
@@ -1161,6 +1167,7 @@ class PCA_GM_Net(torch.nn.Module):
     """
     Pytorch implementation of PCA-GM and IPCA-GM network
     """
+
     def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
         super(PCA_GM_Net, self).__init__()
         self.gnn_layer = num_layers
@@ -1176,8 +1183,7 @@ class PCA_GM_Net(torch.nn.Module):
             if i == self.gnn_layer - 2:  # only the second last layer will have cross-graph module
                 self.add_module('cross_graph_{}'.format(i), torch.nn.Linear(hidden_channel * 2, hidden_channel))
                 if cross_iter_num <= 0:
-                 self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
-
+                    self.add_module('affinity_{}'.format(i), WeightedInnerProdAffinity(hidden_channel))
 
     def forward(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
         _sinkhorn_func = functools.partial(sinkhorn,
@@ -1285,8 +1291,8 @@ ipca_gm_pretrain_path = {
 
 
 def ipca_gm(feat1, feat2, A1, A2, n1, n2,
-           in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
-           network, pretrain):
+            in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+            network, pretrain):
     """
     Pytorch implementation of IPCA-GM
     """
@@ -1322,6 +1328,7 @@ class CIE_Net(torch.nn.Module):
     """
     Pytorch implementation of CIE graph matching network
     """
+
     def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
         super(CIE_Net, self).__init__()
         self.gnn_layer = num_layers
@@ -1412,6 +1419,7 @@ class NGM_Net(torch.nn.Module):
     """
     Pytorch implementation of NGM network
     """
+
     def __init__(self, gnn_channels, sk_emb):
         super(NGM_Net, self).__init__()
         self.gnn_layer = len(gnn_channels)
@@ -1535,7 +1543,8 @@ def build_batch(input, return_ori_dim=False):
         padded_ts.append(torch.nn.functional.pad(t, pad_pattern, 'constant', 0))
 
     if return_ori_dim:
-        return torch.stack(padded_ts, dim=0), tuple([torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape])
+        return torch.stack(padded_ts, dim=0), tuple(
+            [torch.tensor(_, dtype=torch.int64, device=device) for _ in ori_shape])
     else:
         return torch.stack(padded_ts, dim=0)
 
@@ -1674,8 +1683,10 @@ def _aff_mat_from_node_edge_aff(node_aff: Tensor, edge_aff: Tensor, connectivity
         if edge_aff is not None:
             conn1 = connectivity1[b][:ne1[b]]
             conn2 = connectivity2[b][:ne2[b]]
-            edge_indices = torch.cat([conn1.repeat_interleave(ne2[b], dim=0), conn2.repeat(ne1[b], 1)], dim=1) # indices: start_g1, end_g1, start_g2, end_g2
-            edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3], edge_indices[:, 1]) # indices: start_g2, start_g1, end_g2, end_g1
+            edge_indices = torch.cat([conn1.repeat_interleave(ne2[b], dim=0), conn2.repeat(ne1[b], 1)],
+                                     dim=1)  # indices: start_g1, end_g1, start_g2, end_g2
+            edge_indices = (edge_indices[:, 2], edge_indices[:, 0], edge_indices[:, 3],
+                            edge_indices[:, 1])  # indices: start_g2, start_g1, end_g2, end_g1
             k[edge_indices] = edge_aff[b, :ne1[b], :ne2[b]].reshape(-1)
         k = k.reshape(n2max * n1max, n2max * n1max)
         # node-wise affinity

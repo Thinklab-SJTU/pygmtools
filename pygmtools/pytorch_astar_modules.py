@@ -12,8 +12,9 @@ VERY_LARGE_INT = 65536
 #                      GENN-A*  Functions                     #
 ###############################################################
 
+
 def default_parameter():
-    params = {}
+    params = dict()
     params['cuda'] = False
     params['pretrain'] = False
     params['channel'] = 36
@@ -22,18 +23,18 @@ def default_parameter():
     params['filters_3'] = 16
     params['tensor_neurons'] = 16
     params['dropout'] = 0
-    params['astar_beamwidth'] = 0
-    params['astar_trustfact'] = 1
-    params['astar_nopred'] = 0
+    params['astar_beam_width'] = 0
+    params['astar_trust_fact'] = 1
+    params['astar_no_pred'] = 0
     params['use_net'] = True
     return params
 
 
 def check_layer_parameter(params):
-    if(params['pretrain'] == 'AIDS700nef'):
+    if params['pretrain'] == 'AIDS700nef':
         if params['channel'] != 36:
             return False
-    elif(params['pretrain'] == 'LINUX'):
+    elif params['pretrain'] == 'LINUX':
         if params['channel'] != 8:
             return False
     if params['filters_1'] != 64:
@@ -45,6 +46,15 @@ def check_layer_parameter(params):
     if params['tensor_neurons'] != 16:
         return False
     return True
+
+
+def node_metric(node1, node2):
+    
+    encoding = torch.sum(torch.abs(node1.unsqueeze(2) - node2.unsqueeze(1)), dim=-1)
+    non_zero = torch.nonzero(encoding)
+    for i in range(non_zero.shape[0]):
+        encoding[non_zero[i][0], non_zero[i][1], non_zero[i][2]] = 1
+    return encoding
 
 
 def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int):
@@ -97,7 +107,7 @@ def scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
         out.true_divide_(count)
     else:
         out.div_(count, rounding_mode='floor')
-    return out 
+    return out
 
 
 def to_dense_batch(x: Tensor, batch: Optional[Tensor] = None,
@@ -182,65 +192,70 @@ def to_dense_adj(edge_index: Tensor,batch=None,edge_attr=None,max_num_nodes: Opt
 ###############################################################
 
 
-class Graph_pair():
-    def __init__(self,x1,x2,Adj1,Adj2,n1=None,n2=None):        
-        self.g1 = Graphs(x1,Adj1,n1)
-        self.g2 = Graphs(x2,Adj2,n2)        
+class GraphPair:
+    def __init__(self, x1: torch.Tensor, x2: torch.Tensor, adj1: torch.Tensor,
+                 adj2: torch.Tensor, n1=None, n2=None):
+        self.g1 = Graphs(x1, adj1, n1)
+        self.g2 = Graphs(x2, adj2, n2)
+
     def __repr__(self):
         return f"{self.__class__.__name__}('g1' = {self.g1}, 'g2' = {self.g2})"
+
     def to_dict(self):
-        data = {}
+        data = dict()
         data['g1'] = self.g1
         data['g2'] = self.g2
         return data
-   
-    
-class Graphs():
-    def __init__(self,x,Adj,nodes_num=None):
-        assert len(x.shape) == len(Adj.shape)
-        if(len(Adj.shape) == 2):
-            Adj = Adj.unsqueeze(dim=0)
+
+
+class Graphs:
+    def __init__(self, x: torch.Tensor, adj: torch.Tensor, nodes_num=None):
+        assert len(x.shape) == len(adj.shape)
+        if len(adj.shape) == 2:
+            adj = adj.unsqueeze(dim=0)
             x = x.unsqueeze(dim=0)
-        assert x.shape[0] == Adj.shape[0]
-        assert x.shape[1] == Adj.shape[1]
+        assert x.shape[0] == adj.shape[0]
+        assert x.shape[1] == adj.shape[1]
         self.x = x
-        self.Adj = Adj
-        self.num_graphs = Adj.shape[0]
+        self.adj = adj
+        self.num_graphs = adj.shape[0]
         if nodes_num is not None:
-            self.nodes_num = nodes_num 
+            self.nodes_num = nodes_num
         else:
             self.nodes_num = torch.tensor([x.shape[1]]*x.shape[0])
         if self.x.shape[0] == 1:
-            if (self.x.shape[1] != nodes_num):
-                self.x = self.x[:,:nodes_num,:]
-                self.Adj = self.Adj[:,:nodes_num,:nodes_num]
-            
+            if self.x.shape[1] != nodes_num:
+                self.x = self.x[:, :nodes_num, :]
+                self.adj = self.adj[:, :nodes_num, :nodes_num]
+        self.edge_index = None
+        self.edge_weight = None
+        self.batch = None
         self.graph_process()
-        
+
     def graph_process(self):
-        edge_index,edge_weight,_ = pygmtools.utils.dense_to_sparse(self.Adj)
-        self.edge_index = torch.cat([edge_index[:,:,0].unsqueeze(dim=1),
-                                     edge_index[:,:,1].unsqueeze(dim=1)],dim=1)
+        edge_index, edge_weight, _ = pygmtools.utils.dense_to_sparse(self.adj)
+        self.edge_index = torch.cat([edge_index[:, :, 0].unsqueeze(dim=1),
+                                     edge_index[:, :, 1].unsqueeze(dim=1)], dim=1)
         self.edge_weight = edge_weight.view(-1)
-        if(self.nodes_num.shape == torch.Size([])):
+        if self.nodes_num.shape == torch.Size([]):
             batch = torch.tensor([0] * self.nodes_num)
         else:
             for i in range(len(self.nodes_num)):
-                if(i == 0):
+                if i == 0:
                     batch = torch.tensor([i] * self.nodes_num[i])
                 else:
                     cur_batch = torch.tensor([i] * self.nodes_num[i])
-                    batch = torch.cat([batch,cur_batch])
+                    batch = torch.cat([batch, cur_batch])
         self.batch = batch
-        
+
     def __repr__(self):
-        messgae = "x = {}, Adj = {}".format(list(self.x.shape),list(self.Adj.shape))
-        messgae += " edge_index = {}, edge_weight = {}".format(list(self.edge_index.shape),list(self.edge_weight.shape))
-        messgae += " nodes_num = {}, num_graphs = {})".format(self.nodes_num.shape,self.num_graphs)
-        self.message = messgae
+        message = "x = {}, adj = {}".format(list(self.x.shape), list(self.adj.shape))
+        message += " edge_index = {}, edge_weight = {}".format(list(self.edge_index.shape), list(self.edge_weight.shape))
+        message += " nodes_num = {}, num_graphs = {})".format(self.nodes_num.shape, self.num_graphs)
+        self.message = message
         return f"{self.__class__.__name__}({self.message})"
-   
-                
+
+
 class AttentionModule(torch.nn.Module):
     """
     SimGNN Attention Module to make a pass on graph.
@@ -258,8 +273,8 @@ class AttentionModule(torch.nn.Module):
         """
         Defining weights.
         """
-        self.weight_matrix = torch.nn.Parameter(torch.Tensor(self.args['filters_3'], self.args['filters_3'])) 
-        
+        self.weight_matrix = torch.nn.Parameter(torch.Tensor(self.args['filters_3'], self.args['filters_3']))
+
     def init_parameters(self):
         """
         Initializing weights.
@@ -276,12 +291,12 @@ class AttentionModule(torch.nn.Module):
         size = batch[-1].item() + 1 if size is None else size
         mean = scatter_mean(x, batch, dim=0, dim_size=size)
         transformed_global = torch.tanh(torch.mm(mean, self.weight_matrix))
-        
+
         coefs = torch.sigmoid((x * transformed_global[batch] * 10).sum(dim=1))
         weighted = coefs.unsqueeze(-1) * x
-        
+
         return scatter_sum(weighted, batch, dim=0, dim_size=size)
-        
+
     def get_coefs(self, x):
         mean = x.mean(dim=0)
         transformed_global = torch.tanh(torch.matmul(mean, self.weight_matrix))
@@ -355,15 +370,12 @@ class GCNConv(nn.Module):
         """
         x = torch.mm(x,self.weight) + self.bias
         D = torch.zeros_like(A)
-        
+
         for i in range(A.shape[0]):
             A[i,i] = 1
             D[i,i] = torch.pow(torch.sum(A[i]),exponent=-0.5)
         A = torch.mm(torch.mm(D,A),D)
         return torch.mm(A,x)
-    
+
     def __repr__(self):
         return f"{self.__class__.__name__}(in_features={self.num_inputs}, out_features={self.num_outputs})"
-            
-
-

@@ -1063,8 +1063,8 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
-           tensor_neurons=16, dropout=0, beam_width=0, trustfact=1, no_pred_size=0,
-           network=None, return_network=False, pretrain='AIDS700nef',use_net=True, backend=None):
+           tensor_neurons=16, dropout=0, beam_width=0, trust_fact=1, no_pred_size=0,
+           network=None, return_network=False, pretrain='AIDS700nef', use_net=True, backend=None):
 
     r"""
     The **GENN-ASTAR** (Graph Edit Neural Network Astar) solver for graph matching based on the combination of traditional A-star and Neural Network.    
@@ -1097,7 +1097,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, fi
     :param tensor_neurons: (default: 16) Neurons in tensor network layer.
     :param dropout: (default: 0) Dropout probability
     :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
-    :param trustfact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
+    :param trust_fact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
     :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
     :param network: (default: None) The network object. If None, a new network object will be created, and load the
         model weights specified in ``pretrain`` argument.
@@ -1257,7 +1257,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, fi
     if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3, 
-            tensor_neurons, dropout, beam_width, trustfact, no_pred_size,network, pretrain, use_net)
+            tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain, use_net)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.astar
