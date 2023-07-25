@@ -1400,6 +1400,44 @@ def from_networkx(G:nx.Graph):
     return adj_matrix
 
 
+def to_networkx(adj_matrix, backend=None):
+    """
+    Convert adjacency matrix to NetworkX object
+    
+    :param adj_matrix: the adjacency matrix to convert
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the NetworkX object corresponding to the adjacency matrix
+    
+    .. dropdown:: Example
+
+        ::
+
+            >>> import networkx as nx
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+
+            # Generate adjacency matrix
+            >>> adj_matrix = np.random.random(size=(4,4))
+            
+            # Obtain NetworkX object
+            >>> pygm.utils.to_networkx(adj_matrix)
+            <networkx.classes.digraph.DiGraph at ...>
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    adj_matrix = from_numpy(adj_matrix, backend=backend)
+    
+    if adj_matrix.ndim == 3 and adj_matrix.shape[0] == 1:
+        adj_matrix.squeeze(0)
+    assert adj_matrix.ndim == 2, 'Request the dimension of adj_matrix is 2'
+    
+    G = nx.DiGraph() if np.any(adj_matrix != adj_matrix.T) else nx.Graph()
+    G.add_nodes_from(range(adj_matrix.shape[0]))
+    for i, j in zip(*np.where(adj_matrix)):
+        G.add_edge(i, j, weight=adj_matrix[i, j])
+    return G
+
+
 def from_graphml(filename):
     r"""
     Convert graphml object to Adjacency matrix
@@ -1432,3 +1470,42 @@ def from_graphml(filename):
     if not os.path.isfile(filename):
         raise ValueError("File not found: {}".format(filename))
     return from_networkx(nx.read_graphml(filename))
+
+
+def to_graphml(adj_matrix, filename, backend=None):
+    r"""
+    Write an adjacency matrix to a GraphML file
+    
+    :param adj_matrix: numpy.ndarray, the adjacency matrix to write
+    :param filename: str, the name of the output file
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> import numpy as np
+            >>> pygm.BACKEND = 'numpy'
+            
+            # Generate adjacency matrix
+            >>> adj_matrix = np.random.random(size=(4,4))
+            >>> filename = 'examples/data/test.graphml'
+            >>> adj_matrix
+            array([[0.29440151, 0.66468829, 0.05403941, 0.85887567],
+                   [0.48120964, 0.01429095, 0.73536659, 0.02962113],
+                   [0.3815578 , 0.93356234, 0.01332568, 0.61149257],
+                   [0.15422904, 0.64656912, 0.93219422, 0.784769  ]])
+
+            # Write GraphML file
+            >>> pygm.utils.to_graphml(adj_matrix, filename)
+            
+            # Check the generated GraphML file
+            >>> pygm.utils.from_graphml(filename)
+            array([[0.29440151, 0.66468829, 0.05403941, 0.85887567],
+                   [0.48120964, 0.01429095, 0.73536659, 0.02962113],
+                   [0.3815578 , 0.93356234, 0.01332568, 0.61149257],
+                   [0.15422904, 0.64656912, 0.93219422, 0.784769  ]])            
+    """
+    nx.write_graphml(to_networkx(adj_matrix, backend), filename)
+    
