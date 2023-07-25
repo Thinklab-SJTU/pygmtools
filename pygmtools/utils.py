@@ -1374,7 +1374,7 @@ def from_networkx(G:nx.Graph):
             >>> import pygmtools as pygm
             >>> pygm.BACKEND = 'numpy'
 
-            # Generate networkx images
+            # Generate networkx graphs
             >>> G1 = nx.DiGraph()
             >>> G1.add_weighted_edges_from([(1, 2, 0.5), (2, 3, 0.8), (3, 4, 0.7)])
             >>> G2 = nx.DiGraph()
@@ -1432,8 +1432,3 @@ def from_graphml(filename):
     if not os.path.isfile(filename):
         raise ValueError("File not found: {}".format(filename))
     return from_networkx(nx.read_graphml(filename))
-
-    
-
-
-    
