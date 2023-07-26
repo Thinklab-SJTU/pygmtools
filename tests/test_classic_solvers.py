@@ -283,6 +283,8 @@ def _test_networkx(graph_num_nodes, backends):
     :param graph_num_nodes: list, the numbers of nodes in the graphs to test
     """
     for working_backend in backends:
+        if working_backend == 'mindspore': #The backend function for mindspore is not implemented.
+            continue
         pygm.BACKEND = working_backend
         for num_node in tqdm(graph_num_nodes):
             As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
@@ -309,6 +311,8 @@ def _test_graphml(graph_num_nodes, backends):
     filename_1 = filename.format(1)
     filename_2 = filename.format(2)
     for working_backend in backends:
+        if working_backend == 'mindspore': #The backend function for mindspore is not implemented.
+            continue
         pygm.BACKEND = working_backend
         for num_node in tqdm(graph_num_nodes):
             As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
