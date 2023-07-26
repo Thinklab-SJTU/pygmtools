@@ -1425,7 +1425,7 @@ def to_networkx(adj_matrix, backend=None):
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    adj_matrix = from_numpy(adj_matrix, backend=backend)
+    adj_matrix = to_numpy(adj_matrix, backend=backend)
     
     if adj_matrix.ndim == 3 and adj_matrix.shape[0] == 1:
         adj_matrix.squeeze(0)
