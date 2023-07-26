@@ -13,4 +13,5 @@ tensorflow==2.9.3
 distro
 cython
 wget
+networkx==2.8.8
 

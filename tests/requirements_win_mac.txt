@@ -13,3 +13,4 @@ mindspore==1.10.0
 distro
 cython
 wget
+networkx==2.8.8
