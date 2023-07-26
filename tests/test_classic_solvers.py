@@ -283,8 +283,6 @@ def _test_networkx(graph_num_nodes, backends):
     :param graph_num_nodes: list, the numbers of nodes in the graphs to test
     """
     for working_backend in backends:
-        if working_backend == 'mindspore': #The backend function for mindspore is not implemented.
-            continue
         pygm.BACKEND = working_backend
         for num_node in tqdm(graph_num_nodes):
             As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
@@ -311,8 +309,6 @@ def _test_graphml(graph_num_nodes, backends):
     filename_1 = filename.format(1)
     filename_2 = filename.format(2)
     for working_backend in backends:
-        if working_backend == 'mindspore': #The backend function for mindspore is not implemented.
-            continue
         pygm.BACKEND = working_backend
         for num_node in tqdm(graph_num_nodes):
             As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
@@ -508,13 +504,13 @@ def test_astar(get_backend):
     _test_astar(*args4)
 
 
-def test_networkx(get_backend):
-    backends = get_backends(get_backend)
+def test_networkx():
+    backends = ['pytorch', 'numpy']
     _test_networkx(list(range(10, 30, 2)), backends=backends)
 
 
-def test_graphml(get_backend):
-    backends = get_backends(get_backend)
+def test_graphml():
+    backends = ['pytorch', 'numpy']
     _test_graphml(list(range(10, 30, 2)), backends=backends)
 
 
@@ -525,6 +521,6 @@ if __name__ == '__main__':
     test_sm('all')
     test_ipfp('all')
     test_astar('')
-    test_networkx('')
-    test_graphml('')
+    test_networkx()
+    test_graphml()
     
