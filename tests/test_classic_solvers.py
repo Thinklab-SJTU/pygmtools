@@ -525,6 +525,6 @@ if __name__ == '__main__':
     test_sm('all')
     test_ipfp('all')
     test_astar('')
-    test_networkx('all')
-    test_graphml('all')
+    test_networkx('')
+    test_graphml('')
     
