@@ -1271,3 +1271,211 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         return match_mat, result[1]
     else:
         return match_mat
+
+
+def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
+           tensor_neurons=16, dropout=0, beam_width=0, trust_fact=1, no_pred_size=0,
+           network=None, return_network=False, pretrain='AIDS700nef', backend=None):
+    r"""
+    The **GENN-ASTAR** (Graph Edit Neural Network Astar) solver for graph matching based on the combination of traditional A-star and Neural Network.    
+    This algorithm replaces the heuristic prediction module in the traditional A-star algorithm with **GNN** (Graph Neural Network) model, 
+    greatly improving the efficiency of A-star algorithm while ensuring a certain degree of accuracy.
+    During the search process, the algorithm prioritizes the next search direction based on the distance between the current state and the target state. 
+    At each step of the search, the algorithm uses a predicted probability distribution of node pairs for matching. 
+    
+    See the following picture to better understand the workflow of the algorithm:
+
+    .. image:: ../../images/astar.png
+
+    See the following paper for more technical details:
+    `"Combinatorial Learning of Graph Edit Distance via Dynamic Embedding"
+    <https://ieeexplore.ieee.org/document/9578389/>`_
+
+ 
+    :param feat1: :math:`(b\times n_1 \times d)` input feature of graph1
+    :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
+    :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
+    :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
+    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
+    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
+    :param channel: (default: None)  Channel size of the input layer. If given, it must match the feature dimension (d) of feat1, feat2. 
+        If not given, it will be defined by the feature dimension (d) of feat1, feat2. 
+        Ignored if the network object isgiven (ignored if network!=None)
+    :param filters_1: (default: 64) Filters (neurons) in 1st convolution.
+    :param filters_2: (default: 32) Filters (neurons) in 2nd convolution.
+    :param filters_3: (default: 16) Filters (neurons) in 2nd convolution.
+    :param tensor_neurons: (default: 16) Neurons in tensor network layer.
+    :param dropout: (default: 0) Dropout probability
+    :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
+    :param trust_fact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
+    :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
+    :param network: (default: None) The network object. If None, a new network object will be created, and load the
+        model weights specified in ``pretrain`` argument.
+    :param return_network: (default: False) Return the network object (saving model construction time if calling the
+        model multiple times).
+    :param pretrain: (default: 'AIDS700nef') If ``network==None``, the pretrained model weights to be loaded. Available
+        pretrained weights: ``AIDS700nef`` (channel=36), ``LINUX`` (channel=8),
+        or ``False`` (no pretraining).
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: if ``return_network==False``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix
+
+        if ``return_network==True``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix,
+        the network object
+
+    .. note::
+        You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
+        You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
+
+        `[google drive] <https://drive.google.com/drive/folders/1mUpwHeW1RbMHaNxX_PZvD5HrWvyCQG8y>`_
+
+    .. note::
+        This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+
+    .. dropdown:: PyTorch Example
+
+        ::
+
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'pytorch'
+            >>> _ = torch.manual_seed(1)
+            
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> nodes_num = 4
+            >>> channel = 36
+
+            >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
+            >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
+            >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
+            >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> feat1 = torch.rand(batch_size, nodes_num, channel) - 0.5
+            >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
+
+            # Match by GENN-ASTAR (load pretrained model)
+            >>> X, net = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, return_network=True)
+            Downloading to ~/.cache/pygmtools/best_genn_AIDS700nef_gcn_astar.pt...
+            >>> (X * X_gt).sum() / X_gt.sum()# accuracy
+            tensor(1.)
+
+            # Pass the net object to avoid rebuilding the model agian
+            >>> X = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, network=net)
+            
+            # This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
+            >>> part_f1 = feat1[0]
+            >>> part_f2 = feat2[0]
+            >>> part_A1 = A1[0]
+            >>> part_A2 = A2[0]
+            >>> part_X_gt = X_gt[0]
+            >>> part_X = pygm.genn_astar(part_f1, part_f2, part_A1, part_A2, return_network=False)
+            
+            >>> part_X.shape
+            torch.Size([4, 4])
+            
+            >>> (part_X * part_X_gt).sum() / part_X_gt.sum()# accuracy
+            tensor(1.)
+            
+            # You may also load other pretrained weights
+            # However, it should be noted that each pretrained set supports different node feature dimensions
+            # AIDS700nef(Default): channel = 36
+            # LINUX: channel = 8
+            # Generate a batch of isomorphic graphs
+            >>> batch_size = 10
+            >>> nodes_num = 4
+            >>> channel = 8
+
+            >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
+            >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
+            >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
+            >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
+            >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
+            >>> feat1 = torch.rand(batch_size, nodes_num, channel) - 0.5
+            >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
+            >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
+            
+            >>> X, net = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, pretrain='LINUX', return_network=True)
+            Downloading to ~/.cache/pygmtools/best_genn_LINUX_gcn_astar.pt...
+
+            >>> (X * X_gt).sum() / X_gt.sum()# accuracy
+            tensor(1.)
+            
+            # When the input node feature dimension is different from the one supported by pre training, 
+            # you can still use the solver, but the solver will provide a warning
+            >>> X, net = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, return_network=True, pretrain='AIDS700nef')
+            Warning: Skip key(s) in state_dict: "convolution_1.weight". 
+            Warning: Pretrain AIDS700nef does not support the parameters you entered, 
+                     Supported parameters: ( channel:36, filters:(64,32,16) ), 
+                     Input parameters: ( channel:8, filters:(64,32,16) )
+            
+            # You may configure your own model and integrate the model into a deep learning pipeline. For example:
+            >>> net = pygm.utils.get_network(pygm.genn_astar, channel = 1000, filters_1 = 1024, filters_2 = 256, filters_3 = 128, pretrain=False)
+            >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+            # feat1/feat2 may be outputs by other neural networks
+            >>> X = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, network=net)
+            >>> loss = pygm.utils.permutation_loss(X, X_gt)
+            >>> loss.backward()
+            >>> optimizer.step()
+
+    .. note::
+
+        If you find this model useful in your research, please cite:
+
+        ::
+
+            @inproceedings{WangCVPR21,
+              author={Runzhong Wang, Tianqi Zhang, Tianshu Yu, Junchi Yan, Xiaokang Yang},
+              booktitle={2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+              title={Combinatorial Learning of Graph Edit Distance via Dynamic Embedding},
+              year={2021},
+            }
+    """
+
+    if backend is None:
+        backend = pygmtools.BACKEND
+    non_batched_input = False
+    if feat1 is not None: # if feat1 is None, this function skips the forward pass and only returns a network object
+        for _ in (feat1, feat2, A1, A2):
+            _check_data_type(_, backend)
+
+        if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
+            feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
+            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
+            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+            non_batched_input = True
+        elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
+            non_batched_input = False
+        else:
+            raise ValueError(
+                f'the input arguments feat1, feat2, A1, A2 are expected to be all 2-dimensional or 3-dimensional, got '
+                f'feat1:{len(_get_shape(feat1, backend))}dims, feat2:{len(_get_shape(feat2, backend))}dims, '
+                f'A1:{len(_get_shape(A1, backend))}dims, A2:{len(_get_shape(A2, backend))}dims!')
+
+        if not (_get_shape(feat1, backend)[0] == _get_shape(feat2, backend)[0] == _get_shape(A1, backend)[0] == _get_shape(A2, backend)[0])\
+                or not (_get_shape(feat1, backend)[1] == _get_shape(A1, backend)[1] == _get_shape(A1, backend)[2])\
+                or not (_get_shape(feat2, backend)[1] == _get_shape(A2, backend)[1] == _get_shape(A2, backend)[2])\
+                or not (_get_shape(feat1, backend)[2] == _get_shape(feat2, backend)[2]):
+            raise ValueError(
+                f'the input dimensions do not match. Got feat1:{_get_shape(feat1, backend)}, '
+                f'feat2:{_get_shape(feat2, backend)}, A1:{_get_shape(A1, backend)}, A2:{_get_shape(A2, backend)}!')
+    if n1 is not None: _check_data_type(n1, 'n1', backend)
+    if n2 is not None: _check_data_type(n2, 'n2', backend)
+
+    args = (feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3, 
+            tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain)
+    try:
+        mod = importlib.import_module(f'pygmtools.{backend}_backend')
+        fn = mod.genn_astar
+    except (ModuleNotFoundError, AttributeError):
+        raise NotImplementedError(
+            NOT_IMPLEMENTED_MSG.format(backend)
+        )
+
+    result = fn(*args)
+    match_mat = _squeeze(result[0], 0, backend) if non_batched_input else result[0]
+    if return_network:
+        return match_mat, result[1]
+    else:
+        return match_mat
+    
