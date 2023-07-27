@@ -252,17 +252,7 @@ def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, back
         for working_backend in backends:
             pygm.BACKEND = working_backend
             _A1, _A2, _F1, _F2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, n1, n2)
-            _X1, net = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, return_network=True, **solver_param_dict)
-            _X2 = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, network=net, **solver_param_dict)
-            net2 = pygm.utils.get_network(solver_func, **solver_param_dict)
-            assert type(net) == type(net2)
-
-            assert np.abs(pygm.utils.to_numpy(_X1) - pygm.utils.to_numpy(_X2)).sum() < 1e-4, \
-                f"GM result inconsistent for predefined network object. backend={working_backend}; " \
-                f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
-
-            if 'pretrain' in solver_param_dict and solver_param_dict['pretrain'] is None:
-                _X1 = pygm.hungarian(_X1, _n1, _n2)
+            _X1 = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, **solver_param_dict)
 
             if last_X is not None:
                 assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 5e-3, \
@@ -463,36 +453,15 @@ def test_ipfp(get_backend):
     
 def test_astar(get_backend):
     backends = get_backends(get_backend)
-    # test pretrained by AIDS700nef
-    args1 = (list(range(10, 30, 2)), 36, pygm.astar,{
-        "pretrain": ["AIDS700nef"],
-        "use_net": [True],
-        "beam_width": [0, 1, 2],
-        "trust_fact": [0.9, 0.95, 1.0],
-        "no_pred_size": [0, 1],
-    
-    }, backends)
-
-    # test pretrained by LINUX
-    args2 = (list(range(10, 30, 2)), 8, pygm.astar,{
-        'pretrain':  ['LINUX'],
-        "use_net":   [True],
-        "beam_width": [0, 1, 2],
-        "trust_fact": [0.9, 0.95, 1.0],
-        "no_pred_size": [0, 1],
-    }, backends)
-
     # heuristic_prediction
-    args3 = (list(range(10, 16, 2)), 10, pygm.astar,{
-        "use_net":   [False],
+    args1 = (list(range(10, 16, 2)), 10, pygm.astar,{
         "beam_width": [0, 1, 2],
         "trust_fact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
     }, backends)
     
     # non-batched input
-    args4 = ([10], 10, pygm.astar,{
-        "use_net":   [False],
+    args2 = ([10], 10, pygm.astar,{
         "beam_width": [0, 1, 2],
         "trust_fact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
@@ -500,8 +469,6 @@ def test_astar(get_backend):
     
     _test_astar(*args1)
     _test_astar(*args2)
-    _test_astar(*args3)
-    _test_astar(*args4)
 
 
 def test_networkx():
