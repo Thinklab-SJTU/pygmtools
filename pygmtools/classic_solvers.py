@@ -119,7 +119,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> batch_size = 10
             >>> X_gt = torch.zeros(batch_size, 4, 4)
             >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
-            >>> A1 = torch.rand(batch_size, 4, 4)
+            >>> A1 = torch.rand(batch_size, 4, 4)f
             >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
             >>> n1 = n2 = torch.tensor([4] * batch_size)
     
@@ -1203,7 +1203,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, fi
             UserWarning: Pretrain AIDS700nef does not support the channel = 8 you entered
             
             # You may configure your own model and integrate the model into a deep learning pipeline. For example:
-            >>> net = pygm.utils.get_network(pygm.astar, channel = 1000, filters_1 = 1024,filters_2 = 256,filters_3 = 128,pretrain=False)
+            >>> net = pygm.utils.get_network(pygm.astar, channel = 1000, filters_1 = 1024, filters_2 = 256, filters_3 = 128, pretrain=False)
             >>> optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
             # feat1/feat2 may be outputs by other neural networks
             >>> X = pygm.astar(feat1, feat2, A1, A2, n1, n2, network=net)
@@ -1217,12 +1217,11 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, fi
 
         ::
 
-            @ARTICLE{WangPAMI22,
+            @inproceedings{WangCVPR21,
               author={Runzhong Wang, Tianqi Zhang, Tianshu Yu, Junchi Yan, Xiaokang Yang},
-              journal={2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+              booktitle={2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
               title={Combinatorial Learning of Graph Edit Distance via Dynamic Embedding},
               year={2021},
-              doi={10.1109/CVPR46437.2021.00520}
             }
     """
     
