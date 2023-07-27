@@ -313,4 +313,3 @@ if __name__ == '__main__':
     test_cie()
     test_ngm()
     test_genn_astar()
-
