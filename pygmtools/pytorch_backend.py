@@ -19,7 +19,6 @@ import pygmtools.utils
 
 from .pytorch_astar_modules import GCNConv, AttentionModule, TensorNetworkModule, GraphPair, \
     VERY_LARGE_INT, to_dense_adj, to_dense_batch, default_parameter, check_layer_parameter, node_metric
-import warnings
 from torch import Tensor
 from pygmtools.a_star import a_star
 
@@ -1097,8 +1096,20 @@ def hungarian_ged(node_cost_mat: torch.Tensor, n1, n2):
     return pred_x, ged_lower_bound
 
 
-def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
+def astar(feat1, feat2, A1, A2, n1, n2, channel, dropout, beam_width, trust_fact, no_pred_size):
+    """ 
+    Pytorch implementation of ASTAR
+    """
+    return astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, dropout=dropout, beam_width=beam_width, 
+                        filters_1=64, filters_2=32, filters_3=16, tensor_neurons=16, trust_fact=trust_fact, 
+                        no_pred_size=no_pred_size, pretrain=False, network=None, use_net=False)
+    
+
+def astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
           tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain, use_net):
+    """ 
+    The true implementation of astar and genn_astar functions
+    """
     if feat1 is None:
         forward_pass = False
         device = torch.device('cpu')
@@ -1109,15 +1120,18 @@ def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3
 
     if network is None:
         args = default_parameter()
-
         if forward_pass:
             if channel is None:
                 args['channel'] = feat1.shape[-1]
             else:
                 assert feat1.shape[-1] == channel, 'the channel {} must match the feature dimension of feat1\n'.format(
                     channel)
+                args['channel'] = channel
         else:
-            args['channel'] = 8 if pretrain == "LINUX" else 36
+            if channel is None:
+                args['channel'] = 8 if pretrain == "LINUX" else 36
+            else:
+                args['channel'] = channel
 
         args['filters_1'] = filters_1
         args['filters_2'] = filters_2
@@ -1127,23 +1141,28 @@ def astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3
         args['astar_beam_width'] = beam_width
         args['astar_trust_fact'] = trust_fact
         args['astar_no_pred'] = no_pred_size
+        args['pretrain'] = pretrain
         args['use_net'] = use_net
-
+        
         network = GENN(args)
+
         network = network.to(device)
         if pretrain and args['use_net']:
             if pretrain in astar_pretrain_path:
+                url, md5 = astar_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'best_genn_{pretrain}_gcn_astar.pt', url, md5)
                 if check_layer_parameter(args):
-                    url, md5 = astar_pretrain_path[pretrain]
-                    filename = pygmtools.utils.download(f'best_genn_{pretrain}_gcn_astar.pt', url, md5)
                     _load_model(network, filename, device)
                 else:
-                    message = 'Pretrain {} does not support the parameters you entered\n'.format(pretrain)
+                    _load_part_model(network, filename, device)
+                    message = 'Warning: Pretrain {} does not support the parameters you entered, '.format(pretrain)
                     if args['pretrain'] == 'AIDS700nef':
-                        message += "Supported parameters: ( channel: 36, filters:(64,32,16) )\n"
+                        message += "Supported parameters: ( channel:36, filters:(64,32,16) ), "
                     elif args['pretrain'] == 'LINUX':
-                        message += "Supported parameters: ( channel: 8, filters:(64,32,16) )\n"
-                    warnings.warn(message)
+                        message += "Supported parameters: ( channel:8, filters:(64,32,16) ), "
+                    message += 'Input parameters: ( channel:{}, filters:({},{},{}) )'.format(args['channel'], \
+                        args['filters_1'], args['filters_2'], args['filters_3'])
+                    print(message)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {astar_pretrain_path.keys()}')
 
@@ -1494,6 +1513,15 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
     return result, network
 
 
+def genn_astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
+          tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain):
+    """
+    Pytorch implementation of GENN-ASTAR
+    """
+    return astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
+          tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain, use_net=True)
+    
+    
 #############################################
 #              Utils Functions              #
 #############################################
@@ -1775,3 +1803,25 @@ def _load_model(model, path, device, strict=True):
     if len(missing_keys) > 0:
         print('Warning: Missing key(s) in state_dict: {}. '.format(
             ', '.join('"{}"'.format(k) for k in missing_keys)))
+
+
+def _load_part_model(model, path, device):
+    """
+    Load PyTorch model from a given path.  This function is used for some parameters' size mismatching
+    """    
+    if isinstance(model, torch.nn.DataParallel):
+        module = model.module
+    else:
+        module = model
+    model_state_dict = module.state_dict()
+    load_state_dict = torch.load(path, map_location=device)
+    skip_keys= list()
+    for name, param in load_state_dict.items():
+        if name in model_state_dict:
+            try:
+                model_state_dict[name].copy_(param)
+            except:
+                skip_keys.append(name)
+    if len(skip_keys) > 0:
+            print('Warning: Skip key(s) in state_dict: {}. '.format(
+                ', '.join('"{}"'.format(k) for k in skip_keys)))
