@@ -119,7 +119,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
             >>> batch_size = 10
             >>> X_gt = torch.zeros(batch_size, 4, 4)
             >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
-            >>> A1 = torch.rand(batch_size, 4, 4)f
+            >>> A1 = torch.rand(batch_size, 4, 4)
             >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
             >>> n1 = n2 = torch.tensor([4] * batch_size)
     
