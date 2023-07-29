@@ -27,6 +27,7 @@ import wget
 import numpy as np
 import pygmtools
 import networkx as nx
+import urllib.request
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
@@ -1209,7 +1210,7 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
     :param filename: the destination file name
     :param url: the url
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
-    :param retries: (default: 5) max number of retries
+    :param retries: (default: 10) max number of retries
     :return: the full path to the file: ``<user cache path>/pygmtools/<filename>``
     """
     if retries <= 0:
@@ -1222,7 +1223,7 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
         filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
         print(f'\nDownloading to {filename}...')
-        if retries % 2 == 1:
+        if retries % 3 == 1:
             try:
                 down_res = requests.get(url, stream=True)
                 file_size = int(down_res.headers.get('Content-Length', 0))
@@ -1232,11 +1233,17 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
             except requests.exceptions.ConnectionError as err:
                 print('Warning: Network error. Retrying...\n', err)
                 return download(filename, url, md5, retries - 1)
-        else:
+        elif retries % 3 == 2:
             try:
                 wget.download(url,out=filename)
             except:
                 return download(filename, url, md5, retries - 1)
+        else:
+            try:
+                urllib.request.urlretrieve(url, filename)
+            except:
+                return download(filename, url, md5, retries - 1)  
+            
     if md5 is not None:
         md5_returned = _get_md5(filename)
         if md5 != md5_returned:
