@@ -853,9 +853,9 @@ def gamgm_real(
 
 
 astar_pretrain_path = {
-    'AIDS700nef': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1QWGgpt4C4XjFZSEcIZmQF-84XtpfXope',
+    'AIDS700nef': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1vV7G7EwCg6hEOc1SYZ_o8yUO3udwzWZT',
                    'b2516aea4c8d730704a48653a5ca94ba'),
-    'LINUX': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1EGVSejxsgSefIBquZtDftpe3Ize1Vw1P',
+    'LINUX': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1nkKAR4d7qdq9D8LkFLrrQ1Um2RY60OfF',
               'fd3b2a8dfa3edb20607da2e2b96d2e96'),
 }
 
