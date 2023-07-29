@@ -9,7 +9,6 @@
 # See the Mulan PSL v2 for more details.
 
 import pygmtools as pygm
-from tqdm import tqdm
 
 # Some test utils functions
 def data_from_numpy(*data, device=None):
