@@ -853,9 +853,9 @@ def gamgm_real(
 
 
 astar_pretrain_path = {
-    'AIDS700nef': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1vV7G7EwCg6hEOc1SYZ_o8yUO3udwzWZT',
+    'AIDS700nef': ('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/best_genn_AIDS700nef_gcn_astar.pt',
                    'b2516aea4c8d730704a48653a5ca94ba'),
-    'LINUX': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1nkKAR4d7qdq9D8LkFLrrQ1Um2RY60OfF',
+    'LINUX': ('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/best_genn_LINUX_gcn_astar.pt',
               'fd3b2a8dfa3edb20607da2e2b96d2e96'),
 }
 
