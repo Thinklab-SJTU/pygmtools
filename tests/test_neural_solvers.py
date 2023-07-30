@@ -308,8 +308,8 @@ def test_genn_astar():
 
 
 if __name__ == '__main__':
-    # test_pca_gm()
-    # test_ipca_gm()
-    # test_cie()
-    # test_ngm()
+    test_pca_gm()
+    test_ipca_gm()
+    test_cie()
+    test_ngm()
     test_genn_astar()

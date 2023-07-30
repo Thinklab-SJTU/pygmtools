@@ -115,6 +115,4 @@ def test_dataset_and_benchmark():
 
 
 if __name__ == '__main__':
-    # test_dataset_and_benchmark()
-    pass
-
+    test_dataset_and_benchmark()
