@@ -16,10 +16,33 @@ import distro
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 import shutil
 
+
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
     return result.group(1)
 
+
+def get_os_and_python_version():
+    system = platform.system()
+    python_version = ".".join(map(str, sys.version_info[:2]))
+    if system.lower() == "windows":
+        os_version = "windows"
+    elif system.lower() == "darwin":
+        os_version = "macos"
+    elif system.lower() == "linux":
+        os_version = distro.name().lower()
+    else:
+        raise ValueError("Unknown System")
+    if (python_version == '3.11'):
+        python_version = '3.10'
+    return os_version, python_version
+        
+        
+def untar_file(tar_file_path, extract_folder_path):
+    with tarfile.open(tar_file_path, 'r:gz') as tarObj:
+        tarObj.extractall(extract_folder_path)
+        
+        
 # Package meta-data.
 NAME = 'pygmtools'
 DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and supports numpy and pytorch backends. ' \
@@ -27,11 +50,21 @@ DESCRIPTION = 'pygmtools provides graph matching solvers in Python API and suppo
 URL = 'https://pygmtools.readthedocs.io/'
 AUTHOR = get_property('__author__', NAME)
 VERSION = get_property('__version__', NAME)
-
 REQUIRED = [
      'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1','wget>=3.2'
 ]
-
+FILE={'windows':{ '3.7':'a_star.cp37-win_amd64.pyd',
+                        '3.8':'a_star.cp38-win_amd64.pyd',
+                        '3.9':'a_star.cp39-win_amd64.pyd',
+                        '3.10':'a_star.cp310-win_amd64.pyd'},
+            'macos'  :{ '3.7':'a_star.cpython-37m-darwin.so',
+                        '3.8':'a_star.cpython-38-darwin.so',
+                        '3.9':'a_star.cpython-39-darwin.so',
+                        '3.10':'a_star.cpython-310-darwin.so'},
+            'ubuntu' :{ '3.7':'a_star.cpython-37m-x86_64-linux-gnu.so',
+                        '3.8':'a_star.cpython-38-x86_64-linux-gnu.so',
+                        '3.9':'a_star.cpython-39-x86_64-linux-gnu.so',
+                        '3.10':'a_star.cpython-310-x86_64-linux-gnu.so'}}
 EXTRAS = {}
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -53,51 +86,16 @@ if not VERSION:
 else:
     about['__version__'] = VERSION
 
-
-
-def get_os_and_python_version():
-    system = platform.system()
-    python_version = ".".join(map(str, sys.version_info[:2]))
-    if system.lower() == "windows":
-        os_version = "windows"
-    elif system.lower() == "darwin":
-        os_version = "macos"
-    elif system.lower() == "linux":
-        os_version = distro.name().lower()
-    else:
-        raise ValueError("Unknown System")
-    if (python_version == '3.11'):
-        python_version = '3.10'
-    return os_version, python_version
-        
-def untar_file(tar_file_path, extract_folder_path):
-    with tarfile.open(tar_file_path, 'r:gz') as tarObj:
-        tarObj.extractall(extract_folder_path)
-
-if os.path.exists(os.path.join(NAME,'lib/a_star.tar.gz')):
-    untar_file(os.path.join(NAME,'lib/a_star.tar.gz'),os.path.join(NAME,'lib'))
+if os.path.exists(os.path.join(NAME,'astar/a_star.tar.gz')):
+    untar_file(os.path.join(NAME,'astar/a_star.tar.gz'),os.path.join(NAME,'astar'))
     
-filename={'windows':{ '3.7':'a_star.cp37-win_amd64.pyd',
-                        '3.8':'a_star.cp38-win_amd64.pyd',
-                        '3.9':'a_star.cp39-win_amd64.pyd',
-                        '3.10':'a_star.cp310-win_amd64.pyd'},
-            'macos'  :{ '3.7':'a_star.cpython-37m-darwin.so',
-                        '3.8':'a_star.cpython-38-darwin.so',
-                        '3.9':'a_star.cpython-39-darwin.so',
-                        '3.10':'a_star.cpython-310-darwin.so'},
-            'ubuntu' :{ '3.7':'a_star.cpython-37m-x86_64-linux-gnu.so',
-                        '3.8':'a_star.cpython-38-x86_64-linux-gnu.so',
-                        '3.9':'a_star.cpython-39-x86_64-linux-gnu.so',
-                        '3.10':'a_star.cpython-310-x86_64-linux-gnu.so'}}
-
+    
 class CustomBdistWheelCommand(_bdist_wheel):
     def run(self):
-        # os_version, python_version = get_os_and_python_version()
-        # dynamic_link = filename[os_version][python_version]
-        # shutil.copy2(os.path.join(NAME, 'lib', dynamic_link), os.path.join(NAME, dynamic_link))
-        # shutil.rmtree(os.path.join(NAME, 'lib'))
-        # if os.path.exists(os.path.join(NAME,"a_star.tar.gz")):
-        #     os.remove(os.path.join(NAME,"a_star.tar.gz"))
+        os_version, python_version = get_os_and_python_version()
+        dynamic_link = FILE[os_version][python_version]
+        shutil.copy2(os.path.join(NAME, 'astar', dynamic_link), os.path.join(NAME, dynamic_link))
+        shutil.rmtree(os.path.join(NAME, 'astar'))
         _bdist_wheel.run(self)
         
 
@@ -147,7 +145,7 @@ setup(
     author=AUTHOR,
     url=URL,
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    package_data={NAME: ['lib/*','*.pyd','*.so']},
+    package_data={NAME: ['astar/*','*.pyd','*.so']},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
