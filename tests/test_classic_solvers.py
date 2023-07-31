@@ -27,6 +27,8 @@ os_name = platform.system()
 def get_backends(backend):
     if backend == "all":
         backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow'] if os_name == 'Linux' else ['pytorch', 'numpy',  'paddle', 'tensorflow']
+    elif backend == '':
+        backends = ['pytorch']
     else:
         backends = ["pytorch", backend]
     return backends
@@ -208,6 +210,110 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             last_X = pygm.utils.to_numpy(_X)
 
 
+# The testing function for a_star
+def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
+    if backends[0] != 'pytorch':
+        backends.insert(0, 'pytorch') # force pytorch as the reference backend
+    backends = ['pytorch'] # Due to currently only supporting pytorch, testing is only conducted under pytorch
+    batch_size = len(graph_num_nodes)
+    
+    # Generate isomorphic graphs
+    pygm.BACKEND = 'pytorch'
+    torch.manual_seed(0)
+    X_gt, A1, A2, F1, F2, = [], [], [], [], [],
+    for b, num_node in enumerate(graph_num_nodes):
+        As_b, X_gt_b, Fs_b = pygm.utils.generate_isomorphic_graphs(num_node, node_feat_dim=node_feat_dim)
+        Fs_b = Fs_b - 0.5
+        X_gt.append(X_gt_b)
+        A1.append(As_b[0])
+        A2.append(As_b[1])
+        F1.append(Fs_b[0])
+        F2.append(Fs_b[1])
+    n1 = torch.tensor(graph_num_nodes, dtype=torch.int)
+    n2 = torch.tensor(graph_num_nodes, dtype=torch.int)
+    A1, A2, F1, F2,  X_gt = (pygm.utils.build_batch(_) for _ in (A1, A2, F1, F2, X_gt))
+    if batch_size > 1:
+        A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(A1, A2, F1, F2, n1, n2, X_gt)
+    else:
+        A1, A2, F1, F2, n1, n2, X_gt = data_to_numpy(
+            A1.squeeze(0), A2.squeeze(0), F1.squeeze(0), F2.squeeze(0),  n1, n2, X_gt.squeeze(0)
+        )
+    
+    # call the solver
+    total = 1
+    for val in matrix_params.values():
+        total *= len(val)
+    for values in tqdm(itertools.product(*matrix_params.values()), total=total):
+        solver_param_dict = {}
+        for k, v in zip(matrix_params.keys(), values):
+            solver_param_dict[k] = v
+            
+        last_X = None
+        for working_backend in backends:
+            pygm.BACKEND = working_backend
+            _A1, _A2, _F1, _F2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, n1, n2)
+            _X1 = solver_func(_F1, _F2, _A1, _A2, _n1, _n2, **solver_param_dict)
+
+            if last_X is not None:
+                assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 5e-3, \
+                    f"Incorrect GM solution for {working_backend}; " \
+                    f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+                    
+            last_X = pygm.utils.to_numpy(_X1)
+            accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X1, _n1, _n2)) * X_gt).sum() / X_gt.sum()
+            assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}; " \
+                                  f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+
+
+# The testing function for networkx
+def _test_networkx(graph_num_nodes, backends):
+    """
+    Test the RRWM algorithm on pairs of isomorphic graphs using NetworkX
+    
+    :param graph_num_nodes: list, the numbers of nodes in the graphs to test
+    """
+    for working_backend in backends:
+        pygm.BACKEND = working_backend
+        for num_node in tqdm(graph_num_nodes):
+            As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
+            X_gt = pygm.utils.to_numpy(X_gt, backend=working_backend)
+            A1 = As_b[0]
+            A2 = As_b[1]
+            G1 = pygm.utils.to_networkx(A1)
+            G2 = pygm.utils.to_networkx(A2)
+            K = pygm.utils.build_aff_mat_from_networkx(G1, G2)
+            X = pygm.rrwm(K, n1=num_node, n2=num_node)
+            accuracy = (pygm.utils.to_numpy(pygm.hungarian(X, num_node, num_node)) * X_gt).sum() / X_gt.sum()
+            assert accuracy == 1, f'When testing the networkx function with rrwm algorithm, there is an error in accuracy, \
+                                    and the accuracy is {accuracy}, the num_node is {num_node},.'
+     
+     
+# The testing fuction for graphml
+def _test_graphml(graph_num_nodes, backends):
+    """
+    Test the RRWM algorithm on pairs of isomorphic graphs using graphml
+    
+    :param graph_num_nodes: list, the numbers of nodes in the graphs to test
+    """
+    filename = 'examples/data/test_graphml_{}.graphml'
+    filename_1 = filename.format(1)
+    filename_2 = filename.format(2)
+    for working_backend in backends:
+        pygm.BACKEND = working_backend
+        for num_node in tqdm(graph_num_nodes):
+            As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
+            X_gt = pygm.utils.to_numpy(X_gt, backend=working_backend)
+            A1 = As_b[0]
+            A2 = As_b[1]
+            pygm.utils.to_graphml(A1, filename_1, backend=working_backend)
+            pygm.utils.to_graphml(A2, filename_2, backend=working_backend)
+            K = pygm.utils.build_aff_mat_from_graphml(filename_1, filename_2)
+            X = pygm.rrwm(K, n1=num_node, n2=num_node)
+            accuracy = (pygm.utils.to_numpy(pygm.hungarian(X, num_node, num_node)) * X_gt).sum() / X_gt.sum()
+            assert accuracy == 1, f'When testing the graphml function with rrwm algorithm, there is an error in accuracy, \
+                                    and the accuracy is {accuracy}, the num_node is {num_node},.'
+                              
+                                
 def test_hungarian(get_backend):
     backends = get_backends(get_backend)
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
@@ -343,6 +449,36 @@ def test_ipfp(get_backend):
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)]
     }, backends)
+    
+    
+def test_astar(get_backend):
+    backends = get_backends(get_backend)
+    # heuristic_prediction
+    args1 = (list(range(10, 16, 2)), 10, pygm.astar,{
+        "beam_width": [0, 1, 2],
+        "trust_fact": [0.9, 0.95, 1.0],
+        "no_pred_size": [0, 1],
+    }, backends)
+    
+    # non-batched input
+    args2 = ([10], 10, pygm.astar,{
+        "beam_width": [0, 1, 2],
+        "trust_fact": [0.9, 0.95, 1.0],
+        "no_pred_size": [0, 1],
+    }, backends)
+    
+    _test_astar(*args1)
+    _test_astar(*args2)
+
+
+def test_networkx():
+    backends = ['pytorch', 'numpy']
+    _test_networkx(list(range(10, 30, 2)), backends=backends)
+
+
+def test_graphml():
+    backends = ['pytorch', 'numpy']
+    _test_graphml(list(range(10, 30, 2)), backends=backends)
 
 
 if __name__ == '__main__':
@@ -351,3 +487,6 @@ if __name__ == '__main__':
     test_rrwm('all')
     test_sm('all')
     test_ipfp('all')
+    test_astar('')
+    test_networkx()
+    test_graphml()

@@ -10,4 +10,7 @@ tqdm
 appdirs>=1.4.4
 tensorflow==2.9.3
 mindspore==1.10.0
+distro
+cython
 wget
+networkx==2.8.8

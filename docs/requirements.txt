@@ -15,4 +15,5 @@ matplotlib
 networkx
 scikit-learn
 wget
+networkx==2.8.8
 pygmtools

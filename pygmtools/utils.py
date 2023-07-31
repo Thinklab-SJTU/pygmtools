@@ -26,6 +26,8 @@ import inspect
 import wget
 import numpy as np
 import pygmtools
+import networkx as nx
+import urllib.request
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
@@ -1200,6 +1202,7 @@ def _mm(input1, input2, backend=None):
         )
     return fn(*args)
 
+
 def download(filename, url, md5=None, retries=10, to_cache=True):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
@@ -1207,7 +1210,7 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
     :param filename: the destination file name
     :param url: the url
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
-    :param retries: (default: 5) max number of retries
+    :param retries: (default: 10) max number of retries
     :return: the full path to the file: ``<user cache path>/pygmtools/<filename>``
     """
     if retries <= 0:
@@ -1220,7 +1223,7 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
         filename = os.path.join(dirs, filename)
     if not os.path.exists(filename):
         print(f'\nDownloading to {filename}...')
-        if retries % 2 == 1:
+        if retries % 3 == 1:
             try:
                 down_res = requests.get(url, stream=True)
                 file_size = int(down_res.headers.get('Content-Length', 0))
@@ -1230,11 +1233,17 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
             except requests.exceptions.ConnectionError as err:
                 print('Warning: Network error. Retrying...\n', err)
                 return download(filename, url, md5, retries - 1)
-        else:
+        elif retries % 3 == 2:
             try:
                 wget.download(url,out=filename)
             except:
                 return download(filename, url, md5, retries - 1)
+        else:
+            try:
+                urllib.request.urlretrieve(url, filename)
+            except:
+                return download(filename, url, md5, retries - 1)  
+            
     if md5 is not None:
         md5_returned = _get_md5(filename)
         if md5 != md5_returned:
@@ -1243,6 +1252,7 @@ def download(filename, url, md5=None, retries=10, to_cache=True):
             time.sleep(1)
             return download(filename, url, md5, retries - 1)
     return filename
+
 
 def _get_md5(filename):
     hash_md5 = hashlib.md5()
@@ -1255,3 +1265,254 @@ def _get_md5(filename):
             hash_md5.update(buffer)
         md5_returned = hash_md5.hexdigest()
         return md5_returned
+
+
+###################################################
+#       Support NetworkX and GraphML formats      #
+###################################################
+
+
+def build_aff_mat_from_networkx(G1:nx.Graph, G2:nx.Graph, node_aff_fn=None, edge_aff_fn=None, backend=None):
+    r"""
+    Convert networkx object to Adjacency matrix
+    
+    :param G1: networkx object, whose type must be networkx.Graph
+    :param G2: networkx object, whose type must be networkx.Graph
+    :param node_aff_fn: (default: inner_prod_aff_fn) the node affinity function with the characteristic
+                        ``node_aff_fn(2D Tensor, 2D Tensor) -> 2D Tensor``, which accepts two node feature tensors and
+                        outputs the node-wise affinity tensor. See :func:`~pygmtools.utils.inner_prod_aff_fn` as an
+                        example.
+    :param edge_aff_fn: (default: inner_prod_aff_fn) the edge affinity function with the characteristic
+                        ``edge_aff_fn(2D Tensor, 2D Tensor) -> 2D Tensor``, which accepts two edge feature tensors and
+                        outputs the edge-wise affinity tensor. See :func:`~pygmtools.utils.inner_prod_aff_fn` as an
+                        example.
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the affinity matrix corresponding to the networkx object G1 and G2
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import networkx as nx
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+
+            # Generate networkx images
+            >>> G1 = nx.DiGraph()
+            >>> G1.add_weighted_edges_from([(1, 2, 0.5), (2, 3, 0.8), (3, 4, 0.7)])
+            >>> G2 = nx.DiGraph()
+            >>> G2.add_weighted_edges_from([(1, 2, 0.3), (2, 3, 0.6), (3, 4, 0.9), (4, 5, 0.4)])
+
+            # Obtain Affinity Matrix
+            >>> K = pygm.utils.build_aff_mat_from_networkx(G1, G2)
+            >>> K.shape
+            (20,20)
+            
+            # The affinity matrices K can be further processed by GM solvers
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    A1 = from_numpy(np.asarray(from_networkx(G1)))
+    A2 = from_numpy(np.asarray(from_networkx(G2)))
+    conn1, edge1 = dense_to_sparse(A1, backend=backend)
+    conn2, edge2 = dense_to_sparse(A2, backend=backend)
+    K = build_aff_mat(None, edge1, conn1, None, edge2, conn2, node_aff_fn=node_aff_fn, edge_aff_fn=edge_aff_fn, backend=backend)
+    return K
+
+
+def build_aff_mat_from_graphml(G1_path, G2_path, node_aff_fn=None, edge_aff_fn=None, backend=None):
+    r"""
+    Convert networkx object to Adjacency matrix
+    
+    :param G1_path: The file path of the graphml object
+    :param G2_path: The file path of the graphml object
+    :param node_aff_fn: (default: inner_prod_aff_fn) the node affinity function with the characteristic
+                        ``node_aff_fn(2D Tensor, 2D Tensor) -> 2D Tensor``, which accepts two node feature tensors and
+                        outputs the node-wise affinity tensor. See :func:`~pygmtools.utils.inner_prod_aff_fn` as an
+                        example.
+    :param edge_aff_fn: (default: inner_prod_aff_fn) the edge affinity function with the characteristic
+                        ``edge_aff_fn(2D Tensor, 2D Tensor) -> 2D Tensor``, which accepts two edge feature tensors and
+                        outputs the edge-wise affinity tensor. See :func:`~pygmtools.utils.inner_prod_aff_fn` as an
+                        example.
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the affinity matrix corresponding to the graphml object G1 and G2
+    
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+
+            # example file (.graphml) path
+            >>> G1_path = 'examples/data/graph1.graphml'
+            >>> G2_path = 'examples/data/graph2.graphml'
+
+            # Obtain Affinity Matrix
+            >>> K = pygm.utils.build_aff_mat_from_graphml(G1_path, G2_path)
+            >>> K.shape
+            (121,121)
+            
+            # The affinity matrices K can be further processed by GM solvers
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    A1 = from_numpy(np.asarray(from_graphml(G1_path)))
+    A2 = from_numpy(np.asarray(from_graphml(G2_path)))
+    conn1, edge1 = dense_to_sparse(A1, backend=backend)
+    conn2, edge2 = dense_to_sparse(A2, backend=backend)
+    K = build_aff_mat(None, edge1, conn1, None, edge2, conn2, node_aff_fn=node_aff_fn, edge_aff_fn=edge_aff_fn, backend=backend)
+    return K
+ 
+    
+def from_networkx(G:nx.Graph):
+    r"""
+    Convert networkx object to Adjacency matrix
+    
+    :param G: networkx object, whose type must be networkx.Graph
+    :return: the adjacency matrix corresponding to the networkx object
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import networkx as nx
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+
+            # Generate networkx graphs
+            >>> G1 = nx.DiGraph()
+            >>> G1.add_weighted_edges_from([(1, 2, 0.5), (2, 3, 0.8), (3, 4, 0.7)])
+            >>> G2 = nx.DiGraph()
+            >>> G2.add_weighted_edges_from([(1, 2, 0.3), (2, 3, 0.6), (3, 4, 0.9), (4, 5, 0.4)])
+
+            # Obtain Adjacency matrix
+            >>> pygm.utils.from_networkx(G1)
+            matrix([[0. , 0.5, 0. , 0. ],
+                    [0. , 0. , 0.8, 0. ],
+                    [0. , 0. , 0. , 0.7],
+                    [0. , 0. , 0. , 0. ]])
+                    
+            >>> pygm.utils.from_networkx(G2)
+            matrix([[0. , 0.3, 0. , 0. , 0. ],
+                    [0. , 0. , 0.6, 0. , 0. ],
+                    [0. , 0. , 0. , 0.9, 0. ],
+                    [0. , 0. , 0. , 0. , 0.4],
+                    [0. , 0. , 0. , 0. , 0. ]])
+            
+    """
+    is_directed = isinstance(G, nx.DiGraph)
+    adj_matrix = nx.to_numpy_matrix(G,nodelist=G.nodes()) if is_directed else nx.to_numpy_matrix(G)
+    return adj_matrix
+
+
+def to_networkx(adj_matrix, backend=None):
+    """
+    Convert adjacency matrix to NetworkX object
+    
+    :param adj_matrix: the adjacency matrix to convert
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the NetworkX object corresponding to the adjacency matrix
+    
+    .. dropdown:: Example
+
+        ::
+
+            >>> import networkx as nx
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+
+            # Generate adjacency matrix
+            >>> adj_matrix = np.random.random(size=(4,4))
+            
+            # Obtain NetworkX object
+            >>> pygm.utils.to_networkx(adj_matrix)
+            <networkx.classes.digraph.DiGraph at ...>
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+    adj_matrix = to_numpy(adj_matrix, backend=backend)
+    
+    if adj_matrix.ndim == 3 and adj_matrix.shape[0] == 1:
+        adj_matrix.squeeze(0)
+    assert adj_matrix.ndim == 2, 'Request the dimension of adj_matrix is 2'
+    
+    G = nx.DiGraph() if np.any(adj_matrix != adj_matrix.T) else nx.Graph()
+    G.add_nodes_from(range(adj_matrix.shape[0]))
+    for i, j in zip(*np.where(adj_matrix)):
+        G.add_edge(i, j, weight=adj_matrix[i, j])
+    return G
+
+
+def from_graphml(filename):
+    r"""
+    Convert graphml object to Adjacency matrix
+    
+    :param filename: graphml file path
+    :return: the adjacency matrix corresponding to the graphml object
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> pygm.BACKEND = 'numpy'
+
+            # example file (.graphml) path
+            >>> G1_path = 'examples/data/graph1.graphml'
+            >>> G2_path = 'examples/data/graph2.graphml'
+
+            # Obtain Adjacency matrix
+            >>> G1 = pygm.utils.from_graphml(G1_path)
+            >>> G1.shape
+            (11,11)
+                    
+            >>> G1 = pygm.utils.from_graphml(G2_path)
+            >>> G2.shape
+            (11,11)
+    """
+    if not filename.endswith('.graphml'):
+        raise ValueError("File name should end with '.graphml'")
+    if not os.path.isfile(filename):
+        raise ValueError("File not found: {}".format(filename))
+    return from_networkx(nx.read_graphml(filename))
+
+
+def to_graphml(adj_matrix, filename, backend=None):
+    r"""
+    Write an adjacency matrix to a GraphML file
+    
+    :param adj_matrix: numpy.ndarray, the adjacency matrix to write
+    :param filename: str, the name of the output file
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import pygmtools as pygm
+            >>> import numpy as np
+            >>> pygm.BACKEND = 'numpy'
+            
+            # Generate adjacency matrix
+            >>> adj_matrix = np.random.random(size=(4,4))
+            >>> filename = 'examples/data/test.graphml'
+            >>> adj_matrix
+            array([[0.29440151, 0.66468829, 0.05403941, 0.85887567],
+                   [0.48120964, 0.01429095, 0.73536659, 0.02962113],
+                   [0.3815578 , 0.93356234, 0.01332568, 0.61149257],
+                   [0.15422904, 0.64656912, 0.93219422, 0.784769  ]])
+
+            # Write GraphML file
+            >>> pygm.utils.to_graphml(adj_matrix, filename)
+            
+            # Check the generated GraphML file
+            >>> pygm.utils.from_graphml(filename)
+            array([[0.29440151, 0.66468829, 0.05403941, 0.85887567],
+                   [0.48120964, 0.01429095, 0.73536659, 0.02962113],
+                   [0.3815578 , 0.93356234, 0.01332568, 0.61149257],
+                   [0.15422904, 0.64656912, 0.93219422, 0.784769  ]])            
+    """
+    nx.write_graphml(to_networkx(adj_matrix, backend), filename)
+    

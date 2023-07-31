@@ -30,6 +30,9 @@ jobs:
         python -m pip install flake8 pytest-cov
         if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
         if [ "${{ matrix.python-version }}" != "3.10" ]; then pip install mindspore==1.10.0; fi
+    - name: preparation for tests
+      run: |
+        python tests/test_a_star/prepare_for_test.py
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -64,6 +67,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
           pip install -r tests/requirements_win_mac.txt
+      - name: preparation for tests
+        run: |
+          python tests/test_a_star/prepare_for_test.py
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -74,7 +80,6 @@ jobs:
         run: |
           pytest --cov=pygmtools --cov-report=xml --backend=mindspore tests/test_classic_solvers.py
           pytest --cov=pygmtools --cov-report=xml --cov-append
-
   windows:
 
     runs-on: windows-latest
@@ -94,6 +99,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install flake8 pytest-cov
           python -m pip install -r tests\requirements_win_mac.txt
+      - name: preparation for tests
+        run: |
+          python tests/test_a_star/prepare_for_test.py
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
