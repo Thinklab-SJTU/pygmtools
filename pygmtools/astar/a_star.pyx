@@ -25,25 +25,6 @@ cdef extern from "priority_queue.hpp":
         bool empty()
         long size()
 
-#cdef class TreeNode:
-#    cdef public x_indices
-#    cdef public double gplsh
-#    cdef public long idx
-#
-#    def __init__(self, x_indices, double gplsh, long idx):
-#        self.x_indices = x_indices
-#        self.gplsh = gplsh
-#        self.idx = idx
-
-#cdef (double, long) key_func(TreeNode ele):
-#cdef tuple key_func(TreeNode ele):
-#    cdef double gplsh = ele.gplsh
-#    cdef long idx = ele.idx
-#    return gplsh, -idx
-
-#cdef bool comp_func(TreeNode a, TreeNode b):
-#    # note - no protection if allocated memory isn't long enough
-#    return a.gplsh < a.gplsh
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
