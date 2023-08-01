@@ -6,42 +6,16 @@
 
 import io
 import os
-import sys
-from shutil import rmtree
 import re
-import platform
-from setuptools import find_packages, setup, Command
-import tarfile
-import distro
-from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 import shutil
-
-
+from setuptools import find_packages, setup
+from wheel.bdist_wheel import bdist_wheel as _bdist_wheel, get_platform, get_abi_tag, tags
+from setuptools.command.install import install as _install
+    
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
     return result.group(1)
-
-
-def get_os_and_python_version():
-    system = platform.system()
-    python_version = ".".join(map(str, sys.version_info[:2]))
-    if system.lower() == "windows":
-        os_version = "windows"
-    elif system.lower() == "darwin":
-        os_version = "macos"
-    elif system.lower() == "linux":
-        os_version = distro.name().lower()
-    else:
-        raise ValueError("Unknown System")
-    if (python_version == '3.11'):
-        python_version = '3.10'
-    return os_version, python_version
-        
-        
-def untar_file(tar_file_path, extract_folder_path):
-    with tarfile.open(tar_file_path, 'r:gz') as tarObj:
-        tarObj.extractall(extract_folder_path)
-        
+   
         
 # Package meta-data.
 NAME = 'pygmtools'
@@ -51,20 +25,9 @@ URL = 'https://pygmtools.readthedocs.io/'
 AUTHOR = get_property('__author__', NAME)
 VERSION = get_property('__version__', NAME)
 REQUIRED = [
-     'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1','wget>=3.2'
+     'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1', 
+     'wget>=3.2', 'networkx>=2.8.8'
 ]
-FILE={'windows':{ '3.7':'a_star.cp37-win_amd64.pyd',
-                        '3.8':'a_star.cp38-win_amd64.pyd',
-                        '3.9':'a_star.cp39-win_amd64.pyd',
-                        '3.10':'a_star.cp310-win_amd64.pyd'},
-            'macos'  :{ '3.7':'a_star.cpython-37m-darwin.so',
-                        '3.8':'a_star.cpython-38-darwin.so',
-                        '3.9':'a_star.cpython-39-darwin.so',
-                        '3.10':'a_star.cpython-310-darwin.so'},
-            'ubuntu' :{ '3.7':'a_star.cpython-37m-x86_64-linux-gnu.so',
-                        '3.8':'a_star.cpython-38-x86_64-linux-gnu.so',
-                        '3.9':'a_star.cpython-39-x86_64-linux-gnu.so',
-                        '3.10':'a_star.cpython-310-x86_64-linux-gnu.so'}}
 EXTRAS = {}
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -85,57 +48,38 @@ if not VERSION:
         exec(f.read(), about)
 else:
     about['__version__'] = VERSION
-
-if os.path.exists(os.path.join(NAME,'astar/a_star.tar.gz')):
-    untar_file(os.path.join(NAME,'astar/a_star.tar.gz'),os.path.join(NAME,'astar'))
+ 
     
-    
-class CustomBdistWheelCommand(_bdist_wheel):
+class BdistWheelCommand(_bdist_wheel):
     def run(self):
-        os_version, python_version = get_os_and_python_version()
-        dynamic_link = FILE[os_version][python_version]
-        shutil.copy2(os.path.join(NAME, 'astar', dynamic_link), os.path.join(NAME, dynamic_link))
-        shutil.rmtree(os.path.join(NAME, 'astar'))
-        _bdist_wheel.run(self)
-        
+        os.system("python pygmtools/astar/get_astar.py")
+        super().run()
 
-class UploadCommand(Command):
-    """Support setup.py upload."""
+    def get_tag(self):
+        if self.plat_name and not self.plat_name.startswith("macosx"):
+            plat_name = self.plat_name
+        else:
+            plat_name = get_platform(self.bdist_dir)
+        if plat_name in ("linux-x86_64", "linux_x86_64"):
+            plat_name = "manylinux2014_x86_64"
+        plat_name = (plat_name.lower().replace("-", "_").replace(".", "_").replace(" ", "_"))
+        impl_name = tags.interpreter_name()
+        impl_ver = tags.interpreter_version()
+        impl = impl_name + impl_ver
+        abi_tag = str(get_abi_tag()).lower()
+        tag = (impl, abi_tag, plat_name)
+        return tag
 
-    description = 'Build and publish the package.'
-    user_options = []
 
-    @staticmethod
-    def status(s):
-        """Prints things in bold."""
-        print('\033[1m{0}\033[0m'.format(s))
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
+class InstallCommand(_install):
     def run(self):
         try:
-            self.status('Removing previous builds…')
-            rmtree(os.path.join(here, 'dist'))
-        except OSError:
+            os.system("python pygmtools/astar/get_astar.py")
+        except:
             pass
-
-        self.status('Building Source and Wheel (universal) distribution…')
-        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
-
-        self.status('Uploading the package to PyPI via Twine…')
-        os.system('twine upload dist/*')
-
-        self.status('Pushing git tags…')
-        os.system('git tag v{0}'.format(about['__version__']))
-        os.system('git push --tags')
-
-        sys.exit()
-
-
+        _install.run(self)
+           
+      
 setup(
     name=NAME,
     version=about['__version__'],
@@ -145,16 +89,25 @@ setup(
     author=AUTHOR,
     url=URL,
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    package_data={NAME: ['astar/*','*.pyd','*.so']},
+    package_data={NAME: ['*.pyd', '*.so', 'astar/*']},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
     license='Mulan PSL v2',
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     classifiers=[
         'License :: OSI Approved :: Mulan Permissive Software License v2 (MulanPSL-2.0)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3 :: Only',
-        'Operating System :: OS Independent',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Operating System :: MacOS',
         'Environment :: GPU :: NVIDIA CUDA',
         'Environment :: Console',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
@@ -163,7 +116,6 @@ setup(
     ],
     # $ setup.py publish support.
     cmdclass={
-        'upload': UploadCommand,
-        'bdist_wheel': CustomBdistWheelCommand,
+        'bdist_wheel': BdistWheelCommand,
     },
 )
