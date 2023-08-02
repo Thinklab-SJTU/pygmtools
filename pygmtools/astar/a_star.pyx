@@ -25,6 +25,7 @@ cdef extern from "priority_queue.hpp":
         bool empty()
         long size()
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def a_star(

@@ -3,7 +3,7 @@ import glob
 import shutil
 
 ori_dir = os.getcwd()
-os.chdir('tests/test_a_star')
+os.chdir('pygmtools/astar')
 
 try:
     os.system("python a_star_setup.py build_ext --inplace")
@@ -20,7 +20,7 @@ if len(ext_files) == 0:
 elif len(ext_files) > 1:
     raise ValueError("too many files end with .pyd or .so")
 else:
-    target_dir = os.path.abspath(os.path.join(current_dir,'..','..','pygmtools'))
+    target_dir = os.path.abspath(os.path.join('..'))
     shutil.copy(ext_files[0], target_dir)
     
 os.chdir(ori_dir)
