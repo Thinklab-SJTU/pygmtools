@@ -1203,16 +1203,27 @@ def _mm(input1, input2, backend=None):
     return fn(*args)
 
 
-def download(filename, url, md5=None, retries=10, to_cache=True):
+def download(filename, url, md5=None, url_alter=None, retries=10, to_cache=True):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
     :param filename: the destination file name
     :param url: the url
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
+    :param url_alter: (optional) the alternate url
     :param retries: (default: 10) max number of retries
     :return: the full path to the file: ``<user cache path>/pygmtools/<filename>``
     """
+    if url_alter:
+        try:
+            _download(filename, url, md5, retries, to_cache)
+        except RuntimeError:
+            _download(filename, url_alter, md5, retries, to_cache)
+    else:
+        _download(filename, url, md5, retries, to_cache)
+        
+        
+def _download(filename, url, md5, retries, to_cache):
     if retries <= 0:
         raise RuntimeError('Max Retries exceeded!')
 
