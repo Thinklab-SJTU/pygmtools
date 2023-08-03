@@ -1216,11 +1216,11 @@ def download(filename, url, md5=None, url_alter=None, retries=10, to_cache=True)
     """
     if url_alter:
         try:
-            _download(filename, url, md5, retries, to_cache)
+            return _download(filename, url, md5, retries, to_cache)
         except RuntimeError:
-            _download(filename, url_alter, md5, retries, to_cache)
+            return _download(filename, url_alter, md5, retries, to_cache)
     else:
-        _download(filename, url, md5, retries, to_cache)
+        return _download(filename, url, md5, retries, to_cache)
         
         
 def _download(filename, url, md5, retries, to_cache):
