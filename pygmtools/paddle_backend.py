@@ -866,14 +866,14 @@ class PCA_GM_Net(paddle.nn.Layer):
         return s
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1PoeWfa4v3n4Bk_9VlSUSd7akZf1rL8ct',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/pca_gm_voc_paddle.pdparams',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/pca_gm_voc_paddle.pdparams',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1PoeWfa4v3n4Bk_9VlSUSd7akZf1rL8ct',
             '03b1dedeed7195aa98431b3c561d5de3'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1hgCpvcvt5eoz1xbMbuDyBuYH6SCue6UD',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/pca_gm_willow_paddle.pdparams',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/pca_gm_willow_paddle.pdparams',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1hgCpvcvt5eoz1xbMbuDyBuYH6SCue6UD',
                'ebf2dae8593a3640012832858bec3499'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=116_v4rC31T-hq3kE2d_thMKmJ65swrCD',
-                'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/pca_gm_voc-all_paddle.pdparams',
+    'voc-all': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/pca_gm_voc-all_paddle.pdparams',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=116_v4rC31T-hq3kE2d_thMKmJ65swrCD',
                 '677c03d7180fefaaee9fcc85a03c8d53')
 }
 
@@ -912,11 +912,11 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = { 
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1bVGl9lhhzkLeWKsjiWYHgzFV-evCo1sh',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ipca_gm_voc_paddle.pdparams',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ipca_gm_voc_paddle.pdparams',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1bVGl9lhhzkLeWKsjiWYHgzFV-evCo1sh',
             '2fb842d4fbdeed60ac2846201a24f771'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17RdDzNp2SjYahRd9aep5dEbidWJNR4uu',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ipca_gm_willow_paddle.pdparams',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ipca_gm_willow_paddle.pdparams',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17RdDzNp2SjYahRd9aep5dEbidWJNR4uu',
                '763ea7b3c0518e27ca16c5ae987eccaa'),
 }
 
@@ -1000,11 +1000,11 @@ class CIE_Net(paddle.nn.Layer):
         return s
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13dtxDfySvfqQcYvPiTd8Pb2xgcXIesAz',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/cie_voc_paddle.pdparams',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/cie_voc_paddle.pdparams',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13dtxDfySvfqQcYvPiTd8Pb2xgcXIesAz',
             '2c52c70e4a8919d24fde261756d1d6c4'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_-G00V3yhJ3IL_Xp6cMcVV9N2vWgEDwk',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/cie_willow_paddle.pdparams',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/cie_willow_paddle.pdparams',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_-G00V3yhJ3IL_Xp6cMcVV9N2vWgEDwk',
                '2619383120ca67d68c40eebd9dde9d95'),
 }
 
@@ -1081,11 +1081,11 @@ class NGM_Net(paddle.nn.Layer):
         return _sinkhorn_func(s, n1, n2, dummy_row=True)
 
 ngm_pretrain_path = { 
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cd5AvddQtpWmENPLEWjJ76cKG7Df43nh',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ngm_voc_paddle.pdparams',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ngm_voc_paddle.pdparams',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cd5AvddQtpWmENPLEWjJ76cKG7Df43nh',
             'bf1808dd16304e03ff33133c7ea9de90'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j1kXWsassE3bAVWjPy2g0jUGG2IeODc8',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ngm_willow_paddle.pdparams',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/paddle_backend/ngm_willow_paddle.pdparams',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j1kXWsassE3bAVWjPy2g0jUGG2IeODc8',
                'a5daf06cdaf6cc370928b5f8fc01c585'),
 }
 

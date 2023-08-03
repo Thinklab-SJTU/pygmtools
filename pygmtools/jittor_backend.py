@@ -923,14 +923,14 @@ class PCA_GM_Net(Sequential):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/pca_gm_voc_jittor.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/pca_gm_voc_jittor.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
             '112bb91bd0ccc573c3a936c49416d79e'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/pca_gm_willow_jittor.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/pca_gm_willow_jittor.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
                '72f4decf48eb5e00933699518563035a'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
-                'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/pca_gm_voc-all_jittor.pt',
+    'voc-all': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/pca_gm_voc-all_jittor.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
                 '65cdf9ab437fa37c18eac147cb490c8f')
 }
 
@@ -968,11 +968,11 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_voc_jittor.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_voc_jittor.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
             '3a6dc7948c75d2e31781847941b5f2f6'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_willow_jittor.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_willow_jittor.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
                '5a1a5b783b9e7ba51579b724a26dccb4'),
 }
 
@@ -1059,11 +1059,11 @@ class CIE_Net(Sequential):
 
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/cie_voc_jittor.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/cie_voc_jittor.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
             'dc398a5885c5d5894ed6667103d2ff18'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/cie_willow_jittor.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/cie_willow_jittor.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
                'bef2c341f605669ed4211e8ff7b1fe0b'),
 }
 
@@ -1140,11 +1140,11 @@ class NGM_Net(Sequential):
 
 
 ngm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ngm_voc_jittor.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ngm_voc_jittor.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL',
             '1c01a48ee2095b70da270da9d862a8c0'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ngm_willow_jittor.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/jittor_backend/ngm_willow_jittor.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7',
                'c23821751c895f79bbd038fa426ce259'),
 }
 

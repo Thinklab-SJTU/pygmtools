@@ -1259,14 +1259,14 @@ class PCA_GM_Net(torch.nn.Module):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/pca_gm_voc_pytorch.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/pca_gm_voc_pytorch.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
             '05924bffc97c9773fda233317c8169d7'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/pca_gm_willow_pytorch.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/pca_gm_willow_pytorch.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
                'db4fe01e9ba1911c1e22f034e2087b7a'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
-                'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/pca_gm_voc-all_pytorch.pt',
+    'voc-all': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/pca_gm_voc-all_pytorch.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
                 '0491f3064e2b841099e5ee12fac6c7a2')
 }
 
@@ -1307,11 +1307,11 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_voc_pytorch.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_voc_pytorch.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
             '572da07231ea436ba174fde332f2ae6c'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_willow_pytorch.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_willow_pytorch.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
                'd9febe4f567bf5a93430b42b11ebd302'),
 }
 
@@ -1399,11 +1399,11 @@ class CIE_Net(torch.nn.Module):
 
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/cie_voc_pytorch.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/cie_voc_pytorch.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
             '187916041d9454aecedfd1d09c197f29'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/cie_willow_pytorch.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/cie_willow_pytorch.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
                '47cf8f5176a3d17faed96f30fa14ecf4'),
 }
 
@@ -1482,11 +1482,11 @@ class NGM_Net(torch.nn.Module):
 
 
 ngm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK',
-            'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_voc_pytorch.pt',
+    'voc': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_voc_pytorch.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK',
             '60dbc7cc882fd88de4fc9596b7fb0f4a'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_willow_pytorch.pt',
+    'willow': ('https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_willow_pytorch.pt',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL',
                'dd13498bb385df07ac8530da87b14cd6'),
 }
 
