@@ -866,11 +866,14 @@ class PCA_GM_Net(paddle.nn.Layer):
         return s
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1PoeWfa4v3n4Bk_9VlSUSd7akZf1rL8ct',
+    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=4ghlfy5441ws5cml0w4v2y3b42do2ck8&file_id=f_1273825631692',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1PoeWfa4v3n4Bk_9VlSUSd7akZf1rL8ct',
             '03b1dedeed7195aa98431b3c561d5de3'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1hgCpvcvt5eoz1xbMbuDyBuYH6SCue6UD',
+    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=5c6te9nm1dpzwhovvl1xn8eckpvfpfln&file_id=f_1273837216178',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1hgCpvcvt5eoz1xbMbuDyBuYH6SCue6UD',
                'ebf2dae8593a3640012832858bec3499'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=116_v4rC31T-hq3kE2d_thMKmJ65swrCD',
+    'voc-all': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=hnmyga2zo5an6kq0btnr51v1ormkpzzp&file_id=f_1273826634511',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=116_v4rC31T-hq3kE2d_thMKmJ65swrCD',
                 '677c03d7180fefaaee9fcc85a03c8d53')
 }
 
@@ -891,8 +894,8 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in pca_gm_pretrain_path:
-                url, md5 = pca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_paddle.pdparams', url, md5)
+                url, url_alter, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_paddle.pdparams', url, md5, url_alter)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
@@ -909,9 +912,11 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = { 
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1bVGl9lhhzkLeWKsjiWYHgzFV-evCo1sh',
+    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=r8ud9tv1ywzsi36zki4sx9y7sdtr2fia&file_id=f_1273825482522',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1bVGl9lhhzkLeWKsjiWYHgzFV-evCo1sh',
             '2fb842d4fbdeed60ac2846201a24f771'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17RdDzNp2SjYahRd9aep5dEbidWJNR4uu',
+    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=5c6te9nm1dpzwhovvl1xn8eckpvfpfln&file_id=f_1273837216178',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17RdDzNp2SjYahRd9aep5dEbidWJNR4uu',
                '763ea7b3c0518e27ca16c5ae987eccaa'),
 }
 
@@ -932,8 +937,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in ipca_gm_pretrain_path:
-                url, md5 = ipca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_paddle.pdparams', url, md5)
+                url, url_alter, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_paddle.pdparams', url, md5, url_alter)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
@@ -995,9 +1000,11 @@ class CIE_Net(paddle.nn.Layer):
         return s
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13dtxDfySvfqQcYvPiTd8Pb2xgcXIesAz',
+    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=iqd548rwpkdd3p259k305pilnjgy7m21&file_id=f_1273830112230',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13dtxDfySvfqQcYvPiTd8Pb2xgcXIesAz',
             '2c52c70e4a8919d24fde261756d1d6c4'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_-G00V3yhJ3IL_Xp6cMcVV9N2vWgEDwk',
+    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=gfml4umxtzi65jz9153ro31jio1gftwq&file_id=f_1273824525178',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_-G00V3yhJ3IL_Xp6cMcVV9N2vWgEDwk',
                '2619383120ca67d68c40eebd9dde9d95'),
 }
 
@@ -1018,8 +1025,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in cie_pretrain_path:
-                url, md5 = cie_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'cie_{pretrain}_paddle.pdparams', url, md5)
+                url, url_alter, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_paddle.pdparams', url, md5, url_alter)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
