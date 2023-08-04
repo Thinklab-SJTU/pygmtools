@@ -965,9 +965,12 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=3x2fppctvy6nvci1qy69974384y8c5uw&file_id=f_1273827352401',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
             '3a6dc7948c75d2e31781847941b5f2f6'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
+    
+    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=yd7vcvqpc0aqhjb81b0gq1zoabtgi7jx&file_id=f_1273817773790',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
                '5a1a5b783b9e7ba51579b724a26dccb4'),
 }
 
@@ -986,8 +989,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
         if pretrain:
             if pretrain in ipca_gm_pretrain_path:
-                url, md5 = ipca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url, md5)
+                url, url_alter, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_jittor.pt', url, md5, url_alter)
                 _load_model(network, filename)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
@@ -1054,9 +1057,11 @@ class CIE_Net(Sequential):
 
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
+    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=nic9msg96gxwzgq8qhn98lndt8kftlew&file_id=f_1273824712553'
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
             'dc398a5885c5d5894ed6667103d2ff18'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
+    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=7x4gfjgla81fcbajb8rwpip7y8czyu61&file_id=f_1273812675983',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
                'bef2c341f605669ed4211e8ff7b1fe0b'),
 }
 
