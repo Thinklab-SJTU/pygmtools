@@ -814,6 +814,7 @@ from pygmtools.numpy_modules import *
 def add_module(self, name: str, module) -> None:
         self._modules[name] = module
 
+
 class PCA_GM_Net():
     """
     Numpy implementation of PCA-GM and IPCA-GM network
@@ -885,13 +886,15 @@ class PCA_GM_Net():
 
         return s
 
-
 pca_gm_pretrain_path = {
-    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1En_9f5Zi5rSsS-JTIce7B1BV6ijGEAPd',
+    'voc':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=aej75hjo3qz3v1vvk0f5t504z68ulfeg&file_id=f_1269321608942',
+           'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1En_9f5Zi5rSsS-JTIce7B1BV6ijGEAPd',
            'd85f97498157d723793b8fc1501841ce'),
-    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LAnK6ASYu0CO1fEe6WpvMbt5vskuvwLo',
+    'willow':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=3hkttwnrzsq23vcmeucluc62ms57tb24&file_id=f_1269318892538',
+              'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LAnK6ASYu0CO1fEe6WpvMbt5vskuvwLo',
               'c32f7c8a7a6978619b8fdbb6ad5b505f'),
-    'voc-all':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1c_aw4wxEBuY7JFC4Rt8rlcise777n189',
+    'voc-all':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=fwgc7g6gezioq6mbfhbzvh5n9ih4uz7b&file_id=f_1269303443757',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1c_aw4wxEBuY7JFC4Rt8rlcise777n189',
                '0e2725b3ac51f87f0303bbcfaae5df80')
 }
 
@@ -909,8 +912,8 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
         if pretrain:
             if pretrain in pca_gm_pretrain_path.keys():
-                url, md5 = pca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_numpy.npy', url, md5)
+                url, url_alter, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_numpy.npy', url, md5, url_alter)
                 pca_gm_numpy_dict = np.load(filename,allow_pickle=True)
                 for i in range(network.gnn_layer):
                     gnn_layer = network.dict['gnn_layer_{}'.format(i)]
@@ -940,9 +943,11 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
     return result, network
 
 ipca_gm_pretrain_path = {
-    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13g9iBjXZ804bKo6p8wMQe8yNUZBwVGJj',
+    'voc':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=h7zylzktrrqu200yqf20woo5e3veil4n&file_id=f_1269314306395',
+           'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13g9iBjXZ804bKo6p8wMQe8yNUZBwVGJj',
            '4479a25558780a4b4c9891b4386659cd'),
-    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1vq0FqjPhiSR80cu9jk0qMljkC4gSFvQA',
+    'willow':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=12n1tz8ub8yy24hrgu97g8mpzn4yo21u&file_id=f_1269312798952',
+              'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1vq0FqjPhiSR80cu9jk0qMljkC4gSFvQA',
               'ada1df350d45cc877f08e12919993345')
 }
 
@@ -960,8 +965,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
         if pretrain:
             if pretrain in ipca_gm_pretrain_path.keys():
-                url, md5 = ipca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_numpy.npy', url, md5)
+                url, url_alter, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_numpy.npy', url, md5, url_alter)
                 ipca_gm_numpy_dict = np.load(filename,allow_pickle=True)
                 for i in range(network.gnn_layer-1):
                     gnn_layer = network.dict['gnn_layer_{}'.format(i)]
@@ -1047,9 +1052,11 @@ class CIE_Net():
         return s
 
 cie_pretrain_path = {
-    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1rP9sJY1fh493LLMWw-7RaeFAMHlbSs2D',
+    'voc':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=pvp329zepdugccwm9lrvijioxdaugcp8&file_id=f_1269324580554',
+           'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1rP9sJY1fh493LLMWw-7RaeFAMHlbSs2D',
            '9cbd55fa77d124b95052378643715bae'),
-    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cMiXrSQjXZ9lDxeB6194z1-luyslVTR8',
+    'willow':('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=cck6mv5jvtlsg5w9jfuenefy1qdnkhq1&file_id=f_1269324529809',
+              'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cMiXrSQjXZ9lDxeB6194z1-luyslVTR8',
               'bd36e1bf314503c1f1482794e1648b18')
 }
 
@@ -1067,8 +1074,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
         if pretrain:
             if pretrain in cie_pretrain_path.keys():
-                url, md5 = cie_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'cie_{pretrain}_numpy.npy', url, md5)
+                url, url_alter, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_numpy.npy', url, md5, url_alter)
                 cie_numpy_dict = np.load(filename,allow_pickle=True)
                 for i in range(network.gnn_layer):
                     gnn_layer = network.dict['gnn_layer_{}'.format(i)]
@@ -1138,9 +1145,11 @@ class NGM_Net():
         return _sinkhorn_func(s, n1, n2, dummy_row=True)
 
 ngm_pretrain_path = {
-    'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR',
+    'voc':('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/numpy_backend/ngm_voc_numpy.npy',
+           'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR',
            '19cd48afab71b3277d2062624934702c'),
-    'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iD8FHqahRsVV_H6o3ByB6nwBHU8sEgnt',
+    'willow':('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/numpy_backend/ngm_willow_numpy.npy',
+              'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iD8FHqahRsVV_H6o3ByB6nwBHU8sEgnt',
               '31968e30c399845f34d80733d0118b8b')
 }
 
@@ -1185,6 +1194,8 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
     else:
         result = None
     return result, network
+
+
 #############################################
 #              Utils Functions              #
 #############################################
