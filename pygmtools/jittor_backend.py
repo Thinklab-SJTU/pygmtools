@@ -923,11 +923,14 @@ class PCA_GM_Net(Sequential):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
+    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=ippud98b20pj0kijuo1kr9lr0v6osk1w&file_id=f_1273826267018',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
             '112bb91bd0ccc573c3a936c49416d79e'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
+    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=srjzwvy40380dglaswzso3p836o6vhx1&file_id=f_1273827465342',
+               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
                '72f4decf48eb5e00933699518563035a'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
+    'voc-all': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=qx7fzr80fnc2zs7ai9sqfbzzqkitcv87&file_id=f_1273822573638',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
                 '65cdf9ab437fa37c18eac147cb490c8f')
 }
 
