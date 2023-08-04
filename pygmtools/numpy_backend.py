@@ -888,13 +888,13 @@ class PCA_GM_Net():
 
 pca_gm_pretrain_path = {
     'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1En_9f5Zi5rSsS-JTIce7B1BV6ijGEAPd',
-           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/pca_gm_voc_numpy.npy',
+           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/pca_gm_voc_numpy.npy',
            'd85f97498157d723793b8fc1501841ce'),
     'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LAnK6ASYu0CO1fEe6WpvMbt5vskuvwLo',
-              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/pca_gm_willow_numpy.npy',
+              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/pca_gm_willow_numpy.npy',
               'c32f7c8a7a6978619b8fdbb6ad5b505f'),
     'voc-all':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1c_aw4wxEBuY7JFC4Rt8rlcise777n189',
-               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/pca_gm_voc-all_numpy.npy',
+               'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/pca_gm_voc-all_numpy.npy',
                '0e2725b3ac51f87f0303bbcfaae5df80')
 }
 
@@ -945,10 +945,10 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 ipca_gm_pretrain_path = {
     'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=13g9iBjXZ804bKo6p8wMQe8yNUZBwVGJj',
-           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/ipca_gm_voc_numpy.npy',
+           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/ipca_gm_voc_numpy.npy',
            '4479a25558780a4b4c9891b4386659cd'),
     'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1vq0FqjPhiSR80cu9jk0qMljkC4gSFvQA',
-              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/ipca_gm_willow_numpy.npy',
+              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/ipca_gm_willow_numpy.npy',
               'ada1df350d45cc877f08e12919993345')
 }
 
@@ -1054,10 +1054,10 @@ class CIE_Net():
 
 cie_pretrain_path = {
     'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1rP9sJY1fh493LLMWw-7RaeFAMHlbSs2D',
-           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/cie_voc_numpy.npy',
+           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/cie_voc_numpy.npy',
            '9cbd55fa77d124b95052378643715bae'),
     'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1cMiXrSQjXZ9lDxeB6194z1-luyslVTR8',
-              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/cie_willow_numpy.npy',
+              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/cie_willow_numpy.npy',
               'bd36e1bf314503c1f1482794e1648b18')
 }
 
@@ -1147,10 +1147,10 @@ class NGM_Net():
 
 ngm_pretrain_path = {
     'voc':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1LY93fLCjH5vDcWsjZxGPmXmrYMF8HZIR',
-           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/ngm_voc_numpy.npy',
+           'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/ngm_voc_numpy.npy',
            '19cd48afab71b3277d2062624934702c'),
     'willow':('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iD8FHqahRsVV_H6o3ByB6nwBHU8sEgnt',
-              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models/main/numpy_backend/ngm_willow_numpy.npy',
+              'https://media.githubusercontent.com/media/heatingma/pygmtools-pretrained-models-numpy-backend/main/numpy_backend/ngm_willow_numpy.npy',
               '31968e30c399845f34d80733d0118b8b')
 }
 
