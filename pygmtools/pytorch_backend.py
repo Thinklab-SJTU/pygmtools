@@ -1264,7 +1264,7 @@ pca_gm_pretrain_path = {
                'https://www.dropbox.com/s/2r18f8q3bhfmg8a/pca_gm_willow_pytorch.pt?dl=1',
                'db4fe01e9ba1911c1e22f034e2087b7a'),
     'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
-                'https://www.dropbox.com/s/ercsn73w1t3k68z/pca_gm_voc-all_pytorch.pt?dl=1'
+                'https://www.dropbox.com/s/ercsn73w1t3k68z/pca_gm_voc-all_pytorch.pt?dl=1',
                 '0491f3064e2b841099e5ee12fac6c7a2')
 }
 
