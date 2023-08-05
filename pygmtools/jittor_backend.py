@@ -923,14 +923,11 @@ class PCA_GM_Net(Sequential):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=ippud98b20pj0kijuo1kr9lr0v6osk1w&file_id=f_1273826267018',
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
             '112bb91bd0ccc573c3a936c49416d79e'),
-    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=srjzwvy40380dglaswzso3p836o6vhx1&file_id=f_1273827465342',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
                '72f4decf48eb5e00933699518563035a'),
-    'voc-all': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=qx7fzr80fnc2zs7ai9sqfbzzqkitcv87&file_id=f_1273822573638',
-                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
+    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
                 '65cdf9ab437fa37c18eac147cb490c8f')
 }
 
@@ -968,12 +965,12 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=3x2fppctvy6nvci1qy69974384y8c5uw&file_id=f_1273827352401',
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+            'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_voc_jittor.pt',
             '3a6dc7948c75d2e31781847941b5f2f6'),
     
-    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=yd7vcvqpc0aqhjb81b0gq1zoabtgi7jx&file_id=f_1273817773790',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
+               'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_willow_jittor.pt',
                '5a1a5b783b9e7ba51579b724a26dccb4'),
 }
 
@@ -1060,11 +1057,9 @@ class CIE_Net(Sequential):
 
 
 cie_pretrain_path = {
-    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=nic9msg96gxwzgq8qhn98lndt8kftlew&file_id=f_1273824712553'
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
             'dc398a5885c5d5894ed6667103d2ff18'),
-    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=7x4gfjgla81fcbajb8rwpip7y8czyu61&file_id=f_1273812675983',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
                'bef2c341f605669ed4211e8ff7b1fe0b'),
 }
 

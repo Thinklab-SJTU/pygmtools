@@ -1257,14 +1257,11 @@ class PCA_GM_Net(torch.nn.Module):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=ony1dkjolp6977rbmlau305jp2cgf6op&file_id=f_1273819153337',
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
             '05924bffc97c9773fda233317c8169d7'),
-    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=hf1pw82zrnx3arvy2pjngs0y5hx4gxre&file_id=f_1273817541096',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
                'db4fe01e9ba1911c1e22f034e2087b7a'),
-    'voc-all': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=s3pupi2wmu6qvnde6uhw6oh48lpuahdu&file_id=f_1273815356689',
-                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
+    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
                 '0491f3064e2b841099e5ee12fac6c7a2')
 }
 
@@ -1286,8 +1283,8 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in pca_gm_pretrain_path:
-                url, url_alter, md5 = pca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_pytorch.pt', url, md5, url_alter)
+                url, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_pytorch.pt', url, md5)
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
@@ -1305,11 +1302,11 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=ojk2437mmnpbe6nklsm8sdmnnqpbsnaa&file_id=f_1273816204423',
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
+            'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_voc_pytorch.pt',
             '572da07231ea436ba174fde332f2ae6c'),
-    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=stcbn72dj7t0p2hmd5wq9y0iu9nw21kx&file_id=f_1273825986859',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
+               'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_willow_pytorch.pt',
                'd9febe4f567bf5a93430b42b11ebd302'),
 }
 
@@ -1397,11 +1394,9 @@ class CIE_Net(torch.nn.Module):
 
 
 cie_pretrain_path = {
-    'voc': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=bqqwfx1s188avclllxzasx49lxh9c1o9&file_id=f_1273814438007',
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
+    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
             '187916041d9454aecedfd1d09c197f29'),
-    'willow': ('https://app.box.com/index.php?rm=box_download_shared_file&shared_name=a5ic0y4n244uyhtudkvifibe091qsjat&file_id=f_1273817586925',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
+    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
                '47cf8f5176a3d17faed96f30fa14ecf4'),
 }
 
@@ -1423,8 +1418,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in cie_pretrain_path:
-                url, url_alter, md5 = cie_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'cie_{pretrain}_pytorch.pt', url, md5, url_alter)
+                url, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_pytorch.pt', url, md5)
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
