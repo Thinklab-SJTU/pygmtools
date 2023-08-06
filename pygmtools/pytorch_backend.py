@@ -853,10 +853,12 @@ def gamgm_real(
 
 
 astar_pretrain_path = {
-    'AIDS700nef': ('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/best_genn_AIDS700nef_gcn_astar.pt',
-                   'b2516aea4c8d730704a48653a5ca94ba'),
-    'LINUX': ('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/best_genn_LINUX_gcn_astar.pt',
-              'fd3b2a8dfa3edb20607da2e2b96d2e96'),
+    'AIDS700nef': (['https://huggingface.co/heatingma/pygmtools/resolve/main/best_genn_AIDS700nef_gcn_astar.pt',
+                    'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/best_genn_AIDS700nef_gcn_astar.pt'],                    
+                    'b2516aea4c8d730704a48653a5ca94ba'),
+    'LINUX': (['https://huggingface.co/heatingma/pygmtools/resolve/main/best_genn_LINUX_gcn_astar.pt',
+               'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/best_genn_LINUX_gcn_astar.pt'],
+               'fd3b2a8dfa3edb20607da2e2b96d2e96'),
 }
 
 
@@ -1257,15 +1259,18 @@ class PCA_GM_Net(torch.nn.Module):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
-            'https://www.dropbox.com/s/hb4nw5lr8719bcn/pca_gm_voc_pytorch.pt?dl=1',
-            '05924bffc97c9773fda233317c8169d7'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
-               'https://www.dropbox.com/s/2r18f8q3bhfmg8a/pca_gm_willow_pytorch.pt?dl=1',
-               'db4fe01e9ba1911c1e22f034e2087b7a'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
-                'https://www.dropbox.com/s/ercsn73w1t3k68z/pca_gm_voc-all_pytorch.pt?dl=1',
-                '0491f3064e2b841099e5ee12fac6c7a2')
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc_pytorch.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1HM7dWlKLF0vV2ABL-Vlqq4qVtN5N_QSz',
+             'https://www.dropbox.com/s/hb4nw5lr8719bcn/pca_gm_voc_pytorch.pt?dl=1'],
+             '05924bffc97c9773fda233317c8169d7'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_willow_pytorch.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1SCWDbAb_YCGy5fsgHAniaVdWwVrSQtwT',
+                'https://www.dropbox.com/s/2r18f8q3bhfmg8a/pca_gm_willow_pytorch.pt?dl=1'],
+                'db4fe01e9ba1911c1e22f034e2087b7a'),
+    'voc-all': (['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc-all_pytorch.pt',
+                 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_O8jChVyxOq-N7nUhxLxPLyNHSxDfukx',
+                 'https://www.dropbox.com/s/ercsn73w1t3k68z/pca_gm_voc-all_pytorch.pt?dl=1'],
+                 '0491f3064e2b841099e5ee12fac6c7a2')
 }
 
 
@@ -1286,8 +1291,8 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in pca_gm_pretrain_path:
-                url, url_alter, md5 = pca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_pytorch.pt', url, md5, url_alter)
+                url, md5 = pca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'pca_gm_{pretrain}_pytorch.pt', url, md5)
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {pca_gm_pretrain_path.keys()}')
@@ -1305,12 +1310,14 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
-            'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_voc_pytorch.pt',
-            '572da07231ea436ba174fde332f2ae6c'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
-               'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_willow_pytorch.pt',
-               'd9febe4f567bf5a93430b42b11ebd302'),
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_voc_pytorch.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11Iok8YYU1ojtzuja2jhn59zpSJKVnz5Y',
+             'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_voc_pytorch.pt'],
+             '572da07231ea436ba174fde332f2ae6c'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_willow_pytorch.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1s2mFIwBXgISasGyqVlIOSVej44ihH5Ax',
+                'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ipca_gm_willow_pytorch.pt'],
+                'd9febe4f567bf5a93430b42b11ebd302'),
 }
 
 
@@ -1331,8 +1338,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in ipca_gm_pretrain_path:
-                url, url_alter, md5 = ipca_gm_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_pytorch.pt', url, md5, url_alter)
+                url, md5 = ipca_gm_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'ipca_gm_{pretrain}_pytorch.pt', url, md5)
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {ipca_gm_pretrain_path.keys()}')
@@ -1397,12 +1404,14 @@ class CIE_Net(torch.nn.Module):
 
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
-            'https://www.dropbox.com/s/n59cziwv4pp9pa3/cie_voc_pytorch.pt?dl=1',
-            '187916041d9454aecedfd1d09c197f29'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
-               'https://www.dropbox.com/s/micx49ysaybamcp/cie_willow_pytorch.pt?dl=1',
-               '47cf8f5176a3d17faed96f30fa14ecf4'),
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_voc_pytorch.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1AzQVcIExjxZLv9hI8nNvOUnzbxZhuOnW',
+             'https://www.dropbox.com/s/n59cziwv4pp9pa3/cie_voc_pytorch.pt?dl=1'],
+             '187916041d9454aecedfd1d09c197f29'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_willow_pytorch.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1j_mwuSeLzhLFJ9a2b0ZZa73S6jipuhvM',
+                'https://www.dropbox.com/s/micx49ysaybamcp/cie_willow_pytorch.pt?dl=1'],
+                '47cf8f5176a3d17faed96f30fa14ecf4'),
 }
 
 
@@ -1423,8 +1432,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
         network = network.to(device)
         if pretrain:
             if pretrain in cie_pretrain_path:
-                url, url_alter, md5 = cie_pretrain_path[pretrain]
-                filename = pygmtools.utils.download(f'cie_{pretrain}_pytorch.pt', url, md5, url_alter)
+                url, md5 = cie_pretrain_path[pretrain]
+                filename = pygmtools.utils.download(f'cie_{pretrain}_pytorch.pt', url, md5)
                 _load_model(network, filename, device)
             else:
                 raise ValueError(f'Unknown pretrain tag. Available tags: {cie_pretrain_path.keys()}')
@@ -1480,12 +1489,14 @@ class NGM_Net(torch.nn.Module):
 
 
 ngm_pretrain_path = {
-    'voc': ('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_voc_pytorch.pt',
-            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK',
-            '60dbc7cc882fd88de4fc9596b7fb0f4a'),
-    'willow': ('https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_willow_pytorch.pt',
-               'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL',
-               'dd13498bb385df07ac8530da87b14cd6'),
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_voc_pytorch.pt',
+             'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_voc_pytorch.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1POvy6J-9UDNy93qJCKu-czh2FCYkykMK'],
+             '60dbc7cc882fd88de4fc9596b7fb0f4a'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_willow_pytorch.pt',
+                'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/pytorch_backend/ngm_willow_pytorch.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1ZdlUxyeNoIjA74QTr5wxwQ-vBrr2MBaL'],
+                'dd13498bb385df07ac8530da87b14cd6'),
 }
 
 
@@ -1504,9 +1515,9 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
         network = network.to(device)
         if pretrain:
             if pretrain in ngm_pretrain_path:
-                url, url_alter, md5 = ngm_pretrain_path[pretrain]
+                url, md5 = ngm_pretrain_path[pretrain]
                 try:
-                    filename = pygmtools.utils.download(f'ngm_{pretrain}_pytorch.pt', url, md5, url_alter)
+                    filename = pygmtools.utils.download(f'ngm_{pretrain}_pytorch.pt', url, md5)
                 except:
                     filename = os.path.dirname(__file__) + f'/temp/ngm_{pretrain}_pytorch.pt'
                 _load_model(network, filename, device)

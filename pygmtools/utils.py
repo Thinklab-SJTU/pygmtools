@@ -1203,27 +1203,30 @@ def _mm(input1, input2, backend=None):
     return fn(*args)
 
 
-def download(filename, url, md5=None, url_alter=None, retries=5, to_cache=True):
+def download(filename, url, md5=None, retries=5, to_cache=True):
     r"""
     Check if content exits. If not, download the content to ``<user cache path>/pygmtools/<filename>``. ``<user cache path>``
     depends on your system. For example, on Debian, it should be ``$HOME/.cache``.
     :param filename: the destination file name
-    :param url: the url
+    :param url: the url or the url list to download file
     :param md5: (optional) the md5sum to verify the content. It should match the result of ``md5sum file`` on Linux.
-    :param url_alter: (optional) the alternate url
     :param retries: (default: 5) max number of retries
     :return: the full path to the file: ``<user cache path>/pygmtools/<filename>``
     """
-    if url_alter:
-        try:
-            return _download(filename, url, md5, retries, to_cache)
-        except RuntimeError:
-            return _download(filename, url_alter, md5, retries, to_cache)
-    else:
+    if type(url) == str:
         return _download(filename, url, md5, retries, to_cache)
+    elif type(url) == list:
+        for cur_url in url:
+            try:
+                return _download(filename, cur_url, md5, retries, to_cache)
+            except RuntimeError:
+                continue
+        raise RuntimeError('Max Retries exceeded!')
+    else:
+        raise ValueError("The url should be string or list of string.")
         
         
-def _download(filename, url, md5, retries, to_cache):
+def _download(filename, url, md5, retries, to_cache=True):
     if retries <= 0:
         raise RuntimeError('Max Retries exceeded!')
 
@@ -1248,12 +1251,12 @@ def _download(filename, url, md5, retries, to_cache):
             try:
                 wget.download(url,out=filename)
             except:
-                return download(filename, url, md5, retries - 1)
+                return _download(filename, url, md5, retries - 1)
         else:
             try:
                 urllib.request.urlretrieve(url, filename)
             except:
-                return download(filename, url, md5, retries - 1)  
+                return _download(filename, url, md5, retries - 1)  
             
     if md5 is not None:
         md5_returned = _get_md5(filename)
@@ -1261,7 +1264,7 @@ def _download(filename, url, md5, retries, to_cache):
             print('Warning: MD5 check failed for the downloaded content. Retrying...')
             os.remove(filename)
             time.sleep(1)
-            return download(filename, url, md5, retries - 1)
+            return _download(filename, url, md5, retries - 1)
     return filename
 
 

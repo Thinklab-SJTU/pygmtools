@@ -482,12 +482,11 @@ def test_graphml():
 
 
 if __name__ == '__main__':
-    # test_hungarian('all')
-    # test_sinkhorn('all')
-    # test_rrwm('all')
-    # test_sm('all')
-    # test_ipfp('all')
-    # test_astar('')
-    # test_networkx()
-    # test_graphml()
-    pass
+    test_hungarian('all')
+    test_sinkhorn('all')
+    test_rrwm('all')
+    test_sm('all')
+    test_ipfp('all')
+    test_astar('')
+    test_networkx()
+    test_graphml()
