@@ -22,7 +22,6 @@ def default_parameter():
     params['filters_2'] = 32
     params['filters_3'] = 16
     params['tensor_neurons'] = 16
-    params['dropout'] = 0
     params['astar_beam_width'] = 0
     params['astar_trust_fact'] = 1
     params['astar_no_pred'] = 0

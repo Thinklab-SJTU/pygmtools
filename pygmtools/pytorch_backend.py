@@ -869,6 +869,7 @@ class GENN(torch.nn.Module):
         :param number_of_labels: Number of node labels.
         """
         super(GENN, self).__init__()
+        self.training = False
         self.args = args
         if self.args['use_net']:
             self.number_labels = self.args['channel']
@@ -909,10 +910,8 @@ class GENN(torch.nn.Module):
 
         features = self.convolution_1(edge_index, x, edge_weight)
         features = F.relu(features)
-        features = F.dropout(features, p=self.args['dropout'], training=self.training)
         features = self.convolution_2(edge_index, features, edge_weight)
         features = F.relu(features)
-        features = F.dropout(features, p=self.args['dropout'], training=self.training)
         features = self.convolution_3(edge_index, features, edge_weight)
         return features
 
@@ -1098,17 +1097,17 @@ def hungarian_ged(node_cost_mat: torch.Tensor, n1, n2):
     return pred_x, ged_lower_bound
 
 
-def astar(feat1, feat2, A1, A2, n1, n2, channel, dropout, beam_width, trust_fact, no_pred_size):
+def astar(feat1, feat2, A1, A2, n1, n2, channel, beam_width):
     """ 
     Pytorch implementation of ASTAR
     """
-    return astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, dropout=dropout, beam_width=beam_width, 
-                        filters_1=64, filters_2=32, filters_3=16, tensor_neurons=16, trust_fact=trust_fact, 
-                        no_pred_size=no_pred_size, pretrain=False, network=None, use_net=False)
+    return astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, beam_width=beam_width, 
+                        filters_1=64, filters_2=32, filters_3=16, tensor_neurons=16, trust_fact=1.0, 
+                        no_pred_size=0, pretrain=False, network=None, use_net=False)
     
 
 def astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
-          tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain, use_net):
+          tensor_neurons, beam_width, trust_fact, no_pred_size, network, pretrain, use_net):
     """ 
     The true implementation of astar and genn_astar functions
     """
@@ -1139,7 +1138,6 @@ def astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, fi
         args['filters_2'] = filters_2
         args['filters_3'] = filters_3
         args['tensor_neurons'] = tensor_neurons
-        args['dropout'] = dropout
         args['astar_beam_width'] = beam_width
         args['astar_trust_fact'] = trust_fact
         args['astar_no_pred'] = no_pred_size
@@ -1534,12 +1532,12 @@ def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, 
 
 
 def genn_astar(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
-          tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain):
+          tensor_neurons, beam_width, trust_fact, no_pred_size, network, pretrain):
     """
     Pytorch implementation of GENN-ASTAR
     """
     return astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3,
-          tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain, use_net=True)
+          tensor_neurons, beam_width, trust_fact, no_pred_size, network, pretrain, use_net=True)
     
     
 #############################################
