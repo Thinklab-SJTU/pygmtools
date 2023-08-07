@@ -923,12 +923,18 @@ class PCA_GM_Net(Sequential):
 
 
 pca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
-            '112bb91bd0ccc573c3a936c49416d79e'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
-               '72f4decf48eb5e00933699518563035a'),
-    'voc-all': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
-                '65cdf9ab437fa37c18eac147cb490c8f')
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc_jittor.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1k4eBJ869uX7sN9TVTe67-8ZKRffpeBu8',
+             'https://www.dropbox.com/scl/fi/gc7ekhxdeump5znzv8nnz/pca_gm_voc_jittor.pt?rlkey=h9fe2d3cfn4r1fumvaqjjia16&dl=1'],
+             '112bb91bd0ccc573c3a936c49416d79e'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_willow_jittor.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=15R3mdOR99g1LuSyv2IikRmlvy06ub7GQ',
+                'https://www.dropbox.com/scl/fi/1irrb63jdz30m2ebj3lhy/pca_gm_willow_jittor.pt?rlkey=njkwysy6eh89wa4jgrl54v767&dl=1'],
+                '72f4decf48eb5e00933699518563035a'),
+    'voc-all': (['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc-all_jittor.pt',
+                 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=17QvlZRAFcPBslaMCax9BVmQpoFMUWv5I',
+                 'https://www.dropbox.com/scl/fi/yl8vymg3rc52n4wxr50gh/pca_gm_voc-all_jittor.pt?rlkey=niypnhmsve6md495j59psqs37&dl=1'],
+                 '65cdf9ab437fa37c18eac147cb490c8f')
 }
 
 
@@ -965,10 +971,15 @@ def pca_gm(feat1, feat2, A1, A2, n1, n2,
 
 
 ipca_gm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_voc_jittor.pt',
+            'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1B5W83efRL50C1D348xPJHaHoEXpAfKTL',
+            'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_voc_jittor.pt'],
             '3a6dc7948c75d2e31781847941b5f2f6'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
-               '5a1a5b783b9e7ba51579b724a26dccb4'),
+    
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_willow_jittor.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1iHSAY0d7Ufw9slYQjD_dEMkUB8SQM0kO',
+                'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/jittor_backend/ipca_gm_willow_jittor.pt'],
+                '5a1a5b783b9e7ba51579b724a26dccb4'),
 }
 
 
@@ -1054,10 +1065,14 @@ class CIE_Net(Sequential):
 
 
 cie_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
-            'dc398a5885c5d5894ed6667103d2ff18'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
-               'bef2c341f605669ed4211e8ff7b1fe0b'),
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_voc_jittor.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1jjzbtXne_ppdg7M2jWEpye8piURDVidY',
+             'https://www.dropbox.com/scl/fi/rual5ozkfrbe3205lzui3/cie_voc_jittor.pt?rlkey=zio8gca7qg8mc5a3murl6mew9&dl=1'],
+             'dc398a5885c5d5894ed6667103d2ff18'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_willow_jittor.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=11ftNCYBGnjGpFM3__oTCpBhOBabSU1Rv',
+                'https://www.dropbox.com/scl/fi/iyigyphvuil8ch7cura0n/cie_willow_jittor.pt?rlkey=44wgqd4njgwmj8qdbe9fjxnez&dl=1'],
+                'bef2c341f605669ed4211e8ff7b1fe0b'),
 }
 
 
@@ -1133,10 +1148,14 @@ class NGM_Net(Sequential):
 
 
 ngm_pretrain_path = {
-    'voc': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL',
-            '1c01a48ee2095b70da270da9d862a8c0'),
-    'willow': ('https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7',
-               'c23821751c895f79bbd038fa426ce259'),
+    'voc': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_voc_jittor.pt',
+             'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/jittor_backend/ngm_voc_jittor.pt',
+             'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1_KZQPR6msYsMXupfrAgGgXT-zUXaGtmL'],
+             '1c01a48ee2095b70da270da9d862a8c0'),
+    'willow': (['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_willow_jittor.pt',
+                'https://raw.githubusercontent.com/heatingma/pygmtools-pretrained-models/main/jittor_backend/ngm_willow_jittor.pt',
+                'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1sLI7iC9kUyWm3xeByHvAMx_Hux8VAuP7'],
+                'c23821751c895f79bbd038fa426ce259'),
 }
 
 

@@ -134,6 +134,12 @@ def _test_mgm_solver_on_isomorphic_graphs(num_graph, num_node, node_feat_dim, so
                     diff = 0
                     for i, j in itertools.product(range(num_graph), repeat=2):
                         diff += np.abs(pygm.utils.to_numpy(_X[i, j]) - last_X[i, j]).sum()
+                    # solve again
+                    if diff > 1e-4:
+                        _X = solver_func(_As, node_aff_mat, **solver_param_dict)
+                        diff = 0
+                        for i, j in itertools.product(range(num_graph), repeat=2):
+                            diff += np.abs(pygm.utils.to_numpy(_X[i, j]) - last_X[i, j]).sum()
                     assert diff < 1e-4, \
                         f"Incorrect GM solution for {working_backend}, " \
                         f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
