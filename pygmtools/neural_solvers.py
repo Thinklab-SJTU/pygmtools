@@ -1277,11 +1277,12 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
            tensor_neurons=16, dropout=0, beam_width=0, trust_fact=1, no_pred_size=0,
            network=None, return_network=False, pretrain='AIDS700nef', backend=None):
     r"""
-    The **GENN-ASTAR** (Graph Edit Neural Network Astar) solver for graph matching based on the combination of traditional A-star and Neural Network.    
-    This algorithm replaces the heuristic prediction module in the traditional A-star algorithm with **GNN** (Graph Neural Network) model, 
-    greatly improving the efficiency of A-star algorithm while ensuring a certain degree of accuracy.
-    During the search process, the algorithm prioritizes the next search direction based on the distance between the current state and the target state. 
-    At each step of the search, the algorithm uses a predicted probability distribution of node pairs for matching. 
+    The **GENN-A\*** (Graph Edit Neural Network A\*) solver for graph matching (and graph edit distance)
+    based on the fusion of traditional A\* and Neural Network.
+    This algorithm replaces the heuristic prediction module in the traditional A\* algorithm with **GENN** (Graph Edit
+    Neural Network) model, greatly improving the efficiency of A\* algorithm with negligible loss in accuracy.
+    During the search process, the algorithm chooses the next state with the lowest edit cost, which is predicted by
+    GENN.
     
     See the following picture to better understand the workflow of the algorithm:
 
@@ -1323,6 +1324,14 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
         the network object
 
     .. note::
+        Graph matching problem (Lawler's QAP) and graph edit distance problem are two sides of the same coin. If you
+        want to transform your graph edit distance problem into Lawler's QAP, first compute the edit cost of each
+        node pairs and edge pairs, then place them to the right places to get a **cost** matrix. Finally, build
+        the affinity matrix by :math:`-1\times` cost matrix.
+
+        You can get your customized cost/affinity matrix by :func:`~pygmtools.utils.build_aff_mat`.
+
+    .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
         You may also download the pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
 
@@ -1354,7 +1363,7 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
 
-            # Match by GENN-ASTAR (load pretrained model)
+            # Match by GENN-A* (load pretrained model)
             >>> X, net = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, return_network=True)
             Downloading to ~/.cache/pygmtools/best_genn_AIDS700nef_gcn_astar.pt...
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy

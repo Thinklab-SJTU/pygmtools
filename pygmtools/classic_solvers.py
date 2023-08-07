@@ -1065,9 +1065,13 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_width=0, 
           trust_fact=1, no_pred_size=0, backend=None):
     r"""
-    ASTAR solver for graph matching (Lawler's QAP).
-    The **ASTAR** solver finds the optimal match between two graphs through heuristic search.
-    
+    A\* (A-star) solver for graph matching (Lawler's QAP).
+    The **A\*** solver was originally proposed to solve the graph edit distance (GED) problem. It finds the optimal
+    matching between two graphs (which is equivalent to an edit path between them) by priority search.
+
+    Here we implement the A\* solver with Hungarian heuristic. See the following paper for more details:
+    `An Exact Graph Edit Distance Algorithm for Solving Pattern Recognition Problems <https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=5e3a679c3bdf5c5d72c5cc91c8cc9d019a500842>`_
+
     :param feat1: :math:`(b\times n_1 \times d)` input feature of graph1
     :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
     :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
@@ -1083,6 +1087,18 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_
     :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix
+
+    .. warning::
+        If ``beam_width==0``, the algorithm will find the optimal solution, and it may take a very long time.
+        You may set a ``beam_width`` to lower the size of the search tree, at the cost of losing the optimal guarantee.
+
+    .. note::
+        Graph matching problem (Lawler's QAP) and graph edit distance problem are two sides of the same coin. If you
+        want to transform your graph edit distance problem into Lawler's QAP, first compute the edit cost of each
+        node pairs and edge pairs, then place them to the right places to get a **cost** matrix. Finally, build
+        the affinity matrix by :math:`-1\times` cost matrix.
+
+        You can get your customized cost/affinity matrix by :func:`~pygmtools.utils.build_aff_mat`.
 
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
@@ -1110,7 +1126,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
 
-            # Match by ASTAR (load pretrained model)
+            # Match by A* (load pretrained model)
             >>> X = pygm.astar(feat1, feat2, A1, A2, n1, n2)
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy
             tensor(1.)
@@ -1128,6 +1144,19 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_
             
             >>> (part_X * part_X_gt).sum() / part_X_gt.sum()# accuracy
             tensor(1.)
+
+    .. note::
+        If you find this graph matching solver useful in your research, please cite:
+
+        ::
+
+            @inproceedings{astar,
+              title={Speeding Up Graph Edit Distance Computation with a Bipartite Heuristic.},
+              author={Riesen, Kaspar and Fankhauser, Stefan and Bunke, Horst},
+              booktitle={Mining and Learning with Graphs},
+              pages={21--24},
+              year={2007}
+            }
     """
     if backend is None:
         backend = pygmtools.BACKEND
