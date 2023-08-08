@@ -55,7 +55,7 @@ Now the pygmtools is available with the ``numpy`` backend.
 The following packages are required, and shall be automatically installed by ``pip``:
 
 ```
-Python >= 3.7
+Python >= 3.8
 requests >= 2.25.1
 scipy >= 1.4.1
 Pillow >= 7.2.0
@@ -64,6 +64,7 @@ easydict >= 1.7
 appdirs >= 1.4.4
 tqdm >= 4.64.1
 wget >= 3.2
+networkx >= 2.8.8
 ```
   
 ## Available Graph Matching Solvers
