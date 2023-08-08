@@ -1308,7 +1308,7 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
     :param tensor_neurons: (default: 16) Neurons in tensor network layer.
     :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
     :param trust_fact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
-    :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
+    :param no_pred_size: (default: 0) If the smaller graph has no more than ``no_pred_size`` nodes, stop using heuristics.
     :param network: (default: None) The network object. If None, a new network object will be created, and load the
         model weights specified in ``pretrain`` argument.
     :param return_network: (default: False) Return the network object (saving model construction time if calling the
