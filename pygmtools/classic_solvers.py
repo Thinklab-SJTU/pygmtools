@@ -1062,8 +1062,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         return result
 
 
-def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_width=0, 
-          trust_fact=1, no_pred_size=0, backend=None):
+def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, backend=None):
     r"""
     A\* (A-star) solver for graph matching (Lawler's QAP).
     The **A\*** solver was originally proposed to solve the graph edit distance (GED) problem. It finds the optimal
@@ -1081,10 +1080,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_
     :param channel: (default: None)  Channel size of the input layer. If given, it must match the feature dimension (d) of feat1, feat2. 
         If not given, it will be defined by the feature dimension (d) of feat1, feat2. 
         Ignored if the network object isgiven (ignored if network!=None)
-    :param dropout: (default: 0) Dropout probability
     :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
-    :param trust_fact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
-    :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix
 
@@ -1188,7 +1184,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, dropout=0, beam_
     if n1 is not None: _check_data_type(n1, 'n1', backend)
     if n2 is not None: _check_data_type(n2, 'n2', backend)
 
-    args = (feat1, feat2, A1, A2, n1, n2, channel, dropout, beam_width, trust_fact, no_pred_size)
+    args = (feat1, feat2, A1, A2, n1, n2, channel, beam_width)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.astar

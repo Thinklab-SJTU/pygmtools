@@ -1274,7 +1274,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
-           tensor_neurons=16, dropout=0, beam_width=0, trust_fact=1, no_pred_size=0,
+           tensor_neurons=16, beam_width=0, trust_fact=1, no_pred_size=0,
            network=None, return_network=False, pretrain='AIDS700nef', backend=None):
     r"""
     The **GENN-A\*** (Graph Edit Neural Network A\*) solver for graph matching (and graph edit distance)
@@ -1306,7 +1306,6 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
     :param filters_2: (default: 32) Filters (neurons) in 2nd convolution.
     :param filters_3: (default: 16) Filters (neurons) in 2nd convolution.
     :param tensor_neurons: (default: 16) Neurons in tensor network layer.
-    :param dropout: (default: 0) Dropout probability
     :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
     :param trust_fact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
     :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
@@ -1472,7 +1471,7 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
     if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3, 
-            tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain)
+            tensor_neurons, beam_width, trust_fact, no_pred_size, network, pretrain)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.genn_astar
