@@ -455,16 +455,12 @@ def test_astar(get_backend):
     backends = get_backends(get_backend)
     # heuristic_prediction
     args1 = (list(range(10, 16, 2)), 10, pygm.astar,{
-        "beam_width": [0, 1, 2],
-        "trust_fact": [0.9, 0.95, 1.0],
-        "no_pred_size": [0, 1],
+        "beam_width": [0, 1, 2]
     }, backends)
     
     # non-batched input
     args2 = ([10], 10, pygm.astar,{
-        "beam_width": [0, 1, 2],
-        "trust_fact": [0.9, 0.95, 1.0],
-        "no_pred_size": [0, 1],
+        "beam_width": [0, 1, 2]
     }, backends)
     
     _test_astar(*args1)

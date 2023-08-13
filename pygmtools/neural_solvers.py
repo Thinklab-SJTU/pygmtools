@@ -1274,14 +1274,15 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
 
 def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=64, filters_2=32, filters_3=16,
-           tensor_neurons=16, dropout=0, beam_width=0, trust_fact=1, no_pred_size=0,
+           tensor_neurons=16, beam_width=0, trust_fact=1, no_pred_size=0,
            network=None, return_network=False, pretrain='AIDS700nef', backend=None):
     r"""
-    The **GENN-ASTAR** (Graph Edit Neural Network Astar) solver for graph matching based on the combination of traditional A-star and Neural Network.    
-    This algorithm replaces the heuristic prediction module in the traditional A-star algorithm with **GNN** (Graph Neural Network) model, 
-    greatly improving the efficiency of A-star algorithm while ensuring a certain degree of accuracy.
-    During the search process, the algorithm prioritizes the next search direction based on the distance between the current state and the target state. 
-    At each step of the search, the algorithm uses a predicted probability distribution of node pairs for matching. 
+    The **GENN-A\*** (Graph Edit Neural Network A\*) solver for graph matching (and graph edit distance)
+    based on the fusion of traditional A\* and Neural Network.
+    This algorithm replaces the heuristic prediction module in the traditional A\* algorithm with **GENN** (Graph Edit
+    Neural Network) model, greatly improving the efficiency of A\* algorithm with negligible loss in accuracy.
+    During the search process, the algorithm chooses the next state with the lowest edit cost, which is predicted by
+    GENN.
     
     See the following picture to better understand the workflow of the algorithm:
 
@@ -1305,10 +1306,9 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
     :param filters_2: (default: 32) Filters (neurons) in 2nd convolution.
     :param filters_3: (default: 16) Filters (neurons) in 2nd convolution.
     :param tensor_neurons: (default: 16) Neurons in tensor network layer.
-    :param dropout: (default: 0) Dropout probability
     :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
     :param trust_fact: (default: 1) The trust factor on GNN prediction (0 = no GNN).
-    :param no_pred_size: (default: 0) If the smaller graph has no more than x nodes, stop using heuristics.
+    :param no_pred_size: (default: 0) If the smaller graph has no more than ``no_pred_size`` nodes, stop using heuristics.
     :param network: (default: None) The network object. If None, a new network object will be created, and load the
         model weights specified in ``pretrain`` argument.
     :param return_network: (default: False) Return the network object (saving model construction time if calling the
@@ -1321,6 +1321,14 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
 
         if ``return_network==True``, :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix,
         the network object
+
+    .. note::
+        Graph matching problem (Lawler's QAP) and graph edit distance problem are two sides of the same coin. If you
+        want to transform your graph edit distance problem into Lawler's QAP, first compute the edit cost of each
+        node pairs and edge pairs, then place them to the right places to get a **cost** matrix. Finally, build
+        the affinity matrix by :math:`-1\times` cost matrix.
+
+        You can get your customized cost/affinity matrix by :func:`~pygmtools.utils.build_aff_mat`.
 
     .. note::
         You may need a proxy to load the pretrained weights if Google drive is not accessible in your contry/region.
@@ -1354,7 +1362,7 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
             >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
             >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
 
-            # Match by GENN-ASTAR (load pretrained model)
+            # Match by GENN-A* (load pretrained model)
             >>> X, net = pygm.genn_astar(feat1, feat2, A1, A2, n1, n2, return_network=True)
             Downloading to ~/.cache/pygmtools/best_genn_AIDS700nef_gcn_astar.pt...
             >>> (X * X_gt).sum() / X_gt.sum()# accuracy
@@ -1463,7 +1471,7 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
     if n2 is not None: _check_data_type(n2, 'n2', backend)
 
     args = (feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, filters_3, 
-            tensor_neurons, dropout, beam_width, trust_fact, no_pred_size, network, pretrain)
+            tensor_neurons, beam_width, trust_fact, no_pred_size, network, pretrain)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.genn_astar
