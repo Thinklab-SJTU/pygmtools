@@ -309,7 +309,7 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
         n1max = paddle.max(n1)
     if n2max is None:
         n2max = paddle.max(n2)
-        
+
     assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
 
     # initialize x0 (also v0)
