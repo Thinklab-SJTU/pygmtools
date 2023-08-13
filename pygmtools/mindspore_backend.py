@@ -223,14 +223,19 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
     """
     mindspore implementation of RRWM algorithm.
     """
+    import time
+    lp1 = sk = 0
+    t1 = time.time()
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     # rescale the values in K
     d = K.sum(axis=2, keepdims=True)
     dmax = d.max(axis=1, keepdims=True)
     K = K / (dmax + d.min() * 1e-5)
     v = v0
+    t2 = time.time()
     for i in range(max_iter):
         # random walk
+        t3 = time.time()
         v = mindspore.ops.BatchMatMul()(K, v)
         last_v = v
         n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
@@ -239,14 +244,20 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         # reweighted jump
         s = v.view(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
         s = beta * s / s.max(axis=1, keepdims=True).max(axis=2, keepdims=True)
-        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).swapaxes(1, 2).reshape(batch_num, n1n2, 1) + \
+        t4 = time.time()
+        lp1 += (t4 - t3)
+        # print(n1, n2)
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True).swapaxes(1, 2).reshape(batch_num, n1n2, 1) + \
             (1 - alpha) * v
+        t5 = time.time()
+        # print(s.shape)
+        sk += (t5 - t4)
         n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
         v = mindspore.ops.matmul(v, 1 / n)
 
         if (v - last_v).sum().sqrt() < 1e-5:
             break
-
+    # print(f'pre:{t2-t1:.4f}, lp1:{lp1:.4f}, sk:{sk:.4f}')
     return v.view(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
 
 

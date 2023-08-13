@@ -245,7 +245,7 @@ def rrwm(K: tf.Tensor, n1: tf.Tensor, n2: tf.Tensor, n1max, n2max, x0: tf.Tensor
         # reweighted jump
         s = tf.transpose(tf.reshape(v, [batch_num, n2max, n1max]), [0, 2, 1])
         s = beta * s / tf.reduce_max(s, axis=[1,2], keepdims=True)
-        v = alpha * tf.reshape(tf.transpose(sinkhorn(s, n1, n2, max_iter=sk_iter), [0, 2, 1]), [batch_num, n1n2, 1]) + \
+        v = alpha * tf.reshape(tf.transpose(sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True), [0, 2, 1]), [batch_num, n1n2, 1]) + \
             (1 - alpha) * v
         n = tf.norm(v, ord=1, axis=1, keepdims=True)
         v = tf.matmul(v, 1 / n)

@@ -20,7 +20,7 @@ import pygmtools.utils
 from .pytorch_astar_modules import GCNConv, AttentionModule, TensorNetworkModule, GraphPair, \
     VERY_LARGE_INT, to_dense_adj, to_dense_batch, default_parameter, check_layer_parameter, node_metric
 from torch import Tensor
-from pygmtools.a_star import a_star
+# from pygmtools.a_star import a_star
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -245,7 +245,7 @@ def rrwm(K: Tensor, n1: Tensor, n2: Tensor, n1max, n2max, x0: Tensor,
         # reweighted jump
         s = v.view(batch_num, n2max, n1max).transpose(1, 2)
         s = beta * s / s.max(dim=1, keepdim=True).values.max(dim=2, keepdim=True).values
-        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True).transpose(1, 2).reshape(batch_num, n1n2, 1) + \
             (1 - alpha) * v
         n = torch.norm(v, p=1, dim=1, keepdim=True)
         v = torch.matmul(v, 1 / n)

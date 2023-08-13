@@ -253,7 +253,7 @@ def rrwm(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
         # reweighted jump
         s = v.reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
         s = beta * s / np.amax(s, axis=(1, 2), keepdims=True)
-        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).transpose((0, 2, 1)).reshape((batch_num, n1n2, 1)) + \
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True).transpose((0, 2, 1)).reshape((batch_num, n1n2, 1)) + \
             (1 - alpha) * v
         n = np.linalg.norm(v, ord=1, axis=1, keepdims=True)
         v = np.matmul(v, 1 / n)
