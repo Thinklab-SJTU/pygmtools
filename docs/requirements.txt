@@ -14,6 +14,8 @@ sphinx-gallery==0.11.1
 matplotlib
 networkx
 scikit-learn
-wget
+requests
 networkx==2.8.8
+async-timeout
+aiohttp
 pygmtools
