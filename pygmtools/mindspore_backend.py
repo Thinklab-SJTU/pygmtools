@@ -239,7 +239,7 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         # reweighted jump
         s = v.view(batch_num, int(n2max), int(n1max)).swapaxes(1, 2)
         s = beta * s / s.max(axis=1, keepdims=True).max(axis=2, keepdims=True)
-        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter).swapaxes(1, 2).reshape(batch_num, n1n2, 1) + \
+        v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True).swapaxes(1, 2).reshape(batch_num, n1n2, 1) + \
             (1 - alpha) * v
         n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
         v = mindspore.ops.matmul(v, 1 / n)
