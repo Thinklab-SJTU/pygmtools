@@ -63,8 +63,9 @@ numpy >= 1.18.5
 easydict >= 1.7
 appdirs >= 1.4.4
 tqdm >= 4.64.1
-wget >= 3.2
 networkx >= 2.8.8
+aiohttp
+async-timeout
 ```
   
 ## Available Graph Matching Solvers

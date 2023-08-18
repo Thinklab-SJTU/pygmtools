@@ -12,6 +12,7 @@ appdirs>=1.4.4
 tensorflow==2.9.3
 distro
 cython
-wget
+aiohttp
+async-timeout
 networkx==2.8.8
 
