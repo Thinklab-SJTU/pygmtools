@@ -18,15 +18,6 @@ or get the latest version by running:
     $ pip install -U https://github.com/Thinklab-SJTU/pygmtools/archive/master.zip # with --user for user install (no root)
 
 
-
-
-Now the pygmtools is available with the ``numpy`` backend:
-
-.. image:: ../images/numpy_logo.png
-    :width: 200
-
-You may jump to :ref:`Example: Matching Isomorphic Graphs` if you do not need other backends.
-
 The following packages are required, and shall be automatically installed by ``pip``:
 
 ::
@@ -40,134 +31,14 @@ The following packages are required, and shall be automatically installed by ``p
     appdirs >= 1.4.4
     tqdm >= 4.64.1
 
+Note that we support different deep learning architectures ``pytorch``, ``paddle``, ``jittor``. You may see
+:doc:`./numerical_backends` for the introduction and examples on different backends.
 
-Install Other Backends
-------------------------
-
-Currently, we also support deep learning architectures ``pytorch``, ``paddle``, ``jittor`` which are GPU-friendly and deep learning-friendly.
-
-Once the backend is ready, you may switch to the backend globally by the following command:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'pytorch'  # replace 'pytorch' by other backend names
-
-PyTorch Backend
-^^^^^^^^^^^^^^^^
-
-.. image:: ../images/pytorch_logo.png
-    :width: 250
-
-PyTorch is an open-source machine learning framework developed and maintained by Meta Inc./Linux Foundation.
-PyTorch is popular, especially among the deep learning research community.
-The PyTorch backend of ``pygmtools`` is designed to support GPU devices and facilitate deep learning research.
-
-Please follow `the official PyTorch installation guide <https://pytorch.org/get-started/locally/>`_.
-
-This package is developed with ``torch==1.6.0`` and shall work with any PyTorch versions ``>=1.6.0``.
-
-How to enable PyTorch backend:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> import torch
-    >>> pygm.BACKEND = 'pytorch'
-
-Jittor Backend
-^^^^^^^^^^^^^^^^
-
-.. image:: ../images/jittor_logo.png
-    :width: 300
-
-Jittor is an open-source deep learning platform based on just-in-time (JIT) for high performance, which is developed
-and maintained by the `CSCG group <https://cg.cs.tsinghua.edu.cn/>`_ from Tsinghua University.
-The Jittor backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
-
-Please follow `the official Jittor installation guide <https://github.com/Jittor/Jittor#install>`_.
-
-This package is developed with ``jittor==1.3.4.16`` and shall work with any Jittor versions ``>=1.3.4.16``.
-
-How to enable Jittor backend:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> import jittor
-    >>> pygm.BACKEND = 'jittor'
-
-Paddle Backend
-^^^^^^^^^^^^^^^^
-
-.. image:: ../images/paddle_logo.png
-    :width: 300
-
-PaddlePaddle is an open-source deep learning platform originated from industrial practice, which is developed and
-maintained by Baidu Inc.
-The Paddle backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
-
-Please follow `the official PaddlePaddle installation guide <https://www.paddlepaddle.org.cn/en/install/quick>`_.
-
-This package is developed with ``paddlepaddle==2.3.1`` and shall work with any PaddlePaddle versions ``>=2.3.1``.
-
-How to enable Paddle backend:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> import paddle
-    >>> pygm.BACKEND = 'paddle'
-
-Tensorflow Backend
-^^^^^^^^^^^^^^^^^^^
-
-.. image:: ../images/tensorflow_logo.png
-    :width: 300
-
-TensorFlow is an end-to-end open source platform for machine learning, which is developed by researchers and engineers
-working on the Google Brain team within Google's Machine Intelligence Research organization.
-The TensorFlow backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
-
-Please follow `the official Tensorflow installation guide <https://www.tensorflow.org/install>`_.
-
-This package is developed with ``Tensorflow==2.9.3`` and please mind the API compatibility among different Tensorflow
-versions.
-
-How to enable Tensorflow backend:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> import tensorflow
-    >>> pygm.BACKEND = 'tensorflow'
-
-Mindspore Backend
-^^^^^^^^^^^^^^^^^^^
-
-.. image:: ../images/mindspore_logo.png
-    :width: 300
-
-Mindspore is an open source deep learning platform developed and maintained by Huawei.
-The Mindspore backend of ``pygmtools`` is designed to support GPU devices and deep learning applications.
-
-Please follow `the official Mindspore installation guide <https://www.mindspore.cn/install>`_.
-
-This package is developed with ``mindspore==1.10.0`` and shall work with any Mindspore versions ``>=1.10.0``.
-
-How to enable Mindspore backend:
-
-::
-
-    >>> import pygmtools as pygm
-    >>> import mindspore
-    >>> pygm.BACKEND = 'mindspore'
-
-Example: Matching Isomorphic Graphs
-------------------------------------
+Example: Matching Isomorphic Graphs with ``numpy`` backend
+---------------------------------------------------------------
 
 Here we provide a basic example of matching two isomorphic graphs (i.e. two graphs have the same nodes and edges, but
-the node permutations are unknown).
+the node permutations are unknown) with the default ``numpy`` backend to show the usage of pygmtools.
 
 Step 0: Import packages and set backend
 

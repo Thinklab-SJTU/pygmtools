@@ -1,4 +1,4 @@
-# Contributing to pygmtools
+# Contributing to pygmtools: Developer Documentation
 
 First, thank you for contributing to ``pygmtools``! 
 
@@ -169,5 +169,30 @@ intuition to the reader on what the algorithm does. It is best to always
 start with a small paragraph with a hand-waving explanation of what the
 method does to the data.
 
+## Notes for Developers
+
+Here we show some ideas to help developers better understand our designs and contribute to ``pygmtools``.
+
+### Multiple Numerical Backends
+``pygmtools`` supports multiple backends including ``numpy``, ``pytorch``, ``jittor``, ``paddle``, aiming to 
+cater to a broader audience of researchers and practitioners. Each backend might have its strengths and performance 
+characteristics, making it beneficial to provide multiple options for users.
+
+### Unified API
+Despite supporting multiple backends, ``pygmtools`` could present a unified API for its functionalities. This makes it 
+easier for users to switch between different backends, enhancing its ease of use and maintainability.
+
+### Documentation-Driven Development
+We put a strong emphasis on comprehensive and user-friendly documentation. ``pygmtools`` should include usage examples, 
+tutorials, and clear explanations for each component, making it easier for users and contributors to understand and 
+utilize the toolkit.
+
+### Performance Benchmarks
+We compare the algorithms and numerical backends under various conditions, aiming to provide users with empirical data 
+to guide their selection of the most suitable solvers/algorithms for their specific use cases.
+
+### Open-Source Collaboration
+Emphasizing open-source principles and collaborative development is likely a key idea. We encourage open
+discussions, peer reviews, and community engagement to improve the quality and scope of the toolkit.
 
 This Contribution guide is strongly inpired by the one of the [scikit-learn](https://github.com/scikit-learn/scikit-learn) team.
