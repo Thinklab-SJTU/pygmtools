@@ -56,20 +56,6 @@ If your task involves matching two or more graphs, you should try the solvers in
 What is Graph Matching?
 ------------------------
 
-The Graph Matching Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Solving a real-world graph-matching problem may involve the following steps:
-
-1. Extract node/edge features from the graphs you want to match.
-2. Build an affinity matrix from node/edge features.
-3. Solve the graph matching problem with GM solvers.
-
-And Step 1 may be done by methods depending on your application, Step 2\&3 can be handled by ``pygmtools``.
-The following plot illustrates a standard deep graph matching pipeline.
-
-.. image:: ../images/QAP_illustration.png
-
 The Math Form
 ^^^^^^^^^^^^^^
 
@@ -102,6 +88,32 @@ The notations are explained as follows:
     node :math:`i` in graph 1 and node :math:`a` in graph 2;
   * The off-diagonal element :math:`\mathbf{K}_{i + a\times n_1, j + b\times n_1}` means the edge-wise affinity of
     edge :math:`ij` in graph 1 and edge :math:`ab` in graph 2.
+
+The Graph Matching Pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Solving a real-world graph-matching problem can be divided into the following parts:
+
+Part 1: Feature Extraction
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Extract node/edge features from the graphs you want to match. The features are used to measure the similarity
+between nodes/edges and to build the affinity matrix which is essential in graph matching problems.
+
+Part 2: Affinity Matrix Construction
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Build the affinity matrix from node/edge features and form the specific QAP problem.
+
+Part 3: QAP Problem Solving
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Solve the resulting QAP problem (graph matching problem) with GM solvers.
+
+Part 1 may be done by methods depending on your application, Part 2\&3 can be handled by ``pygmtools``.
+The following plot illustrates a standard deep graph matching pipeline.
+
+.. image:: ../images/QAP_illustration.png
 
 Graph Matching Best Practice
 -----------------------------
