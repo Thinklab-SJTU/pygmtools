@@ -23,11 +23,13 @@ import hashlib
 import shutil
 from tqdm.auto import tqdm
 import inspect
-import wget
 import numpy as np
 import pygmtools
 import networkx as nx
 import urllib.request
+import asyncio
+import aiohttp
+import async_timeout
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
@@ -1225,6 +1227,13 @@ def download(filename, url, md5=None, retries=5, to_cache=True):
     else:
         raise ValueError("The url should be string or list of string.")
         
+async def _asyncdownload(filename, url):
+    async with aiohttp.ClientSession() as session:
+        async with async_timeout.timeout(120):
+            async with session.get(url) as response:
+                with open(filename, 'wb') as file:
+                    async for data in response.content.iter_chunked(512):
+                        file.write(data)
         
 def _download(filename, url, md5, retries, to_cache=True):
     if retries <= 0:
@@ -1249,7 +1258,7 @@ def _download(filename, url, md5, retries, to_cache=True):
                 return download(filename, url, md5, retries - 1)
         elif retries % 3 == 2:
             try:
-                wget.download(url,out=filename)
+                asyncio.run(_asyncdownload(filename, url))
             except:
                 return _download(filename, url, md5, retries - 1)
         else:

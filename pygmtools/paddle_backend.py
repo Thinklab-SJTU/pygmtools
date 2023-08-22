@@ -234,7 +234,7 @@ def rrwm(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         # reweighted jump
         s = paddle.reshape(v, (batch_num, n2max, n1max)).transpose((0, 2, 1))
         s = beta * s / s.max(axis=1, keepdim=True).max(axis=2, keepdim=True)
-        v = alpha * paddle.reshape(sinkhorn(s, n1, n2, max_iter=sk_iter).transpose((0, 2, 1)),(batch_num, n1n2, 1)) + \
+        v = alpha * paddle.reshape(sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True).transpose((0, 2, 1)),(batch_num, n1n2, 1)) + \
             (1 - alpha) * v
         n = paddle.norm(v, p=1, axis=1, keepdim=True)
         v = paddle.matmul(v, 1 / n)

@@ -13,6 +13,7 @@ Contents of Official Documentation
    self
    guide/introduction
    guide/get_started
+   guide/numerical_backends
    guide/benchmark
    api/pygmtools
    auto_examples/index.rst
