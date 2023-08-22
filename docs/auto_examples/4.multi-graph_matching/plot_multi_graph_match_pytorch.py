@@ -75,7 +75,7 @@ def load_image(pth, resize, n_outlier):
 
 
 obj_resize = (256, 256)
-data_dir = '../data/mgm_data'
+data_dir = '../data/mgm_data/Car'
 n_images = 30
 n_outlier = 0
 img_list = []
@@ -85,7 +85,7 @@ perm_list = []
 
 for root, ds, fs in os.walk(data_dir):
     for i, f in enumerate(fs):
-        if f[:-3] == 'mat':
+        if f[-3:] == 'mat':
             continue
         if len(img_list) == n_images:
             break
@@ -113,8 +113,6 @@ for i in range(n_images):
     plt.subplot(1, n_images, i + 1)
     plt.title('Image {}'.format(i + 1))
     plot_image_with_graph(img_list[i], kpts_list[i])
-# plt.savefig('image')
-# plt.close()
 
 
 ##############################################################################
