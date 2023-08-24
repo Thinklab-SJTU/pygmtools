@@ -122,7 +122,7 @@ The images are resized to 256x256.
 
 
     obj_resize = (256, 256)
-    data_dir = '../data/mgm_data/Motorbike'
+    data_dir = '../data/mgm_data/Motorbike' # put any class of Willow images in this directory
     n_images = 30
     n_outlier = 0
     img_list = []
@@ -223,11 +223,21 @@ we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_tria
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 142-143
+.. GENERATED FROM PYTHON SOURCE LINES 142-153
 
 Build affinity matrix
+----------------------
+We follow the formulation of Quadratic Assignment Problem (QAP):
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-216
+.. math::
+
+    &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
+    s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+where the first step is to build the affinity matrix (:math:`\mathbf{K}`) for each pair of graphs
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 153-226
 
 .. code-block:: default
 
@@ -311,11 +321,11 @@ Build affinity matrix
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 217-218
+.. GENERATED FROM PYTHON SOURCE LINES 227-228
 
 Calculate accuracy, consistency, and affinity
 
-.. GENERATED FROM PYTHON SOURCE LINES 218-349
+.. GENERATED FROM PYTHON SOURCE LINES 228-359
 
 .. code-block:: default
 
@@ -457,11 +467,11 @@ Calculate accuracy, consistency, and affinity
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 350-351
+.. GENERATED FROM PYTHON SOURCE LINES 360-361
 
 Generate gt mat
 
-.. GENERATED FROM PYTHON SOURCE LINES 351-360
+.. GENERATED FROM PYTHON SOURCE LINES 361-370
 
 .. code-block:: default
 
@@ -481,11 +491,14 @@ Generate gt mat
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 361-362
+.. GENERATED FROM PYTHON SOURCE LINES 371-375
 
 Pairwise graph matching by RRWM
+-------------------------------------------
+See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 362-387
+
+.. GENERATED FROM PYTHON SOURCE LINES 375-400
 
 .. code-block:: default
 
@@ -535,11 +548,15 @@ Pairwise graph matching by RRWM
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 388-389
+.. GENERATED FROM PYTHON SOURCE LINES 401-406
 
-Multi graph matching: CAO-M
+Multi graph matching by multi-graph solvers
+------------------------------------------------
+ Multi graph matching: CAO-M
+ See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 389-412
+
+.. GENERATED FROM PYTHON SOURCE LINES 406-429
 
 .. code-block:: default
 
@@ -578,11 +595,13 @@ Multi graph matching: CAO-M
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 413-414
+.. GENERATED FROM PYTHON SOURCE LINES 430-433
 
 Multi graph matching: CAO-T
+See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 414-437
+
+.. GENERATED FROM PYTHON SOURCE LINES 433-456
 
 .. code-block:: default
 
@@ -621,11 +640,13 @@ Multi graph matching: CAO-T
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 438-439
+.. GENERATED FROM PYTHON SOURCE LINES 457-460
 
 Multi graph matching: MGM-Floyd-M
+See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 439-462
+
+.. GENERATED FROM PYTHON SOURCE LINES 460-483
 
 .. code-block:: default
 
@@ -664,11 +685,13 @@ Multi graph matching: MGM-Floyd-M
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 463-464
+.. GENERATED FROM PYTHON SOURCE LINES 484-487
 
 Multi graph matching: MGM-Floyd-T
+See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 464-485
+
+.. GENERATED FROM PYTHON SOURCE LINES 487-508
 
 .. code-block:: default
 
@@ -708,7 +731,7 @@ Multi graph matching: MGM-Floyd-T
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  0.604 seconds)
+   **Total running time of the script:** ( 2 minutes  9.460 seconds)
 
 
 .. _sphx_glr_download_auto_examples_4.multi-graph_matching_plot_multi_graph_match_paddle.py:

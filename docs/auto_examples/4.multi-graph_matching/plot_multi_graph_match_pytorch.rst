@@ -122,7 +122,7 @@ The images are resized to 256x256.
 
 
     obj_resize = (256, 256)
-    data_dir = '../data/mgm_data/Car'
+    data_dir = '../data/mgm_data/Car' # put any class of Willow images in this directory
     n_images = 30
     n_outlier = 0
     img_list = []
@@ -156,7 +156,7 @@ The images are resized to 256x256.
 Visualize the images and keypoints
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 103-118
+.. GENERATED FROM PYTHON SOURCE LINES 103-120
 
 .. code-block:: default
 
@@ -173,6 +173,8 @@ Visualize the images and keypoints
         plt.subplot(1, n_images, i + 1)
         plt.title('Image {}'.format(i + 1))
         plot_image_with_graph(img_list[i], kpts_list[i])
+    # plt.savefig('image')
+    # plt.close()
 
 
 
@@ -187,7 +189,7 @@ Visualize the images and keypoints
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 119-124
+.. GENERATED FROM PYTHON SOURCE LINES 121-126
 
 Build the graphs
 -----------------
@@ -195,7 +197,7 @@ Graph structures are built based on the geometric structure of the keypoint set.
 we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_triangulation>`_.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-139
+.. GENERATED FROM PYTHON SOURCE LINES 126-141
 
 .. code-block:: default
 
@@ -221,11 +223,21 @@ we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_tria
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 140-141
+.. GENERATED FROM PYTHON SOURCE LINES 142-153
 
 Build affinity matrix
+----------------------
+We follow the formulation of Quadratic Assignment Problem (QAP):
 
-.. GENERATED FROM PYTHON SOURCE LINES 141-214
+.. math::
+
+    &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
+    s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+where the first step is to build the affinity matrix (:math:`\mathbf{K}`) for each pair of graphs
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 153-226
 
 .. code-block:: default
 
@@ -309,11 +321,11 @@ Build affinity matrix
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 215-216
+.. GENERATED FROM PYTHON SOURCE LINES 227-228
 
 Calculate accuracy, consistency, and affinity
 
-.. GENERATED FROM PYTHON SOURCE LINES 216-346
+.. GENERATED FROM PYTHON SOURCE LINES 228-358
 
 .. code-block:: default
 
@@ -454,11 +466,11 @@ Calculate accuracy, consistency, and affinity
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 347-348
+.. GENERATED FROM PYTHON SOURCE LINES 359-360
 
 Generate gt mat
 
-.. GENERATED FROM PYTHON SOURCE LINES 348-357
+.. GENERATED FROM PYTHON SOURCE LINES 360-369
 
 .. code-block:: default
 
@@ -478,11 +490,14 @@ Generate gt mat
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 358-359
+.. GENERATED FROM PYTHON SOURCE LINES 370-374
 
 Pairwise graph matching by RRWM
+-------------------------------------------
+See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 359-384
+
+.. GENERATED FROM PYTHON SOURCE LINES 374-399
 
 .. code-block:: default
 
@@ -523,11 +538,15 @@ Pairwise graph matching by RRWM
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 385-386
+.. GENERATED FROM PYTHON SOURCE LINES 400-405
 
-Multi graph matching: CAO-M
+Multi graph matching by multi-graph solvers
+------------------------------------------------
+ Multi graph matching: CAO-M
+ See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 386-409
+
+.. GENERATED FROM PYTHON SOURCE LINES 405-428
 
 .. code-block:: default
 
@@ -566,11 +585,13 @@ Multi graph matching: CAO-M
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 410-411
+.. GENERATED FROM PYTHON SOURCE LINES 429-432
 
 Multi graph matching: CAO-T
+See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 411-434
+
+.. GENERATED FROM PYTHON SOURCE LINES 432-455
 
 .. code-block:: default
 
@@ -609,11 +630,13 @@ Multi graph matching: CAO-T
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 435-436
+.. GENERATED FROM PYTHON SOURCE LINES 456-459
 
 Multi graph matching: MGM-Floyd-M
+See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 436-459
+
+.. GENERATED FROM PYTHON SOURCE LINES 459-482
 
 .. code-block:: default
 
@@ -652,11 +675,13 @@ Multi graph matching: MGM-Floyd-M
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 460-461
+.. GENERATED FROM PYTHON SOURCE LINES 483-486
 
 Multi graph matching: MGM-Floyd-T
+See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 461-483
+
+.. GENERATED FROM PYTHON SOURCE LINES 486-508
 
 .. code-block:: default
 
@@ -697,7 +722,7 @@ Multi graph matching: MGM-Floyd-T
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  23.750 seconds)
+   **Total running time of the script:** ( 0 minutes  25.334 seconds)
 
 
 .. _sphx_glr_download_auto_examples_4.multi-graph_matching_plot_multi_graph_match_pytorch.py:

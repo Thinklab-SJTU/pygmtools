@@ -5,11 +5,7 @@ Examples Gallery
 
 Below is the gallery of ``pygmtools`` examples. We build the examples from the introduction of graph matching
 to the variants of graph matching, and finally, we provide examples on the applications of graph matching.
-In each topic, we provide examples on different numerical backends (e.g., pytorch, numpy, paddle, jittor).
-
-.. warning::
-
-    The examples are under construction. Will be updated very soon.
+In each topic, we provide examples on different numerical backends (e.g., pytorch, numpy, paddle, jittor, tensorflow, mindspore).
 
 
 
@@ -328,14 +324,14 @@ Variant of Graph Matching: Multi-Graph Matching
 
 .. only:: html
 
-  .. image:: /auto_examples/4.multi-graph_matching/images/thumb/sphx_glr_plot_multi_graph_match_pytorch_thumb.png
+  .. image:: /auto_examples/4.multi-graph_matching/images/thumb/sphx_glr_plot_multi_graph_match_numpy_thumb.png
     :alt:
 
-  :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_pytorch.py`
+  :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_numpy.py`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">PyTorch Backend Example: Multi-Graph Matching</div>
+      <div class="sphx-glr-thumbnail-title">Numpy Backend Example: Multi-Graph Matching</div>
     </div>
 
 
@@ -345,14 +341,14 @@ Variant of Graph Matching: Multi-Graph Matching
 
 .. only:: html
 
-  .. image:: /auto_examples/4.multi-graph_matching/images/thumb/sphx_glr_plot_multi_graph_match_numpy_thumb.png
+  .. image:: /auto_examples/4.multi-graph_matching/images/thumb/sphx_glr_plot_multi_graph_match_pytorch_thumb.png
     :alt:
 
-  :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_numpy.py`
+  :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_pytorch.py`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Numpy Backend Example: Multi-Graph Matching</div>
+      <div class="sphx-glr-thumbnail-title">PyTorch Backend Example: Multi-Graph Matching</div>
     </div>
 
 
@@ -382,8 +378,8 @@ Variant of Graph Matching: Multi-Graph Matching
    :hidden:
 
    /auto_examples/4.multi-graph_matching/plot_multi_graph_match_jittor
-   /auto_examples/4.multi-graph_matching/plot_multi_graph_match_pytorch
    /auto_examples/4.multi-graph_matching/plot_multi_graph_match_numpy
+   /auto_examples/4.multi-graph_matching/plot_multi_graph_match_pytorch
    /auto_examples/4.multi-graph_matching/plot_multi_graph_match_paddle
 
 Application of Graph Matching: Model Fusion by Graph Matching

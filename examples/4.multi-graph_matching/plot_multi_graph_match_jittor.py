@@ -75,7 +75,7 @@ def load_image(pth, resize, n_outlier):
 
 
 obj_resize = (256, 256)
-data_dir = '../data/mgm_data/Face'
+data_dir = '../data/mgm_data/Face' # put any class of Willow images in this directory
 n_images = 30
 n_outlier = 0
 img_list = []
@@ -140,6 +140,16 @@ for i in range(n_images):
 
 ##############################################################################
 # Build affinity matrix
+# ----------------------
+# We follow the formulation of Quadratic Assignment Problem (QAP):
+#
+# .. math::
+#
+#     &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
+#     s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+#
+# where the first step is to build the affinity matrix (:math:`\mathbf{K}`) for each pair of graphs
+#
 def get_feature(n, points, adj):
     """
     :param n: points # of graph
@@ -358,6 +368,9 @@ for i in range(m):
 
 ##############################################################################
 # Pairwise graph matching by RRWM
+# -------------------------------------------
+# See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
+#
 a = 0
 b = 12
 tic = time.time()
@@ -384,7 +397,11 @@ for i in range(X.shape[0]):
 # plt.close()
 
 ##############################################################################
+# Multi graph matching by multi-graph solvers
+#------------------------------------------------
 # Multi graph matching: CAO-M
+# See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
+#
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 cao_m_mat = pygm.multi_graph_solvers.cao(affinity_mat, base_mat, mode='memory')
@@ -410,6 +427,8 @@ for i in range(X.shape[0]):
 
 ##############################################################################
 # Multi graph matching: CAO-T
+# See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
+#
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 cao_t_mat = pygm.multi_graph_solvers.cao(affinity_mat, base_mat, mode='time')
@@ -435,6 +454,8 @@ for i in range(X.shape[0]):
 
 ##############################################################################
 # Multi graph matching: MGM-Floyd-M
+# See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
+#
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 floyd_m_mat = pygm.multi_graph_solvers.mgm_floyd(affinity_mat, base_mat, param_lambda=0.4, mode='memory')
@@ -460,6 +481,8 @@ for i in range(X.shape[0]):
 
 ##############################################################################
 # Multi graph matching: MGM-Floyd-T
+# See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
+#
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 floyd_t_mat = pygm.multi_graph_solvers.mgm_floyd(affinity_mat, base_mat, param_lambda=0.6, mode='time')

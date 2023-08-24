@@ -122,7 +122,7 @@ The images are resized to 256x256.
 
 
     obj_resize = (256, 256)
-    data_dir = '../data/mgm_data/Face'
+    data_dir = '../data/mgm_data/Face' # put any class of Willow images in this directory
     n_images = 30
     n_outlier = 0
     img_list = []
@@ -223,11 +223,21 @@ we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_tria
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 142-143
+.. GENERATED FROM PYTHON SOURCE LINES 142-153
 
 Build affinity matrix
+----------------------
+We follow the formulation of Quadratic Assignment Problem (QAP):
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-216
+.. math::
+
+    &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
+    s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+where the first step is to build the affinity matrix (:math:`\mathbf{K}`) for each pair of graphs
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 153-226
 
 .. code-block:: default
 
@@ -311,11 +321,11 @@ Build affinity matrix
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 217-218
+.. GENERATED FROM PYTHON SOURCE LINES 227-228
 
 Calculate accuracy, consistency, and affinity
 
-.. GENERATED FROM PYTHON SOURCE LINES 218-348
+.. GENERATED FROM PYTHON SOURCE LINES 228-358
 
 .. code-block:: default
 
@@ -456,11 +466,11 @@ Calculate accuracy, consistency, and affinity
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 349-350
+.. GENERATED FROM PYTHON SOURCE LINES 359-360
 
 Generate gt mat
 
-.. GENERATED FROM PYTHON SOURCE LINES 350-359
+.. GENERATED FROM PYTHON SOURCE LINES 360-369
 
 .. code-block:: default
 
@@ -480,11 +490,14 @@ Generate gt mat
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 360-361
+.. GENERATED FROM PYTHON SOURCE LINES 370-374
 
 Pairwise graph matching by RRWM
+-------------------------------------------
+See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 361-386
+
+.. GENERATED FROM PYTHON SOURCE LINES 374-399
 
 .. code-block:: default
 
@@ -525,11 +538,15 @@ Pairwise graph matching by RRWM
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 387-388
+.. GENERATED FROM PYTHON SOURCE LINES 400-405
 
-Multi graph matching: CAO-M
+Multi graph matching by multi-graph solvers
+------------------------------------------------
+ Multi graph matching: CAO-M
+ See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 388-411
+
+.. GENERATED FROM PYTHON SOURCE LINES 405-428
 
 .. code-block:: default
 
@@ -568,11 +585,13 @@ Multi graph matching: CAO-M
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 412-413
+.. GENERATED FROM PYTHON SOURCE LINES 429-432
 
 Multi graph matching: CAO-T
+See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 413-436
+
+.. GENERATED FROM PYTHON SOURCE LINES 432-455
 
 .. code-block:: default
 
@@ -611,11 +630,13 @@ Multi graph matching: CAO-T
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 437-438
+.. GENERATED FROM PYTHON SOURCE LINES 456-459
 
 Multi graph matching: MGM-Floyd-M
+See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 438-461
+
+.. GENERATED FROM PYTHON SOURCE LINES 459-482
 
 .. code-block:: default
 
@@ -654,11 +675,13 @@ Multi graph matching: MGM-Floyd-M
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 462-463
+.. GENERATED FROM PYTHON SOURCE LINES 483-486
 
 Multi graph matching: MGM-Floyd-T
+See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
-.. GENERATED FROM PYTHON SOURCE LINES 463-485
+
+.. GENERATED FROM PYTHON SOURCE LINES 486-508
 
 .. code-block:: default
 
@@ -699,7 +722,7 @@ Multi graph matching: MGM-Floyd-T
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  24.427 seconds)
+   **Total running time of the script:** ( 1 minutes  25.270 seconds)
 
 
 .. _sphx_glr_download_auto_examples_4.multi-graph_matching_plot_multi_graph_match_jittor.py:
