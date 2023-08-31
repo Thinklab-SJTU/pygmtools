@@ -1,7 +1,7 @@
 # coding: utf-8
 """
 =============================================
-PyTorch Backend Example: Multi-Graph Matching
+Paddle Backend Example: Multi-Graph Matching
 =============================================
 
 This example shows how to match multiple graphs. Multi-graph matching means that more than two graphs are jointly
@@ -10,6 +10,7 @@ matched.
 
 # Author: Zetian Jiang <maple_jzt@sjtu.edu.cn>
 #         Ziao Guo <ziao.guo@sjtu.edu.cn>
+#         Wenzheng Pan <pwz1121@sjtu.edu.cn>
 #
 # License: Mulan PSL v2 License
 # sphinx_gallery_thumbnail_number = 6
@@ -29,7 +30,7 @@ import os
 import time
 import math
 import copy
-import torch  # pytorch backend
+import paddle as pd  # paddle backend
 import itertools
 import numpy as np
 import pygmtools as pygm
@@ -40,8 +41,7 @@ import scipy.spatial as spa  # for Delaunay triangulation
 from PIL import Image
 from matplotlib.patches import ConnectionPatch # for plotting matching result
 
-pygm.BACKEND = 'pytorch'  # set default backend for pygmtools
-
+pygm.BACKEND = 'paddle'  # set default backend for pygmtools
 
 ##############################################################################
 # Load the images
@@ -56,26 +56,26 @@ def load_image(pth, resize, n_outlier):
     # load images
     img = Image.open(pth + '.png')
     # load key points' coordinates
-    kpts = torch.tensor(sio.loadmat(pth + '.mat')['pts_coord'])
+    kpts = pd.to_tensor(sio.loadmat(pth + '.mat')['pts_coord'])
     kpts[0] = kpts[0] * resize[0] / img.size[0]
     kpts[1] = kpts[1] * resize[1] / img.size[1]
     img = img.resize(resize, resample=Image.BILINEAR)
     # generate random outlier
     if n_outlier != 0:
-        random_kpts = torch.rand((2, n_outlier))
+        random_kpts = pd.rand((2, n_outlier))
         random_kpts[0] = random_kpts[0] * resize[0]
         random_kpts[1] = random_kpts[1] * resize[1]
-        kpts = torch.cat([kpts, random_kpts], dim=1)
+        kpts = pd.cat([kpts, random_kpts], axis=1)
     # random shuffle the key points
     perm = np.eye(kpts.shape[1])
     # np.random.shuffle(perm)
-    # perm = torch.tensor(perm)
-    # kpts = torch.matmul(kpts, perm)
+    # perm = pd.to_tensor(perm)
+    # kpts = pd.matmul(kpts, perm)
     return img, kpts, perm
 
 
 obj_resize = (256, 256)
-data_dir = '../data/mgm_data/Car' # put any class of Willow images in this directory
+data_dir = '../data/mgm_data/Motorbike' # put any class of Willow images in this directory
 n_images = 30
 n_outlier = 0
 img_list = []
@@ -104,7 +104,7 @@ def plot_image_with_graph(img, kpt, A=None):
     plt.imshow(img)
     plt.scatter(kpt[0], kpt[1], c='w', edgecolors='k')
     if A is not None:
-        for idx in torch.nonzero(A, as_tuple=False):
+        for idx in pd.nonzero(A, as_tuple=False):
             plt.plot((kpt[0, idx[0]], kpt[0, idx[1]]), (kpt[1, idx[0]], kpt[1, idx[1]]), 'k-')
 
 
@@ -125,7 +125,7 @@ for i in range(n_images):
 #
 def delaunay_triangulation(kpt):
     d = spa.Delaunay(kpt.numpy().transpose())
-    A = torch.zeros(len(kpt[0]), len(kpt[0]))
+    A = pd.zeros((len(kpt[0]), len(kpt[0])))
     for simplex in d.simplices:
         for pair in itertools.permutations(simplex, 2):
             A[pair] = 1
@@ -153,15 +153,15 @@ for i in range(n_images):
 def get_feature(n, points, adj):
     """
     :param n: points # of graph
-    :param points: torch tensor, (n, 2)
-    :param adj: torch tensor, (n, n)
+    :param points: pd tensor, (n, 2)
+    :param adj: pd tensor, (n, n)
     :return: edge feat, angle feat
     """
-    points_1 = points.reshape(n, 1, 2).repeat(1, n, 1)
-    points_2 = points.reshape(1, n, 2).repeat(n, 1, 1)
-    edge_feat = torch.sqrt(torch.sum((points_1 - points_2) ** 2, dim=2))
-    edge_feat = edge_feat / torch.max(edge_feat)
-    angle_feat = torch.atan((points_1[:, :, 1] - points_2[:, :, 1]) / (points_1[:, :, 0] - points_2[:, :, 0] + 1e-8))
+    points_1 = points.reshape((n, 1, 2)).tile((1, n, 1))
+    points_2 = points.reshape((1, n, 2)).tile((n, 1, 1))
+    edge_feat = pd.sqrt(pd.sum((points_1 - points_2) ** 2, axis=2))
+    edge_feat = edge_feat / pd.max(edge_feat)
+    angle_feat = pd.atan((points_1[:, :, 1] - points_2[:, :, 1]) / (points_1[:, :, 0] - points_2[:, :, 0] + 1e-8))
     angle_feat = 2 * angle_feat / math.pi
 
     return edge_feat, angle_feat
@@ -171,21 +171,21 @@ def get_pair_affinity(edge_feat_1, angle_feat_1, edge_feat_2, angle_feat_2, adj1
     n1, n2 = edge_feat_1.shape[0], edge_feat_2.shape[0]
     assert n1 == angle_feat_1.shape[0] and n2 == angle_feat_2.shape[0]
 
-    left_adj = adj1.reshape(n1, n1, 1, 1).repeat(1, 1, n2, n2)
-    right_adj = adj2.reshape(1, 1, n2, n2).repeat(n1, n1, 1, 1)
+    left_adj = adj1.reshape((n1, n1, 1, 1)).tile((1, 1, n2, n2))
+    right_adj = adj2.reshape((1, 1, n2, n2)).tile((n1, n1, 1, 1))
     adj = left_adj * right_adj
 
-    left_edge_feat = edge_feat_1.reshape(n1, n1, 1, 1, -1).repeat(1, 1, n2, n2, 1)
-    right_edge_feat = edge_feat_2.reshape(1, 1, n2, n2, -1).repeat(n1, n1, 1, 1, 1)
-    edge_weight = torch.sqrt(torch.sum((left_edge_feat - right_edge_feat) ** 2, dim=-1))
+    left_edge_feat = edge_feat_1.reshape((n1, n1, 1, 1, -1)).tile((1, 1, n2, n2, 1))
+    right_edge_feat = edge_feat_2.reshape((1, 1, n2, n2, -1)).tile((n1, n1, 1, 1, 1))
+    edge_weight = pd.sqrt(pd.sum((left_edge_feat - right_edge_feat) ** 2, axis=-1))
 
-    left_angle_feat = angle_feat_1.reshape(n1, n1, 1, 1, -1).repeat(1, 1, n2, n2, 1)
-    right_angle_feat = angle_feat_2.reshape(1, 1, n2, n2, -1).repeat(n1, n1, 1, 1, 1)
-    angle_weight = torch.sqrt(torch.sum((left_angle_feat - right_angle_feat) ** 2, dim=-1))
+    left_angle_feat = angle_feat_1.reshape((n1, n1, 1, 1, -1)).tile((1, 1, n2, n2, 1))
+    right_angle_feat = angle_feat_2.reshape((1, 1, n2, n2, -1)).tile((n1, n1, 1, 1, 1))
+    angle_weight = pd.sqrt(pd.sum((left_angle_feat - right_angle_feat) ** 2, axis=-1))
 
     affinity = edge_weight * 0.9 + angle_weight * 0.1
-    affinity = torch.exp(-affinity / 0.1) * adj
-    affinity = affinity.transpose(1, 2)
+    affinity = pd.exp(-affinity / 0.1) * adj
+    affinity = affinity.transpose((0, 2, 1, 3))
 
     return affinity
 
@@ -193,7 +193,7 @@ def get_pair_affinity(edge_feat_1, angle_feat_1, edge_feat_2, angle_feat_2, adj1
 def generate_affinity_matrix(n_points, points_list, adj_list):
     m = len(n_points)
     n_max = max(n_points)
-    affinity = torch.zeros(m, m, n_max, n_max, n_max, n_max)
+    affinity = pd.zeros((m, m, n_max, n_max, n_max, n_max))
 
     edge_feat_list = []
     angle_feat_list = []
@@ -209,18 +209,18 @@ def generate_affinity_matrix(n_points, points_list, adj_list):
                                           angle_feat_list[j],
                                           adj_list[i],
                                           adj_list[j])
-        affinity[i, j] = pair_affinity
+        affinity[i, j] = pd.cast(pair_affinity, 'float32')
 
-    affinity = affinity.permute(0, 1, 3, 2, 5, 4).reshape(m, m, n_max * n_max, n_max * n_max)
+    affinity = affinity.transpose((0, 1, 3, 2, 5, 4)).reshape((m, m, n_max * n_max, n_max * n_max))
     return affinity
 
 
 affinity_mat = generate_affinity_matrix(n_kpts_list, kpts_list, adj_list)
 
 m = len(kpts_list)
-n = int(torch.max(torch.tensor(n_kpts_list)))
-ns_src = torch.ones(m * m).int() * n
-ns_tgt = torch.ones(m * m).int() * n
+n = int(pd.max(pd.to_tensor(n_kpts_list)))
+ns_src = pd.ones(m * m, dtype=int) * n
+ns_tgt = pd.ones(m * m, dtype=int) * n
 
 
 ##############################################################################
@@ -232,29 +232,30 @@ def cal_accuracy(mat, gt_mat, n):
     for i in range(m):
         for j in range(m):
             _mat, _gt_mat = mat[i, j], gt_mat[i, j]
-            row_sum = torch.sum(_gt_mat, dim=0)
-            col_sum = torch.sum(_gt_mat, dim=1)
+            row_sum = pd.sum(_gt_mat, axis=0)
+            col_sum = pd.sum(_gt_mat, axis=1)
             row_idx = [k for k in range(n) if row_sum[k] != 0]
             col_idx = [k for k in range(n) if col_sum[k] != 0]
-            _mat = _mat[row_idx, :]
-            _mat = _mat[:, col_idx]
-            _gt_mat = _gt_mat[row_idx, :]
-            _gt_mat = _gt_mat[:, col_idx]
-            acc += 1 - torch.sum(torch.abs(_mat - _gt_mat)) / 2 / (n - n_outlier)
+            # print(row_idx)
+            _mat = pd.index_select(_mat, pd.to_tensor(row_idx), axis=0)
+            _mat = pd.index_select(_mat, pd.to_tensor(col_idx), axis=1)
+            _gt_mat = pd.index_select(_gt_mat, pd.to_tensor(row_idx), axis=0)
+            _gt_mat = pd.index_select(_gt_mat, pd.to_tensor(col_idx), axis=1)
+            acc += 1 - pd.sum(pd.abs(_mat - _gt_mat)) / 2 / (n - n_outlier)
     return acc / (m * m)
 
 
 def cal_consistency(mat, gt_mat, m, n):
-    return torch.mean(get_batch_pc_opt(mat))
+    return pd.mean(get_batch_pc_opt(mat))
 
 
 def cal_affinity(X, X_gt, K, m, n):
-    X_batch = X.reshape(-1, n, n)
-    X_gt_batch = X_gt.reshape(-1, n, n)
-    K_batch = K.reshape(-1, n * n, n * n)
+    X_batch = X.reshape((-1, n, n))
+    X_gt_batch = X_gt.reshape((-1, n, n))
+    K_batch = K.reshape((-1, n * n, n * n))
     affinity = get_batch_affinity(X_batch, K_batch)
     affinity_gt = get_batch_affinity(X_gt_batch, K_batch)
-    return torch.mean(affinity / (affinity_gt + 1e-8))
+    return pd.mean(affinity / (affinity_gt + 1e-8))
 
 
 def get_batch_affinity(X, K, norm=1):
@@ -265,10 +266,10 @@ def get_batch_affinity(X, K, norm=1):
     :param norm: normalization term
     :return: affinity_score (b, 1, 1)
     """
-    b, n, _ = X.size()
-    vx = X.transpose(1, 2).reshape(b, -1, 1)  # (b, n*n, 1)
-    vxt = vx.transpose(1, 2)  # (b, 1, n*n)
-    affinity = torch.bmm(torch.bmm(vxt, K), vx) / norm
+    b, n, _ = X.shape
+    vx = X.transpose((0, 2, 1)).reshape((b, -1, 1))  # (b, n*n, 1)
+    vxt = vx.transpose((0, 2, 1))  # (b, 1, n*n)
+    affinity = pd.bmm(pd.bmm(vxt, K), vx) / norm
     return affinity
 
 
@@ -280,10 +281,10 @@ def get_single_affinity(X, K, norm=1):
     :param norm: normalization term
     :return: affinity_score scale
     """
-    n, _ = X.size()
-    vx = X.transpose(0, 1).reshape(-1, 1)
-    vxt = vx.transpose(0, 1)
-    affinity = torch.matmul(torch.matmul(vxt, K), vx) / norm
+    n, _ = X.shape
+    vx = X.transpose((0, 1)).reshape((-1, 1))
+    vxt = vx.transpose((0, 1))
+    affinity = pd.matmul(pd.matmul(vxt, K), vx) / norm
     return affinity
 
 
@@ -295,13 +296,13 @@ def get_single_pc(X, i, j, Xij=None):
     :param Xij: (n, n) matching
     :return: the consistency of X_ij
     """
-    m, _, n, _ = X.size()
+    m, _, n, _ = X.shape
     if Xij is None:
         Xij = X[i, j]
     pair_con = 0
     for k in range(m):
-        X_combo = torch.matmul(X[i, k], X[k, j])
-        pair_con += torch.sum(torch.abs(Xij - X_combo)) / (2 * n)
+        X_combo = pd.matmul(X[i, k], X[k, j])
+        pair_con += pd.sum(pd.abs(Xij - X_combo)) / (2 * n)
     return 1 - pair_con / m
 
 
@@ -312,13 +313,13 @@ def get_single_pc_opt(X, i, j, Xij=None):
     :param j: index
     :return: the consistency of X_ij
     """
-    m, _, n, _ = X.size()
+    m, _, n, _ = X.shape
     if Xij is None:
         Xij = X[i, j]
-    X1 = X[i, :].reshape(-1, n, n)
-    X2 = X[:, j].reshape(-1, n, n)
-    X_combo = torch.bmm(X1, X2)
-    pair_con = 1 - torch.sum(torch.abs(Xij - X_combo)) / (2 * n * m)
+    X1 = X[i, :].reshape((-1, n, n))
+    X2 = X[:, j].reshape((-1, n, n))
+    X_combo = pd.bmm(X1, X2)
+    pair_con = 1 - pd.sum(pd.abs(Xij - X_combo)) / (2 * n * m)
     return pair_con
 
 
@@ -327,7 +328,7 @@ def get_batch_pc(X):
     :param X: (m, m, n, n) all the matching results
     :return: (m, m) the consistency of X
     """
-    pair_con = torch.zeros(m, m).cuda()
+    pair_con = pd.zeros((m, m))
     for i in range(m):
         for j in range(m):
             pair_con[i, j] = get_single_pc_opt(X, i, j)
@@ -339,12 +340,12 @@ def get_batch_pc_opt(X):
     :param X: (m, m, n, n) all the matching results
     :return: (m, m) the consistency of X
     """
-    m, _, n, _ = X.size()
-    X1 = X.reshape(m, 1, m, n, n).repeat(1, m, 1, 1, 1).reshape(-1, n, n)  # X1[i, j, k] = X[i, k]
-    X2 = X.reshape(1, m, m, n, n).repeat(m, 1, 1, 1, 1).transpose(1, 2).reshape(-1, n, n)  # X2[i, j, k] = X[k, j]
-    X_combo = torch.bmm(X1, X2).reshape(m, m, m, n, n)
-    X_ori = X.reshape(m, m, 1, n, n).repeat(1, 1, m, 1, 1)
-    pair_con = 1 - torch.sum(torch.abs(X_combo - X_ori), dim=(2, 3, 4)) / (2 * n * m)
+    m, _, n, _ = X.shape
+    X1 = X.reshape((m, 1, m, n, n)).tile((1, m, 1, 1, 1)).reshape((-1, n, n))  # X1[i, j, k] = X[i, k]
+    X2 = X.reshape((1, m, m, n, n)).tile((m, 1, 1, 1, 1)).transpose((0, 2, 1, 3, 4)).reshape((-1, n, n))  # X2[i, j, k] = X[k, j]
+    X_combo = pd.bmm(X1, X2).reshape((m, m, m, n, n))
+    X_ori = X.reshape((m, m, 1, n, n)).tile((1, 1, m, 1, 1))
+    pair_con = 1 - pd.sum(pd.abs(X_combo - X_ori), axis=(2, 3, 4)) / (2 * n * m)
     return pair_con
 
 
@@ -357,10 +358,10 @@ def eval(mat, gt_mat, affinity, m, n):
 
 ##############################################################################
 # Generate gt mat
-gt_mat = torch.zeros(m, m, n, n)
+gt_mat = pd.zeros((m, m, n, n))
 for i in range(m):
     for j in range(m):
-        gt_mat[i, j] = torch.tensor(np.matmul(perm_list[i].transpose(0, 1), perm_list[j]))
+        gt_mat[i, j] = pd.to_tensor(np.matmul(perm_list[i].transpose((0, 1)), perm_list[j]), dtype='float32')
 # print(perm_list[0])
 # print(perm_list[1])
 # print(gt_mat[1, 2])
@@ -374,10 +375,10 @@ for i in range(m):
 a = 0
 b = 12
 tic = time.time()
-rrwm_mat = pygm.classic_solvers.rrwm(affinity_mat.reshape(-1, n * n, n * n), ns_src, ns_tgt)
+rrwm_mat = pygm.classic_solvers.rrwm(affinity_mat.reshape((-1, n * n, n * n)), ns_src, ns_tgt)
 rrwm_mat = pygm.linear_solvers.hungarian(rrwm_mat)
 toc = time.time()
-rrwm_mat = rrwm_mat.reshape(m, m, n, n)
+rrwm_mat = rrwm_mat.reshape((m, m, n, n))
 rrwm_acc, rrwm_src, rrwm_con = eval(rrwm_mat, gt_mat, affinity_mat, m, n)
 rrwm_tim = toc - tic
 
@@ -389,7 +390,7 @@ ax2 = plt.subplot(1, 2, 2)
 plot_image_with_graph(img_list[b], kpts_list[b], adj_list[b])
 X = rrwm_mat[a, b]
 for i in range(X.shape[0]):
-    j = torch.argmax(X[i]).item()
+    j = pd.argmax(X[i]).item()
     con = ConnectionPatch(xyA=kpts_list[a][:, i], xyB=kpts_list[b][:, j], coordsA="data", coordsB="data",
                           axesA=ax1, axesB=ax2, color="red" if i != j else "green")
     plt.gca().add_artist(con)
@@ -405,7 +406,7 @@ for i in range(X.shape[0]):
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 cao_m_mat = pygm.multi_graph_solvers.cao(affinity_mat, base_mat, mode='memory')
-cao_m_mat = pygm.linear_solvers.hungarian(cao_m_mat.reshape(-1, n, n)).reshape(m, m, n, n)
+cao_m_mat = pygm.linear_solvers.hungarian(cao_m_mat.reshape((-1, n, n))).reshape((m, m, n, n))
 toc = time.time()
 cao_m_acc, cao_m_src, cao_m_con = eval(cao_m_mat, gt_mat, affinity_mat, m, n)
 cao_m_tim = toc - tic + rrwm_tim
@@ -418,7 +419,7 @@ ax2 = plt.subplot(1, 2, 2)
 plot_image_with_graph(img_list[b], kpts_list[b], adj_list[b])
 X = cao_m_mat[a, b]
 for i in range(X.shape[0]):
-    j = torch.argmax(X[i]).item()
+    j = pd.argmax(X[i]).item()
     con = ConnectionPatch(xyA=kpts_list[a][:, i], xyB=kpts_list[b][:, j], coordsA="data", coordsB="data",
                           axesA=ax1, axesB=ax2, color="red" if i != j else "green")
     plt.gca().add_artist(con)
@@ -432,7 +433,7 @@ for i in range(X.shape[0]):
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 cao_t_mat = pygm.multi_graph_solvers.cao(affinity_mat, base_mat, mode='time')
-cao_t_mat = pygm.linear_solvers.hungarian(cao_t_mat.reshape(-1, n, n)).reshape(m, m, n, n)
+cao_t_mat = pygm.linear_solvers.hungarian(cao_t_mat.reshape((-1, n, n))).reshape((m, m, n, n))
 toc = time.time()
 cao_t_acc, cao_t_src, cao_t_con = eval(cao_t_mat, gt_mat, affinity_mat, m, n)
 cao_t_tim = toc - tic + rrwm_tim
@@ -445,7 +446,7 @@ ax2 = plt.subplot(1, 2, 2)
 plot_image_with_graph(img_list[b], kpts_list[b], adj_list[b])
 X = cao_t_mat[a, b]
 for i in range(X.shape[0]):
-    j = torch.argmax(X[i]).item()
+    j = pd.argmax(X[i]).item()
     con = ConnectionPatch(xyA=kpts_list[a][:, i], xyB=kpts_list[b][:, j], coordsA="data", coordsB="data",
                           axesA=ax1, axesB=ax2, color="red" if i != j else "green")
     plt.gca().add_artist(con)
@@ -459,7 +460,7 @@ for i in range(X.shape[0]):
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 floyd_m_mat = pygm.multi_graph_solvers.mgm_floyd(affinity_mat, base_mat, param_lambda=0.4, mode='memory')
-floyd_m_mat = pygm.linear_solvers.hungarian(floyd_m_mat.reshape(-1, n, n)).reshape(m, m, n, n)
+floyd_m_mat = pygm.linear_solvers.hungarian(floyd_m_mat.reshape((-1, n, n))).reshape((m, m, n, n))
 toc = time.time()
 floyd_m_acc, floyd_m_src, floyd_m_con = eval(floyd_m_mat, gt_mat, affinity_mat, m, n)
 floyd_m_tim = toc - tic + rrwm_tim
@@ -472,7 +473,7 @@ ax2 = plt.subplot(1, 2, 2)
 plot_image_with_graph(img_list[b], kpts_list[b], adj_list[b])
 X = floyd_m_mat[a, b]
 for i in range(X.shape[0]):
-    j = torch.argmax(X[i]).item()
+    j = pd.argmax(X[i]).item()
     con = ConnectionPatch(xyA=kpts_list[a][:, i], xyB=kpts_list[b][:, j], coordsA="data", coordsB="data",
                           axesA=ax1, axesB=ax2, color="red" if i != j else "green")
     plt.gca().add_artist(con)
@@ -486,7 +487,7 @@ for i in range(X.shape[0]):
 base_mat = copy.deepcopy(rrwm_mat)
 tic = time.time()
 floyd_t_mat = pygm.multi_graph_solvers.mgm_floyd(affinity_mat, base_mat, param_lambda=0.6, mode='time')
-floyd_t_mat = pygm.linear_solvers.hungarian(floyd_t_mat.reshape(-1, n, n)).reshape(m, m, n, n)
+floyd_t_mat = pygm.linear_solvers.hungarian(floyd_t_mat.reshape((-1, n, n))).reshape((m, m, n, n))
 toc = time.time()
 floyd_t_acc, floyd_t_src, floyd_t_con = eval(floyd_t_mat, gt_mat, affinity_mat, m, n)
 floyd_t_tim = toc - tic + rrwm_tim
@@ -499,7 +500,7 @@ ax2 = plt.subplot(1, 2, 2)
 plot_image_with_graph(img_list[b], kpts_list[b], adj_list[b])
 X = floyd_t_mat[a, b]
 for i in range(X.shape[0]):
-    j = torch.argmax(X[i]).item()
+    j = pd.argmax(X[i]).item()
     con = ConnectionPatch(xyA=kpts_list[a][:, i], xyB=kpts_list[b][:, j], coordsA="data", coordsB="data",
                           axesA=ax1, axesB=ax2, color="red" if i != j else "green")
     plt.gca().add_artist(con)

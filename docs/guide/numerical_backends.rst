@@ -9,7 +9,7 @@ Now the pygmtools is available with the default ``numpy`` backend:
 
 We show an example of Matching Isomorphic Graphs with ``numpy`` backend in :doc:`./get_started`.
 
-Currently, we also support deep learning architectures ``pytorch``, ``paddle``, ``jittor`` which are GPU-friendly and deep learning-friendly.
+Currently, we also support deep learning architectures ``pytorch``, ``paddle``, ``jittor``, ``tensorflow`` and ``mindspore`` which are GPU-friendly and deep learning-friendly.
 
 Once the backend is ready, you may switch to the backend globally by the following command:
 
@@ -314,7 +314,70 @@ How to enable Tensorflow backend:
     >>> import tensorflow
     >>> pygm.BACKEND = 'tensorflow'
 
-Examples with Tensorflow backend are coming soon.
+Example: Matching Isomorphic Graphs with ``tensorflow`` backend
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here we provide a basic example of matching two isomorphic graphs (i.e. two graphs have the same nodes and edges, but
+the node permutations are unknown) with ``tensorflow`` backend.
+
+Step 0: Import packages and set backend
+
+::
+
+    >>> import tensorflow as tf # tensorflow backend
+    >>> import pygmtools as pygm
+    >>> pygm.BACKEND = 'tensorflow'
+    >>> _ = tf.random.set_seed(1) # fix random seed
+
+Step 1: Generate two isomorphic graphs
+
+::
+
+    >>> num_nodes = 10
+    >>> X_gt = tf.Variable(tf.zeros([num_nodes, num_nodes]))
+    >>> indices = tf.stack([tf.range(num_nodes),tf.random.shuffle(tf.range(num_nodes))], axis=1)
+    >>> updates = tf.ones([num_nodes])
+    >>> _ = X_gt.assign(tf.tensor_scatter_nd_update(X_gt, indices, updates))
+    >>> A1 = tf.random.uniform([num_nodes, num_nodes])
+    >>> A1 = (A1 + tf.cast(tf.transpose(A1) > 1., dtype=tf.float32)) / 2 * (A1 + tf.transpose(A1))
+    >>> A2 = tf.matmul(tf.matmul(tf.transpose(X_gt), A1), X_gt)
+    >>> n1 = n2 = tf.constant([num_nodes])
+
+Step 2: Build an affinity matrix and select an affinity function
+
+::
+
+    >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
+    >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+    >>> import functools
+    >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1) # set affinity function
+    >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+Step 3: Solve graph matching by RRWM
+
+::
+
+    >>> X = pygm.rrwm(K, n1, n2, beta=100)
+    >>> X = pygm.hungarian(X)
+    >>> X # X is the permutation matrix
+    tf.Tensor(
+    [[0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
+    [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
+    [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]], shape=(10, 10), dtype=float32)
+
+Final Step: Evaluate the accuracy
+
+::
+
+    >>> tf.reduce_sum(X * X_gt) / tf.reduce_sum(X_gt)
+    tf.Tensor(1.0, shape=(), dtype=float32)
 
 Mindspore Backend
 ------------------------
@@ -340,7 +403,68 @@ How to enable Mindspore backend:
     >>> import mindspore
     >>> pygm.BACKEND = 'mindspore'
 
-Examples with Mindspore backend are coming soon.
+Example: Matching Isomorphic Graphs with ``mindspore`` backend
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here we provide a basic example of matching two isomorphic graphs (i.e. two graphs have the same nodes and edges, but
+the node permutations are unknown) with ``mindspore`` backend.
+
+Step 0: Import packages and set backend
+
+::
+
+    >>> import mindspore as ms # mindspore backend
+    >>> import pygmtools as pygm
+    >>> pygm.BACKEND = 'mindspore'
+    >>> _ = ms.set_seed(1) # fix random seed
+
+Step 1: Generate two isomorphic graphs
+
+::
+
+    >>> num_nodes = 10
+    >>> X_gt = ms.numpy.zeros((num_nodes, num_nodes))
+    >>> X_gt[ms.numpy.arange(0, num_nodes, dtype=ms.int32), ms.ops.Randperm(num_nodes)(ms.Tensor([num_nodes], dtype=ms.int32))] = 1
+    >>> A1 = ms.numpy.rand((num_nodes, num_nodes))
+    >>> A1[ms.numpy.arange(A1.shape[0]), ms.numpy.arange(A1.shape[1])] = 0  # mindspore.diagonal(A1)[:] = 0
+    >>> A2 = ms.ops.matmul(ms.ops.matmul(ms.ops.transpose(X_gt, (1, 0)), A1), X_gt)
+    >>> n1 = n2 = ms.Tensor([num_nodes])
+
+Step 2: Build an affinity matrix and select an affinity function
+
+::
+
+    >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
+    >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
+    >>> print(conn1.shape, edge1.shape)
+    >>> import functools
+    >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1) # set affinity function
+    >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+Step 3: Solve graph matching by RRWM
+
+::
+
+    >>> X = pygm.rrwm(K, n1, n2, beta=100)
+    >>> X = pygm.hungarian(X)
+    >>> X # X is the permutation matrix
+    [[0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
+    [0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+    [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
+    [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+    [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
+    [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]]
+
+Final Step: Evaluate the accuracy
+
+::
+
+    >>> (X * X_gt).sum() / X_gt.sum()
+    1.0
 
 What's Next
 ------------
