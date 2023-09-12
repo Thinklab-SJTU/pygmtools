@@ -6,9 +6,9 @@ ori_dir = os.getcwd()
 os.chdir('pygmtools/astar')
 
 try:
-    os.system("python a_star_setup.py build_ext --inplace")
+    os.system("python astar_setup.py build_ext --inplace")
 except:
-    os.system("python3 a_star_setup.py build_ext --inplace")
+    os.system("python3 astar_setup.py build_ext --inplace")
       
 current_dir = os.getcwd()
 

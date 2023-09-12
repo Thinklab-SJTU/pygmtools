@@ -20,7 +20,7 @@ import pygmtools.utils
 from .pytorch_astar_modules import GCNConv, AttentionModule, TensorNetworkModule, GraphPair, \
     VERY_LARGE_INT, to_dense_adj, to_dense_batch, default_parameter, check_layer_parameter, node_metric
 from torch import Tensor
-from pygmtools.a_star import a_star
+from pygmtools.astar import astar
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -930,10 +930,10 @@ class GENN(torch.nn.Module):
                                  data.g1.nodes_num[i], data.g2.nodes_num[i])
             num_nodes_1 = data.g1.nodes_num[i] + 1
             num_nodes_2 = data.g2.nodes_num[i] + 1
-            x_pred[i][:num_nodes_1, :num_nodes_2] = self._a_star(cur_data)
+            x_pred[i][:num_nodes_1, :num_nodes_2] = self._astar(cur_data)
         return x_pred[:, :-1, :-1]
 
-    def _a_star(self, data: GraphPair):
+    def _astar(self, data: GraphPair):
 
         if self.args['cuda']:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -995,7 +995,7 @@ class GENN(torch.nn.Module):
 
         self.reset_cache()
 
-        x_pred, _ = a_star(
+        x_pred, _ = astar(
             data, k, ns_1.cpu().numpy(), ns_2.cpu().numpy(),
             self.net_prediction_cache,
             self.heuristic_prediction_hun,
