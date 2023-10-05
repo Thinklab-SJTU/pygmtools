@@ -52,7 +52,7 @@ else:
     
 class BdistWheelCommand(_bdist_wheel):
     def run(self):
-        os.system("python pygmtools/astar/get_astar.py")
+        os.system("python pygmtools/c_astar/get_c_astar.py")
         super().run()
 
     def get_tag(self):
@@ -74,7 +74,7 @@ class BdistWheelCommand(_bdist_wheel):
 class InstallCommand(_install):
     def run(self):
         try:
-            os.system("python pygmtools/astar/get_astar.py")
+            os.system("python pygmtools/c_astar/get_c_astar.py")
         except:
             pass
         _install.run(self)

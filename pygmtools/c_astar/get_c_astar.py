@@ -3,12 +3,12 @@ import glob
 import shutil
 
 ori_dir = os.getcwd()
-os.chdir('pygmtools/astar')
+os.chdir('pygmtools/c_astar')
 
 try:
-    os.system("python a_star_setup.py build_ext --inplace")
+    os.system("python c_astar_setup.py build_ext --inplace")
 except:
-    os.system("python3 a_star_setup.py build_ext --inplace")
+    os.system("python3 c_astar_setup.py build_ext --inplace")
       
 current_dir = os.getcwd()
 

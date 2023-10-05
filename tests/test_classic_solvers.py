@@ -210,7 +210,7 @@ def _test_classic_solver_on_linear_assignment(num_nodes1, num_nodes2, node_feat_
             last_X = pygm.utils.to_numpy(_X)
 
 
-# The testing function for a_star
+# The testing function for astar
 def _test_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
     if backends[0] != 'pytorch':
         backends.insert(0, 'pytorch') # force pytorch as the reference backend
