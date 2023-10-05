@@ -2,11 +2,12 @@ from setuptools import setup, Extension
 from Cython.Build import cythonize
 import numpy as np
 from glob import glob
+
 setup(
-    name='astar function',
+    name='c_astar function',
     ext_modules=cythonize(
         Extension(
-            'astar',
+            'c_astar',
             glob('*.pyx'),
             include_dirs=[np.get_include(),"."],
             extra_compile_args=["-std=c++11"],
