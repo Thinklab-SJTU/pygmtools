@@ -20,7 +20,7 @@ import pygmtools.utils
 from .pytorch_astar_modules import GCNConv, AttentionModule, TensorNetworkModule, GraphPair, \
     VERY_LARGE_INT, to_dense_adj, to_dense_batch, default_parameter, check_layer_parameter, node_metric
 from torch import Tensor
-from pygmtools.astar import astar
+from pygmtools.astar import astar as c_astar
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -995,7 +995,7 @@ class GENN(torch.nn.Module):
 
         self.reset_cache()
 
-        x_pred, _ = astar(
+        x_pred, _ = c_astar(
             data, k, ns_1.cpu().numpy(), ns_2.cpu().numpy(),
             self.net_prediction_cache,
             self.heuristic_prediction_hun,
