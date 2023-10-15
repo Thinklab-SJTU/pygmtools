@@ -839,7 +839,7 @@ class SPair71k:
         train_file = os.path.join(self.dataset_dir, 'train.json')
         test_file = os.path.join(self.dataset_dir, 'test.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
-        if (not os.path.exists(train_file)) or (not os.path.exists(test_file)):
+        if (not os.path.exists(train_file)) or (not os.path.exists(test_file)) or (not os.path.exists(img_file)):
             train_list = []
             test_list = []
             if self.sets == 'trn':
