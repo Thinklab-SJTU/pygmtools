@@ -168,9 +168,9 @@ Visualize the images and keypoints
                 plt.plot((kpt[0, idx[0]], kpt[0, idx[1]]), (kpt[1, idx[0]], kpt[1, idx[1]]), 'k-')
 
 
-    plt.figure(figsize=(4 * n_images, 4))
+    plt.figure(figsize=(20, 18))
     for i in range(n_images):
-        plt.subplot(1, n_images, i + 1)
+        plt.subplot(5, n_images // 5, i + 1)
         plt.title('Image {}'.format(i + 1))
         plot_image_with_graph(img_list[i], kpts_list[i])
     # plt.savefig('image')
@@ -721,7 +721,7 @@ See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  11.797 seconds)
+   **Total running time of the script:** (1 minutes 49.312 seconds)
 
 
 .. _sphx_glr_download_auto_examples_4.multi-graph_matching_plot_multi_graph_match_numpy.py:
