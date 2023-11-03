@@ -168,9 +168,9 @@ Visualize the images and keypoints
                 plt.plot((kpt[0, idx[0]], kpt[0, idx[1]]), (kpt[1, idx[0]], kpt[1, idx[1]]), 'k-')
 
 
-    plt.figure(figsize=(4 * n_images, 4))
+    plt.figure(figsize=(20, 18))
     for i in range(n_images):
-        plt.subplot(1, n_images, i + 1)
+        plt.subplot(5, n_images // 5, i + 1)
         plt.title('Image {}'.format(i + 1))
         plot_image_with_graph(img_list[i], kpts_list[i])
     # plt.savefig('image')
@@ -540,9 +540,9 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
  .. code-block:: none
 
-    /home/wzever/miniconda3/envs/pygm/lib/python3.9/site-packages/paddle/fluid/variable_index.py:292: UserWarning: 1-D Tensor will be treat as advanced indexing in future version. Currently, 1-D Tensor means a scalar, not vector, and please modify it to 0-D Tensor. If advanced indexing is needed, please use `export FLAGS_set_to_1d=False` to set the flag.
+    /home/wzever/miniconda3/envs/pygmtools/lib/python3.10/site-packages/paddle/fluid/variable_index.py:292: UserWarning: 1-D Tensor will be treat as advanced indexing in future version. Currently, 1-D Tensor means a scalar, not vector, and please modify it to 0-D Tensor. If advanced indexing is needed, please use `export FLAGS_set_to_1d=False` to set the flag.
       warnings.warn(
-    /home/wzever/miniconda3/envs/pygm/lib/python3.9/site-packages/paddle/fluid/variable_index.py:591: UserWarning: Warning: In Tensor '__getitem__', if the number of scalar elements in the index is equal to the rank of the Tensor, the output should be 0-D. In order to be consistent with the behavior of previous versions, it will be processed to 1-D. But it is not correct and will be removed in release 2.6. If 1-D is still wanted, please modify the index element from scalar to slice (e.g. 'x[i]' => 'x[i:i+1]').
+    /home/wzever/miniconda3/envs/pygmtools/lib/python3.10/site-packages/paddle/fluid/variable_index.py:591: UserWarning: Warning: In Tensor '__getitem__', if the number of scalar elements in the index is equal to the rank of the Tensor, the output should be 0-D. In order to be consistent with the behavior of previous versions, it will be processed to 1-D. But it is not correct and will be removed in release 2.6. If 1-D is still wanted, please modify the index element from scalar to slice (e.g. 'x[i]' => 'x[i:i+1]').
       warnings.warn(
 
 
@@ -731,7 +731,7 @@ See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  9.460 seconds)
+   **Total running time of the script:** (0 minutes 50.203 seconds)
 
 
 .. _sphx_glr_download_auto_examples_4.multi-graph_matching_plot_multi_graph_match_paddle.py:
