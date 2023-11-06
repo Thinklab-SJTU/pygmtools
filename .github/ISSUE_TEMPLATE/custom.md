@@ -1,6 +1,6 @@
 ---
 name: Custom issue template
-about: Describe this issue template's purpose here.
+about: General questions about graph matching or pygmtools
 title: ''
 labels: ''
 assignees: ''
