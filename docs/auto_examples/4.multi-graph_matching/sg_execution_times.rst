@@ -6,10 +6,10 @@
 
 Computation times
 =================
-**01:25.270** total execution time for **auto_examples_4.multi-graph_matching** files:
+**05:51.393** total execution time for **auto_examples_4.multi-graph_matching** files:
 
 +--------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_jittor.py` (``plot_multi_graph_match_jittor.py``)   | 01:25.270 | 0.0 MB |
+| :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_jittor.py` (``plot_multi_graph_match_jittor.py``)   | 05:51.393 | 0.0 MB |
 +--------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_auto_examples_4.multi-graph_matching_plot_multi_graph_match_numpy.py` (``plot_multi_graph_match_numpy.py``)     | 00:00.000 | 0.0 MB |
 +--------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
