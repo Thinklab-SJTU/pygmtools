@@ -50,7 +50,7 @@ jobs:
 
   macos:
 
-    runs-on: macos-latest
+    runs-on: macos-12
     strategy:
       fail-fast: false
       matrix:
@@ -82,7 +82,7 @@ jobs:
           pytest --cov=pygmtools --cov-report=xml --cov-append
   windows:
 
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
