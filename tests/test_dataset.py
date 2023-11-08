@@ -68,6 +68,7 @@ def test_dataset_and_benchmark():
     voc_cfg_dict['SET_SPLIT'] = dataset_cfg.PascalVOC.SET_SPLIT
     voc_cfg_dict['CLASSES'] = dataset_cfg.PascalVOC.CLASSES
     voc_cfg_dict['CACHE_PATH'] = dataset_cfg.CACHE_PATH
+    voc_cfg_dict['URL'] = 'https://drive.google.com/u/0/uc?id=1TLBN4dnf_THmN3kNINMO0DpHhcBDqzcI&export=download'
     dict_list.append(voc_cfg_dict)
 
     willow_cfg_dict = dict()
