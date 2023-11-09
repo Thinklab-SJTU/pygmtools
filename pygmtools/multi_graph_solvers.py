@@ -73,7 +73,7 @@ def cao(K, x0=None, qap_solver=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -120,7 +120,7 @@ def cao(K, x0=None, qap_solver=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate 10 isomorphic graphs
@@ -167,7 +167,7 @@ def cao(K, x0=None, qap_solver=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -214,7 +214,7 @@ def cao(K, x0=None, qap_solver=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -353,7 +353,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -400,7 +400,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate 10 isomorphic graphs
@@ -447,7 +447,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -494,7 +494,7 @@ def mgm_floyd(K, x0=None, qap_solver=None,
             
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -670,7 +670,7 @@ def gamgm(A, W,
             >>> import pygmtools as pygm
             >>> import itertools
             >>> import time
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -721,7 +721,7 @@ def gamgm(A, W,
             >>> import pygmtools as pygm
             >>> import itertools
             >>> import time
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate 10 isomorphic graphs
@@ -786,7 +786,7 @@ def gamgm(A, W,
             >>> import pygmtools as pygm
             >>> import itertools
             >>> import time
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate 10 isomorphic graphs
@@ -838,7 +838,7 @@ def gamgm(A, W,
             >>> import pygmtools as pygm
             >>> import itertools
             >>> import time
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
 
             # Generate 10 isomorphic graphs
             >>> graph_num = 10

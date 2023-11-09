@@ -89,7 +89,7 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -136,7 +136,7 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -179,7 +179,7 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -224,7 +224,7 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(4)
 
             # Generate a batch of isomorphic graphs
@@ -395,7 +395,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -442,7 +442,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -485,7 +485,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -530,7 +530,7 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(5)
 
             # Generate a batch of isomorphic graphs
@@ -709,7 +709,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -758,7 +758,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -802,7 +802,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -849,7 +849,7 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -1033,7 +1033,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -1082,7 +1082,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -1128,7 +1128,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -1175,7 +1175,7 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -1345,7 +1345,7 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
             
             # Generate a batch of isomorphic graphs

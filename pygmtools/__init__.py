@@ -14,9 +14,20 @@ from .classic_solvers import rrwm, sm, ipfp, astar
 from .multi_graph_solvers import cao, mgm_floyd, gamgm
 from .neural_solvers import pca_gm, ipca_gm, cie, ngm, genn_astar
 import pygmtools.utils as utils
+set_backend = utils.set_backend
+
 BACKEND = 'numpy'
 __version__ = '0.4.1'
 __author__ = 'ThinkLab at SJTU'
+
+SUPPORTED_BACKENDS = [
+    'numpy',
+    'pytorch',
+    'jittor',
+    'paddle',
+    'mindspore',
+    'tensorflow'
+]
 
 
 def env_report():

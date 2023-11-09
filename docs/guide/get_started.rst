@@ -46,7 +46,7 @@ Step 0: Import packages and set backend
 
     >>> import numpy as np
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'numpy'
+    >>> pygm.set_backend('numpy')
     >>> np.random.seed(1)
 
 Step 1: Generate a batch of isomorphic graphs

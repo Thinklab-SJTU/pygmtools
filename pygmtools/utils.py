@@ -30,12 +30,60 @@ import urllib.request
 import asyncio
 import aiohttp
 import async_timeout
+import importlib.util
+from difflib import get_close_matches
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented. ' \
     'If you are a user, please check the spelling, and use other backends as workarounds. ' \
     'If you are a developer, it will be truly appreciated if you could develop and share your' \
     ' implementation with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
+
+
+_BACKEND_MAP = {
+    'numpy': 'numpy',
+    'pytorch': 'torch',
+    'jittor': 'jittor',
+    'paddle': 'paddle',
+    'mindspore': 'mindspore',
+    'tensorflow': 'tensorflow',
+}
+
+
+def set_backend(new_backend: str):
+    """
+    Set the default backend. The current backend information is stored in the variable ``pygmtools.BACKEND``.
+
+    :param new_backend: string, name of the new backend. Possible values are ``['numpy', 'pytorch', 'jittor',
+    'paddle', 'mindspore', 'tensorflow']``
+
+    .. note::
+        You can change the backend by directly assign new values to ``pygmtools.BACKEND``. However, we encourage
+        you using this ``pygmtools.utils.set_backend`` function because it will do a spelling check and check if
+        that package is installed.
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import pygmtools as pygm # numpy is the default backend
+            >>> pygm.set_backend('pytorch') # set backend to pytorch, it will through an error if torch is not installed
+
+    """
+    new_backend = new_backend.lower()
+    if new_backend not in pygmtools.SUPPORTED_BACKENDS:
+        matches = get_close_matches(new_backend, pygmtools.SUPPORTED_BACKENDS, n=1, cutoff=0.3)
+        # the cutoff param is tuned to include some common misspellings such as 'tf', 'torch', 'paddlepaddle'
+        if len(matches) > 0:
+            raise ValueError(f'Unknown backend {new_backend}. Did you mean {matches[0]}? '
+                             f'Supported backends: {pygmtools.SUPPORTED_BACKENDS}')
+        else:
+            raise ValueError(f'Unknown backend {new_backend}. Please specify one backend from the supported ones: '
+                             f'{pygmtools.SUPPORTED_BACKENDS}')
+    found = importlib.util.find_spec(_BACKEND_MAP[new_backend])
+    if not found:
+        raise ModuleNotFoundError(f'Module {_BACKEND_MAP[new_backend]} is not installed.')
+    pygmtools.BACKEND = new_backend
 
 
 def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2, connectivity2,
@@ -85,7 +133,7 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # Generate a batch of graphs
             >>> batch_size = 10
@@ -116,7 +164,7 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
 
             # Generate a batch of graphs
             >>> batch_size = 10
@@ -146,7 +194,7 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
         ::
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
 
             # Generate a batch of graphs
             >>> batch_size = 10
@@ -177,7 +225,7 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
 
             # Generate a batch of graphs
             >>> batch_size = 10
@@ -348,7 +396,7 @@ def build_batch(input, return_ori_dim=False, backend=None):
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # batched adjacency matrices
             >>> A1 = np.random.rand(4, 4)
@@ -374,7 +422,7 @@ def build_batch(input, return_ori_dim=False, backend=None):
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
 
             # batched adjacency matrices
             >>> A1 = torch.rand(4, 4)
@@ -400,7 +448,7 @@ def build_batch(input, return_ori_dim=False, backend=None):
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
 
             # batched adjacency matrices
             >>> A1 = paddle.rand((4, 4))
@@ -427,7 +475,7 @@ def build_batch(input, return_ori_dim=False, backend=None):
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
 
             # batched adjacency matrices
             >>> A1 = mindspore.numpy.rand((4, 4))
@@ -484,7 +532,7 @@ def dense_to_sparse(dense_adj, backend=None):
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(0)
 
             >>> batch_size = 10
@@ -509,7 +557,7 @@ def dense_to_sparse(dense_adj, backend=None):
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(0)
 
             >>> batch_size = 10
@@ -534,7 +582,7 @@ def dense_to_sparse(dense_adj, backend=None):
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> paddle.seed(0)
 
             >>> batch_size = 10
@@ -560,7 +608,7 @@ def dense_to_sparse(dense_adj, backend=None):
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
             >>> _ = mindspore.set_seed(0)
 
             >>> batch_size = 10
@@ -634,7 +682,7 @@ def compute_affinity_score(X, K, backend=None):
 
             >>> import pygmtools as pygm
             >>> import torch
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
 
             # Generate a graph matching problem
             >>> X_gt = torch.zeros(4, 4)
@@ -903,7 +951,7 @@ def get_network(nn_solver_func, **params):
 
             >>> import pygmtools as pygm
             >>> import torch
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> pygm.utils.get_network(pygm.pca_gm, pretrain='willow')
             PCA_GM_Net(
               (gnn_layer_0): Siamese_Gconv(
@@ -1318,7 +1366,7 @@ def build_aff_mat_from_networkx(G1:nx.Graph, G2:nx.Graph, node_aff_fn=None, edge
 
             >>> import networkx as nx
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # Generate networkx images
             >>> G1 = nx.DiGraph()
@@ -1366,7 +1414,7 @@ def build_aff_mat_from_graphml(G1_path, G2_path, node_aff_fn=None, edge_aff_fn=N
         ::
 
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # example file (.graphml) path
             >>> G1_path = 'examples/data/graph1.graphml'
@@ -1402,7 +1450,7 @@ def from_networkx(G:nx.Graph):
 
             >>> import networkx as nx
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # Generate networkx graphs
             >>> G1 = nx.DiGraph()
@@ -1444,7 +1492,7 @@ def to_networkx(adj_matrix, backend=None):
 
             >>> import networkx as nx
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # Generate adjacency matrix
             >>> adj_matrix = np.random.random(size=(4,4))
@@ -1480,7 +1528,7 @@ def from_graphml(filename):
         ::
 
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
 
             # example file (.graphml) path
             >>> G1_path = 'examples/data/graph1.graphml'
@@ -1516,7 +1564,7 @@ def to_graphml(adj_matrix, filename, backend=None):
 
             >>> import pygmtools as pygm
             >>> import numpy as np
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             
             # Generate adjacency matrix
             >>> adj_matrix = np.random.random(size=(4,4))

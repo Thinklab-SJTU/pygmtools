@@ -43,7 +43,7 @@ import pygmtools as pygm
 import warnings
 warnings.filterwarnings("ignore")
 
-pygm.BACKEND = 'paddle'
+pygm.set_backend('paddle')
 device = paddle.device.get_device()
 paddle.device.set_device(device)
 

@@ -41,7 +41,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import pygmtools as pygm
 
-pygm.BACKEND = 'pytorch'
+pygm.set_backend('pytorch')
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
