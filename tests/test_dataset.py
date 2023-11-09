@@ -62,14 +62,6 @@ def test_dataset_and_benchmark():
     set_list = ['train', 'test']
     filter_list = ['intersection', 'inclusion', 'unfiltered']
     dict_list = []
-    voc_cfg_dict = dict()
-    voc_cfg_dict['KPT_ANNO_DIR'] = dataset_cfg.PascalVOC.KPT_ANNO_DIR
-    voc_cfg_dict['ROOT_DIR'] = dataset_cfg.PascalVOC.ROOT_DIR
-    voc_cfg_dict['SET_SPLIT'] = dataset_cfg.PascalVOC.SET_SPLIT
-    voc_cfg_dict['CLASSES'] = dataset_cfg.PascalVOC.CLASSES
-    voc_cfg_dict['CACHE_PATH'] = dataset_cfg.CACHE_PATH
-    voc_cfg_dict['URL'] = 'https://huggingface.co/datasets/ziaoguo/small_VOC/resolve/main/small_voc.tar?download=true'
-    dict_list.append(voc_cfg_dict)
 
     willow_cfg_dict = dict()
     willow_cfg_dict['CLASSES'] = dataset_cfg.WillowObject.CLASSES
@@ -81,6 +73,15 @@ def test_dataset_and_benchmark():
     willow_cfg_dict['RAND_OUTLIER'] = dataset_cfg.WillowObject.RAND_OUTLIER
     willow_cfg_dict['URL'] = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=18AvGwkuhnih5bFDjfJK5NYM16LvDfwW_'
     dict_list.append(willow_cfg_dict)
+
+    voc_cfg_dict = dict()
+    voc_cfg_dict['KPT_ANNO_DIR'] = dataset_cfg.PascalVOC.KPT_ANNO_DIR
+    voc_cfg_dict['ROOT_DIR'] = dataset_cfg.PascalVOC.ROOT_DIR
+    voc_cfg_dict['SET_SPLIT'] = dataset_cfg.PascalVOC.SET_SPLIT
+    voc_cfg_dict['CLASSES'] = dataset_cfg.PascalVOC.CLASSES
+    voc_cfg_dict['CACHE_PATH'] = dataset_cfg.CACHE_PATH
+    voc_cfg_dict['URL'] = 'https://huggingface.co/datasets/ziaoguo/small_VOC/resolve/main/small_voc.tar?download=true'
+    dict_list.append(voc_cfg_dict)
 
     spair_cfg_dict = dict()
     spair_cfg_dict['TRAIN_DIFF_PARAMS'] = {'mirror': 0}
