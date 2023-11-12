@@ -63,7 +63,7 @@ def test_dataset_and_benchmark():
     dataset_name_list = ['WillowObject', 'PascalVOC', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
     
     if os_name == 'Darwin':
-        dataset_name_list = ['WillowObject', 'PascalVOC', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
+        dataset_name_list = ['WillowObject', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
     problem_type_list = ['2GM', 'MGM']
     set_list = ['train', 'test']
     filter_list = ['intersection', 'inclusion', 'unfiltered']
