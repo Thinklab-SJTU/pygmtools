@@ -16,7 +16,7 @@ Once the backend is ready, you may switch to the backend globally by the followi
 ::
 
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'pytorch'  # replace 'pytorch' by other backend names
+    >>> pygm.set_backend('pytorch')  # replace 'pytorch' by other backend names
 
 PyTorch Backend
 ------------------------
@@ -41,7 +41,7 @@ How to enable PyTorch backend:
 
     >>> import pygmtools as pygm
     >>> import torch
-    >>> pygm.BACKEND = 'pytorch'
+    >>> pygm.set_backend('pytorch')
 
 Example: Matching Isomorphic Graphs with ``pytorch`` backend
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,7 +55,7 @@ Step 0: Import packages and set backend
 
     >>> import torch # pytorch backend
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'pytorch'
+    >>> pygm.set_backend('pytorch')
     >>> torch.manual_seed(1) # fix random seed
 
 Step 1: Generate two isomorphic graphs
@@ -130,7 +130,7 @@ How to enable Jittor backend:
 
     >>> import pygmtools as pygm
     >>> import jittor
-    >>> pygm.BACKEND = 'jittor'
+    >>> pygm.set_backend('jittor')
 
 
 Example: Matching Isomorphic Graphs with ``jittor`` backend
@@ -145,7 +145,7 @@ Step 0: Import packages and set backend
 
     >>> import jittor as jt # jittor backend
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'jittor'
+    >>> pygm.set_backend('jittor')
     >>> jt.set_seed(1) # fix random seed
     >>> jt.flags.use_cuda = jt.has_cuda # detect cuda
 
@@ -221,7 +221,7 @@ How to enable Paddle backend:
 
     >>> import pygmtools as pygm
     >>> import paddle
-    >>> pygm.BACKEND = 'paddle'
+    >>> pygm.set_backend('paddle')
 
 Example: Matching Isomorphic Graphs with ``paddle`` backend
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -235,7 +235,7 @@ Step 0: Import packages and set backend
 
     >>> import paddle # paddle backend
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'paddle'
+    >>> pygm.set_backend('paddle')
     >>> paddle.seed(1) # fix random seed
     >>> paddle.device.set_device('cpu') # set cpu
 
@@ -312,7 +312,7 @@ How to enable Tensorflow backend:
 
     >>> import pygmtools as pygm
     >>> import tensorflow
-    >>> pygm.BACKEND = 'tensorflow'
+    >>> pygm.set_backend('tensorflow')
 
 Example: Matching Isomorphic Graphs with ``tensorflow`` backend
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -326,7 +326,7 @@ Step 0: Import packages and set backend
 
     >>> import tensorflow as tf # tensorflow backend
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'tensorflow'
+    >>> pygm.set_backend('tensorflow')
     >>> _ = tf.random.set_seed(1) # fix random seed
 
 Step 1: Generate two isomorphic graphs
@@ -401,7 +401,7 @@ How to enable Mindspore backend:
 
     >>> import pygmtools as pygm
     >>> import mindspore
-    >>> pygm.BACKEND = 'mindspore'
+    >>> pygm.set_backend('mindspore')
 
 Example: Matching Isomorphic Graphs with ``mindspore`` backend
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -415,7 +415,7 @@ Step 0: Import packages and set backend
 
     >>> import mindspore as ms # mindspore backend
     >>> import pygmtools as pygm
-    >>> pygm.BACKEND = 'mindspore'
+    >>> pygm.set_backend('mindspore')
     >>> _ = ms.set_seed(1) # fix random seed
 
 Step 1: Generate two isomorphic graphs

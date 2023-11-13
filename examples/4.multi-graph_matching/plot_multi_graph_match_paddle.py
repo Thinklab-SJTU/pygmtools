@@ -41,7 +41,7 @@ import scipy.spatial as spa  # for Delaunay triangulation
 from PIL import Image
 from matplotlib.patches import ConnectionPatch # for plotting matching result
 
-pygm.BACKEND = 'paddle'  # set default backend for pygmtools
+pygm.set_backend('paddle')  # set default backend for pygmtools
 
 ##############################################################################
 # Load the images

@@ -40,7 +40,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import pygmtools as pygm
 
-pygm.BACKEND = 'jittor'
+pygm.set_backend('jittor')
 jt.flags.use_cuda = jt.has_cuda
 
 ##############################################################################
