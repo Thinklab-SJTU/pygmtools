@@ -1307,17 +1307,17 @@ def _download(filename, url, md5, retries, to_cache=True):
                         shutil.copyfileobj(content, file)
             except requests.exceptions.ConnectionError as err:
                 print('Warning: Network error. Retrying...\n', err)
-                return download(filename, url, md5, retries - 1)
+                return download(filename, url, md5, retries - 1, to_cache)
         elif retries % 3 == 2:
             try:
                 asyncio.run(_asyncdownload(filename, url))
             except:
-                return _download(filename, url, md5, retries - 1)
+                return _download(filename, url, md5, retries - 1, to_cache)
         else:
             try:
                 urllib.request.urlretrieve(url, filename)
             except:
-                return _download(filename, url, md5, retries - 1)  
+                return _download(filename, url, md5, retries - 1, to_cache)
             
     if md5 is not None:
         md5_returned = _get_md5(filename)
@@ -1325,7 +1325,7 @@ def _download(filename, url, md5, retries, to_cache=True):
             print('Warning: MD5 check failed for the downloaded content. Retrying...')
             os.remove(filename)
             time.sleep(1)
-            return _download(filename, url, md5, retries - 1)
+            return _download(filename, url, md5, retries - 1, to_cache)
     return filename
 
 

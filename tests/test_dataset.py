@@ -13,6 +13,9 @@ from pygmtools.dataset_config import dataset_cfg
 from random import choice
 import os
 
+import platform
+os_name = platform.system()
+
 # Test dataset download and preprocess, and data fetch and evaluation
 def _test_benchmark(name, sets, problem, filter, **ds_dict):
     benchmark = pygm.benchmark.Benchmark(name=name, sets=sets, problem=problem, filter=filter, **ds_dict)
@@ -57,18 +60,14 @@ def _test_get_data(benchmark, num):
 
 # Entry function
 def test_dataset_and_benchmark():
-    dataset_name_list = ['PascalVOC', 'WillowObject', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
+    dataset_name_list = ['WillowObject', 'PascalVOC', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
+    
+    if os_name == 'Darwin':
+        dataset_name_list = ['WillowObject', 'SPair71k', 'IMC_PT_SparseGM', 'CUB2011']
     problem_type_list = ['2GM', 'MGM']
     set_list = ['train', 'test']
     filter_list = ['intersection', 'inclusion', 'unfiltered']
     dict_list = []
-    voc_cfg_dict = dict()
-    voc_cfg_dict['KPT_ANNO_DIR'] = dataset_cfg.PascalVOC.KPT_ANNO_DIR
-    voc_cfg_dict['ROOT_DIR'] = dataset_cfg.PascalVOC.ROOT_DIR
-    voc_cfg_dict['SET_SPLIT'] = dataset_cfg.PascalVOC.SET_SPLIT
-    voc_cfg_dict['CLASSES'] = dataset_cfg.PascalVOC.CLASSES
-    voc_cfg_dict['CACHE_PATH'] = dataset_cfg.CACHE_PATH
-    dict_list.append(voc_cfg_dict)
 
     willow_cfg_dict = dict()
     willow_cfg_dict['CLASSES'] = dataset_cfg.WillowObject.CLASSES
@@ -80,6 +79,16 @@ def test_dataset_and_benchmark():
     willow_cfg_dict['RAND_OUTLIER'] = dataset_cfg.WillowObject.RAND_OUTLIER
     willow_cfg_dict['URL'] = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=18AvGwkuhnih5bFDjfJK5NYM16LvDfwW_'
     dict_list.append(willow_cfg_dict)
+
+    if os_name != 'Darwin':
+        voc_cfg_dict = dict()
+        voc_cfg_dict['KPT_ANNO_DIR'] = dataset_cfg.PascalVOC.KPT_ANNO_DIR
+        voc_cfg_dict['ROOT_DIR'] = dataset_cfg.PascalVOC.ROOT_DIR
+        voc_cfg_dict['SET_SPLIT'] = dataset_cfg.PascalVOC.SET_SPLIT
+        voc_cfg_dict['CLASSES'] = dataset_cfg.PascalVOC.CLASSES
+        voc_cfg_dict['CACHE_PATH'] = dataset_cfg.CACHE_PATH
+        voc_cfg_dict['URL'] = 'https://huggingface.co/datasets/ziaoguo/small_VOC/resolve/main/small_voc.tar?download=true'
+        dict_list.append(voc_cfg_dict)
 
     spair_cfg_dict = dict()
     spair_cfg_dict['TRAIN_DIFF_PARAMS'] = {'mirror': 0}
