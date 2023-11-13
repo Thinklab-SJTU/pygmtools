@@ -22,6 +22,16 @@ def test_env_report():
     pygm.env_report()
 
 
+def test_set_backend():
+    for bk in backends:
+        pygm.set_backend(bk)
+    for bk in ['torch', 'tf', 'paddlepaddle', '0000']:
+        try:
+            pygm.set_backend(bk)
+        except ValueError:
+            pass
+
+
 def test_generate_isomorphic_graphs():
     for backend in backends:
         pygm.BACKEND = backend
