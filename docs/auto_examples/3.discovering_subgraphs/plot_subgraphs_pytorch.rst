@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_pytorch.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_pytorch.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -63,7 +63,7 @@ This example shows how to match a smaller graph to a subset of a larger graph.
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+    pygm.set_backend('pytorch') # set default backend for pygmtools
     _ = torch.manual_seed(1) # fix random seed
 
 
@@ -125,6 +125,13 @@ Generate the smaller graph
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    /home/wzever/pygmtools/examples/3.discovering_subgraphs/plot_subgraphs_pytorch.py:52: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at  ../torch/csrc/utils/tensor_new.cpp:210.)
+      pos2_t = torch.tensor([pos2[_] for _ in range(num_nodes2)])
 
 
 
@@ -229,7 +236,7 @@ the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046896040>
+    <matplotlib.image.AxesImage object at 0x7fd306a0c280>
 
 
 
@@ -284,7 +291,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e40ad60>
+    <matplotlib.image.AxesImage object at 0x7fd306ac0fa0>
 
 
 
@@ -339,7 +346,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e87ba60>
+    <matplotlib.image.AxesImage object at 0x7fd307ef1480>
 
 
 
@@ -562,7 +569,7 @@ Visualization of NGM matching result:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.133 seconds)
+   **Total running time of the script:** (0 minutes 0.545 seconds)
 
 
 .. _sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_pytorch.py:
@@ -570,6 +577,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

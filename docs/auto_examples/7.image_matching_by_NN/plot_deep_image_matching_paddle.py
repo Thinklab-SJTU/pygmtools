@@ -38,10 +38,9 @@ import numpy as np
 from PIL import Image
 import warnings
 warnings.filterwarnings("ignore")
-pygm.BACKEND = 'paddle' # set default backend for pygmtools
+pygm.set_backend('paddle') # set default backend for pygmtools
 
-device = paddle.device.get_device()
-paddle.device.set_device(device) # paddle sets device globally
+paddle.device.set_device('cpu') # paddle sets device globally
 
 ##############################################################################
 # Predicting Matching by Graph Matching Neural Networks

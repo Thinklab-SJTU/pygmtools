@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_jittor.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_jittor.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -56,7 +56,7 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
     * :func:`~pygmtools.neural_solvers.ngm` (neural network solver)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-39
+.. GENERATED FROM PYTHON SOURCE LINES 29-37
 
 .. code-block:: default
 
@@ -65,10 +65,9 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'jittor' # set default backend for pygmtools
+    pygm.set_backend('jittor') # set default backend for pygmtools
     _ = jt.set_seed(1) # fix random seed
 
-    jt.flags.use_cuda = jt.has_cuda
 
 
 
@@ -76,14 +75,13 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 40-43
+.. GENERATED FROM PYTHON SOURCE LINES 38-41
 
 Generate two isomorphic graphs
 ------------------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-53
+.. GENERATED FROM PYTHON SOURCE LINES 41-51
 
 .. code-block:: default
 
@@ -104,13 +102,13 @@ Generate two isomorphic graphs
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-57
+.. GENERATED FROM PYTHON SOURCE LINES 52-55
 
 Visualize the graphs
 ----------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 57-69
+.. GENERATED FROM PYTHON SOURCE LINES 55-67
 
 .. code-block:: default
 
@@ -138,7 +136,7 @@ Visualize the graphs
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-84
+.. GENERATED FROM PYTHON SOURCE LINES 68-82
 
 These two graphs look dissimilar because they are not aligned. We then align these two graphs
 by graph matching.
@@ -155,7 +153,7 @@ To match isomorphic graphs by graph matching, we follow the formulation of Quadr
 where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-90
+.. GENERATED FROM PYTHON SOURCE LINES 82-88
 
 .. code-block:: default
 
@@ -172,7 +170,7 @@ where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 91-97
+.. GENERATED FROM PYTHON SOURCE LINES 89-95
 
 Visualization of the affinity matrix. For graph matching problem with :math:`N` nodes, the affinity matrix
 has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
@@ -181,7 +179,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
     The diagonal elements of the affinity matrix are empty because there is no node features in this example.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 97-101
+.. GENERATED FROM PYTHON SOURCE LINES 95-99
 
 .. code-block:: default
 
@@ -203,18 +201,18 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046866eb0>
+    <matplotlib.image.AxesImage object at 0x7fd947c5ac50>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-106
+.. GENERATED FROM PYTHON SOURCE LINES 100-104
 
 Solve graph matching problem by RRWM solver
 -------------------------------------------
 See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-108
+.. GENERATED FROM PYTHON SOURCE LINES 104-106
 
 .. code-block:: default
 
@@ -227,12 +225,12 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 109-111
+.. GENERATED FROM PYTHON SOURCE LINES 107-109
 
 The output of RRWM is a soft matching matrix. Visualization:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 111-119
+.. GENERATED FROM PYTHON SOURCE LINES 109-117
 
 .. code-block:: default
 
@@ -258,18 +256,18 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa048131f40>
+    <matplotlib.image.AxesImage object at 0x7fd947d39c30>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 120-124
+.. GENERATED FROM PYTHON SOURCE LINES 118-122
 
 Get the discrete matching matrix
 ---------------------------------
 Hungarian algorithm is then adopted to reach a discrete matching matrix
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-126
+.. GENERATED FROM PYTHON SOURCE LINES 122-124
 
 .. code-block:: default
 
@@ -282,12 +280,12 @@ Hungarian algorithm is then adopted to reach a discrete matching matrix
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 127-129
+.. GENERATED FROM PYTHON SOURCE LINES 125-127
 
 Visualization of the discrete matching matrix:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 129-137
+.. GENERATED FROM PYTHON SOURCE LINES 127-135
 
 .. code-block:: default
 
@@ -313,18 +311,18 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa0483d8be0>
+    <matplotlib.image.AxesImage object at 0x7fd947a8a530>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 138-142
+.. GENERATED FROM PYTHON SOURCE LINES 136-140
 
 Align the original graphs
 --------------------------
 Draw the matching (green lines for correct matching, red lines for wrong matching):
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 142-155
+.. GENERATED FROM PYTHON SOURCE LINES 140-153
 
 .. code-block:: default
 
@@ -353,12 +351,12 @@ Draw the matching (green lines for correct matching, red lines for wrong matchin
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 156-158
+.. GENERATED FROM PYTHON SOURCE LINES 154-156
 
 Align the nodes:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-174
+.. GENERATED FROM PYTHON SOURCE LINES 156-172
 
 .. code-block:: default
 
@@ -390,7 +388,7 @@ Align the nodes:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 175-182
+.. GENERATED FROM PYTHON SOURCE LINES 173-180
 
 Other solvers are also available
 ---------------------------------
@@ -400,7 +398,7 @@ Classic IPFP solver
 See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 182-184
+.. GENERATED FROM PYTHON SOURCE LINES 180-182
 
 .. code-block:: default
 
@@ -413,12 +411,12 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 185-187
+.. GENERATED FROM PYTHON SOURCE LINES 183-185
 
 Visualization of IPFP matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 187-195
+.. GENERATED FROM PYTHON SOURCE LINES 185-193
 
 .. code-block:: default
 
@@ -444,18 +442,18 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa0489e2d30>
+    <matplotlib.image.AxesImage object at 0x7fda50d6b010>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 196-200
+.. GENERATED FROM PYTHON SOURCE LINES 194-198
 
 Classic SM solver
 ^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 200-203
+.. GENERATED FROM PYTHON SOURCE LINES 198-201
 
 .. code-block:: default
 
@@ -469,12 +467,12 @@ See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 204-206
+.. GENERATED FROM PYTHON SOURCE LINES 202-204
 
 Visualization of SM matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 206-214
+.. GENERATED FROM PYTHON SOURCE LINES 204-212
 
 .. code-block:: default
 
@@ -500,18 +498,18 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046985070>
+    <matplotlib.image.AxesImage object at 0x7fda50e496f0>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 215-219
+.. GENERATED FROM PYTHON SOURCE LINES 213-217
 
 NGM neural network solver
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 219-223
+.. GENERATED FROM PYTHON SOURCE LINES 217-221
 
 .. code-block:: default
 
@@ -526,12 +524,12 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 224-226
+.. GENERATED FROM PYTHON SOURCE LINES 222-224
 
 Visualization of NGM matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 226-233
+.. GENERATED FROM PYTHON SOURCE LINES 224-231
 
 .. code-block:: default
 
@@ -556,14 +554,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046826c70>
+    <matplotlib.image.AxesImage object at 0x7fda2c29b610>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  7.989 seconds)
+   **Total running time of the script:** (0 minutes 6.864 seconds)
 
 
 .. _sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_jittor.py:
@@ -571,6 +569,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

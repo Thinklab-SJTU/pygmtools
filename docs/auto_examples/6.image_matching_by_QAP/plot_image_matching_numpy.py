@@ -37,7 +37,7 @@ import scipy.spatial as spa # for Delaunay triangulation
 from sklearn.decomposition import PCA as PCAdimReduc
 import itertools
 from PIL import Image
-pygm.BACKEND = 'numpy' # set numpy as backend for pygmtools
+pygm.set_backend('numpy') # set numpy as backend for pygmtools
 
 ##############################################################################
 # Load the images

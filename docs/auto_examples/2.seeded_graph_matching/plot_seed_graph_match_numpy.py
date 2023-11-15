@@ -35,7 +35,7 @@ import pygmtools as pygm
 import matplotlib.pyplot as plt # for plotting
 from matplotlib.patches import ConnectionPatch # for plotting matching result
 import networkx as nx # for plotting graphs
-pygm.BACKEND = 'numpy' # set default backend for pygmtools
+pygm.set_backend('numpy') # set default backend for pygmtools
 np.random.seed(1) # fix random seed
 
 ##############################################################################

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_pytorch.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_pytorch.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -68,7 +68,7 @@ results are called "seeds". In this example, we show how to exploit such prior w
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+    pygm.set_backend('pytorch') # set default backend for pygmtools
     _ = torch.manual_seed(1) # fix random seed
 
 
@@ -156,7 +156,7 @@ The seed matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02edd6d00>
+    <matplotlib.image.AxesImage object at 0x7fd30c1740a0>
 
 
 
@@ -288,7 +288,7 @@ Visualization of the affinity matrix.
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa048a48c40>
+    <matplotlib.image.AxesImage object at 0x7fd306ac0940>
 
 
 
@@ -343,7 +343,7 @@ The output of RRWM is a soft matching matrix. The matching prior is well-preserv
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e571700>
+    <matplotlib.image.AxesImage object at 0x7fd307ef0850>
 
 
 
@@ -398,7 +398,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e771cd0>
+    <matplotlib.image.AxesImage object at 0x7fd307cbd630>
 
 
 
@@ -544,7 +544,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f0a7700>
+    <matplotlib.image.AxesImage object at 0x7fd3ff764ac0>
 
 
 
@@ -600,7 +600,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e85ca00>
+    <matplotlib.image.AxesImage object at 0x7fd3ff622a40>
 
 
 
@@ -656,14 +656,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e8144f0>
+    <matplotlib.image.AxesImage object at 0x7fd3ff6f1ea0>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.348 seconds)
+   **Total running time of the script:** (0 minutes 0.648 seconds)
 
 
 .. _sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_pytorch.py:
@@ -671,6 +671,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

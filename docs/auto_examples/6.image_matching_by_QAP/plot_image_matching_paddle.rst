@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_paddle.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_paddle.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -74,7 +74,7 @@ The matched images can be further processed for other downstream tasks.
     from PIL import Image
     import warnings
     warnings.filterwarnings("ignore")
-    pygm.BACKEND = 'paddle' # set default backend for pygmtools
+    pygm.set_backend('paddle') # set default backend for pygmtools
 
 
 
@@ -348,7 +348,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf562d2880>
+    <matplotlib.image.AxesImage object at 0x7feb905a6ec0>
 
 
 
@@ -436,7 +436,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf56524970>
+    <matplotlib.image.AxesImage object at 0x7feb906ce0b0>
 
 
 
@@ -675,7 +675,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  17.969 seconds)
+   **Total running time of the script:** (0 minutes 10.361 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_paddle.py:
@@ -683,6 +683,8 @@ The NGM solver pretrained on VOC dataset:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python
