@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_pytorch.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_pytorch.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -64,7 +64,7 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+    pygm.set_backend('pytorch') # set default backend for pygmtools
     _ = torch.manual_seed(1) # fix random seed
 
 
@@ -200,7 +200,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa04687fac0>
+    <matplotlib.image.AxesImage object at 0x7fd3460f3dc0>
 
 
 
@@ -255,7 +255,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa0467f2040>
+    <matplotlib.image.AxesImage object at 0x7fd30c0f5990>
 
 
 
@@ -310,7 +310,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa04809ee50>
+    <matplotlib.image.AxesImage object at 0x7fd307f5bc10>
 
 
 
@@ -441,7 +441,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa048627bb0>
+    <matplotlib.image.AxesImage object at 0x7fd307c847f0>
 
 
 
@@ -497,7 +497,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa0487bfac0>
+    <matplotlib.image.AxesImage object at 0x7fd307b32620>
 
 
 
@@ -519,6 +519,27 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_pytorch.pt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fd307ba7430>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_pytorch.pt...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_pytorch.pt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fd306a0c790>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_pytorch.pt...
 
 
 
@@ -553,14 +574,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa048a9ffa0>
+    <matplotlib.image.AxesImage object at 0x7fd306a5ae90>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.069 seconds)
+   **Total running time of the script:** (0 minutes 11.874 seconds)
 
 
 .. _sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_pytorch.py:
@@ -568,6 +589,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

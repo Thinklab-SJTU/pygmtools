@@ -33,7 +33,7 @@ import networkx as nx # for plotting graphs
 pygm.set_backend('jittor') # set default backend for pygmtools
 _ = jt.set_seed(1) # fix random seed
 
-jt.flags.use_cuda = jt.has_cuda
+jt.flags.use_cuda = False
 
 ##############################################################################
 # Generate the larger graph

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_paddle.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_paddle.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -67,7 +67,7 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
     import networkx as nx # for plotting graphs
     import warnings
     warnings.filterwarnings("ignore")
-    pygm.BACKEND = 'paddle' # set default backend for pygmtools
+    pygm.set_backend('paddle') # set default backend for pygmtools
 
     paddle.device.set_device('cpu')
     _ = paddle.seed(1) # fix random seed
@@ -75,13 +75,6 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/setuptools/depends.py:2: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
-      import imp
 
 
 
@@ -212,7 +205,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e589cd0>
+    <matplotlib.image.AxesImage object at 0x7f0ee1c322f0>
 
 
 
@@ -267,7 +260,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e784c10>
+    <matplotlib.image.AxesImage object at 0x7f0ea9393be0>
 
 
 
@@ -322,7 +315,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02eb60e50>
+    <matplotlib.image.AxesImage object at 0x7f0ea9279e10>
 
 
 
@@ -453,7 +446,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f302340>
+    <matplotlib.image.AxesImage object at 0x7f0ea8f73ee0>
 
 
 
@@ -509,7 +502,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f45e220>
+    <matplotlib.image.AxesImage object at 0x7f0ea8e50f40>
 
 
 
@@ -531,6 +524,27 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_paddle.pdparams (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f0ea8ef49a0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_paddle.pdparams (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f0ea8ef5cc0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
 
 
 
@@ -565,14 +579,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f343100>
+    <matplotlib.image.AxesImage object at 0x7f0ea8e52290>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.345 seconds)
+   **Total running time of the script:** (0 minutes 5.321 seconds)
 
 
 .. _sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_paddle.py:
@@ -580,6 +594,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

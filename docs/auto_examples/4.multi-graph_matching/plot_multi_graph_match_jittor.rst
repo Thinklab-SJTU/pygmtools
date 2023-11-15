@@ -75,7 +75,7 @@ matched.
     from PIL import Image
     from matplotlib.patches import ConnectionPatch # for plotting matching result
 
-    pygm.BACKEND = 'jittor'  # set default backend for pygmtools
+    pygm.set_backend('jittor')  # set default backend for pygmtools
     jt.flags.use_cuda = True
 
 
@@ -94,35 +94,11 @@ see :class:`~pygmtools.dataset.WillowObject`).
 The images are resized to 256x256.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-100
+.. GENERATED FROM PYTHON SOURCE LINES 54-80
 
 .. code-block:: default
 
-
-    def load_image(pth, resize, n_outlier):
-        # load images
-        img = Image.open(pth + '.png')
-        # load key points' coordinates
-        kpts = jt.Var(sio.loadmat(pth + '.mat')['pts_coord'])
-        kpts[0] = kpts[0] * resize[0] / img.size[0]
-        kpts[1] = kpts[1] * resize[1] / img.size[1]
-        img = img.resize(resize, resample=Image.BILINEAR)
-        # generate random outlier
-        if n_outlier != 0:
-            random_kpts = jt.rand((2, n_outlier))
-            random_kpts[0] = random_kpts[0] * resize[0]
-            random_kpts[1] = random_kpts[1] * resize[1]
-            kpts = jt.concat([kpts, random_kpts], dim=1)
-        # random shuffle the key points
-        perm = np.eye(kpts.shape[1])
-        # np.random.shuffle(perm)
-        # perm = jt.Var(perm)
-        # kpts = jt.matmul(kpts, perm)
-        return img, kpts, perm
-
-
     obj_resize = (256, 256)
-    data_dir = '../data/mgm_data/Face' # put any class of Willow images in this directory
     n_images = 30
     n_outlier = 0
     img_list = []
@@ -130,14 +106,18 @@ The images are resized to 256x256.
     n_kpts_list = []
     perm_list = []
 
-    for root, ds, fs in os.walk(data_dir):
-        for i, f in enumerate(fs):
-            if f[-3:] == 'mat':
-                continue
-            if len(img_list) == n_images:
-                break
-            path = os.path.join(data_dir, f[:-4])
-            img, kpts, perm = load_image(pth=path, resize=obj_resize, n_outlier=n_outlier)
+    bm = pygm.benchmark.Benchmark(name='WillowObject', 
+                                  sets='train', 
+                                  obj_resize=obj_resize)
+
+    while len(img_list) < n_images:
+        data_list, gt_dict, _ = bm.rand_get_data(cls='Face')
+        for data in data_list:
+            img = Image.fromarray(data['img'])
+            coords = sorted(data['kpts'], key=lambda x: x['labels'])
+            kpts = jt.Var([[kpt['x'] for kpt in coords], 
+                            [kpt['y'] for kpt in coords]])
+            perm = np.eye(kpts.shape[1])
             img_list.append(img)
             kpts_list.append(kpts)
             n_kpts_list.append(kpts.shape[1])
@@ -151,12 +131,12 @@ The images are resized to 256x256.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 101-103
+.. GENERATED FROM PYTHON SOURCE LINES 81-83
 
 Visualize the images and keypoints
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 103-120
+.. GENERATED FROM PYTHON SOURCE LINES 83-100
 
 .. code-block:: default
 
@@ -189,7 +169,7 @@ Visualize the images and keypoints
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 121-126
+.. GENERATED FROM PYTHON SOURCE LINES 101-106
 
 Build the graphs
 -----------------
@@ -197,7 +177,7 @@ Graph structures are built based on the geometric structure of the keypoint set.
 we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_triangulation>`_.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 126-141
+.. GENERATED FROM PYTHON SOURCE LINES 106-121
 
 .. code-block:: default
 
@@ -223,7 +203,7 @@ we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_tria
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 142-153
+.. GENERATED FROM PYTHON SOURCE LINES 122-133
 
 Build affinity matrix
 ----------------------
@@ -237,7 +217,7 @@ We follow the formulation of Quadratic Assignment Problem (QAP):
 where the first step is to build the affinity matrix (:math:`\mathbf{K}`) for each pair of graphs
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-226
+.. GENERATED FROM PYTHON SOURCE LINES 133-206
 
 .. code-block:: default
 
@@ -321,11 +301,11 @@ where the first step is to build the affinity matrix (:math:`\mathbf{K}`) for ea
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 227-228
+.. GENERATED FROM PYTHON SOURCE LINES 207-208
 
 Calculate accuracy, consistency, and affinity
 
-.. GENERATED FROM PYTHON SOURCE LINES 228-358
+.. GENERATED FROM PYTHON SOURCE LINES 208-338
 
 .. code-block:: default
 
@@ -466,11 +446,11 @@ Calculate accuracy, consistency, and affinity
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 359-360
+.. GENERATED FROM PYTHON SOURCE LINES 339-340
 
 Generate gt mat
 
-.. GENERATED FROM PYTHON SOURCE LINES 360-369
+.. GENERATED FROM PYTHON SOURCE LINES 340-349
 
 .. code-block:: default
 
@@ -490,14 +470,14 @@ Generate gt mat
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 370-374
+.. GENERATED FROM PYTHON SOURCE LINES 350-354
 
 Pairwise graph matching by RRWM
 -------------------------------------------
 See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 374-399
+.. GENERATED FROM PYTHON SOURCE LINES 354-379
 
 .. code-block:: default
 
@@ -538,7 +518,7 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 400-405
+.. GENERATED FROM PYTHON SOURCE LINES 380-385
 
 Multi graph matching by multi-graph solvers
 ------------------------------------------------
@@ -546,7 +526,7 @@ Multi graph matching by multi-graph solvers
  See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 405-428
+.. GENERATED FROM PYTHON SOURCE LINES 385-408
 
 .. code-block:: default
 
@@ -585,13 +565,13 @@ Multi graph matching by multi-graph solvers
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 429-432
+.. GENERATED FROM PYTHON SOURCE LINES 409-412
 
 Multi graph matching: CAO-T
 See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 432-455
+.. GENERATED FROM PYTHON SOURCE LINES 412-435
 
 .. code-block:: default
 
@@ -630,13 +610,13 @@ See :func:`~pygmtools.multi_graph_solvers.cao` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 456-459
+.. GENERATED FROM PYTHON SOURCE LINES 436-439
 
 Multi graph matching: MGM-Floyd-M
 See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 459-482
+.. GENERATED FROM PYTHON SOURCE LINES 439-462
 
 .. code-block:: default
 
@@ -675,13 +655,13 @@ See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 483-486
+.. GENERATED FROM PYTHON SOURCE LINES 463-466
 
 Multi graph matching: MGM-Floyd-T
 See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 486-508
+.. GENERATED FROM PYTHON SOURCE LINES 466-489
 
 .. code-block:: default
 
@@ -708,6 +688,7 @@ See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
     # plt.savefig("Floyd-T.png")
     # plt.close()
 
+    plt.show()
 
 
 .. image-sg:: /auto_examples/4.multi-graph_matching/images/sphx_glr_plot_multi_graph_match_jittor_006.png
@@ -722,7 +703,7 @@ See :func:`~pygmtools.multi_graph_solvers.mgm_floyd` for the API reference.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (5 minutes 51.393 seconds)
+   **Total running time of the script:** (1 minutes 31.315 seconds)
 
 
 .. _sphx_glr_download_auto_examples_4.multi-graph_matching_plot_multi_graph_match_jittor.py:

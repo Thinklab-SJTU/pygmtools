@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_jittor.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_jittor.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -64,10 +64,10 @@ This example shows how to match a smaller graph to a subset of a larger graph.
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'jittor' # set default backend for pygmtools
+    pygm.set_backend('jittor') # set default backend for pygmtools
     _ = jt.set_seed(1) # fix random seed
 
-    jt.flags.use_cuda = jt.has_cuda
+    jt.flags.use_cuda = False
 
 
 
@@ -232,7 +232,7 @@ the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f447b50>
+    <matplotlib.image.AxesImage object at 0x7f3fb0590af0>
 
 
 
@@ -287,7 +287,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02ed5a3a0>
+    <matplotlib.image.AxesImage object at 0x7f3fb01e0340>
 
 
 
@@ -342,7 +342,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa044ee7520>
+    <matplotlib.image.AxesImage object at 0x7f3fb07d3940>
 
 
 
@@ -554,7 +554,7 @@ Visualization of NGM matching result:
 
 
 .. image-sg:: /auto_examples/3.discovering_subgraphs/images/sphx_glr_plot_subgraphs_jittor_008.png
-   :alt: NGM Matching Result (acc=0.60), Subgraph 1, Graph 2
+   :alt: NGM Matching Result (acc=0.80), Subgraph 1, Graph 2
    :srcset: /auto_examples/3.discovering_subgraphs/images/sphx_glr_plot_subgraphs_jittor_008.png
    :class: sphx-glr-single-img
 
@@ -565,7 +565,7 @@ Visualization of NGM matching result:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.519 seconds)
+   **Total running time of the script:** (0 minutes 3.906 seconds)
 
 
 .. _sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_jittor.py:
@@ -573,6 +573,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

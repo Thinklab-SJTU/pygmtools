@@ -51,31 +51,7 @@ jt.flags.use_cuda = True
 #
 # The images are resized to 256x256.
 #
-
-def load_image(pth, resize, n_outlier):
-    # load images
-    img = Image.open(pth + '.png')
-    # load key points' coordinates
-    kpts = jt.Var(sio.loadmat(pth + '.mat')['pts_coord'])
-    kpts[0] = kpts[0] * resize[0] / img.size[0]
-    kpts[1] = kpts[1] * resize[1] / img.size[1]
-    img = img.resize(resize, resample=Image.BILINEAR)
-    # generate random outlier
-    if n_outlier != 0:
-        random_kpts = jt.rand((2, n_outlier))
-        random_kpts[0] = random_kpts[0] * resize[0]
-        random_kpts[1] = random_kpts[1] * resize[1]
-        kpts = jt.concat([kpts, random_kpts], dim=1)
-    # random shuffle the key points
-    perm = np.eye(kpts.shape[1])
-    # np.random.shuffle(perm)
-    # perm = jt.Var(perm)
-    # kpts = jt.matmul(kpts, perm)
-    return img, kpts, perm
-
-
 obj_resize = (256, 256)
-data_dir = '../data/mgm_data/Face' # put any class of Willow images in this directory
 n_images = 30
 n_outlier = 0
 img_list = []
@@ -83,14 +59,18 @@ kpts_list = []
 n_kpts_list = []
 perm_list = []
 
-for root, ds, fs in os.walk(data_dir):
-    for i, f in enumerate(fs):
-        if f[-3:] == 'mat':
-            continue
-        if len(img_list) == n_images:
-            break
-        path = os.path.join(data_dir, f[:-4])
-        img, kpts, perm = load_image(pth=path, resize=obj_resize, n_outlier=n_outlier)
+bm = pygm.benchmark.Benchmark(name='WillowObject', 
+                              sets='train', 
+                              obj_resize=obj_resize)
+
+while len(img_list) < n_images:
+    data_list, gt_dict, _ = bm.rand_get_data(cls='Face')
+    for data in data_list:
+        img = Image.fromarray(data['img'])
+        coords = sorted(data['kpts'], key=lambda x: x['labels'])
+        kpts = jt.Var([[kpt['x'] for kpt in coords], 
+                        [kpt['y'] for kpt in coords]])
+        perm = np.eye(kpts.shape[1])
         img_list.append(img)
         kpts_list.append(kpts)
         n_kpts_list.append(kpts.shape[1])
@@ -505,3 +485,5 @@ for i in range(X.shape[0]):
     plt.gca().add_artist(con)
 # plt.savefig("Floyd-T.png")
 # plt.close()
+
+plt.show()

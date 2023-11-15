@@ -40,7 +40,6 @@ import numpy as np
 from PIL import Image
 pygm.set_backend('jittor') # set default backend for pygmtools
 
-jt.flags.use_cuda = jt.has_cuda
 
 ##############################################################################
 # Load the images

@@ -33,7 +33,7 @@ from matplotlib.patches import ConnectionPatch # for plotting matching result
 import networkx as nx # for plotting graphs
 import warnings
 warnings.filterwarnings("ignore")
-pygm.BACKEND = 'paddle' # set default backend for pygmtools
+pygm.set_backend('paddle') # set default backend for pygmtools
 
 paddle.device.set_device('cpu')
 _ = paddle.seed(1) # fix random seed

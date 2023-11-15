@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_pytorch.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_pytorch.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -71,7 +71,7 @@ The matched images can be further processed for other downstream tasks.
     import itertools
     import numpy as np
     from PIL import Image
-    pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+    pygm.set_backend('pytorch') # set default backend for pygmtools
 
 
 
@@ -251,6 +251,13 @@ Let's adopt the VGG16 CNN model to extract node features.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Downloading: "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth" to /home/wzever/.cache/torch/hub/checkpoints/vgg16_bn-6c64b313.pth
+      0%|          | 0.00/528M [00:00<?, ?B/s]      0%|          | 80.0k/528M [00:00<14:27, 638kB/s]      0%|          | 272k/528M [00:00<06:54, 1.34MB/s]      0%|          | 744k/528M [00:00<03:16, 2.81MB/s]      0%|          | 1.87M/528M [00:00<01:28, 6.23MB/s]      1%|          | 4.32M/528M [00:00<00:42, 12.9MB/s]      1%|▏         | 6.61M/528M [00:00<00:33, 16.5MB/s]      2%|▏         | 9.23M/528M [00:00<00:27, 20.0MB/s]      2%|▏         | 12.1M/528M [00:00<00:23, 22.6MB/s]      3%|▎         | 14.9M/528M [00:00<00:22, 23.9MB/s]      3%|▎         | 17.8M/528M [00:01<00:20, 25.6MB/s]      4%|▍         | 20.4M/528M [00:01<00:20, 26.2MB/s]      4%|▍         | 23.7M/528M [00:01<00:18, 28.3MB/s]      5%|▌         | 27.2M/528M [00:01<00:17, 30.8MB/s]      6%|▌         | 30.6M/528M [00:01<00:16, 32.2MB/s]      6%|▋         | 33.7M/528M [00:01<00:16, 32.0MB/s]      7%|▋         | 36.8M/528M [00:01<00:17, 30.2MB/s]      8%|▊         | 40.4M/528M [00:01<00:15, 32.4MB/s]      8%|▊         | 43.5M/528M [00:01<00:15, 32.1MB/s]      9%|▉         | 47.1M/528M [00:01<00:14, 33.8MB/s]     10%|▉         | 50.4M/528M [00:02<00:15, 32.1MB/s]     10%|█         | 53.5M/528M [00:02<00:15, 31.3MB/s]     11%|█         | 56.7M/528M [00:02<00:15, 31.8MB/s]     11%|█▏        | 59.7M/528M [00:02<00:17, 28.1MB/s]     12%|█▏        | 63.2M/528M [00:02<00:16, 29.4MB/s]     13%|█▎        | 67.1M/528M [00:02<00:14, 32.5MB/s]     13%|█▎        | 70.5M/528M [00:02<00:14, 33.3MB/s]     14%|█▍        | 73.7M/528M [00:02<00:14, 33.4MB/s]     15%|█▍        | 77.0M/528M [00:02<00:14, 33.5MB/s]     15%|█▌        | 80.2M/528M [00:03<00:14, 31.6MB/s]     16%|█▌        | 83.2M/528M [00:03<00:15, 29.4MB/s]     16%|█▋        | 86.3M/528M [00:03<00:15, 29.6MB/s]     17%|█▋        | 89.8M/528M [00:03<00:14, 31.3MB/s]     18%|█▊        | 93.1M/528M [00:03<00:14, 31.3MB/s]     18%|█▊        | 96.9M/528M [00:03<00:13, 33.4MB/s]     19%|█▉        | 100M/528M [00:03<00:13, 34.3MB/s]      20%|█▉        | 104M/528M [00:03<00:13, 33.2MB/s]     20%|██        | 107M/528M [00:03<00:13, 31.8MB/s]     21%|██        | 110M/528M [00:04<00:14, 30.9MB/s]     21%|██▏       | 113M/528M [00:04<00:14, 29.0MB/s]     22%|██▏       | 116M/528M [00:04<00:15, 28.4MB/s]     23%|██▎       | 119M/528M [00:04<00:14, 30.1MB/s]     23%|██▎       | 123M/528M [00:04<00:14, 29.8MB/s]     24%|██▍       | 126M/528M [00:04<00:13, 31.8MB/s]     25%|██▍       | 130M/528M [00:04<00:13, 31.1MB/s]     25%|██▌       | 133M/528M [00:04<00:13, 31.0MB/s]     26%|██▌       | 136M/528M [00:04<00:13, 30.7MB/s]     26%|██▋       | 139M/528M [00:05<00:13, 30.7MB/s]     27%|██▋       | 142M/528M [00:05<00:13, 31.1MB/s]     27%|██▋       | 145M/528M [00:05<00:13, 30.1MB/s]     28%|██▊       | 148M/528M [00:05<00:13, 29.3MB/s]     29%|██▊       | 151M/528M [00:05<00:12, 31.0MB/s]     29%|██▉       | 155M/528M [00:05<00:11, 32.7MB/s]     30%|██▉       | 158M/528M [00:05<00:12, 31.9MB/s]     30%|███       | 161M/528M [00:05<00:12, 31.6MB/s]     31%|███       | 164M/528M [00:05<00:12, 30.6MB/s]     32%|███▏      | 167M/528M [00:06<00:12, 31.0MB/s]     32%|███▏      | 171M/528M [00:06<00:11, 32.8MB/s]     33%|███▎      | 174M/528M [00:06<00:11, 33.6MB/s]     34%|███▎      | 178M/528M [00:06<00:11, 33.0MB/s]     34%|███▍      | 181M/528M [00:06<00:11, 31.7MB/s]     35%|███▍      | 184M/528M [00:06<00:11, 32.3MB/s]     35%|███▌      | 187M/528M [00:06<00:11, 32.2MB/s]     36%|███▌      | 190M/528M [00:06<00:11, 32.1MB/s]     37%|███▋      | 194M/528M [00:06<00:10, 32.6MB/s]     37%|███▋      | 197M/528M [00:06<00:10, 33.7MB/s]     38%|███▊      | 201M/528M [00:07<00:09, 34.9MB/s]     39%|███▊      | 204M/528M [00:07<00:10, 31.1MB/s]     39%|███▉      | 208M/528M [00:07<00:10, 32.0MB/s]     40%|███▉      | 211M/528M [00:07<00:10, 31.7MB/s]     41%|████      | 214M/528M [00:07<00:10, 32.5MB/s]     41%|████      | 217M/528M [00:07<00:10, 32.2MB/s]     42%|████▏     | 221M/528M [00:07<00:09, 32.9MB/s]     42%|████▏     | 224M/528M [00:07<00:10, 29.6MB/s]     43%|████▎     | 227M/528M [00:07<00:10, 30.6MB/s]     44%|████▎     | 230M/528M [00:08<00:10, 30.9MB/s]     44%|████▍     | 234M/528M [00:08<00:10, 30.6MB/s]     45%|████▍     | 237M/528M [00:08<00:09, 31.7MB/s]     46%|████▌     | 240M/528M [00:08<00:09, 32.6MB/s]     46%|████▌     | 244M/528M [00:08<00:09, 32.6MB/s]     47%|████▋     | 247M/528M [00:08<00:08, 33.7MB/s]     47%|████▋     | 251M/528M [00:08<00:08, 34.5MB/s]     48%|████▊     | 254M/528M [00:08<00:09, 30.4MB/s]     49%|████▊     | 257M/528M [00:09<00:10, 27.6MB/s]     49%|████▉     | 260M/528M [00:09<00:09, 29.3MB/s]     50%|████▉     | 263M/528M [00:09<00:09, 29.9MB/s]     50%|█████     | 266M/528M [00:09<00:09, 29.4MB/s]     51%|█████     | 270M/528M [00:09<00:09, 29.4MB/s]     52%|█████▏    | 273M/528M [00:09<00:09, 28.4MB/s]     52%|█████▏    | 276M/528M [00:09<00:09, 27.6MB/s]     53%|█████▎    | 279M/528M [00:09<00:09, 28.6MB/s]     54%|█████▎    | 283M/528M [00:09<00:08, 30.3MB/s]     54%|█████▍    | 286M/528M [00:10<00:08, 29.7MB/s]     55%|█████▍    | 289M/528M [00:10<00:08, 31.1MB/s]     55%|█████▌    | 293M/528M [00:10<00:07, 32.3MB/s]     56%|█████▌    | 296M/528M [00:10<00:07, 31.2MB/s]     57%|█████▋    | 300M/528M [00:10<00:07, 33.0MB/s]     57%|█████▋    | 303M/528M [00:10<00:07, 32.8MB/s]     58%|█████▊    | 306M/528M [00:10<00:07, 32.4MB/s]     59%|█████▊    | 309M/528M [00:10<00:06, 33.3MB/s]     59%|█████▉    | 313M/528M [00:10<00:06, 32.5MB/s]     60%|█████▉    | 316M/528M [00:11<00:07, 29.9MB/s]     60%|██████    | 319M/528M [00:11<00:14, 15.6MB/s]     61%|██████    | 322M/528M [00:11<00:10, 19.7MB/s]     62%|██████▏   | 326M/528M [00:11<00:09, 22.3MB/s]     62%|██████▏   | 329M/528M [00:11<00:08, 23.9MB/s]     63%|██████▎   | 332M/528M [00:11<00:07, 26.2MB/s]     64%|██████▎   | 336M/528M [00:11<00:06, 29.4MB/s]     64%|██████▍   | 339M/528M [00:12<00:06, 30.3MB/s]     65%|██████▍   | 343M/528M [00:12<00:06, 29.9MB/s]     66%|██████▌   | 346M/528M [00:12<00:05, 32.2MB/s]     66%|██████▌   | 350M/528M [00:12<00:05, 33.0MB/s]     67%|██████▋   | 353M/528M [00:12<00:05, 32.8MB/s]     68%|██████▊   | 357M/528M [00:12<00:05, 32.8MB/s]     68%|██████▊   | 360M/528M [00:12<00:05, 33.6MB/s]     69%|██████▉   | 363M/528M [00:12<00:05, 32.0MB/s]     69%|██████▉   | 366M/528M [00:12<00:05, 31.7MB/s]     70%|███████   | 370M/528M [00:13<00:05, 31.7MB/s]     71%|███████   | 373M/528M [00:13<00:05, 31.5MB/s]     71%|███████   | 376M/528M [00:13<00:04, 32.1MB/s]     72%|███████▏  | 379M/528M [00:13<00:04, 32.3MB/s]     73%|███████▎  | 383M/528M [00:13<00:04, 34.1MB/s]     73%|███████▎  | 386M/528M [00:13<00:04, 33.5MB/s]     74%|███████▍  | 389M/528M [00:13<00:05, 28.3MB/s]     74%|███████▍  | 392M/528M [00:13<00:05, 28.4MB/s]     75%|███████▌  | 396M/528M [00:13<00:04, 31.0MB/s]     76%|███████▌  | 399M/528M [00:14<00:04, 31.1MB/s]     76%|███████▋  | 403M/528M [00:14<00:03, 32.8MB/s]     77%|███████▋  | 406M/528M [00:14<00:03, 33.1MB/s]     78%|███████▊  | 409M/528M [00:14<00:03, 31.2MB/s]     78%|███████▊  | 413M/528M [00:14<00:03, 32.9MB/s]     79%|███████▉  | 416M/528M [00:14<00:03, 33.4MB/s]     80%|███████▉  | 420M/528M [00:14<00:03, 32.0MB/s]     80%|████████  | 424M/528M [00:14<00:03, 33.0MB/s]     81%|████████  | 427M/528M [00:14<00:03, 34.3MB/s]     82%|████████▏ | 431M/528M [00:15<00:03, 33.5MB/s]     82%|████████▏ | 434M/528M [00:15<00:03, 31.6MB/s]     83%|████████▎ | 437M/528M [00:15<00:03, 31.1MB/s]     83%|████████▎ | 440M/528M [00:15<00:03, 29.2MB/s]     84%|████████▍ | 443M/528M [00:15<00:02, 30.3MB/s]     84%|████████▍ | 446M/528M [00:15<00:03, 27.9MB/s]     85%|████████▌ | 449M/528M [00:15<00:02, 28.7MB/s]     86%|████████▌ | 452M/528M [00:15<00:02, 30.4MB/s]     86%|████████▋ | 456M/528M [00:15<00:02, 30.4MB/s]     87%|████████▋ | 459M/528M [00:16<00:02, 29.9MB/s]     88%|████████▊ | 462M/528M [00:16<00:02, 30.3MB/s]     88%|████████▊ | 466M/528M [00:16<00:02, 31.4MB/s]     89%|████████▉ | 469M/528M [00:16<00:01, 31.8MB/s]     90%|████████▉ | 473M/528M [00:16<00:01, 32.6MB/s]     90%|█████████ | 476M/528M [00:16<00:01, 33.7MB/s]     91%|█████████ | 480M/528M [00:16<00:01, 33.0MB/s]     91%|█████████▏| 483M/528M [00:16<00:01, 31.8MB/s]     92%|█████████▏| 486M/528M [00:16<00:01, 31.9MB/s]     93%|█████████▎| 489M/528M [00:17<00:01, 31.3MB/s]     93%|█████████▎| 493M/528M [00:17<00:01, 31.8MB/s]     94%|█████████▍| 496M/528M [00:17<00:01, 30.1MB/s]     94%|█████████▍| 499M/528M [00:17<00:01, 29.9MB/s]     95%|█████████▌| 502M/528M [00:17<00:00, 32.2MB/s]     96%|█████████▌| 506M/528M [00:17<00:00, 33.5MB/s]     96%|█████████▋| 509M/528M [00:17<00:00, 32.7MB/s]     97%|█████████▋| 512M/528M [00:17<00:00, 32.8MB/s]     98%|█████████▊| 515M/528M [00:17<00:00, 31.6MB/s]     98%|█████████▊| 519M/528M [00:18<00:00, 32.4MB/s]     99%|█████████▉| 522M/528M [00:18<00:00, 32.3MB/s]     99%|█████████▉| 525M/528M [00:18<00:00, 32.2MB/s]    100%|██████████| 528M/528M [00:18<00:00, 30.2MB/s]
+
 
 
 
@@ -341,7 +348,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf55eb7130>
+    <matplotlib.image.AxesImage object at 0x7fed5c18bf40>
 
 
 
@@ -428,7 +435,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf55befc40>
+    <matplotlib.image.AxesImage object at 0x7fed5c550ca0>
 
 
 
@@ -627,6 +634,27 @@ The NGM solver pretrained on Willow dataset:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_pytorch.pt...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_pytorch.pt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fed5c21ef20>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_pytorch.pt...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_pytorch.pt...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_pytorch.pt...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_pytorch.pt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fed5c21e8c0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_pytorch.pt...
+
 
 
 
@@ -668,7 +696,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  7.963 seconds)
+   **Total running time of the script:** (0 minutes 29.307 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_pytorch.py:
@@ -676,6 +704,8 @@ The NGM solver pretrained on VOC dataset:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_numpy.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_numpy.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -71,7 +71,7 @@ The matched images can be further processed for other downstream tasks.
     from sklearn.decomposition import PCA as PCAdimReduc
     import itertools
     from PIL import Image
-    pygm.BACKEND = 'numpy' # set numpy as backend for pygmtools
+    pygm.set_backend('numpy') # set numpy as backend for pygmtools
 
 
 
@@ -378,7 +378,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf5580c670>
+    <matplotlib.image.AxesImage object at 0x7fed8721dff0>
 
 
 
@@ -494,6 +494,13 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    /home/wzever/pygmtools/pygmtools/numpy_backend.py:304: RuntimeWarning: invalid value encountered in divide
+      t0 = alpha / beta
+
 
 
 
@@ -577,6 +584,27 @@ The NGM solver pretrained on Willow dataset:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_numpy.npy...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_numpy.npy...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_numpy.npy (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fed5c3063b0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_numpy.npy...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_numpy.npy...
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_numpy.npy...
+    Warning: Network error. Retrying...
+     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_numpy.npy (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fed5c358ca0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
+
+    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_numpy.npy...
+
 
 
 
@@ -618,7 +646,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.037 seconds)
+   **Total running time of the script:** (0 minutes 6.034 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_numpy.py:
@@ -626,6 +654,8 @@ The NGM solver pretrained on VOC dataset:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

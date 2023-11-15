@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_jittor.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_jittor.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -65,10 +65,10 @@ Isomorphic graphs mean graphs whose structures are identical, but the node corre
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'jittor' # set default backend for pygmtools
+    pygm.set_backend('jittor') # set default backend for pygmtools
     _ = jt.set_seed(1) # fix random seed
 
-    jt.flags.use_cuda = jt.has_cuda
+    jt.flags.use_cuda = False
 
 
 
@@ -203,7 +203,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046866eb0>
+    <matplotlib.image.AxesImage object at 0x7f3fb07d27a0>
 
 
 
@@ -258,7 +258,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa048131f40>
+    <matplotlib.image.AxesImage object at 0x7f4101738e20>
 
 
 
@@ -313,7 +313,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa0483d8be0>
+    <matplotlib.image.AxesImage object at 0x7f3fb068a020>
 
 
 
@@ -444,7 +444,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa0489e2d30>
+    <matplotlib.image.AxesImage object at 0x7f3fb0274b80>
 
 
 
@@ -500,7 +500,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046985070>
+    <matplotlib.image.AxesImage object at 0x7f3fb006ed10>
 
 
 
@@ -556,14 +556,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa046826c70>
+    <matplotlib.image.AxesImage object at 0x7f3fb013a440>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  7.989 seconds)
+   **Total running time of the script:** (0 minutes 12.105 seconds)
 
 
 .. _sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_jittor.py:
@@ -571,6 +571,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python
