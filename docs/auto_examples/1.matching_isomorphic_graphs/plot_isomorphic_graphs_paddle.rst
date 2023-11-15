@@ -205,7 +205,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0ee1c322f0>
+    <matplotlib.image.AxesImage object at 0x7feb92da5180>
 
 
 
@@ -260,7 +260,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0ea9393be0>
+    <matplotlib.image.AxesImage object at 0x7feb9296e230>
 
 
 
@@ -315,7 +315,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0ea9279e10>
+    <matplotlib.image.AxesImage object at 0x7feb9296fd90>
 
 
 
@@ -446,7 +446,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0ea8f73ee0>
+    <matplotlib.image.AxesImage object at 0x7feb927e6890>
 
 
 
@@ -502,7 +502,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0ea8e50f40>
+    <matplotlib.image.AxesImage object at 0x7feb926af8e0>
 
 
 
@@ -524,27 +524,6 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_paddle.pdparams (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f0ea8ef49a0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_paddle.pdparams (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f0ea8ef5cc0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_paddle.pdparams...
 
 
 
@@ -579,14 +558,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0ea8e52290>
+    <matplotlib.image.AxesImage object at 0x7feb9259aa10>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 5.321 seconds)
+   **Total running time of the script:** (0 minutes 1.179 seconds)
 
 
 .. _sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_paddle.py:

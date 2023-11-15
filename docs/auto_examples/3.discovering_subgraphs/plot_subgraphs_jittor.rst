@@ -55,7 +55,7 @@ This example shows how to match a smaller graph to a subset of a larger graph.
     * :func:`~pygmtools.neural_solvers.ngm` (neural network solver)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-38
+.. GENERATED FROM PYTHON SOURCE LINES 28-36
 
 .. code-block:: default
 
@@ -67,7 +67,6 @@ This example shows how to match a smaller graph to a subset of a larger graph.
     pygm.set_backend('jittor') # set default backend for pygmtools
     _ = jt.set_seed(1) # fix random seed
 
-    jt.flags.use_cuda = False
 
 
 
@@ -75,14 +74,13 @@ This example shows how to match a smaller graph to a subset of a larger graph.
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 39-42
+.. GENERATED FROM PYTHON SOURCE LINES 37-40
 
 Generate the larger graph
 --------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-48
+.. GENERATED FROM PYTHON SOURCE LINES 40-46
 
 .. code-block:: default
 
@@ -99,13 +97,13 @@ Generate the larger graph
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-52
+.. GENERATED FROM PYTHON SOURCE LINES 47-50
 
 Generate the smaller graph
 ---------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-68
+.. GENERATED FROM PYTHON SOURCE LINES 50-66
 
 .. code-block:: default
 
@@ -132,13 +130,13 @@ Generate the smaller graph
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-72
+.. GENERATED FROM PYTHON SOURCE LINES 67-70
 
 Visualize the graphs
 ---------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-85
+.. GENERATED FROM PYTHON SOURCE LINES 70-83
 
 .. code-block:: default
 
@@ -167,7 +165,7 @@ Visualize the graphs
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-99
+.. GENERATED FROM PYTHON SOURCE LINES 84-97
 
 We then show how to automatically discover the matching by graph matching.
 
@@ -183,7 +181,7 @@ To match the larger graph and the smaller graph, we follow the formulation of Qu
 where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 99-105
+.. GENERATED FROM PYTHON SOURCE LINES 97-103
 
 .. code-block:: default
 
@@ -200,7 +198,7 @@ where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-113
+.. GENERATED FROM PYTHON SOURCE LINES 104-111
 
 Visualization of the affinity matrix. For graph matching problem with :math:`N_1` and :math:`N_2` nodes,
 the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :math:`N_1^2` and
@@ -210,7 +208,7 @@ the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :
     The diagonal elements of the affinity matrix is empty because there is no node features in this example.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-117
+.. GENERATED FROM PYTHON SOURCE LINES 111-115
 
 .. code-block:: default
 
@@ -232,18 +230,18 @@ the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb0590af0>
+    <matplotlib.image.AxesImage object at 0x7fda2c0bc880>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 118-122
+.. GENERATED FROM PYTHON SOURCE LINES 116-120
 
 Solve graph matching problem by RRWM solver
 -------------------------------------------
 See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-124
+.. GENERATED FROM PYTHON SOURCE LINES 120-122
 
 .. code-block:: default
 
@@ -256,12 +254,12 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 125-127
+.. GENERATED FROM PYTHON SOURCE LINES 123-125
 
 The output of RRWM is a soft matching matrix. Visualization:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 127-135
+.. GENERATED FROM PYTHON SOURCE LINES 125-133
 
 .. code-block:: default
 
@@ -287,18 +285,18 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb01e0340>
+    <matplotlib.image.AxesImage object at 0x7fda5104dc90>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 136-140
+.. GENERATED FROM PYTHON SOURCE LINES 134-138
 
 Get the discrete matching matrix
 ---------------------------------
 Hungarian algorithm is then adopted to reach a discrete matching matrix
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 140-142
+.. GENERATED FROM PYTHON SOURCE LINES 138-140
 
 .. code-block:: default
 
@@ -311,12 +309,12 @@ Hungarian algorithm is then adopted to reach a discrete matching matrix
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-145
+.. GENERATED FROM PYTHON SOURCE LINES 141-143
 
 Visualization of the discrete matching matrix:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 145-153
+.. GENERATED FROM PYTHON SOURCE LINES 143-151
 
 .. code-block:: default
 
@@ -342,18 +340,18 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb07d3940>
+    <matplotlib.image.AxesImage object at 0x7fd94c72d090>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-158
+.. GENERATED FROM PYTHON SOURCE LINES 152-156
 
 Match the subgraph
 -------------------
 Draw the matching:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-173
+.. GENERATED FROM PYTHON SOURCE LINES 156-171
 
 .. code-block:: default
 
@@ -384,7 +382,7 @@ Draw the matching:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 174-181
+.. GENERATED FROM PYTHON SOURCE LINES 172-179
 
 Other solvers are also available
 ---------------------------------
@@ -394,7 +392,7 @@ Classic IPFP solver
 See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 181-183
+.. GENERATED FROM PYTHON SOURCE LINES 179-181
 
 .. code-block:: default
 
@@ -407,12 +405,12 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-186
+.. GENERATED FROM PYTHON SOURCE LINES 182-184
 
 Visualization of IPFP matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 186-201
+.. GENERATED FROM PYTHON SOURCE LINES 184-199
 
 .. code-block:: default
 
@@ -443,14 +441,14 @@ Visualization of IPFP matching result:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 202-206
+.. GENERATED FROM PYTHON SOURCE LINES 200-204
 
 Classic SM solver
 ^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 206-209
+.. GENERATED FROM PYTHON SOURCE LINES 204-207
 
 .. code-block:: default
 
@@ -464,12 +462,12 @@ See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 210-212
+.. GENERATED FROM PYTHON SOURCE LINES 208-210
 
 Visualization of SM matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 212-227
+.. GENERATED FROM PYTHON SOURCE LINES 210-225
 
 .. code-block:: default
 
@@ -500,7 +498,7 @@ Visualization of SM matching result:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 228-237
+.. GENERATED FROM PYTHON SOURCE LINES 226-235
 
 NGM neural network solver
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -512,7 +510,7 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
     NGM on the new problem.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 237-241
+.. GENERATED FROM PYTHON SOURCE LINES 235-239
 
 .. code-block:: default
 
@@ -527,12 +525,12 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 242-244
+.. GENERATED FROM PYTHON SOURCE LINES 240-242
 
 Visualization of NGM matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 244-258
+.. GENERATED FROM PYTHON SOURCE LINES 242-256
 
 .. code-block:: default
 
@@ -565,7 +563,7 @@ Visualization of NGM matching result:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.906 seconds)
+   **Total running time of the script:** (0 minutes 0.601 seconds)
 
 
 .. _sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_jittor.py:

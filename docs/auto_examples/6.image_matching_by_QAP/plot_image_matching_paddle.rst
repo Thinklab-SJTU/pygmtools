@@ -348,7 +348,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0f1fd0d090>
+    <matplotlib.image.AxesImage object at 0x7feb905a6ec0>
 
 
 
@@ -436,7 +436,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f0f1fdea3e0>
+    <matplotlib.image.AxesImage object at 0x7feb906ce0b0>
 
 
 
@@ -635,27 +635,6 @@ The NGM solver pretrained on Willow dataset:
    :class: sphx-glr-single-img
 
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_paddle.pdparams...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_paddle.pdparams...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_paddle.pdparams (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f0f5ab1f730>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_paddle.pdparams...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_paddle.pdparams...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_paddle.pdparams...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_paddle.pdparams (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f0f5ab4f430>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_paddle.pdparams...
-
 
 
 
@@ -696,7 +675,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 10.939 seconds)
+   **Total running time of the script:** (0 minutes 10.361 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_paddle.py:

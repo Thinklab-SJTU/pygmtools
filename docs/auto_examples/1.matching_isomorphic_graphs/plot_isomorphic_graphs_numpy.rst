@@ -201,7 +201,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f21fd8fd150>
+    <matplotlib.image.AxesImage object at 0x7fda03dc1270>
 
 
 
@@ -256,7 +256,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f21fd809540>
+    <matplotlib.image.AxesImage object at 0x7fda03b21660>
 
 
 
@@ -311,7 +311,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f21fd6fbb20>
+    <matplotlib.image.AxesImage object at 0x7fda03bbfc40>
 
 
 
@@ -449,7 +449,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f21fd5542b0>
+    <matplotlib.image.AxesImage object at 0x7fda038be470>
 
 
 
@@ -505,7 +505,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f21fd63a500>
+    <matplotlib.image.AxesImage object at 0x7fda037a0430>
 
 
 
@@ -526,30 +526,6 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_numpy.npy (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f21fd8ce200>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_voc_numpy.npy (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f21fd8cd2d0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_voc_numpy.npy...
-      0%|          | 0/14319 [00:00<?, ?it/s]    100%|██████████| 14.0k/14.0k [00:00<00:00, 1.04MB/s]
 
 
 
@@ -584,14 +560,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f21fd8acac0>
+    <matplotlib.image.AxesImage object at 0x7fda0364a380>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (4 minutes 13.815 seconds)
+   **Total running time of the script:** (0 minutes 0.956 seconds)
 
 
 .. _sphx_glr_download_auto_examples_1.matching_isomorphic_graphs_plot_isomorphic_graphs_numpy.py:

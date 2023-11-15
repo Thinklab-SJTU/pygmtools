@@ -60,7 +60,7 @@ results are called "seeds". In this example, we show how to exploit such prior w
     * :func:`~pygmtools.neural_solvers.ngm` (neural network solver)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 33-43
+.. GENERATED FROM PYTHON SOURCE LINES 33-41
 
 .. code-block:: default
 
@@ -72,7 +72,6 @@ results are called "seeds". In this example, we show how to exploit such prior w
     pygm.set_backend('jittor') # set default backend for pygmtools
     _ = jt.set_seed(1) # fix random seed
 
-    jt.flags.use_cuda = False
 
 
 
@@ -80,8 +79,7 @@ results are called "seeds". In this example, we show how to exploit such prior w
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 44-49
+.. GENERATED FROM PYTHON SOURCE LINES 42-47
 
 Generate two isomorphic graphs (with seeds)
 -------------------------------------------
@@ -89,7 +87,7 @@ In this example, we assume the first three nodes are already aligned. Firstly, w
 matrix:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-54
+.. GENERATED FROM PYTHON SOURCE LINES 47-52
 
 .. code-block:: default
 
@@ -105,12 +103,12 @@ matrix:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-57
+.. GENERATED FROM PYTHON SOURCE LINES 53-55
 
 Then we generate the isomorphic graphs:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 57-68
+.. GENERATED FROM PYTHON SOURCE LINES 55-66
 
 .. code-block:: default
 
@@ -132,14 +130,14 @@ Then we generate the isomorphic graphs:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-73
+.. GENERATED FROM PYTHON SOURCE LINES 67-71
 
 Visualize the graphs and seeds
 -------------------------------
 The seed matching matrix:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-77
+.. GENERATED FROM PYTHON SOURCE LINES 71-75
 
 .. code-block:: default
 
@@ -161,16 +159,16 @@ The seed matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3f7810a440>
+    <matplotlib.image.AxesImage object at 0x7fda50d6abf0>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-80
+.. GENERATED FROM PYTHON SOURCE LINES 76-78
 
 The blue lines denote the matching seeds.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-97
+.. GENERATED FROM PYTHON SOURCE LINES 78-95
 
 .. code-block:: default
 
@@ -203,7 +201,7 @@ The blue lines denote the matching seeds.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-113
+.. GENERATED FROM PYTHON SOURCE LINES 96-111
 
 Now these two graphs look dissimilar because they are not aligned. We then align these two graphs
 by graph matching.
@@ -221,7 +219,7 @@ where the first step is to build the affinity matrix (:math:`\mathbf{K}`). We fi
 affinity matrix:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-119
+.. GENERATED FROM PYTHON SOURCE LINES 111-117
 
 .. code-block:: default
 
@@ -238,7 +236,7 @@ affinity matrix:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 120-129
+.. GENERATED FROM PYTHON SOURCE LINES 118-127
 
 The next step is to add the seed matching information as priors to the affinity matrix. The matching priors
 are treated as node affinities and the corresponding node affinity is added by 10 if there is an matching
@@ -250,7 +248,7 @@ prior.
     vectorized.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 129-131
+.. GENERATED FROM PYTHON SOURCE LINES 127-129
 
 .. code-block:: default
 
@@ -263,7 +261,7 @@ prior.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 132-137
+.. GENERATED FROM PYTHON SOURCE LINES 130-135
 
 Visualization of the affinity matrix.
 
@@ -271,7 +269,7 @@ Visualization of the affinity matrix.
     In this example, the diagonal elements reflect the matching prior.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 137-141
+.. GENERATED FROM PYTHON SOURCE LINES 135-139
 
 .. code-block:: default
 
@@ -293,18 +291,18 @@ Visualization of the affinity matrix.
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb006d750>
+    <matplotlib.image.AxesImage object at 0x7fd947d39db0>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 142-146
+.. GENERATED FROM PYTHON SOURCE LINES 140-144
 
 Solve graph matching problem by RRWM solver
 -------------------------------------------
 See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 146-148
+.. GENERATED FROM PYTHON SOURCE LINES 144-146
 
 .. code-block:: default
 
@@ -317,12 +315,12 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 149-151
+.. GENERATED FROM PYTHON SOURCE LINES 147-149
 
 The output of RRWM is a soft matching matrix. The matching prior is well-preserved:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 151-159
+.. GENERATED FROM PYTHON SOURCE LINES 149-157
 
 .. code-block:: default
 
@@ -348,18 +346,18 @@ The output of RRWM is a soft matching matrix. The matching prior is well-preserv
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb02eff40>
+    <matplotlib.image.AxesImage object at 0x7fd94c637c70>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 160-164
+.. GENERATED FROM PYTHON SOURCE LINES 158-162
 
 Get the discrete matching matrix
 ---------------------------------
 Hungarian algorithm is then adopted to reach a discrete matching matrix
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-166
+.. GENERATED FROM PYTHON SOURCE LINES 162-164
 
 .. code-block:: default
 
@@ -372,12 +370,12 @@ Hungarian algorithm is then adopted to reach a discrete matching matrix
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 167-169
+.. GENERATED FROM PYTHON SOURCE LINES 165-167
 
 Visualization of the discrete matching matrix:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 169-177
+.. GENERATED FROM PYTHON SOURCE LINES 167-175
 
 .. code-block:: default
 
@@ -403,11 +401,11 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f4136c05d50>
+    <matplotlib.image.AxesImage object at 0x7fd94c72ce80>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 178-183
+.. GENERATED FROM PYTHON SOURCE LINES 176-181
 
 Align the original graphs
 --------------------------
@@ -415,7 +413,7 @@ Draw the matching (green lines for correct matching, red lines for wrong matchin
 seed matching):
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-202
+.. GENERATED FROM PYTHON SOURCE LINES 181-200
 
 .. code-block:: default
 
@@ -450,12 +448,12 @@ seed matching):
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 203-205
+.. GENERATED FROM PYTHON SOURCE LINES 201-203
 
 Align the nodes:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 205-227
+.. GENERATED FROM PYTHON SOURCE LINES 203-225
 
 .. code-block:: default
 
@@ -493,7 +491,7 @@ Align the nodes:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 228-237
+.. GENERATED FROM PYTHON SOURCE LINES 226-235
 
 Other solvers are also available
 ---------------------------------
@@ -505,7 +503,7 @@ Classic IPFP solver
 See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 237-239
+.. GENERATED FROM PYTHON SOURCE LINES 235-237
 
 .. code-block:: default
 
@@ -518,12 +516,12 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 240-242
+.. GENERATED FROM PYTHON SOURCE LINES 238-240
 
 Visualization of IPFP matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 242-250
+.. GENERATED FROM PYTHON SOURCE LINES 240-248
 
 .. code-block:: default
 
@@ -549,18 +547,18 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb05933d0>
+    <matplotlib.image.AxesImage object at 0x7fda2c0f6080>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 251-255
+.. GENERATED FROM PYTHON SOURCE LINES 249-253
 
 Classic SM solver
 ^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 255-258
+.. GENERATED FROM PYTHON SOURCE LINES 253-256
 
 .. code-block:: default
 
@@ -574,12 +572,12 @@ See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 259-261
+.. GENERATED FROM PYTHON SOURCE LINES 257-259
 
 Visualization of SM matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 261-269
+.. GENERATED FROM PYTHON SOURCE LINES 259-267
 
 .. code-block:: default
 
@@ -605,18 +603,18 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3fb02e5360>
+    <matplotlib.image.AxesImage object at 0x7fda3c98c250>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 270-274
+.. GENERATED FROM PYTHON SOURCE LINES 268-272
 
 NGM neural network solver
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 274-278
+.. GENERATED FROM PYTHON SOURCE LINES 272-276
 
 .. code-block:: default
 
@@ -631,12 +629,12 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 279-281
+.. GENERATED FROM PYTHON SOURCE LINES 277-279
 
 Visualization of NGM matching result:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 281-287
+.. GENERATED FROM PYTHON SOURCE LINES 279-285
 
 .. code-block:: default
 
@@ -660,14 +658,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f3f77f41a80>
+    <matplotlib.image.AxesImage object at 0x7fda3c840790>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 2.549 seconds)
+   **Total running time of the script:** (0 minutes 0.720 seconds)
 
 
 .. _sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_jittor.py:

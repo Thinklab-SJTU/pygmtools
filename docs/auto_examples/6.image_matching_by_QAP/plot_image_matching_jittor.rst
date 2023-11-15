@@ -57,7 +57,7 @@ The matched images can be further processed for other downstream tasks.
     * :func:`~pygmtools.neural_solvers.ngm` (neural network solver)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 30-44
+.. GENERATED FROM PYTHON SOURCE LINES 30-43
 
 .. code-block:: default
 
@@ -81,8 +81,7 @@ The matched images can be further processed for other downstream tasks.
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 45-52
+.. GENERATED FROM PYTHON SOURCE LINES 44-51
 
 Load the images
 ----------------
@@ -92,7 +91,7 @@ see :class:`~pygmtools.dataset.WillowObject`).
 The images are resized to 256x256.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-64
+.. GENERATED FROM PYTHON SOURCE LINES 51-63
 
 .. code-block:: default
 
@@ -115,12 +114,12 @@ The images are resized to 256x256.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-67
+.. GENERATED FROM PYTHON SOURCE LINES 64-66
 
 Visualize the images and keypoints
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-82
+.. GENERATED FROM PYTHON SOURCE LINES 66-81
 
 .. code-block:: default
 
@@ -151,7 +150,7 @@ Visualize the images and keypoints
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-88
+.. GENERATED FROM PYTHON SOURCE LINES 82-87
 
 Build the graphs
 -----------------
@@ -159,7 +158,7 @@ Graph structures are built based on the geometric structure of the keypoint set.
 we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_triangulation>`_.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-99
+.. GENERATED FROM PYTHON SOURCE LINES 87-98
 
 .. code-block:: default
 
@@ -181,12 +180,12 @@ we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_tria
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-102
+.. GENERATED FROM PYTHON SOURCE LINES 99-101
 
 We encode the length of edges as edge features
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-107
+.. GENERATED FROM PYTHON SOURCE LINES 101-106
 
 .. code-block:: default
 
@@ -202,12 +201,12 @@ We encode the length of edges as edge features
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 108-110
+.. GENERATED FROM PYTHON SOURCE LINES 107-109
 
 Visualize the graphs
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 110-118
+.. GENERATED FROM PYTHON SOURCE LINES 109-117
 
 .. code-block:: default
 
@@ -231,14 +230,14 @@ Visualize the graphs
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 119-123
+.. GENERATED FROM PYTHON SOURCE LINES 118-122
 
 Extract node features
 ----------------------
 Let's adopt the VGG16 CNN model to extract node features.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 123-130
+.. GENERATED FROM PYTHON SOURCE LINES 122-129
 
 .. code-block:: default
 
@@ -256,12 +255,12 @@ Let's adopt the VGG16 CNN model to extract node features.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 131-133
+.. GENERATED FROM PYTHON SOURCE LINES 130-132
 
 Normalize the features
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 133-168
+.. GENERATED FROM PYTHON SOURCE LINES 132-167
 
 .. code-block:: default
 
@@ -307,12 +306,12 @@ Normalize the features
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 169-171
+.. GENERATED FROM PYTHON SOURCE LINES 168-170
 
 Up-sample the features to the original image size
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 171-174
+.. GENERATED FROM PYTHON SOURCE LINES 170-173
 
 .. code-block:: default
 
@@ -326,12 +325,12 @@ Up-sample the features to the original image size
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 175-177
+.. GENERATED FROM PYTHON SOURCE LINES 174-176
 
 Visualize the extracted CNN feature (dimensionality reduction via principle component analysis)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 177-198
+.. GENERATED FROM PYTHON SOURCE LINES 176-197
 
 .. code-block:: default
 
@@ -370,16 +369,16 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f57dc0fa470>
+    <matplotlib.image.AxesImage object at 0x7f34bc1eb700>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-201
+.. GENERATED FROM PYTHON SOURCE LINES 198-200
 
 Extract node features by nearest interpolation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 201-206
+.. GENERATED FROM PYTHON SOURCE LINES 200-205
 
 .. code-block:: default
 
@@ -395,7 +394,7 @@ Extract node features by nearest interpolation
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 207-218
+.. GENERATED FROM PYTHON SOURCE LINES 206-217
 
 Build affinity matrix
 ----------------------
@@ -409,7 +408,7 @@ We follow the formulation of Quadratic Assignment Problem (QAP):
 where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 218-224
+.. GENERATED FROM PYTHON SOURCE LINES 217-223
 
 .. code-block:: default
 
@@ -426,7 +425,7 @@ where the first step is to build the affinity matrix (:math:`\mathbf{K}`)
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 225-231
+.. GENERATED FROM PYTHON SOURCE LINES 224-230
 
 Visualization of the affinity matrix. For graph matching problem with :math:`N` nodes, the affinity matrix
 has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each graph.
@@ -435,7 +434,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
     The diagonal elements are node affinities, the off-diagonal elements are edge features.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 231-235
+.. GENERATED FROM PYTHON SOURCE LINES 230-234
 
 .. code-block:: default
 
@@ -457,18 +456,18 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f57dc09a8f0>
+    <matplotlib.image.AxesImage object at 0x7f34b67351e0>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 236-240
+.. GENERATED FROM PYTHON SOURCE LINES 235-239
 
 Solve graph matching problem by RRWM solver
 -------------------------------------------
 See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 240-242
+.. GENERATED FROM PYTHON SOURCE LINES 239-241
 
 .. code-block:: default
 
@@ -481,12 +480,12 @@ See :func:`~pygmtools.classic_solvers.rrwm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 243-245
+.. GENERATED FROM PYTHON SOURCE LINES 242-244
 
 The output of RRWM is a soft matching matrix. Hungarian algorithm is then adopted to reach a discrete matching matrix.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 245-247
+.. GENERATED FROM PYTHON SOURCE LINES 244-246
 
 .. code-block:: default
 
@@ -499,7 +498,7 @@ The output of RRWM is a soft matching matrix. Hungarian algorithm is then adopte
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 248-253
+.. GENERATED FROM PYTHON SOURCE LINES 247-252
 
 Plot the matching
 ------------------
@@ -507,7 +506,7 @@ The correct matchings are marked by green, and wrong matchings are marked by red
 ordered by their ground truth classes (i.e. the ground truth matching matrix is a diagonal matrix).
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 253-266
+.. GENERATED FROM PYTHON SOURCE LINES 252-265
 
 .. code-block:: default
 
@@ -536,7 +535,7 @@ ordered by their ground truth classes (i.e. the ground truth matching matrix is 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 267-275
+.. GENERATED FROM PYTHON SOURCE LINES 266-274
 
 Solve by other solvers
 -----------------------
@@ -547,7 +546,7 @@ IPFP solver
 See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 275-290
+.. GENERATED FROM PYTHON SOURCE LINES 274-289
 
 .. code-block:: default
 
@@ -578,14 +577,14 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 291-295
+.. GENERATED FROM PYTHON SOURCE LINES 290-294
 
 SM solver
 ^^^^^^^^^^^
 See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 295-311
+.. GENERATED FROM PYTHON SOURCE LINES 294-310
 
 .. code-block:: default
 
@@ -617,7 +616,7 @@ See :func:`~pygmtools.classic_solvers.sm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 312-323
+.. GENERATED FROM PYTHON SOURCE LINES 311-322
 
 NGM solver
 ^^^^^^^^^^^
@@ -631,7 +630,7 @@ See :func:`~pygmtools.neural_solvers.ngm` for the API reference.
 The NGM solver pretrained on Willow dataset:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 323-339
+.. GENERATED FROM PYTHON SOURCE LINES 322-338
 
 .. code-block:: default
 
@@ -660,39 +659,15 @@ The NGM solver pretrained on Willow dataset:
    :class: sphx-glr-single-img
 
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_jittor.pt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f57b91342e0>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-    Warning: Network error. Retrying...
-     HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /heatingma/pygmtools/resolve/main/ngm_willow_jittor.pt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f57b9136920>: Failed to resolve 'huggingface.co' ([Errno -3] Temporary failure in name resolution)"))
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-
-    Downloading to /home/wzever/.cache/pygmtools/ngm_willow_jittor.pt...
-      0%|          | 0/23238 [00:00<?, ?it/s]    100%|██████████| 22.7k/22.7k [00:09<00:00, 2.35kB/s]    100%|██████████| 22.7k/22.7k [00:09<00:00, 2.35kB/s]
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 340-342
+.. GENERATED FROM PYTHON SOURCE LINES 339-341
 
 The NGM solver pretrained on VOC dataset:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 342-357
+.. GENERATED FROM PYTHON SOURCE LINES 341-356
 
 .. code-block:: default
 
@@ -726,7 +701,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (9 minutes 24.182 seconds)
+   **Total running time of the script:** (0 minutes 4.532 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_jittor.py:
