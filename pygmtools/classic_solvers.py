@@ -79,7 +79,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
     
             # Generate a batch of isomorphic graphs
@@ -112,7 +112,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
     
             # Generate a batch of isomorphic graphs
@@ -152,7 +152,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -193,7 +193,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -244,7 +244,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
             >>> _ = mindspore.set_seed(1)
             >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
@@ -304,7 +304,7 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import tensorflow as tf
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'tensorflow'
+            >>> pygm.set_backend('tensorflow')
             >>> _ = tf.random.set_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -454,7 +454,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
     
             # Generate a batch of isomorphic graphs
@@ -487,7 +487,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
     
             # Generate a batch of isomorphic graphs
@@ -527,7 +527,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -568,7 +568,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
 
@@ -620,7 +620,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
             >>> _ = mindspore.set_seed(1)
             >>> mindspore.set_context(mode=mindspore.PYNATIVE_MODE)
 
@@ -667,7 +667,7 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import tensorflow as tf
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'tensorflow'
+            >>> pygm.set_backend('tensorflow')
             >>> _ = tf.random.set_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -796,7 +796,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(1)
     
             # Generate a batch of isomorphic graphs
@@ -832,7 +832,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
     
             # Generate a batch of isomorphic graphs
@@ -869,7 +869,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> _ = paddle.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -907,7 +907,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> _ = jt.seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -944,7 +944,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
             >>> _ = mindspore.set_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -981,7 +981,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
 
             >>> import tensorflow as tf
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'tensorflow'
+            >>> pygm.set_backend('tensorflow')
             >>> _ = tf.random.set_seed(1)
 
             # Generate a batch of isomorphic graphs
@@ -1105,7 +1105,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, ba
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
             
             # Generate a batch of isomorphic graphs

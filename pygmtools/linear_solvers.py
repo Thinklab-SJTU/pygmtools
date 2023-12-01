@@ -124,7 +124,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -214,7 +214,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -307,7 +307,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -419,7 +419,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -513,7 +513,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -612,7 +612,7 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import tensorflow as tf
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'tensorflow'
+            >>> pygm.set_backend('tensorflow')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -844,7 +844,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import numpy as np
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'numpy'
+            >>> pygm.set_backend('numpy')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -915,7 +915,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import torch
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'pytorch'
+            >>> pygm.set_backend('pytorch')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -985,7 +985,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import paddle
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'paddle'
+            >>> pygm.set_backend('paddle')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -1063,7 +1063,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import jittor as jt
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'jittor'
+            >>> pygm.set_backend('jittor')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -1133,7 +1133,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import mindspore
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'mindspore'
+            >>> pygm.set_backend('mindspore')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input
@@ -1206,7 +1206,7 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
 
             >>> import tensorflow as tf
             >>> import pygmtools as pygm
-            >>> pygm.BACKEND = 'tensorflow'
+            >>> pygm.set_backend('tensorflow')
             >>> np.random.seed(0)
 
             # 2-dimensional (non-batched) input

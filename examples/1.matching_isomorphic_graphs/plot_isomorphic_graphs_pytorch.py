@@ -30,7 +30,7 @@ import pygmtools as pygm
 import matplotlib.pyplot as plt # for plotting
 from matplotlib.patches import ConnectionPatch # for plotting matching result
 import networkx as nx # for plotting graphs
-pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+pygm.set_backend('pytorch') # set default backend for pygmtools
 _ = torch.manual_seed(1) # fix random seed
 
 ##############################################################################

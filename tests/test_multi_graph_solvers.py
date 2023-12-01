@@ -237,13 +237,12 @@ def test_gamgm_backward():
     # This function is differentiable by the black-box trick
     W.requires_grad_(True)  # tell PyTorch to track the gradients
     X = pygm.gamgm(As, W)
-    matched = 0
+    loss = 0 # a random loss function
     for i, j in itertools.product(range(graph_num), repeat=2):
-        matched += (X[i, j] * X_gt[i, j]).sum()
-    acc = matched / X_gt.sum()
+        loss += (X[i, j] * torch.rand_like(X[i, j])).sum()
 
     # Backward pass via black-box trick
-    acc.backward()
+    loss.backward()
     assert torch.sum(W.grad != 0) > 0
 
     # Jittor
@@ -271,14 +270,13 @@ def test_gamgm_backward():
         W.start_grad()
         model = Model(W)
         X = model(As)
-        matched = 0
+        loss = 0
         for i, j in itertools.product(range(graph_num), repeat=2):
-            matched += (X[i, j] * X_gt[i, j]).sum()
-        acc = matched / X_gt.sum()
+            loss += (X[i, j] * jt.rand_like(X[i, j])).sum()
 
         # Backward pass via black-box trick
         optim = jt.nn.SGD(model.parameters(), lr=0.1)
-        optim.step(acc)
+        optim.step(loss)
         grad = W.opt_grad(optim)
         print(jt.sum(grad != 0))
         assert jt.sum(grad != 0) > 0

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_5.model_fusion_plot_model_fusion_jittor.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_5.model_fusion_plot_model_fusion_jittor.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -61,7 +61,7 @@ fused model could combine the knowledge from two input models and can reach high
     * :func:`~pygmtools.linear_solvers.hungarian` (linear solver)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 34-46
+.. GENERATED FROM PYTHON SOURCE LINES 34-45
 
 .. code-block:: default
 
@@ -74,8 +74,7 @@ fused model could combine the knowledge from two input models and can reach high
     import matplotlib.pyplot as plt
     import pygmtools as pygm
 
-    pygm.BACKEND = 'jittor'
-    jt.flags.use_cuda = jt.has_cuda
+    pygm.set_backend('jittor')
 
 
 
@@ -84,13 +83,13 @@ fused model could combine the knowledge from two input models and can reach high
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-50
+.. GENERATED FROM PYTHON SOURCE LINES 46-49
 
 Define a simple CNN classifier network
 ---------------------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-71
+.. GENERATED FROM PYTHON SOURCE LINES 49-70
 
 .. code-block:: default
 
@@ -122,13 +121,13 @@ Define a simple CNN classifier network
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-75
+.. GENERATED FROM PYTHON SOURCE LINES 71-74
 
 Load the trained models to be fused
 ------------------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-90
+.. GENERATED FROM PYTHON SOURCE LINES 74-89
 
 .. code-block:: default
 
@@ -154,12 +153,12 @@ Load the trained models to be fused
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 91-93
+.. GENERATED FROM PYTHON SOURCE LINES 90-92
 
 Print the layers of the simple CNN model:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 93-95
+.. GENERATED FROM PYTHON SOURCE LINES 92-94
 
 .. code-block:: default
 
@@ -186,13 +185,13 @@ Print the layers of the simple CNN model:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-99
+.. GENERATED FROM PYTHON SOURCE LINES 95-98
 
 Test the input models
 ------------------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 99-114
+.. GENERATED FROM PYTHON SOURCE LINES 98-113
 
 .. code-block:: default
 
@@ -218,12 +217,12 @@ Test the input models
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 115-117
+.. GENERATED FROM PYTHON SOURCE LINES 114-116
 
 Testing results (two separate models):
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 117-119
+.. GENERATED FROM PYTHON SOURCE LINES 116-118
 
 .. code-block:: default
 
@@ -242,7 +241,7 @@ Testing results (two separate models):
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 120-126
+.. GENERATED FROM PYTHON SOURCE LINES 119-125
 
 Build the affinity matrix for graph matching
 ---------------------------------------------
@@ -251,7 +250,7 @@ the edge features, and the bias corresponds to the node features. In this exampl
 does not have bias so that there are only edge features.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 126-132
+.. GENERATED FROM PYTHON SOURCE LINES 125-131
 
 .. code-block:: default
 
@@ -273,12 +272,12 @@ does not have bias so that there are only edge features.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 133-135
+.. GENERATED FROM PYTHON SOURCE LINES 132-134
 
 Define the graph matching affinity metric function
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 135-180
+.. GENERATED FROM PYTHON SOURCE LINES 134-179
 
 .. code-block:: default
 
@@ -334,13 +333,13 @@ Define the graph matching affinity metric function
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 181-184
+.. GENERATED FROM PYTHON SOURCE LINES 180-183
 
 Define the affinity function between two neural networks. This function takes multiple neural network modules,
 and construct the corresponding affinity matrix which is further processed by the graph matching solver.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-307
+.. GENERATED FROM PYTHON SOURCE LINES 183-306
 
 .. code-block:: default
 
@@ -474,12 +473,12 @@ and construct the corresponding affinity matrix which is further processed by th
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 308-310
+.. GENERATED FROM PYTHON SOURCE LINES 307-309
 
 Get the affinity (similarity) matrix between model1 and model2.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 310-312
+.. GENERATED FROM PYTHON SOURCE LINES 309-311
 
 .. code-block:: default
 
@@ -492,14 +491,14 @@ Get the affinity (similarity) matrix between model1 and model2.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 313-317
+.. GENERATED FROM PYTHON SOURCE LINES 312-316
 
 Align the models by graph matching
 -----------------------------------
 Align the channels of model1 & model2 by maximize the affinity (similarity) via graph matching algorithms.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 317-321
+.. GENERATED FROM PYTHON SOURCE LINES 316-320
 
 .. code-block:: default
 
@@ -514,7 +513,7 @@ Align the channels of model1 & model2 by maximize the affinity (similarity) via 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 322-329
+.. GENERATED FROM PYTHON SOURCE LINES 321-328
 
 Project ``X`` to neural network matching result. The neural network matching matrix is built by applying
 Hungarian to small blocks of ``X``, because only the channels from the same neural network layer can be
@@ -524,7 +523,7 @@ matched.
     In this example, we assume the last FC layer is aligned and need not be matched.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 329-339
+.. GENERATED FROM PYTHON SOURCE LINES 328-338
 
 .. code-block:: default
 
@@ -545,12 +544,12 @@ matched.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 340-342
+.. GENERATED FROM PYTHON SOURCE LINES 339-341
 
 Visualization of the matching result. The black lines splits the channels of different layers.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 342-348
+.. GENERATED FROM PYTHON SOURCE LINES 341-347
 
 .. code-block:: default
 
@@ -572,12 +571,12 @@ Visualization of the matching result. The black lines splits the channels of dif
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 349-351
+.. GENERATED FROM PYTHON SOURCE LINES 348-350
 
 Define the alignment function: fuse the models based on matching result
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 351-397
+.. GENERATED FROM PYTHON SOURCE LINES 350-396
 
 .. code-block:: default
 
@@ -634,7 +633,7 @@ Define the alignment function: fuse the models based on matching result
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 398-403
+.. GENERATED FROM PYTHON SOURCE LINES 397-402
 
 Test the fused model
 ---------------------
@@ -642,7 +641,7 @@ The ``fusion_proportion`` variable denotes the contribution to the new model. Fo
 the fused model = 80% model1 + 20% model2.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 403-430
+.. GENERATED FROM PYTHON SOURCE LINES 402-429
 
 .. code-block:: default
 
@@ -683,26 +682,26 @@ the fused model = 80% model1 + 20% model2.
 
     Graph Matching Fusion
     1.00 model1 + 0.00 model2 -> fused model accuracy: 84.18%
-    0.90 model1 + 0.10 model2 -> fused model accuracy: 85.35%
-    0.80 model1 + 0.20 model2 -> fused model accuracy: 85.82%
-    0.70 model1 + 0.30 model2 -> fused model accuracy: 84.44%
-    0.60 model1 + 0.40 model2 -> fused model accuracy: 77.02%
-    0.50 model1 + 0.50 model2 -> fused model accuracy: 61.29%
-    0.40 model1 + 0.60 model2 -> fused model accuracy: 68.53%
-    0.30 model1 + 0.70 model2 -> fused model accuracy: 79.25%
-    0.20 model1 + 0.80 model2 -> fused model accuracy: 82.66%
-    0.10 model1 + 0.90 model2 -> fused model accuracy: 83.88%
+    0.90 model1 + 0.10 model2 -> fused model accuracy: 85.12%
+    0.80 model1 + 0.20 model2 -> fused model accuracy: 85.21%
+    0.70 model1 + 0.30 model2 -> fused model accuracy: 82.52%
+    0.60 model1 + 0.40 model2 -> fused model accuracy: 71.11%
+    0.50 model1 + 0.50 model2 -> fused model accuracy: 53.74%
+    0.40 model1 + 0.60 model2 -> fused model accuracy: 63.26%
+    0.30 model1 + 0.70 model2 -> fused model accuracy: 78.51%
+    0.20 model1 + 0.80 model2 -> fused model accuracy: 82.81%
+    0.10 model1 + 0.90 model2 -> fused model accuracy: 83.97%
     0.00 model1 + 1.00 model2 -> fused model accuracy: 83.81%
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 431-433
+.. GENERATED FROM PYTHON SOURCE LINES 430-432
 
 Compare with vanilla model fusion (no matching), graph matching method stabilizes the fusion step:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 433-447
+.. GENERATED FROM PYTHON SOURCE LINES 432-446
 
 .. code-block:: default
 
@@ -749,13 +748,13 @@ Compare with vanilla model fusion (no matching), graph matching method stabilize
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 448-451
+.. GENERATED FROM PYTHON SOURCE LINES 447-450
 
 Print the result summary
 ------------------------------------
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 451-456
+.. GENERATED FROM PYTHON SOURCE LINES 450-455
 
 .. code-block:: default
 
@@ -772,14 +771,14 @@ Print the result summary
 
  .. code-block:: none
 
-    time consumed for model fusion: 335.47 seconds
+    time consumed for model fusion: 192.60 seconds
     model1 accuracy = 84.18%, model2 accuracy = 83.81%
-    best fused model accuracy: 85.82%
+    best fused model accuracy: 85.21%
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 457-461
+.. GENERATED FROM PYTHON SOURCE LINES 456-460
 
 .. note::
     This example supports both GPU and CPU, and the online documentation is built by a CPU-only machine.
@@ -789,7 +788,7 @@ Print the result summary
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 5 minutes  47.733 seconds)
+   **Total running time of the script:** (3 minutes 16.258 seconds)
 
 
 .. _sphx_glr_download_auto_examples_5.model_fusion_plot_model_fusion_jittor.py:
@@ -797,6 +796,8 @@ Print the result summary
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

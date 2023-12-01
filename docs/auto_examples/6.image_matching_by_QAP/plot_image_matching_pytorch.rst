@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_pytorch.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_pytorch.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -71,7 +71,7 @@ The matched images can be further processed for other downstream tasks.
     import itertools
     import numpy as np
     from PIL import Image
-    pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+    pygm.set_backend('pytorch') # set default backend for pygmtools
 
 
 
@@ -341,7 +341,7 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf55eb7130>
+    <matplotlib.image.AxesImage object at 0x7fd85c402770>
 
 
 
@@ -428,7 +428,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf55befc40>
+    <matplotlib.image.AxesImage object at 0x7fd85c4625f0>
 
 
 
@@ -668,7 +668,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  7.963 seconds)
+   **Total running time of the script:** (0 minutes 3.513 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_pytorch.py:
@@ -676,6 +676,8 @@ The NGM solver pretrained on VOC dataset:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python
