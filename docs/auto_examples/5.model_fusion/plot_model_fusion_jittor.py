@@ -40,8 +40,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import pygmtools as pygm
 
-pygm.BACKEND = 'jittor'
-jt.flags.use_cuda = jt.has_cuda
+pygm.set_backend('jittor')
 
 ##############################################################################
 # Define a simple CNN classifier network

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_7.image_matching_by_NN_plot_deep_image_matching_jittor.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_7.image_matching_by_NN_plot_deep_image_matching_jittor.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -55,7 +55,7 @@ can be further passed to tackle downstream tasks.
     * :func:`~pygmtools.neural_solvers.cie` (neural network solver)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-42
+.. GENERATED FROM PYTHON SOURCE LINES 28-41
 
 .. code-block:: default
 
@@ -70,8 +70,7 @@ can be further passed to tackle downstream tasks.
     import itertools
     import numpy as np
     from PIL import Image
-    pygm.BACKEND = 'jittor' # set default backend for pygmtools
-    jt.flags.use_cuda = jt.has_cuda
+    pygm.set_backend('jittor') # set default backend for pygmtools
 
 
 
@@ -80,7 +79,7 @@ can be further passed to tackle downstream tasks.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-55
+.. GENERATED FROM PYTHON SOURCE LINES 42-54
 
 Predicting Matching by Graph Matching Neural Networks
 ------------------------------------------------------
@@ -95,7 +94,7 @@ see :class:`~pygmtools.dataset.WillowObject`).
 The images are resized to 256x256.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-69
+.. GENERATED FROM PYTHON SOURCE LINES 54-68
 
 .. code-block:: default
 
@@ -120,12 +119,12 @@ The images are resized to 256x256.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-72
+.. GENERATED FROM PYTHON SOURCE LINES 69-71
 
 Visualize the images and keypoints
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-87
+.. GENERATED FROM PYTHON SOURCE LINES 71-86
 
 .. code-block:: default
 
@@ -156,7 +155,7 @@ Visualize the images and keypoints
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-93
+.. GENERATED FROM PYTHON SOURCE LINES 87-92
 
 Build the graphs
 ^^^^^^^^^^^^^^^^^
@@ -164,7 +163,7 @@ Graph structures are built based on the geometric structure of the keypoint set.
 we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_triangulation>`_.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 93-104
+.. GENERATED FROM PYTHON SOURCE LINES 92-103
 
 .. code-block:: default
 
@@ -186,12 +185,12 @@ we refer to `Delaunay triangulation <https://en.wikipedia.org/wiki/Delaunay_tria
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-107
+.. GENERATED FROM PYTHON SOURCE LINES 104-106
 
 Visualize the graphs
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 107-115
+.. GENERATED FROM PYTHON SOURCE LINES 106-114
 
 .. code-block:: default
 
@@ -215,7 +214,7 @@ Visualize the graphs
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 116-126
+.. GENERATED FROM PYTHON SOURCE LINES 115-125
 
 Extract node features via CNN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -228,7 +227,7 @@ existing deep graph matching papers (such as :func:`~pygmtools.neural_solvers.pc
 Let's firstly fetch and download the VGG16 model:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 126-128
+.. GENERATED FROM PYTHON SOURCE LINES 125-127
 
 .. code-block:: default
 
@@ -241,12 +240,12 @@ Let's firstly fetch and download the VGG16 model:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 129-131
+.. GENERATED FROM PYTHON SOURCE LINES 128-130
 
 List of layers of VGG16:
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 131-133
+.. GENERATED FROM PYTHON SOURCE LINES 130-132
 
 .. code-block:: default
 
@@ -310,13 +309,13 @@ List of layers of VGG16:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 134-137
+.. GENERATED FROM PYTHON SOURCE LINES 133-136
 
 Let's define the CNN feature extractor, which outputs the features of ``layer (30)`` and
 ``layer (37)``
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 137-149
+.. GENERATED FROM PYTHON SOURCE LINES 136-148
 
 .. code-block:: default
 
@@ -339,13 +338,13 @@ Let's define the CNN feature extractor, which outputs the features of ``layer (3
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 150-153
+.. GENERATED FROM PYTHON SOURCE LINES 149-152
 
 Download pretrained CNN weights (from `ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_),
 load the weights and then extract the CNN features
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-161
+.. GENERATED FROM PYTHON SOURCE LINES 152-160
 
 .. code-block:: default
 
@@ -364,12 +363,12 @@ load the weights and then extract the CNN features
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 162-164
+.. GENERATED FROM PYTHON SOURCE LINES 161-163
 
 Normalize the features
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-198
+.. GENERATED FROM PYTHON SOURCE LINES 163-197
 
 .. code-block:: default
 
@@ -414,12 +413,12 @@ Normalize the features
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-201
+.. GENERATED FROM PYTHON SOURCE LINES 198-200
 
 Up-sample the features to the original image size and concatenate
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 201-209
+.. GENERATED FROM PYTHON SOURCE LINES 200-208
 
 .. code-block:: default
 
@@ -438,12 +437,12 @@ Up-sample the features to the original image size and concatenate
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 210-212
+.. GENERATED FROM PYTHON SOURCE LINES 209-211
 
 Visualize the extracted CNN feature (dimensionality reduction via principle component analysis)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 212-233
+.. GENERATED FROM PYTHON SOURCE LINES 211-232
 
 .. code-block:: default
 
@@ -482,16 +481,16 @@ Visualize the extracted CNN feature (dimensionality reduction via principle comp
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf565670d0>
+    <matplotlib.image.AxesImage object at 0x7f226c614e80>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 234-236
+.. GENERATED FROM PYTHON SOURCE LINES 233-235
 
 Extract node features by nearest interpolation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 236-241
+.. GENERATED FROM PYTHON SOURCE LINES 235-240
 
 .. code-block:: default
 
@@ -507,14 +506,14 @@ Extract node features by nearest interpolation
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 242-246
+.. GENERATED FROM PYTHON SOURCE LINES 241-245
 
 Call PCA-GM matching model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.neural_solvers.pca_gm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 246-263
+.. GENERATED FROM PYTHON SOURCE LINES 245-262
 
 .. code-block:: default
 
@@ -547,7 +546,7 @@ See :func:`~pygmtools.neural_solvers.pca_gm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 264-273
+.. GENERATED FROM PYTHON SOURCE LINES 263-272
 
 Matching images with other neural networks
 -------------------------------------------
@@ -559,7 +558,7 @@ Matching by IPCA-GM model
 See :func:`~pygmtools.neural_solvers.ipca_gm` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 273-279
+.. GENERATED FROM PYTHON SOURCE LINES 272-278
 
 .. code-block:: default
 
@@ -576,12 +575,12 @@ See :func:`~pygmtools.neural_solvers.ipca_gm` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 280-282
+.. GENERATED FROM PYTHON SOURCE LINES 279-281
 
 Normalize the features
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 282-291
+.. GENERATED FROM PYTHON SOURCE LINES 281-290
 
 .. code-block:: default
 
@@ -601,12 +600,12 @@ Normalize the features
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 292-294
+.. GENERATED FROM PYTHON SOURCE LINES 291-293
 
 Up-sample the features to the original image size and concatenate
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-302
+.. GENERATED FROM PYTHON SOURCE LINES 293-301
 
 .. code-block:: default
 
@@ -625,12 +624,12 @@ Up-sample the features to the original image size and concatenate
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 303-305
+.. GENERATED FROM PYTHON SOURCE LINES 302-304
 
 Extract node features by nearest interpolation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 305-310
+.. GENERATED FROM PYTHON SOURCE LINES 304-309
 
 .. code-block:: default
 
@@ -646,12 +645,12 @@ Extract node features by nearest interpolation
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 311-313
+.. GENERATED FROM PYTHON SOURCE LINES 310-312
 
 Build edge features as edge lengths
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 313-321
+.. GENERATED FROM PYTHON SOURCE LINES 312-320
 
 .. code-block:: default
 
@@ -670,12 +669,12 @@ Build edge features as edge lengths
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 322-324
+.. GENERATED FROM PYTHON SOURCE LINES 321-323
 
 Matching by IPCA-GM model
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 324-340
+.. GENERATED FROM PYTHON SOURCE LINES 323-339
 
 .. code-block:: default
 
@@ -707,14 +706,14 @@ Matching by IPCA-GM model
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 341-345
+.. GENERATED FROM PYTHON SOURCE LINES 340-344
 
 Matching by CIE model
 ^^^^^^^^^^^^^^^^^^^^^^
 See :func:`~pygmtools.neural_solvers.cie` for the API reference.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 345-351
+.. GENERATED FROM PYTHON SOURCE LINES 344-350
 
 .. code-block:: default
 
@@ -731,12 +730,12 @@ See :func:`~pygmtools.neural_solvers.cie` for the API reference.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 352-354
+.. GENERATED FROM PYTHON SOURCE LINES 351-353
 
 Normalize the features
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 354-363
+.. GENERATED FROM PYTHON SOURCE LINES 353-362
 
 .. code-block:: default
 
@@ -756,12 +755,12 @@ Normalize the features
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 364-366
+.. GENERATED FROM PYTHON SOURCE LINES 363-365
 
 Up-sample the features to the original image size and concatenate
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 366-374
+.. GENERATED FROM PYTHON SOURCE LINES 365-373
 
 .. code-block:: default
 
@@ -780,12 +779,12 @@ Up-sample the features to the original image size and concatenate
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 375-377
+.. GENERATED FROM PYTHON SOURCE LINES 374-376
 
 Extract node features by nearest interpolation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 377-382
+.. GENERATED FROM PYTHON SOURCE LINES 376-381
 
 .. code-block:: default
 
@@ -801,12 +800,12 @@ Extract node features by nearest interpolation
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 383-385
+.. GENERATED FROM PYTHON SOURCE LINES 382-384
 
 Build edge features as edge lengths
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 385-393
+.. GENERATED FROM PYTHON SOURCE LINES 384-392
 
 .. code-block:: default
 
@@ -825,12 +824,12 @@ Build edge features as edge lengths
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 394-396
+.. GENERATED FROM PYTHON SOURCE LINES 393-395
 
 Call CIE matching model
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 396-412
+.. GENERATED FROM PYTHON SOURCE LINES 395-411
 
 .. code-block:: default
 
@@ -862,7 +861,7 @@ Call CIE matching model
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 413-429
+.. GENERATED FROM PYTHON SOURCE LINES 412-428
 
 Training a deep graph matching model
 -------------------------------------
@@ -881,7 +880,7 @@ Let's firstly define the neural network model. By calling :func:`~pygmtools.util
 it will simply return the network object.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 429-464
+.. GENERATED FROM PYTHON SOURCE LINES 428-463
 
 .. code-block:: default
 
@@ -927,13 +926,13 @@ it will simply return the network object.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 465-468
+.. GENERATED FROM PYTHON SOURCE LINES 464-467
 
 Define optimizer
 ^^^^^^^^^^^^^^^^^
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 468-470
+.. GENERATED FROM PYTHON SOURCE LINES 467-469
 
 .. code-block:: default
 
@@ -946,13 +945,13 @@ Define optimizer
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 471-474
+.. GENERATED FROM PYTHON SOURCE LINES 470-473
 
 Forward pass
 ^^^^^^^^^^^^^
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 474-476
+.. GENERATED FROM PYTHON SOURCE LINES 473-475
 
 .. code-block:: default
 
@@ -965,7 +964,7 @@ Forward pass
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 477-482
+.. GENERATED FROM PYTHON SOURCE LINES 476-481
 
 Compute loss
 ^^^^^^^^^^^^^
@@ -973,7 +972,7 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 :func:`~pygmtools.utils.permutation_loss`
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 482-486
+.. GENERATED FROM PYTHON SOURCE LINES 481-485
 
 .. code-block:: default
 
@@ -989,18 +988,18 @@ In this example, the ground truth matching matrix is a diagonal matrix. We calcu
 
  .. code-block:: none
 
-    loss=2.9731
+    loss=2.9790
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 487-490
+.. GENERATED FROM PYTHON SOURCE LINES 486-489
 
 Backward Pass
 ^^^^^^^^^^^^^^
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 490-492
+.. GENERATED FROM PYTHON SOURCE LINES 489-491
 
 .. code-block:: default
 
@@ -1013,12 +1012,12 @@ Backward Pass
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 493-495
+.. GENERATED FROM PYTHON SOURCE LINES 492-494
 
 Visualize the gradients
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 495-505
+.. GENERATED FROM PYTHON SOURCE LINES 494-504
 
 .. code-block:: default
 
@@ -1045,19 +1044,19 @@ Visualize the gradients
 
  .. code-block:: none
 
-    [0.00011754865408875048, 0.002830405253916979, 0.00018986815121024847, 0.003391958773136139, 0.00021283973183017224, 0.005244669038802385, 1.3281178325996734e-05, 4.817378066945821e-05, 9.690597653388977e-05, 0.003940574824810028, 0.0001448701659683138, 0.0032701236195862293, 0.0006114845164120197, 6.690015652566217e-09, 0.0007440873887389898, 0.0004714753304142505, 0.0, 0.0, 0.00019403474288992584, 2.299429979757406e-09, 0.002531695179641247, 0.0011998775880783796, 0.0, 0.0, 0.0002652326365932822, 9.225260555467685e-10, 0.0014176355907693505, 0.0012469154316931963, 0.0, 0.0, 0.0002271719422424212, 8.937490747484844e-10, 0.0021094291005283594, 0.0009502872126176953, 0.0, 0.0, 0.00021508710051421076, 3.129052572603541e-10, 0.0017407170962542295, 0.0011778830084949732, 0.0, 0.0, 0.00017891338211484253, 5.07977659935932e-10, 0.0017641059821471572, 0.0011746250092983246, 0.0, 0.0, 0.00018991334945894778, 5.470006669838767e-10, 0.002228653756901622, 0.0010551337618380785, 0.0, 0.0, 0.00016307432088069618, 1.929567616798522e-10, 0.0018299843650311232, 0.0011226986534893513, 0.0, 0.0, 0.00012367291492410004, 2.9836666470828277e-10, 0.0019260215340182185, 0.001167583279311657, 0.0, 0.0, 0.00012150159454904497, 0.0004955576732754707, 0.00178700836841017, 0.0008999499841593206, 0.0, 0.0, 9.467059862799942e-05, 1.4574474960227235e-10, 0.0015651013236492872, 0.001013824949041009, 0.0, 0.0, 8.723439532332122e-05, 0.0008594693499617279]
+    [0.00012032000813633204, 0.0029908756259828806, 0.0001890812418423593, 0.003432080615311861, 0.0002175412664655596, 0.005439706612378359, 8.84531982592307e-06, 4.3844393076142296e-05, 9.275232150685042e-05, 0.0038394334260374308, 0.00014068347809370607, 0.0032387105748057365, 0.0004730010114144534, 2.232744122920849e-08, 0.0010210294276475906, 0.0005979313282296062, 0.0, 0.0, 0.0001719535794109106, 1.1543310307615684e-08, 0.0021903959568589926, 0.0012790058972314, 0.0, 0.0, 0.00025605762493796647, 3.661839054203142e-09, 0.0013879203470423818, 0.001030159299261868, 0.0, 0.0, 0.0002153523819288239, 4.659028274289767e-09, 0.0020632531959563494, 0.0009495018748566508, 0.0, 0.0, 0.00020805593521799892, 1.3135081911030966e-09, 0.0017076103249564767, 0.0011711850529536605, 0.0, 0.0, 0.00017217609274666756, 2.7571318561570024e-09, 0.001730420277453959, 0.0011667078360915184, 0.0, 0.0, 0.00018079271831084043, 3.229687406403059e-09, 0.0021298921201378107, 0.001029890263453126, 0.0, 0.0, 0.0001582755212439224, 7.906685861591711e-10, 0.0017488845624029636, 0.0010780903976410627, 0.0, 0.0, 0.0001245360035682097, 1.4797246761233396e-09, 0.00206647627055645, 0.0012257269117981195, 0.0, 0.0, 0.00012214107846375555, 0.0005140944267623127, 0.001602952484972775, 0.0008278230670839548, 0.0, 0.0, 9.437291737413034e-05, 4.0557557312581594e-10, 0.0014863943215459585, 0.0010152073809877038, 0.0, 0.0, 8.532514766557142e-05, 0.000895310309715569]
 
     <StemContainer object of 3 artists>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 506-509
+.. GENERATED FROM PYTHON SOURCE LINES 505-508
 
 Update the model parameters. A deep learning pipeline should iterate the forward pass
 and backward pass steps until convergence.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 509-512
+.. GENERATED FROM PYTHON SOURCE LINES 508-511
 
 .. code-block:: default
 
@@ -1071,7 +1070,7 @@ and backward pass steps until convergence.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 513-517
+.. GENERATED FROM PYTHON SOURCE LINES 512-516
 
 .. note::
     This example supports both GPU and CPU, and the online documentation is built by a CPU-only machine.
@@ -1081,7 +1080,7 @@ and backward pass steps until convergence.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  34.982 seconds)
+   **Total running time of the script:** (1 minutes 12.772 seconds)
 
 
 .. _sphx_glr_download_auto_examples_7.image_matching_by_NN_plot_deep_image_matching_jittor.py:
@@ -1089,6 +1088,8 @@ and backward pass steps until convergence.
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

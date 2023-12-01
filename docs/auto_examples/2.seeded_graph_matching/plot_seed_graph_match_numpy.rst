@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_numpy.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_numpy.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -69,7 +69,7 @@ results are called "seeds". In this example, we show how to exploit such prior w
     import matplotlib.pyplot as plt # for plotting
     from matplotlib.patches import ConnectionPatch # for plotting matching result
     import networkx as nx # for plotting graphs
-    pygm.BACKEND = 'numpy' # set default backend for pygmtools
+    pygm.set_backend('numpy') # set default backend for pygmtools
     np.random.seed(1) # fix random seed
 
 
@@ -157,7 +157,7 @@ The seed matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e40a490>
+    <matplotlib.image.AxesImage object at 0x7f21fd639990>
 
 
 
@@ -289,7 +289,7 @@ Visualization of the affinity matrix.
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f35dc10>
+    <matplotlib.image.AxesImage object at 0x7f2232fab820>
 
 
 
@@ -344,7 +344,7 @@ The output of RRWM is a soft matching matrix. The matching prior is well-preserv
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f45aa60>
+    <matplotlib.image.AxesImage object at 0x7f22330e5840>
 
 
 
@@ -399,7 +399,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02e38cc40>
+    <matplotlib.image.AxesImage object at 0x7f22330c2b30>
 
 
 
@@ -511,6 +511,13 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    /home/wzever/pygmtools/pygmtools/numpy_backend.py:304: RuntimeWarning: invalid value encountered in divide
+      t0 = alpha / beta
+
 
 
 
@@ -545,7 +552,7 @@ Visualization of IPFP matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f0bd220>
+    <matplotlib.image.AxesImage object at 0x7f225bfb7df0>
 
 
 
@@ -601,7 +608,7 @@ Visualization of SM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02ebbb100>
+    <matplotlib.image.AxesImage object at 0x7f225be9dc60>
 
 
 
@@ -656,14 +663,14 @@ Visualization of NGM matching result:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7f9fcc77afa0>
+    <matplotlib.image.AxesImage object at 0x7f2254a79db0>
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.323 seconds)
+   **Total running time of the script:** (0 minutes 0.853 seconds)
 
 
 .. _sphx_glr_download_auto_examples_2.seeded_graph_matching_plot_seed_graph_match_numpy.py:
@@ -671,6 +678,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

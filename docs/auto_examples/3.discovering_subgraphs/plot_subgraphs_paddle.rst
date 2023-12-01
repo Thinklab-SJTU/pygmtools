@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_paddle.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_paddle.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -67,7 +67,7 @@ This example shows how to match a smaller graph to a subset of a larger graph.
     import warnings
     warnings.filterwarnings("ignore")
 
-    pygm.BACKEND = 'paddle' # set default backend for pygmtools
+    pygm.set_backend('paddle') # set default backend for pygmtools
 
     paddle.device.set_device('cpu')
     _ = paddle.seed(1) # fix random seed
@@ -235,7 +235,7 @@ the affinity matrix has :math:`N_1N_2\times N_1N_2` elements because there are :
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f0bdd90>
+    <matplotlib.image.AxesImage object at 0x7f0ea85f5210>
 
 
 
@@ -290,7 +290,7 @@ The output of RRWM is a soft matching matrix. Visualization:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02f68dcd0>
+    <matplotlib.image.AxesImage object at 0x7f0ea90a3e50>
 
 
 
@@ -345,7 +345,7 @@ Visualization of the discrete matching matrix:
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fa02ed64be0>
+    <matplotlib.image.AxesImage object at 0x7f0ee1b5eaa0>
 
 
 
@@ -568,7 +568,7 @@ Visualization of NGM matching result:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.218 seconds)
+   **Total running time of the script:** (0 minutes 0.713 seconds)
 
 
 .. _sphx_glr_download_auto_examples_3.discovering_subgraphs_plot_subgraphs_paddle.py:
@@ -576,6 +576,8 @@ Visualization of NGM matching result:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

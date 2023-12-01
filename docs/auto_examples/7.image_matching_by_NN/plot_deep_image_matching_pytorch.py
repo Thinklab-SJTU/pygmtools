@@ -35,7 +35,7 @@ from sklearn.decomposition import PCA as PCAdimReduc
 import itertools
 import numpy as np
 from PIL import Image
-pygm.BACKEND = 'pytorch' # set default backend for pygmtools
+pygm.set_backend('pytorch') # set default backend for pygmtools
 
 ##############################################################################
 # Predicting Matching by Graph Matching Neural Networks

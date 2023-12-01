@@ -240,7 +240,12 @@ class PascalVOC:
                 os.remove(filename)
                 return self.download(url, name, retries - 1)
 
-            file_names = tar.getnames()
+            try:
+                file_names = tar.getnames()
+            except tarfile.ReadError as err:
+                print('Warning: Content error. Retrying...\n', err)
+                os.remove(filename)
+                return self.download(url, name, retries - 1)
             print('Unzipping files...')
             sleep(0.5)
             for file_name in tqdm(file_names):

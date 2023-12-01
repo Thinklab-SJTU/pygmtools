@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_numpy.py>`
+        :ref:`Go to the end <sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_numpy.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -71,7 +71,7 @@ The matched images can be further processed for other downstream tasks.
     from sklearn.decomposition import PCA as PCAdimReduc
     import itertools
     from PIL import Image
-    pygm.BACKEND = 'numpy' # set numpy as backend for pygmtools
+    pygm.set_backend('numpy') # set numpy as backend for pygmtools
 
 
 
@@ -378,7 +378,7 @@ has :math:`N^2\times N^2` elements because there are :math:`N^2` edges in each g
  .. code-block:: none
 
 
-    <matplotlib.image.AxesImage object at 0x7fbf5580c670>
+    <matplotlib.image.AxesImage object at 0x7fd8784e31c0>
 
 
 
@@ -493,6 +493,13 @@ See :func:`~pygmtools.classic_solvers.ipfp` for the API reference.
    :srcset: /auto_examples/6.image_matching_by_QAP/images/sphx_glr_plot_image_matching_numpy_005.png
    :class: sphx-glr-single-img
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    /home/wzever/pygmtools/pygmtools/numpy_backend.py:304: RuntimeWarning: invalid value encountered in divide
+      t0 = alpha / beta
 
 
 
@@ -618,7 +625,7 @@ The NGM solver pretrained on VOC dataset:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.037 seconds)
+   **Total running time of the script:** (0 minutes 2.166 seconds)
 
 
 .. _sphx_glr_download_auto_examples_6.image_matching_by_QAP_plot_image_matching_numpy.py:
@@ -626,6 +633,8 @@ The NGM solver pretrained on VOC dataset:
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python
