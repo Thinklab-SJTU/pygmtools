@@ -47,8 +47,7 @@ def check_layer_parameter(params):
     return True
 
 
-def node_metric(node1, node2):
-    
+def node_metric(node1, node2): 
     encoding = torch.sum(torch.abs(node1.unsqueeze(2) - node2.unsqueeze(1)), dim=-1)
     non_zero = torch.nonzero(encoding)
     for i in range(non_zero.shape[0]):
