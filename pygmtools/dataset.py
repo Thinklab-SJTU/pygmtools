@@ -778,14 +778,12 @@ class SPair71k:
         )
 
         assert not problem == 'MGM', 'No match found for problem {} in SPair-71k'.format(problem)
-        self.dataset_dir = 'data/SPair-71k'
+        
         if not os.path.exists(SPair71k_image_path):
             assert ROOT_DIR == dataset_cfg.SPair.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
             self.download(url=URL)
-
-        if not os.path.exists(self.dataset_dir):
-            os.makedirs(self.dataset_dir)
-
+            
+        self.dataset_dir = 'data/SPair-71k'
         self.obj_resize = obj_resize
         self.sets = sets_translation_dict[sets]
         self.ann_files = open(os.path.join(self.SPair71k_layout_path, self.SPair71k_dataset_size, self.sets + ".txt"), "r").read().split("\n")
@@ -818,7 +816,7 @@ class SPair71k:
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
-        filename = "data/SPair-71k.tgz"
+        filename = "data/SPair-71k.tar.gz"
         download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
@@ -826,12 +824,16 @@ class SPair71k:
             print('Warning: Content error. Retrying...\n', err)
             os.remove(filename)
             return self.download(url, retries - 1)
-
+                
+        self.dataset_dir = 'data/SPair-71k'
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
+            
         file_names = tar.getnames()
         print('Unzipping files...')
         sleep(0.5)
         for file_name in tqdm(file_names):
-            tar.extract(file_name, "data/")
+            tar.extract(file_name, self.dataset_dir)
         tar.close()
         try:
             os.remove(filename)
@@ -1021,7 +1023,9 @@ class IMC_PT_SparseGM:
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B'
+        URL = ['https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download',
+               'https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz']
+        
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
                 MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
