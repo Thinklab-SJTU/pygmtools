@@ -476,7 +476,8 @@ class WillowObject:
         SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
         TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
         RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
-        URL = 'http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip'
+        URL = ['http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip',
+               'https://huggingface.co/heatingma/pygmtools/resolve/main/WILLOW-ObjectClass_dataset.zip']
         if len(ds_dict.keys()) > 0:
             if 'CLASSES' in ds_dict.keys():
                 CLASSES = ds_dict['CLASSES']
@@ -750,6 +751,8 @@ class SPair71k:
         COMB_CLS = dataset_cfg.SPair.COMB_CLS
         SIZE = dataset_cfg.SPair.SIZE
         ROOT_DIR = dataset_cfg.SPair.ROOT_DIR
+        URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/SPair-71k.tar.gz',
+               'http://cvlab.postech.ac.kr/research/SPair-71k/data/SPair-71k.tar.gz']
         if len(ds_dict.keys()) > 0:
             if 'TRAIN_DIFF_PARAMS' in ds_dict.keys():
                 TRAIN_DIFF_PARAMS = ds_dict['TRAIN_DIFF_PARAMS']
@@ -775,14 +778,12 @@ class SPair71k:
         )
 
         assert not problem == 'MGM', 'No match found for problem {} in SPair-71k'.format(problem)
-        self.dataset_dir = 'data/SPair-71k'
+        
         if not os.path.exists(SPair71k_image_path):
             assert ROOT_DIR == dataset_cfg.SPair.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
-            self.download(url='http://cvlab.postech.ac.kr/research/SPair-71k/data/SPair-71k.tar.gz')
-
-        if not os.path.exists(self.dataset_dir):
-            os.makedirs(self.dataset_dir)
-
+            self.download(url=URL)
+            
+        self.dataset_dir = 'data/SPair-71k'
         self.obj_resize = obj_resize
         self.sets = sets_translation_dict[sets]
         self.ann_files = open(os.path.join(self.SPair71k_layout_path, self.SPair71k_dataset_size, self.sets + ".txt"), "r").read().split("\n")
@@ -815,7 +816,7 @@ class SPair71k:
         if not os.path.exists(dirs):
             os.makedirs(dirs)
         print('Downloading dataset SPair-71k...')
-        filename = "data/SPair-71k.tgz"
+        filename = "data/SPair-71k.tar.gz"
         download(filename=filename, url=url, to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
@@ -823,12 +824,16 @@ class SPair71k:
             print('Warning: Content error. Retrying...\n', err)
             os.remove(filename)
             return self.download(url, retries - 1)
-
+                
+        self.dataset_dir = 'data/SPair-71k'
+        if not os.path.exists(self.dataset_dir):
+            os.makedirs(self.dataset_dir)
+            
         file_names = tar.getnames()
         print('Unzipping files...')
         sleep(0.5)
         for file_name in tqdm(file_names):
-            tar.extract(file_name, "data/")
+            tar.extract(file_name, self.dataset_dir)
         tar.close()
         try:
             os.remove(filename)
@@ -1018,7 +1023,9 @@ class IMC_PT_SparseGM:
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B'
+        URL = ['https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download',
+               'https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz']
+        
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
                 MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
@@ -1190,7 +1197,8 @@ class CUB2011:
     def __init__(self, sets, obj_resize, **ds_dict):
         CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
         ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
-        URL = 'https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'
+        URL = ['https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45',
+               'https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tar.gz']
         if len(ds_dict.keys()) > 0:
             if 'ROOT_DIR' in ds_dict.keys():
                 ROOT_DIR = ds_dict['ROOT_DIR']

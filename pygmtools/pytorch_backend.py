@@ -953,7 +953,6 @@ class GENN(torch.nn.Module):
         ns_2 = torch.bincount(data.g2.batch)
 
         adj_1 = to_dense_adj(edge_index_1, batch=batch_1, edge_attr=edge_attr_1)
-
         dummy_adj_1 = torch.zeros(adj_1.shape[0], adj_1.shape[1] + 1, adj_1.shape[2] + 1, device=device)
         dummy_adj_1[:, :-1, :-1] = adj_1
         adj_2 = to_dense_adj(edge_index_2, batch=batch_2, edge_attr=edge_attr_2)
@@ -1055,12 +1054,15 @@ class GENN(torch.nn.Module):
             return ged
 
     def heuristic_prediction_hun(self, k: torch.Tensor, n1, n2, partial_pmat):
-        k_prime = k.reshape(-1, n1 + 1, n2 + 1)
-        node_costs = torch.empty(k_prime.shape[0])
-        for i in range(k_prime.shape[0]):
-            _, node_costs[i] = hungarian_ged(k_prime[i], n1, n2)
-        node_cost_mat = node_costs.reshape(n1 + 1, n2 + 1)
-        self.heuristic_cache['node_cost'] = node_cost_mat
+        if 'node_cost' in self.heuristic_cache:
+            node_cost_mat = self.heuristic_cache['node_cost']
+        else:
+            k_prime = k.reshape(-1, n1 + 1, n2 + 1)
+            node_costs = torch.empty(k_prime.shape[0])
+            for i in range(k_prime.shape[0]):
+                _, node_costs[i] = hungarian_ged(k_prime[i], n1, n2)
+            node_cost_mat = node_costs.reshape(n1 + 1, n2 + 1)
+            self.heuristic_cache['node_cost'] = node_cost_mat
 
         graph_1_mask = ~partial_pmat.sum(dim=-1).to(dtype=torch.bool)
         graph_2_mask = ~partial_pmat.sum(dim=-2).to(dtype=torch.bool)
