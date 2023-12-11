@@ -27,7 +27,8 @@ If applicable, add screenshots to help explain your problem.
 
 **Environment:**
  - OS: [e.g. Ubuntu 22.04]
- - Pygmtools Version [e.g. 0.4.0]
+ - Python Version: [e.g. 3.8.18]
+ - Pygmtools Version: [e.g. 0.4.0]
  - Environment report, by running the command ``python3 -c 'import pygmtools; pygmtools.env_report()'``
 
 **Additional context**
