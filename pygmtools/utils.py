@@ -1347,9 +1347,9 @@ def _get_md5(filename):
 ###################################################
 
 
-def build_aff_mat_from_networkx(G1:nx.Graph, G2:nx.Graph, node_aff_fn=None, edge_aff_fn=None, backend=None):
+def build_aff_mat_from_networkx(G1: nx.Graph, G2: nx.Graph, node_aff_fn=None, edge_aff_fn=None, backend=None):
     r"""
-    Convert networkx object to Adjacency matrix
+    Convert networkx object to affinity matrix
     
     :param G1: networkx object, whose type must be networkx.Graph
     :param G2: networkx object, whose type must be networkx.Graph
@@ -1381,7 +1381,7 @@ def build_aff_mat_from_networkx(G1:nx.Graph, G2:nx.Graph, node_aff_fn=None, edge
             # Obtain Affinity Matrix
             >>> K = pygm.utils.build_aff_mat_from_networkx(G1, G2)
             >>> K.shape
-            (20,20)
+            (20, 20)
             
             # The affinity matrices K can be further processed by GM solvers
     """
@@ -1397,7 +1397,7 @@ def build_aff_mat_from_networkx(G1:nx.Graph, G2:nx.Graph, node_aff_fn=None, edge
 
 def build_aff_mat_from_graphml(G1_path, G2_path, node_aff_fn=None, edge_aff_fn=None, backend=None):
     r"""
-    Convert networkx object to Adjacency matrix
+    Convert networkx object to affinity matrix
     
     :param G1_path: The file path of the graphml object
     :param G2_path: The file path of the graphml object
@@ -1427,7 +1427,7 @@ def build_aff_mat_from_graphml(G1_path, G2_path, node_aff_fn=None, edge_aff_fn=N
             # Obtain Affinity Matrix
             >>> K = pygm.utils.build_aff_mat_from_graphml(G1_path, G2_path)
             >>> K.shape
-            (121,121)
+            (121, 121)
             
             # The affinity matrices K can be further processed by GM solvers
     """
@@ -1441,9 +1441,9 @@ def build_aff_mat_from_graphml(G1_path, G2_path, node_aff_fn=None, edge_aff_fn=N
     return K
  
     
-def from_networkx(G:nx.Graph):
+def from_networkx(G: nx.Graph):
     r"""
-    Convert networkx object to Adjacency matrix
+    Convert networkx object to adjacency matrix
     
     :param G: networkx object, whose type must be networkx.Graph
     :return: the adjacency matrix corresponding to the networkx object
@@ -1522,7 +1522,7 @@ def to_networkx(adj_matrix, backend=None):
 
 def from_graphml(filename):
     r"""
-    Convert graphml object to Adjacency matrix
+    Convert graphml object to adjacency matrix
     
     :param filename: graphml file path
     :return: the adjacency matrix corresponding to the graphml object
@@ -1545,7 +1545,7 @@ def from_graphml(filename):
                     
             >>> G1 = pygm.utils.from_graphml(G2_path)
             >>> G2.shape
-            (11,11)
+            (11, 11)
     """
     if not filename.endswith('.graphml'):
         raise ValueError("File name should end with '.graphml'")
@@ -1590,4 +1590,105 @@ def to_graphml(adj_matrix, filename, backend=None):
                    [0.15422904, 0.64656912, 0.93219422, 0.784769  ]])            
     """
     nx.write_graphml(to_networkx(adj_matrix, backend), filename)
+    
+
+###################################################
+#                  Support PyG                    #
+###################################################
+
+
+def build_aff_mat_from_pyg(G1, G2, node_aff_fn=None, edge_aff_fn=None, backend=None):
+    r"""
+    Convert torch_geometric.data.Data object to affinity matrix
+    
+    :param G1: Graph object, whose type must be torch_geometric.data.Data
+    :param G2: Graph object, whose type must be torch_geometric.data.Data
+    :param node_aff_fn: (default: inner_prod_aff_fn) the node affinity function with the characteristic
+                        ``node_aff_fn(2D Tensor, 2D Tensor) -> 2D Tensor``, which accepts two node feature tensors and
+                        outputs the node-wise affinity tensor. See :func:`~pygmtools.utils.inner_prod_aff_fn` as an
+                        example.
+    :param edge_aff_fn: (default: inner_prod_aff_fn) the edge affinity function with the characteristic
+                        ``edge_aff_fn(2D Tensor, 2D Tensor) -> 2D Tensor``, which accepts two edge feature tensors and
+                        outputs the edge-wise affinity tensor. See :func:`~pygmtools.utils.inner_prod_aff_fn` as an
+                        example.
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the affinity matrix corresponding to the networkx object G1 and G2
+
+    .. dropdown:: Example
+
+        ::
+
+            >>> import networkx as nx
+            >>> from torch_geometric.data import Data
+            >>> import pygmtools as pygm
+            >>> pygm.set_backend('pytorch')
+
+            # Generate Graph object
+            >>> x1 = torch.rand((4, 2), dtype=torch.float)
+            >>> e1 = torch.tensor([[0, 0, 1, 1, 2, 2, 3], [1, 2, 0, 2, 0, 3, 1]], dtype=torch.long)
+            >>> G1 = Data(x=x1, edge_index=e1)
+            >>> x2 = torch.rand((5, 2), dtype=torch.float)
+            >>> e2 = torch.tensor([[0, 0, 1, 1, 2, 2, 3, 4, 4], [1, 3, 2, 3, 1, 3, 4, 2, 3]], dtype=torch.long)
+            >>> G2 = Data(x=x2, edge_index=e2)
+
+            # Obtain Affinity Matrix
+            >>> K = pygm.utils.build_aff_mat_from_pyg(G1, G2)
+            >>> K.shape
+            (20, 20)
+            
+            # The affinity matrices K can be further processed by GM solvers
+    """
+    from torch_geometric.data import Data
+    assert type(G1) == Data, f"G1 must be torch_geometric.data.Data"
+    assert type(G2) == Data, f"G2 must be torch_geometric.data.Data"
+    if backend is None:
+        backend = 'pytorch'
+    else:
+        assert backend == 'pytorch', f"Function 'build_aff_mat_from_pyg' only supports pytorch backend."
+    pygmtools.set_backend(backend)
+    node1 = G1.x
+    edge1 = G1.edge_attr
+    conn1 = G1.edge_index
+    node2 = G2.x
+    edge2 = G2.edge_attr
+    conn2 = G2.edge_index
+    K = build_aff_mat(node1, edge1, conn1, node2, edge2, conn2, node_aff_fn=node_aff_fn, edge_aff_fn=edge_aff_fn, backend=backend)
+    return K
+
+
+def to_pyg(adj_matrix, backend=None):
+    """
+    Convert adjacency matrix to torch_geometric.data.Data object
+    
+    :param adj_matrix: the adjacency matrix to convert, whose type must be torch.Tensor
+    :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
+    :return: the torch_geometric.data.Data object corresponding to the adjacency matrix
+    
+    .. dropdown:: Example
+
+        ::
+
+            >>> import torch
+            >>> import pygmtools as pygm
+            >>> pygm.set_backend('pytorch')
+
+            # Generate adjacency matrix
+            >>> adj_matrix = torch.rand((4, 4))
+            
+            # Obtain torch_geometric.data.Data object
+            >>> pygm.utils.to_pyg(adj_matrix)
+            Data(edge_index=[16, 2], edge_attr=[16, 1])
+    """
+    import torch
+    from torch_geometric.data import Data
+    if backend is None:
+        backend = 'pytorch'
+    else:
+        assert backend == 'pytorch', f"Function 'build_aff_mat_from_pyg' only supports pytorch backend."
+    pygmtools.set_backend(backend)
+    assert type(adj_matrix) == torch.Tensor, f"the adj_matrix's type must be torch.Tensor" 
+    
+    conn1, edge1 = dense_to_sparse(adj_matrix, backend=backend)
+    G = Data(x=None, edge_index=conn1, edge_attr=edge1)
+    return G
     
