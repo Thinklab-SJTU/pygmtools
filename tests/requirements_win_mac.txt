@@ -6,6 +6,7 @@ easydict>=1.7
 paddlepaddle==2.4.1
 protobuf==3.19.5
 torch
+torch_geometric
 tqdm
 appdirs>=1.4.4
 tensorflow==2.9.3

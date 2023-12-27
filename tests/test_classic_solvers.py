@@ -313,7 +313,42 @@ def _test_graphml(graph_num_nodes, backends):
             assert accuracy == 1, f'When testing the graphml function with rrwm algorithm, there is an error in accuracy, \
                                     and the accuracy is {accuracy}, the num_node is {num_node},.'
                               
-                                
+
+# The testing function for PyG
+def _test_pyg(graph_num_nodes, backends):
+    """
+    Test the RRWM algorithm on pairs of isomorphic graphs using PYG
+    
+    :param graph_num_nodes: list, the numbers of nodes in the graphs to test
+    """
+    for working_backend in backends:
+        pygm.BACKEND = working_backend
+        for num_node in tqdm(graph_num_nodes):
+            A = torch.rand((num_node, num_node, 10))
+            G = pygm.utils.to_pyg(A)
+            _A = pygm.utils.from_pyg(G)
+            if not torch.equal(A, _A):
+                raise ValueError("A is changed after passed through to_pyg and from_pyg processing")
+        for num_node in tqdm(graph_num_nodes):
+            As_b, X_gt = pygm.utils.generate_isomorphic_graphs(num_node)
+            X_gt = pygm.utils.to_numpy(X_gt, backend=working_backend)
+            A1 = As_b[0]
+            A2 = As_b[1]
+            G1 = pygm.utils.to_pyg(A1)
+            G2 = pygm.utils.to_pyg(A2)
+            _A1 = pygm.utils.from_pyg(G1)
+            _A2 = pygm.utils.from_pyg(G2)
+            if not torch.equal(A1, _A1):
+                raise ValueError("A1 is changed after passed through to_pyg and from_pyg processing")
+            if not torch.equal(A2, _A2):
+                raise ValueError("A2 is changed after passed through to_pyg and from_pyg processing")
+            K = pygm.utils.build_aff_mat_from_pyg(G1, G2)
+            X = pygm.rrwm(K, n1=num_node, n2=num_node)
+            accuracy = (pygm.utils.to_numpy(pygm.hungarian(X, num_node, num_node)) * X_gt).sum() / X_gt.sum()
+            assert accuracy == 1, f'When testing the pyg function with rrwm algorithm, there is an error in accuracy, \
+                                    and the accuracy is {accuracy}, the num_node is {num_node},.'
+
+
 def test_hungarian(get_backend):
     backends = get_backends(get_backend)
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
@@ -477,6 +512,11 @@ def test_graphml():
     _test_graphml(list(range(10, 30, 2)), backends=backends)
 
 
+def test_pyg():
+    backends = ['pytorch']
+    _test_pyg(list(range(10, 30, 2)), backends=backends)
+
+
 if __name__ == '__main__':
     test_hungarian('all')
     test_sinkhorn('all')
@@ -486,3 +526,4 @@ if __name__ == '__main__':
     test_astar('')
     test_networkx()
     test_graphml()
+    test_pyg()
