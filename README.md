@@ -95,6 +95,8 @@ This library offers user-friendly API for the following solvers:
       based neural graph matching solver for matching individual graphs.
     * [Neural graph matching solver (NGM)](https://pygmtools.readthedocs.io/en/latest/api/_autosummary/pygmtools.neural_solvers.ngm.html) [12]
       for the general quadratic assignment formulation.
+    * [Graph edit neural network A-star (GENN-A*)](https://pygmtools.readthedocs.io/en/latest/api/_autosummary/pygmtools.neural_solvers.genn_astar.html) [13] 
+      for the graph edit distance problem.
 
 ## Available Backends
 This library is designed to support multiple backends with the same set of API. 
@@ -180,26 +182,28 @@ Shanghai Jiao Tong University.
 ## References
 <!--MLA style references-->
 
-[1] Sinkhorn, Richard, and Paul Knopp. "Concerning nonnegative matrices and doubly stochastic matrices." Pacific Journal of Mathematics 21.2 (1967): 343-348.
+[1] Sinkhorn, Richard, and Paul Knopp. "Concerning nonnegative matrices and doubly stochastic matrices." _Pacific Journal of Mathematics_ 21.2 (1967): 343-348.
 
-[2] Munkres, James. "Algorithms for the assignment and transportation problems." Journal of the society for industrial and applied mathematics 5.1 (1957): 32-38.
+[2] Munkres, James. "Algorithms for the assignment and transportation problems." _Journal of the Society for Industrial and Applied Mathematics_ 5.1 (1957): 32-38.
 
-[3] Leordeanu, Marius, and Martial Hebert. "A spectral technique for correspondence problems using pairwise constraints." International Conference on Computer Vision (2005).
+[3] Leordeanu, Marius, and Martial Hebert. "A spectral technique for correspondence problems using pairwise constraints." _International Conference on Computer Vision_ (2005).
 
-[4] Cho, Minsu, Jungmin Lee, and Kyoung Mu Lee. "Reweighted random walks for graph matching." European conference on Computer vision. Springer, Berlin, Heidelberg, 2010.
+[4] Cho, Minsu, Jungmin Lee, and Kyoung Mu Lee. "Reweighted random walks for graph matching." _European conference on Computer Vision_ (2010).
 
-[5] Leordeanu, Marius, Martial Hebert, and Rahul Sukthankar. "An integer projected fixed point method for graph matching and map inference." Advances in neural information processing systems 22 (2009).
+[5] Leordeanu, Marius, Martial Hebert, and Rahul Sukthankar. "An integer projected fixed point method for graph matching and map inference." _Advances in Neural Information Processing Systems_ 22 (2009).
 
-[6] Yan, Junchi, et al. "Multi-graph matching via affinity optimization with graduated consistency regularization." IEEE transactions on pattern analysis and machine intelligence 38.6 (2015): 1228-1242.
+[6] Yan, Junchi, et al. "Multi-graph matching via affinity optimization with graduated consistency regularization." _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 38.6 (2015): 1228-1242.
 
-[7] Jiang, Zetian, Tianzhe Wang, and Junchi Yan. "Unifying offline and online multi-graph matching via finding shortest paths on supergraph." IEEE transactions on pattern analysis and machine intelligence 43.10 (2020): 3648-3663.
+[7] Jiang, Zetian, Tianzhe Wang, and Junchi Yan. "Unifying offline and online multi-graph matching via finding shortest paths on supergraph." _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 43.10 (2020): 3648-3663.
 
-[8] Solé-Ribalta, Albert, and Francesc Serratosa. "Graduated assignment algorithm for multiple graph matching based on a common labeling." International Journal of Pattern Recognition and Artificial Intelligence 27.01 (2013): 1350001.
+[8] Solé-Ribalta, Albert, and Francesc Serratosa. "Graduated assignment algorithm for multiple graph matching based on a common labeling." _International Journal of Pattern Recognition and Artificial Intelligence_ 27.01 (2013): 1350001.
 
-[9] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Graduated assignment for joint multi-graph matching and clustering with application to unsupervised graph matching network learning." Advances in Neural Information Processing Systems 33 (2020): 19908-19919.
+[9] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Unsupervised Learning of Graph Matching with Mixture of Modes via Discrepancy Minimization." _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 45.8 (2023): 10500-10518.
 
-[10] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Combinatorial learning of robust deep graph matching: an embedding based approach." IEEE Transactions on Pattern Analysis and Machine Intelligence (2020).
+[10] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Combinatorial learning of robust deep graph matching: an embedding based approach." _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 45.6 (2023): 6984-7000.
 
-[11] Yu, Tianshu, et al. "Learning deep graph matching with channel-independent embedding and hungarian attention." International conference on learning representations. 2019.
+[11] Yu, Tianshu, et al. "Learning deep graph matching with channel-independent embedding and hungarian attention." _International Conference on Learning Representations_. 2019.
 
-[12] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Neural graph matching network: Learning lawler’s quadratic assignment problem with extension to hypergraph and multiple-graph matching." IEEE Transactions on Pattern Analysis and Machine Intelligence (2021).
+[12] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Neural graph matching network: Learning lawler’s quadratic assignment problem with extension to hypergraph and multiple-graph matching." _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 44.9 (2022): 5261-5279.
+
+[13] Wang, Runzhong, Junchi Yan, and Xiaokang Yang. "Combinatorial Learning of Graph Edit Distance via Dynamic Embedding." _IEEE/CVF Conference on Computer Vision and Pattern Recognition_ (2021): 5241-5250.
