@@ -1,6 +1,20 @@
 r"""
 Classic (learning-free) **multi-graph matching** solvers. These multi-graph matching solvers are recommended to solve
 the joint matching problem of multiple graphs.
+
+.. note::
+
+    Multi-graph matching means jointly matching :math:`\geq` 3 graphs. It is different from two-graph matching because
+    multi-graph matching is a more challenging problem and requires different solvers.
+
+    What makes multi-graph matching more challenging is the so-called **cycle-consistency constraint**: a multi-graph
+    matching solution has to be **cycle-consistent**, meaning that any pairwise matching result should be the same as
+    the result propagated from a third graph. For example, denote :math:`\mathbf{X}_{i,j}` as the matching matrix
+    between ``graph i`` and ``graph j``, it requires
+    :math:`\forall i,j,k, \mathbf{X}_{i,j} = \mathbf{X}_{i,k} \mathbf{X}_{k,j}`.
+    Such an extra constraint offers an extra source of information, but makes the problem itself more challenging
+    to solve.
+
 """
 
 # Copyright (c) 2022 Thinklab@SJTU
