@@ -1539,7 +1539,7 @@ def from_networkx(G: nx.Graph):
             
     """
     is_directed = isinstance(G, nx.DiGraph)
-    adj_matrix = nx.to_numpy_matrix(G,nodelist=G.nodes()) if is_directed else nx.to_numpy_matrix(G)
+    adj_matrix = nx.to_numpy_matrix(G, nodelist=G.nodes()) if is_directed else nx.to_numpy_matrix(G)
     return adj_matrix
 
 
