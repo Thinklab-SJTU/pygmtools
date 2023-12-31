@@ -124,7 +124,7 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
 
-### Development status (0.4.2)
+### Development status
 
 |                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
 | ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
