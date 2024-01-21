@@ -147,7 +147,7 @@ class PascalVOC:
         if not os.path.exists(ROOT_DIR):
             assert ROOT_DIR == dataset_cfg.PascalVOC.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
             self.download(
-                url=['https://huggingface.co/heatingma/pygmtools/resolve/main/VOCtrainval_25-May-2011.tar'
+                url=['https://huggingface.co/heatingma/pygmtools/resolve/main/VOCtrainval_25-May-2011.tar',
                      'http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar'],
                 name='PascalVOC'
             )
@@ -155,7 +155,7 @@ class PascalVOC:
         if not os.path.exists(KPT_ANNO_DIR):
             assert KPT_ANNO_DIR == dataset_cfg.PascalVOC.KPT_ANNO_DIR, 'you should not change KPT_ANNO_DIR unless the annotations have been manually downloaded'
             self.download(
-                url=['https://huggingface.co/heatingma/pygmtools/resolve/main/voc2011_keypoints_Feb2012.tgz'
+                url=['https://huggingface.co/heatingma/pygmtools/resolve/main/voc2011_keypoints_Feb2012.tgz',
                      'https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz'],
                 name='PascalVOC_anno')
 
