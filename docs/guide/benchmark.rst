@@ -185,13 +185,29 @@ Overall Comparison
 ^^^^^^^^^^^^^^^^^^^
 Charts below illustrate the results of our experimental investigation into the efficiency of some ``pygmtools`` solvers, comparing execution time among different backends and against previous packages (``ZAC_GM`` for classic solvers and ``Multiway`` for multigraph solvers).
 
-Experiments of ``pygmtools`` were conducted on both CPU and GPU to explore the acceleration of CUDA for graph matching problems, and the existing packages were executed by both Matlab and Octave. Also examined are the variance of computation time with different input graph sizes and the dissimilar trends in time increments on different devices and backends. These information combined provide rich indication in hope that you can select a preferable backend and determine the necessity of enabling CUDA for specific problem scales.
+.. Note ::
+  Input affinity matrices are randomly generated with a fixed batchsize of 64 and the solving time of multigraph algorithms are evaluated upon matching 10 graphs. The execution times have been averaged across 50 runs, with the first run of each test configuration excluded to mitigate initialization biases.
 
-.. image:: ../images/logtime.png
+Solving time on CPU
+++++++++++++++++++++++
+The following results were conducted on consistent CPU hardware to ensure fair comparison. To highlight, our CPU implementations of GM solvers are on-par and usually more
+efficient than the open-source Octave implementation. 
+
+.. image:: ../images/ori_time_classic_cpu.png
+.. image:: ../images/ori_time_multi_cpu.png
+
+Solving time on GPU
+++++++++++++++++++++++
+The following results were conducted on consistent GPU hardware to explore the acceleration of CUDA for graph matching problems. The speed-up brought by GPU
+becomes more significant when the number of nodes grows, because the calling of GPU introduces non-negligible overhead with a smaller number of nodes. Note that log-scaled times are used for visual clarity and the dashed line labeled ``Pytorch-CPU`` acts as a baseline for 
+your direct reference.
+
+.. image:: ../images/log_time_classic_gpu.png
+.. image:: ../images/log_time_multi_gpu.png
 
 Original Results
 ^^^^^^^^^^^^^^^^^
-We provide the original data of our time tests here. Input affinity matrices are randomly generated with a fixed batchsize of 64 and the execution times have been averaged across 50 runs, with the first run of each test configuration excluded to mitigate initialization biases.
+Original data of our time tests are presented below.
 
 .. Note ::
   All experiments were performed on a consistent platform of Linux Ubuntu 20.04 with Python 3.9.17 and the latest compatible versions of the numerical backends listed as follows. Runtime discrepancy shall occur due to different platform, package version, CUDA version, hardware configuration, etc.
