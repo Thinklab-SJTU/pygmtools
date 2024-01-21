@@ -78,7 +78,7 @@ def test_dataset_and_benchmark():
         willow_cfg_dict['SPLIT_OFFSET'] = dataset_cfg.WillowObject.SPLIT_OFFSET
         willow_cfg_dict['TRAIN_SAME_AS_TEST'] = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
         willow_cfg_dict['RAND_OUTLIER'] = dataset_cfg.WillowObject.RAND_OUTLIER
-        willow_cfg_dict['URL'] = 'https://drive.google.com/u/0/uc?export=download&confirm=Z-AR&id=18AvGwkuhnih5bFDjfJK5NYM16LvDfwW_'
+        willow_cfg_dict['URL'] = 'https://huggingface.co/heatingma/pygmtools/resolve/main/WILLOW-ObjectClass_dataset.zip'
         all_cfgs['WillowObject'] = willow_cfg_dict
 
     if 'PascalVOC' in dataset_name_list:
@@ -107,13 +107,13 @@ def test_dataset_and_benchmark():
                                 'test': ['reichstag']}
         imcpt_cfg_dict['ROOT_DIR_NPZ'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         imcpt_cfg_dict['ROOT_DIR_IMG'] = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-        imcpt_cfg_dict['URL'] = 'https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download'
+        imcpt_cfg_dict['URL'] = 'https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz'
         all_cfgs['IMC_PT_SparseGM'] = imcpt_cfg_dict
 
     if 'CUB2011' in dataset_name_list:
         cub_cfg_dict = dict()
         cub_cfg_dict['ROOT_DIR'] = dataset_cfg.CUB2011.ROOT_DIR
-        cub_cfg_dict['URL'] = 'https://drive.google.com/u/0/uc?id=1fcN3m2PmQF7rMQGPxldEICU8CtJ0-F-z&export=download'
+        cub_cfg_dict['URL'] = 'https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tgz'
         all_cfgs['CUB2011'] = cub_cfg_dict
 
     for dataset_name in dataset_name_list:
