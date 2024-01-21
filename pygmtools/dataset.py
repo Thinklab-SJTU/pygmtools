@@ -146,13 +146,17 @@ class PascalVOC:
         self.dataset_dir = 'data/PascalVOC'
         if not os.path.exists(ROOT_DIR):
             assert ROOT_DIR == dataset_cfg.PascalVOC.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
-            self.download(url='http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar',
-                          name='PascalVOC')
+            self.download(
+                url=['https://huggingface.co/heatingma/pygmtools/resolve/main/VOCtrainval_25-May-2011.tar'
+                     'http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar'],
+                name='PascalVOC'
+            )
 
         if not os.path.exists(KPT_ANNO_DIR):
             assert KPT_ANNO_DIR == dataset_cfg.PascalVOC.KPT_ANNO_DIR, 'you should not change KPT_ANNO_DIR unless the annotations have been manually downloaded'
             self.download(
-                url='https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz',
+                url=['https://huggingface.co/heatingma/pygmtools/resolve/main/voc2011_keypoints_Feb2012.tgz'
+                     'https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/shape/poselets/voc2011_keypoints_Feb2012.tgz'],
                 name='PascalVOC_anno')
 
         if not os.path.exists(self.dataset_dir):
@@ -476,8 +480,8 @@ class WillowObject:
         SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
         TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
         RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
-        URL = ['http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip',
-               'https://huggingface.co/heatingma/pygmtools/resolve/main/WILLOW-ObjectClass_dataset.zip']
+        URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/WILLOW-ObjectClass_dataset.zip',
+               'http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip']
         if len(ds_dict.keys()) > 0:
             if 'CLASSES' in ds_dict.keys():
                 CLASSES = ds_dict['CLASSES']
@@ -1023,8 +1027,8 @@ class IMC_PT_SparseGM:
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-        URL = ['https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download',
-               'https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz']
+        URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz',
+               'https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download']
         
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
@@ -1197,8 +1201,8 @@ class CUB2011:
     def __init__(self, sets, obj_resize, **ds_dict):
         CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
         ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
-        URL = ['https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45',
-               'https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tar.gz']
+        URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tgz',
+               'https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45']
         if len(ds_dict.keys()) > 0:
             if 'ROOT_DIR' in ds_dict.keys():
                 ROOT_DIR = ds_dict['ROOT_DIR']
