@@ -113,7 +113,7 @@ def test_dataset_and_benchmark():
     if 'CUB2011' in dataset_name_list:
         cub_cfg_dict = dict()
         cub_cfg_dict['ROOT_DIR'] = dataset_cfg.CUB2011.ROOT_DIR
-        cub_cfg_dict['URL'] = 'https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tar.gz'
+        cub_cfg_dict['URL'] = 'https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tgz'
         all_cfgs['CUB2011'] = cub_cfg_dict
 
     for dataset_name in dataset_name_list:
