@@ -131,6 +131,15 @@ def build_aff_mat(node_feat1, edge_feat1, connectivity1, node_feat2, edge_feat2,
     .. note::
         This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
 
+    .. note::
+        If you want to implement your customized affinity function, make sure it respects the input & output dimensions:
+
+        * Input feat1: :math:`(b\times n_1 \times f)`,
+        * Input feat2: :math:`(b\times n_2 \times f)`,
+        * Output: :math:`(b\times n_1\times n_2)`.
+
+        See :func:`~pygmtools.utils.inner_prod_aff_fn` and :func:`~pygmtools.utils.gaussian_aff_fn` for examples.
+
     .. dropdown:: Numpy Example
 
         ::
@@ -336,6 +345,26 @@ def inner_prod_aff_fn(feat1, feat2, backend=None):
     :param feat2: :math:`(b\times n_2 \times f)` the feature vectors :math:`\mathbf{f}_2`
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1\times n_2)` element-wise inner product affinity matrix
+
+    .. dropdown:: Numpy Implementation Example
+
+        This is an example of Numpy implementation for your reference if you want to customize the affinity function:
+
+        ::
+
+            import numpy as np
+
+            def inner_prod_aff_fn(feat1, feat2): # feat1 has shape (n_1, f), feat2 has shape (n_2, f)
+                return np.matmul(feat1, feat2.swapaxes(1,2))
+
+        The most important thing to bear in mind when customizing is to write an affinity function that respects the
+        input & output dimensions:
+
+        * Input feat1: :math:`(b\times n_1 \times f)`,
+        * Input feat2: :math:`(b\times n_2 \times f)`,
+        * Output: :math:`(b\times n_1\times n_2)`.
+
+        Another example can be found at :func:`~pygmtools.utils.gaussian_aff_fn`.
     """
     if backend is None:
         backend = pygmtools.BACKEND
@@ -365,6 +394,40 @@ def gaussian_aff_fn(feat1, feat2, sigma=1., backend=None):
     :param sigma: (default: 1) the parameter :math:`\sigma` in Gaussian kernel
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return:  :math:`(b\times n_1\times n_2)` element-wise Gaussian affinity matrix
+
+    .. note::
+        Use ``functools.partial`` to specify ``sigma`` before passing it to :func:`~pygmtools.utils.build_aff_mat`.
+
+        Example:
+
+        ::
+
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)
+            >>> K2 = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, ne1, n2, ne2, edge_aff_fn=gaussian_aff)
+
+    .. dropdown:: Numpy Implementation Example
+
+        This is an example of Numpy implementation for your reference if you want to customize the affinity function:
+
+        ::
+
+            import numpy as np
+
+            def gaussian_aff_fn(feat1, feat2, sigma): # feat1 has shape (n_1, f), feat2 has shape (n_2, f)
+                                                      # use functools.partial if you want to specify sigma value
+                feat1 = np.expand_dims(feat1, axis=2)
+                feat2 = np.expand_dims(feat2, axis=1)
+                return np.exp(-((feat1 - feat2) ** 2).sum(axis=-1) / sigma)
+
+        The most important thing to bear in mind when customizing is to write an affinity function that respects the
+        input & output dimensions:
+
+        * Input feat1: :math:`(b\times n_1 \times f)`,
+        * Input feat2: :math:`(b\times n_2 \times f)`,
+        * Output: :math:`(b\times n_1\times n_2)`.
+
+        Another example can be found at :func:`~pygmtools.utils.inner_prod_aff_fn`.
     """
     if backend is None:
         backend = pygmtools.BACKEND
