@@ -1579,7 +1579,7 @@ def build_batch(input, return_ori_dim=False):
     """
     Pytorch implementation of building a batched tensor
     """
-    assert type(input[0]) == torch.Tensor
+    _check_data_type(input[0], 'input', True)
     device = input[0].device
     it = iter(input)
     t = next(it)
@@ -1764,7 +1764,7 @@ def _check_data_type(input: Tensor, var_name, raise_err):
     """
     if raise_err and type(input) is not Tensor:
         raise ValueError(f'Expected PyTorch Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+                         f'but got {type(input)}.')
     return type(input) is Tensor
 
 

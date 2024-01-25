@@ -1213,7 +1213,7 @@ def build_batch(input, return_ori_dim=False):
     """
     Jittor implementation of building a batched Var
     """
-    assert type(input[0]) == jt.Var
+    _check_data_type(input[0], 'input', True)
 
     it = iter(input)
     t = next(it)
@@ -1373,7 +1373,7 @@ def _check_data_type(input: Var, var_name, raise_err):
     """
     if raise_err and type(input) is not Var:
         raise ValueError(f'Expected Jittor Var{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+                         f'but got {type(input)}.')
     return type(input) is Var
 
 def _check_shape(input, dim_num):

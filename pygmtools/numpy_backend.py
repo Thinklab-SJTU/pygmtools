@@ -1230,7 +1230,7 @@ def build_batch(input, return_ori_dim=False):
     """
     numpy implementation of building a batched np.ndarray
     """
-    assert type(input[0]) == np.ndarray
+    _check_data_type(input[0], 'input', True)
     it = iter(input)
     t = next(it)
     max_shape = list(t.shape)
@@ -1371,8 +1371,8 @@ def _check_data_type(input: np.ndarray, var_name, raise_err):
     numpy implementation of _check_data_type
     """
     if raise_err and type(input) is not np.ndarray:
-        raise ValueError(f'Expected numpy ndarray{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+        raise ValueError(f'Expected Numpy ndarray{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}.')
     return type(input) is np.ndarray
 
 

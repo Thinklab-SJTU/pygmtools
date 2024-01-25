@@ -352,7 +352,7 @@ def build_batch(input, return_ori_dim=False):
     """
     mindspore implementation of building a batched tensor
     """
-    assert type(input[0]) == mindspore.Tensor
+    _check_data_type(input[0], 'input', True)
     # device = input[0].device
     it = iter(input)
     t = next(it)
@@ -505,9 +505,10 @@ def _check_data_type(input: mindspore.Tensor, var_name, raise_err):
     """
     mindspore implementation of _check_data_type
     """
-    if raise_err and type(input) is not mindspore.Tensor:
-        raise ValueError(f'Expected mindspore Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+    if raise_err:
+        if type(input) is not mindspore.Tensor or type(input) is not mindspore.common._stub_tensor.StubTensor:
+            raise ValueError(f'Expected MindSpore Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+                             f'but got {type(input)}.')
     return type(input) is mindspore.Tensor
 
 

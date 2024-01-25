@@ -361,7 +361,7 @@ def build_batch(input, return_ori_dim=False):
     """
     Tensorflow implementation of building a batched tensor
     """
-    assert tf.is_tensor(input[0])
+    _check_data_type(input[0], 'input', True)
     device = input[0].device
     it = iter(input)
     t = next(it)
@@ -552,7 +552,7 @@ def _check_data_type(input: tf.Tensor, var_name, raise_err):
     """
     if raise_err and not tf.is_tensor(input):
         raise ValueError(f'Expected TensorFlow Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+                         f'but got {type(input)}.')
     return tf.is_tensor(input)
 
 
