@@ -18,6 +18,6 @@ API and Modules
 
 .. warning::
 
-    By default the API functions and modules run on ``numpy`` backend. You could set the default backend by setting
-    ``pygm.BACKEND``. If you enable other backends than ``numpy``, the corresponding package should be installed. See
-    :doc:`the installation guide <../guide/get_started>` for details.
+    By default the API functions and modules run on ``numpy`` backend. You could set the default backend by calling
+    ``pygm.set_backend('new_backend')``. If you are using other backends, the corresponding package (such as
+    PyTorch) should be installed. See :doc:`the numerical backend guide <../guide/numerical_backends>` for details.

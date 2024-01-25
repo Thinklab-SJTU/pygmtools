@@ -18,6 +18,14 @@ Once the backend is ready, you may switch to the backend globally by the followi
     >>> import pygmtools as pygm
     >>> pygm.set_backend('pytorch')  # replace 'pytorch' by other backend names
 
+.. dropdown:: Deprecation notice
+
+    .. note::
+
+        Starting version ``0.4.2``, we recommend setting the backend by the function ``pygm.set_backend('pytorch')``.
+        The old way of setting backend ``pygm.BACKEND = 'pytorch'`` is kept for backward compatibility but may be
+        removed in future versions.
+
 PyTorch Backend
 ------------------------
 
