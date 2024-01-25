@@ -122,7 +122,8 @@ def sinkhorn(s: Tensor, nrows: Tensor = None, ncols: Tensor = None,
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -163,11 +164,13 @@ def sinkhorn(s: Tensor, nrows: Tensor = None, ncols: Tensor = None,
             if i % 2 == 0:
                 log_sum = torch.logsumexp(log_s, 2, keepdim=True)
                 log_s = log_s - torch.where(row_mask, log_sum, torch.zeros_like(log_sum))
-                assert not torch.any(torch.isnan(log_s))
+                if torch.any(torch.isnan(log_s)):
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
                 log_sum = torch.logsumexp(log_s, 1, keepdim=True)
                 log_s = log_s - torch.where(col_mask, log_sum, torch.zeros_like(log_sum))
-                assert not torch.any(torch.isnan(log_s))
+                if torch.any(torch.isnan(log_s)):
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
 
         ret_log_s = log_s
     else:
@@ -321,7 +324,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = torch.max(n2)
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:
@@ -443,11 +447,14 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
 
         score_combo, idx = torch.max(score_combo, dim=-1)
 
-        assert torch.all(score_combo + 1e-4 >= score_ori), torch.min(score_combo - score_ori)
+        if not torch.all(score_combo + 1e-4 >= score_ori):
+            raise RuntimeError('CAO-fast internal error', torch.min(score_combo - score_ori))
+
         X_upt = X_combo[mask1, mask2, idx, :, :]
         X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (
                     1 - X_mask - X_mask.transpose(0, 1))
-        assert torch.all(X.transpose(0, 1).transpose(2, 3) == X)
+        if not torch.all(X.transpose(0, 1).transpose(2, 3) == X):
+            raise RuntimeError('CAO-fast internal error')
     return X
 
 
@@ -1087,8 +1094,12 @@ class GENN(torch.nn.Module):
 
 
 def hungarian_ged(node_cost_mat: torch.Tensor, n1, n2):
-    assert node_cost_mat.shape[-2] == n1 + 1
-    assert node_cost_mat.shape[-1] == n2 + 1
+    if not node_cost_mat.shape[-2] == n1 + 1:
+        raise RuntimeError(f'nost_cost_mat dimension mismatch in hungarian_ged. Got {node_cost_mat.shape[-2]} in dim '
+                           f'-2 but {n1 + 1} is expected')
+    if not node_cost_mat.shape[-1] == n2 + 1:
+        raise RuntimeError(f'nost_cost_mat dimension mismatch in hungarian_ged. Got {node_cost_mat.shape[-1]} in dim '
+                           f'-1 but {n2 + 1} is expected')
     device = node_cost_mat.device
     upper_left = node_cost_mat[:n1, :n2]
     upper_right = torch.full((n1, n1), float('inf'), device=device)
@@ -1127,7 +1138,8 @@ def astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, fi
         forward_pass = False
         device = torch.device('cpu')
     else:
-        assert feat1.shape[-1] == feat2.shape[-1], 'The feature dimensions of feat1 and feat2 must be consistent'
+        if not feat1.shape[-1] == feat2.shape[-1]:
+            raise ValueError('The feature dimensions of feat1 and feat2 must be consistent')
         forward_pass = True
         device = feat1.device
 
@@ -1139,8 +1151,8 @@ def astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, fi
             if channel is None:
                 args['channel'] = feat1.shape[-1]
             else:
-                assert feat1.shape[-1] == channel, 'the channel {} must match the feature dimension of feat1\n'.format(
-                    channel)
+                if not feat1.shape[-1] == channel:
+                    raise ValueError(f'the channel {channel} must match the feature dimension of feat1')
                 args['channel'] = channel
         else:
             if channel is None:
@@ -1181,7 +1193,8 @@ def astar_kernel(feat1, feat2, A1, A2, n1, n2, channel, filters_1, filters_2, fi
                 raise ValueError(f'Unknown pretrain tag. Available tags: {astar_pretrain_path.keys()}')
 
     if forward_pass:
-        assert A1.shape[0] == A2.shape[0]
+        if not A1.shape[0] == A2.shape[0]:
+            raise ValueError('Batch dimension does not match')
         data = GraphPair(feat1, feat2, A1, A2, n1, n2)
         result = network(data)
     else:

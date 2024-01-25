@@ -109,7 +109,8 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -155,12 +156,14 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
                 index, m = mindspore.ops.max(log_s, axis=2, keep_dims=True)
                 log_sum = mindspore.ops.logsumexp(log_s - m, 2, keep_dims=True) + m
                 log_s = log_s - mindspore.numpy.where(row_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
-                assert not mindspore.ops.isnan(log_s).any()
+                if mindspore.ops.isnan(log_s).any():
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
                 index, m = mindspore.ops.max(log_s, axis=1, keep_dims=True)
                 log_sum = mindspore.ops.logsumexp(log_s - m, 1, keep_dims=True) + m
                 log_s = log_s - mindspore.numpy.where(col_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
-                assert not mindspore.ops.isnan(log_s).any()
+                if mindspore.ops.isnan(log_s).any():
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
 
         ret_log_s = log_s
     else:
@@ -316,7 +319,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = mindspore.ops.max(n2)[1]
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:

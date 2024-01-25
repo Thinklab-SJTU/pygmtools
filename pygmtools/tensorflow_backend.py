@@ -117,7 +117,8 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -160,11 +161,14 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
             if i % 2 == 0:
                 log_sum = tf.reduce_logsumexp(log_s, 2, keepdims=True)
                 log_s = tf.Variable(log_s - tf.where(row_mask, log_sum, tf.zeros_like(log_sum)))
-                assert not tf.reduce_any(tf.math.is_nan(log_s))
+                if tf.reduce_any(tf.math.is_nan(log_s)):
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
+
             else:
                 log_sum = tf.reduce_logsumexp(log_s, 1, keepdims=True)
                 log_s = tf.Variable(log_s - tf.where(col_mask, log_sum, tf.zeros_like(log_sum)))
-                assert not tf.reduce_any(tf.math.is_nan(log_s))
+                if tf.reduce_any(tf.math.is_nan(log_s)):
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
 
         ret_log_s = log_s
     else:
@@ -322,7 +326,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = tf.reduce_max(n2)
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:
