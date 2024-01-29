@@ -20,7 +20,6 @@ import pygmtools.utils
 from .pytorch_astar_modules import GCNConv, AttentionModule, TensorNetworkModule, GraphPair, \
     VERY_LARGE_INT, to_dense_adj, to_dense_batch, default_parameter, check_layer_parameter, node_metric
 from torch import Tensor
-from pygmtools.c_astar import c_astar
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -951,6 +950,12 @@ class GENN(torch.nn.Module):
         return x_pred[:, :-1, :-1]
 
     def _astar(self, data: GraphPair):
+        try:
+            from pygmtools.c_astar import c_astar
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError('Error when importing the shared library of c_astar. Please 1) try reinstalling'
+                                      'pygmtools; or 2) try the solution here to compile it locally '
+                                      'https://github.com/Thinklab-SJTU/pygmtools/issues/92#issuecomment-1850403638')
 
         if self.args['cuda']:
             device = "cuda" if torch.cuda.is_available() else "cpu"
