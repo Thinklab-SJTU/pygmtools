@@ -34,10 +34,12 @@ import importlib.util
 from difflib import get_close_matches
 
 NOT_IMPLEMENTED_MSG = \
-    'The backend function for {} is not implemented. ' \
-    'If you are a user, please check the spelling, and use other backends as workarounds. ' \
-    'If you are a developer, it will be truly appreciated if you could develop and share your' \
-    ' implementation with the community! See our Github: https://github.com/Thinklab-SJTU/pygmtools'
+    'The backend function for {} is not implemented.\n' \
+    'If you are a user, this error message means the function you are calling is not available with this backend and ' \
+    'please use other backends as workarounds. Scroll up in the call stack and it will tell you which function is ' \
+    'causing this error.\n' \
+    'If you are a developer, it will be truly appreciated if you could develop and share your ' \
+    'implementation with the community! RP is welcomed via Github: https://github.com/Thinklab-SJTU/pygmtools'
 
 
 _BACKEND_MAP = {
