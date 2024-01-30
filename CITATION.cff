@@ -1,0 +1,75 @@
+cff-version: 1.2.0
+message: "If this toolbox is useful in your research, please cite it as below."
+authors:
+- family-names: "Wang"
+  given-names: "Runzhong"
+  email: runzhong.wang@sjtu.edu.cn
+  orcid: 'https://orcid.org/0000-0002-9566-738X'
+- family-names: "Guo"
+  given-names: "Ziao"
+- family-names: "Pan"
+  given-names: "Wenzheng"
+- family-names: "Ma"
+  given-names: "Jiale"
+- family-names: "Zhang"
+  given-names: "Yikai"
+- family-names: "Yang"
+  given-names: "Nan"
+- family-names: "Liu"
+  given-names: "Qi"
+- family-names: "Wei"
+  given-names: "Longxuan"
+- family-names: "Zhang"
+  given-names: "Hanxue"
+- family-names: "Liu"
+  given-names: "Chang"
+- family-names: "Jiang"
+  given-names: "Zetian"
+- family-names: "Yang"
+  given-names: "Xiaokang"
+- given-names: Junchi
+  family-names: Yan
+  email: yanjunchi@sjtu.edu.cn
+  orcid: 'https://orcid.org/0000-0001-9639-7679'
+title: "Pygmtools: A Python Graph Matching Toolkit"
+url: "https://github.com/Thinklab-SJTU/pygmtools"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Wang"
+    given-names: "Runzhong"
+    email: runzhong.wang@sjtu.edu.cn
+    orcid: 'https://orcid.org/0000-0002-9566-738X'
+  - family-names: "Guo"
+    given-names: "Ziao"
+  - family-names: "Pan"
+    given-names: "Wenzheng"
+  - family-names: "Ma"
+    given-names: "Jiale"
+  - family-names: "Zhang"
+    given-names: "Yikai"
+  - family-names: "Yang"
+    given-names: "Nan"
+  - family-names: "Liu"
+    given-names: "Qi"
+  - family-names: "Wei"
+    given-names: "Longxuan"
+  - family-names: "Zhang"
+    given-names: "Hanxue"
+  - family-names: "Liu"
+    given-names: "Chang"
+  - family-names: "Jiang"
+    given-names: "Zetian"
+  - family-names: "Yang"
+    given-names: "Xiaokang"
+  - given-names: Junchi
+    family-names: Yan
+    email: yanjunchi@sjtu.edu.cn
+    orcid: 'https://orcid.org/0000-0001-9639-7679'
+  journal: "Journal of Machine Learning Research"
+  start: 1 # First page number
+  end: 7 # Last page number
+  title: "Pygmtools: A Python Graph Matching Toolkit"
+  issue: 00
+  volume: 25
+  year: 2024
