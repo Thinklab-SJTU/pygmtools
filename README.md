@@ -11,7 +11,8 @@
 
 -----------------------------------------
 
-![News](https://img.shields.io/badge/news!-03e8fc) ``pygmtools`` is published in JMLR! Please [cite our paper](#Citing-Pygmtools)
+![News](https://img.shields.io/badge/news!-03e8fc) 
+``pygmtools`` is published in JMLR! Please [cite our paper](#citing-pygmtools)
 if our tools are useful in your research!
 
 -----------------------------------------

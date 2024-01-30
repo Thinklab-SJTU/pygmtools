@@ -404,9 +404,6 @@ Example: Matching Isomorphic Graphs with ``mindspore`` backend
 Here we provide a basic example of matching two isomorphic graphs (i.e. two graphs have the same nodes and edges, but
 the node permutations are unknown) with ``mindspore`` backend.
 
-.. note::
-
-
 Step 0: Import packages and set backend
 
 ::
