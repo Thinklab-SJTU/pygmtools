@@ -11,6 +11,11 @@
 
 -----------------------------------------
 
+![News](https://img.shields.io/badge/news!-03e8fc) ``pygmtools`` is published in JMLR! Please [cite our paper](#Citing-Pygmtools)
+if our tools are useful in your research!
+
+-----------------------------------------
+
 ``pygmtools`` (Python Graph Matching Tools) provides graph matching solvers in Python and is easily accessible via:
 
 ```bash
@@ -176,8 +181,32 @@ Any contributions/ideas/suggestions from the community is welcomed! Before start
 
 ## Developers and Maintainers
 
-``pygmtools`` is currently developed and maintained by members from [ThinkLab](http://thinklab.sjtu.edu.cn) at 
-Shanghai Jiao Tong University. 
+``pygmtools`` is developed and maintained by members from [ThinkLab](http://thinklab.sjtu.edu.cn) at 
+Shanghai Jiao Tong University.
+
+## Citing Pygmtools
+
+``pygmtools`` is published on Journal of Machine Learning Research (JMLR). If you find our toolkit helpful in your 
+research, please cite:
+```
+Runzhong Wang, Ziao Guo, Wenzheng Pan, Jiale Ma, Yikai Zhang, Nan Yang, Qi Liu, Longxuan Wei, Hanxue Zhang, Chang Liu, Zetian Jiang, Xiaokang Yang, and Junchi Yan.
+Pygmtools: A Python Graph Matching Toolkit.
+Journal of Machine Learning Research, 25(00):1−7, 2024.
+```
+
+In Bibtex format:
+```
+@article{wang2024pygm,
+  author  = {Runzhong Wang and Ziao Guo and Wenzheng Pan and Jiale Ma and Yikai Zhang and Nan Yang and Qi Liu and Longxuan Wei and Hanxue Zhang and Chang Liu and Zetian Jiang and Xiaokang Yang and Junchi Yan},
+  title   = {Pygmtools: A Python Graph Matching Toolkit},
+  journal = {Journal of Machine Learning Research},
+  year    = {2024},
+  volume  = {25},
+  number  = {00},
+  pages   = {1-7},
+  url     = {https://jmlr.org/papers/v25/23-0572.html},
+}
+```
 
 ## References
 <!--MLA style references-->
