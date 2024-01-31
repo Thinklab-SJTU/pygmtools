@@ -1132,8 +1132,8 @@ def astar(K, n1=None, n2=None, n1max=None, n2max=None, beam_width=0, backend=Non
             >>> (X * X_gt).sum() / X_gt.sum()
             tensor(1.)
 
-            # If beam_width=0, the solver visits the entire search space and can be inefficient.
-            # Consider setting a non-zero beam width to make it more efficient, especially for larger problems
+            # If beam_width=0, the solver will do an exhaustive search over the entire space and can be inefficient.
+            # Consider setting a non-zero beam width to make it more efficient, especially for larger-sized problems
             >>> X = pygm.astar(K, n1, n2, beam_width=1)
 
             # This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
