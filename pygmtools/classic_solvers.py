@@ -1062,7 +1062,7 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         return result
 
 
-def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, backend=None):
+def astar(K, n1=None, n2=None, n1max=None, n2max=None, beam_width=0, backend=None):
     r"""
     A\* (A-star) solver for graph matching (Lawler's QAP).
     The **A\*** solver was originally proposed to solve the graph edit distance (GED) problem. It finds the optimal
@@ -1071,15 +1071,11 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, ba
     Here we implement the A\* solver with Hungarian heuristic. See the following paper for more details:
     `An Exact Graph Edit Distance Algorithm for Solving Pattern Recognition Problems <https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=5e3a679c3bdf5c5d72c5cc91c8cc9d019a500842>`_
 
-    :param feat1: :math:`(b\times n_1 \times d)` input feature of graph1
-    :param feat2: :math:`(b\times n_2 \times d)` input feature of graph2
-    :param A1: :math:`(b\times n_1 \times n_1)` input adjacency matrix of graph1
-    :param A2: :math:`(b\times n_2 \times n_2)` input adjacency matrix of graph2
-    :param n1: :math:`(b)` number of nodes in graph1. Optional if all equal to :math:`n_1`
-    :param n2: :math:`(b)` number of nodes in graph2. Optional if all equal to :math:`n_2`
-    :param channel: (default: None)  Channel size of the input layer. If given, it must match the feature dimension (d) of feat1, feat2. 
-        If not given, it will be defined by the feature dimension (d) of feat1, feat2. 
-        Ignored if the network object isgiven (ignored if network!=None)
+    :param K: :math:`(b\times n_1n_2 \times n_1n_2)` the input affinity matrix, :math:`b`: batch size.
+    :param n1: :math:`(b)` number of nodes in graph1 (optional if n1max is given, and all n1=n1max).
+    :param n2: :math:`(b)` number of nodes in graph2 (optional if n2max is given, and all n2=n2max).
+    :param n1max: :math:`(b)` max number of nodes in graph1 (optional if n1 is given, and n1max=max(n1)).
+    :param n2max: :math:`(b)` max number of nodes in graph2 (optional if n2 is given, and n2max=max(n2)).
     :param beam_width: (default: 0) Size of beam-search witdh (0 = no beam).
     :param backend: (default: ``pygmtools.BACKEND`` variable) the backend for computation.
     :return: :math:`(b\times n_1 \times n_2)` the doubly-stochastic matching matrix
@@ -1107,38 +1103,47 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, ba
             >>> import pygmtools as pygm
             >>> pygm.set_backend('pytorch')
             >>> _ = torch.manual_seed(1)
-            
+
             # Generate a batch of isomorphic graphs
             >>> batch_size = 10
-            >>> nodes_num = 4
-            >>> channel = 36
-
-            >>> X_gt = torch.zeros(batch_size, nodes_num, nodes_num)
-            >>> X_gt[:, torch.arange(0, nodes_num, dtype=torch.int64), torch.randperm(nodes_num)] = 1
-            >>> A1 = 1. * (torch.rand(batch_size, nodes_num, nodes_num) > 0.5)
-            >>> torch.diagonal(A1, dim1=1, dim2=2)[:] = 0 # discard self-loop edges
+            >>> X_gt = torch.zeros(batch_size, 4, 4)
+            >>> X_gt[:, torch.arange(0, 4, dtype=torch.int64), torch.randperm(4)] = 1
+            >>> A1 = torch.rand(batch_size, 4, 4)
             >>> A2 = torch.bmm(torch.bmm(X_gt.transpose(1, 2), A1), X_gt)
-            >>> feat1 = torch.rand(batch_size, nodes_num, channel) - 0.5
-            >>> feat2 = torch.bmm(X_gt.transpose(1, 2), feat1)
-            >>> n1 = n2 = torch.tensor([nodes_num] * batch_size)
+            >>> n1 = torch.tensor([4] * batch_size)
+            >>> n2 = torch.tensor([4] * batch_size)
 
-            # Match by A* (load pretrained model)
-            >>> X = pygm.astar(feat1, feat2, A1, A2, n1, n2)
-            >>> (X * X_gt).sum() / X_gt.sum()# accuracy
+            # Build affinity matrix
+            >>> conn1, edge1, ne1 = pygm.utils.dense_to_sparse(A1)
+            >>> conn2, edge2, ne2 = pygm.utils.dense_to_sparse(A2)
+            >>> import functools
+            >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.) # set affinity function
+            >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
+
+            # Solve by A*
+            >>> X = pygm.astar(K, n1, n2)
+            >>> X[0]
+            tensor([[0., 1., 0., 0.],
+                    [0., 0., 0., 1.],
+                    [0., 0., 1., 0.],
+                    [1., 0., 0., 0.]])
+
+            # Accuracy
+            >>> (X * X_gt).sum() / X_gt.sum()
             tensor(1.)
-            
+
+            # If beam_width=0, the solver visits the entire search space and can be inefficient.
+            # Consider setting a non-zero beam width to make it more efficient, especially for larger problems
+            >>> X = pygm.astar(K, n1, n2, beam_width=1)
+
             # This function also supports non-batched input, by ignoring all batch dimensions in the input tensors.
-            >>> part_f1 = feat1[0]
-            >>> part_f2 = feat2[0]
-            >>> part_A1 = A1[0]
-            >>> part_A2 = A2[0]
-            >>> part_X_gt = X_gt[0]
-            >>> part_X = pygm.astar(part_f1, part_f2, part_A1, part_A2)
+            >>> X_0 = pygm.astar(K[0], n1[0], n2[0])
             
-            >>> part_X.shape
+            >>> X_0.shape
             torch.Size([4, 4])
-            
-            >>> (part_X * part_X_gt).sum() / part_X_gt.sum()# accuracy
+
+            # Accuracy
+            >>> (X_0 * X_gt[0]).sum() / X_gt[0].sum()
             tensor(1.)
 
     .. note::
@@ -1156,35 +1161,24 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, ba
     """
     if backend is None:
         backend = pygmtools.BACKEND
-    non_batched_input = False
-    if feat1 is not None: # if feat1 is None, this function skips the forward pass and only returns a network object
-        for _ in (feat1, feat2, A1, A2):
-            _check_data_type(_, backend)
+    _check_data_type(K, 'K', backend)
+    if _check_shape(K, 2, backend):
+        K = _unsqueeze(K, 0, backend)
+        non_batched_input = True
+        if type(n1) is int and n1max is None:
+            n1max = n1
+            n1 = None
+        if type(n2) is int and n2max is None:
+            n2max = n2
+            n2 = None
+    elif _check_shape(K, 3, backend):
+        non_batched_input = False
+    else:
+        raise ValueError(f'the input argument K is expected to be 2-dimensional or 3-dimensional, got '
+                         f'K:{len(_get_shape(K, backend))}dims!')
+    __check_gm_arguments(n1, n2, n1max, n2max)
 
-        if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
-            feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
-            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
-            non_batched_input = True
-        elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
-            non_batched_input = False
-        else:
-            raise ValueError(
-                f'the input arguments feat1, feat2, A1, A2 are expected to be all 2-dimensional or 3-dimensional, got '
-                f'feat1:{len(_get_shape(feat1, backend))}dims, feat2:{len(_get_shape(feat2, backend))}dims, '
-                f'A1:{len(_get_shape(A1, backend))}dims, A2:{len(_get_shape(A2, backend))}dims!')
-
-        if not (_get_shape(feat1, backend)[0] == _get_shape(feat2, backend)[0] == _get_shape(A1, backend)[0] == _get_shape(A2, backend)[0])\
-                or not (_get_shape(feat1, backend)[1] == _get_shape(A1, backend)[1] == _get_shape(A1, backend)[2])\
-                or not (_get_shape(feat2, backend)[1] == _get_shape(A2, backend)[1] == _get_shape(A2, backend)[2])\
-                or not (_get_shape(feat1, backend)[2] == _get_shape(feat2, backend)[2]):
-            raise ValueError(
-                f'the input dimensions do not match. Got feat1:{_get_shape(feat1, backend)}, '
-                f'feat2:{_get_shape(feat2, backend)}, A1:{_get_shape(A1, backend)}, A2:{_get_shape(A2, backend)}!')
-    if n1 is not None: _check_data_type(n1, 'n1', backend)
-    if n2 is not None: _check_data_type(n2, 'n2', backend)
-
-    args = (feat1, feat2, A1, A2, n1, n2, channel, beam_width)
+    args = (K, n1, n2, n1max, n2max, beam_width)
     try:
         mod = importlib.import_module(f'pygmtools.{backend}_backend')
         fn = mod.astar
@@ -1194,7 +1188,7 @@ def astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, beam_width=0, ba
         )
 
     result = fn(*args)
-    match_mat = _squeeze(result[0], 0, backend) if non_batched_input else result[0]
+    match_mat = _squeeze(result, 0, backend) if non_batched_input else result
     return match_mat
 
 
