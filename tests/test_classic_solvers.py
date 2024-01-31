@@ -24,16 +24,16 @@ import platform
 
 os_name = platform.system()
 
-def get_backends(backend_token):
-    if backend_token == "all":
+def get_backends(get_backend):
+    if get_backend == "all":
         if os_name == 'Linux':
             backends = ['pytorch', 'numpy', 'paddle', 'jittor', 'tensorflow']
         else:
             backends = ['pytorch', 'numpy', 'paddle', 'tensorflow']
-    elif backend_token == 'pytorch_only':
+    elif get_backend == 'pytorch_only':
         backends = ['pytorch']
     else:
-        backends = ["pytorch", backend_token]
+        backends = ["pytorch", get_backend]
     return backends
 
 
@@ -297,8 +297,8 @@ def _test_pyg(graph_num_nodes, backends):
                                     and the accuracy is {accuracy}, the num_node is {num_node},.'
 
 
-def test_hungarian(backend_token):
-    backends = get_backends(backend_token)
+def test_hungarian(get_backend):
+    backends = get_backends(get_backend)
     _test_classic_solver_on_linear_assignment(list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.hungarian, {
         'nproc': [1, 2, 4],
         'outlier_num': [0, 5, 10]
@@ -311,8 +311,8 @@ def test_hungarian(backend_token):
     }, backends)
 
 
-def test_sinkhorn(backend_token):
-    backends = get_backends(backend_token)
+def test_sinkhorn(get_backend):
+    backends = get_backends(get_backend)
     # test non-symmetric matching
     args1 = (list(range(10, 30, 2)), list(range(30, 10, -2)), 10, pygm.sinkhorn, {
         'tau': [0.1, 0.01],
@@ -363,8 +363,8 @@ def test_sinkhorn(backend_token):
     _test_classic_solver_on_linear_assignment(*args5)
 
 
-def test_rrwm(backend_token):
-    backends = get_backends(backend_token)
+def test_rrwm(get_backend):
+    backends = get_backends(get_backend)
     if "mindspore" in backends:
         _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.rrwm, {
             'alpha': [0.1, 0.5],
@@ -395,8 +395,8 @@ def test_rrwm(backend_token):
     }, backends)
 
 
-def test_sm(backend_token):
-    backends = get_backends(backend_token)
+def test_sm(get_backend):
+    backends = get_backends(get_backend)
     if "mindspore" in backends:
         _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.sm, {
             'max_iter': [10, 50],
@@ -418,8 +418,8 @@ def test_sm(backend_token):
     }, backends)
 
 
-def test_ipfp(backend_token):
-    backends = get_backends(backend_token)
+def test_ipfp(get_backend):
+    backends = get_backends(get_backend)
     _test_classic_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 10, pygm.ipfp, {
         'max_iter': [10, 50, 100],
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
