@@ -113,7 +113,8 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -154,13 +155,15 @@ def sinkhorn(s: Var, nrows: Var=None, ncols: Var=None,
                 log_sum = jt.nn.logsumexp(log_s - m, 2, keepdim=True) + m
                 log_s = log_s - jt.where(row_mask, log_sum, jt.zeros_like(log_sum))
                 if jt.flags.use_cuda == 0:
-                    assert not jt.any(jt.isnan(log_s))
+                    if jt.any(jt.isnan(log_s)):
+                        raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
                 m = log_s.max(1, keepdims=True)
                 log_sum = jt.nn.logsumexp(log_s - m, 1, keepdim=True) + m                
                 log_s = log_s - jt.where(col_mask, log_sum, jt.zeros_like(log_sum))
                 if jt.flags.use_cuda == 0:
-                    assert not jt.any(jt.isnan(log_s))
+                    if jt.any(jt.isnan(log_s)):
+                        raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
 
         ret_log_s = log_s
     else:
@@ -421,10 +424,12 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
                 idx[i].append(ix[0].item() if ix.shape[0]>1 else ix.item())
         idx = jt.Var(idx)
 
-        assert jt.all(score_combo_max + 1e-4 >= score_ori), jt.min(score_combo_max - score_ori)
+        if not jt.all(score_combo_max + 1e-4 >= score_ori):
+            raise RuntimeError('CAO-fast internal error', jt.min(score_combo_max - score_ori))
         X_upt = X_combo[mask1, mask2, idx, :, :]
         X = X_upt * X_mask + X_upt.transpose(0, 1).transpose(2, 3) * X_mask.transpose(0, 1) + X * (1 - X_mask - X_mask.transpose(0, 1))
-        assert jt.all(X.transpose(0, 1).transpose(2, 3) == X)
+        if not jt.all(X.transpose(0, 1).transpose(2, 3) == X):
+            raise RuntimeError('CAO-fast internal error')
     return X
 
 
@@ -1213,7 +1218,7 @@ def build_batch(input, return_ori_dim=False):
     """
     Jittor implementation of building a batched Var
     """
-    assert type(input[0]) == jt.Var
+    _check_data_type(input[0], 'input', True)
 
     it = iter(input)
     t = next(it)
@@ -1355,7 +1360,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = jt.max(n2).item()
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:
@@ -1373,7 +1379,7 @@ def _check_data_type(input: Var, var_name, raise_err):
     """
     if raise_err and type(input) is not Var:
         raise ValueError(f'Expected Jittor Var{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+                         f'but got {type(input)}.')
     return type(input) is Var
 
 def _check_shape(input, dim_num):

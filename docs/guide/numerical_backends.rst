@@ -18,6 +18,14 @@ Once the backend is ready, you may switch to the backend globally by the followi
     >>> import pygmtools as pygm
     >>> pygm.set_backend('pytorch')  # replace 'pytorch' by other backend names
 
+.. dropdown:: Deprecation notice
+
+    .. note::
+
+        Starting version ``0.4.2``, we recommend setting the backend by the function ``pygm.set_backend('pytorch')``.
+        The old way of setting backend ``pygm.BACKEND = 'pytorch'`` is kept for backward compatibility but may be
+        removed in future versions.
+
 PyTorch Backend
 ------------------------
 
@@ -62,7 +70,7 @@ Step 1: Generate two isomorphic graphs
 
 ::
 
-    >>> num_nodes = 10
+    >>> num_nodes = 5
     >>> X_gt = torch.zeros(num_nodes, num_nodes)
     >>> X_gt[torch.arange(0, num_nodes, dtype=torch.int64), torch.randperm(num_nodes)] = 1
     >>> A1 = torch.rand(num_nodes, num_nodes)
@@ -89,23 +97,18 @@ Step 3: Solve graph matching by RRWM
     >>> X = pygm.rrwm(K, n1, n2, beta=100)
     >>> X = pygm.hungarian(X)
     >>> X # X is the permutation matrix
-    [[0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
-      [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
-      [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-      [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-      [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-      [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]]
+    tensor([[1., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 1.],
+            [0., 0., 0., 1., 0.],
+            [0., 1., 0., 0., 0.],
+            [0., 0., 1., 0., 0.]])
 
 Final Step: Evaluate the accuracy
 
 ::
 
     >>> (X * X_gt).sum() / X_gt.sum()
-    1.0
+    tensor(1.)
 
 Jittor Backend
 ------------------------
@@ -139,6 +142,11 @@ Example: Matching Isomorphic Graphs with ``jittor`` backend
 Here we provide a basic example of matching two isomorphic graphs (i.e. two graphs have the same nodes and edges, but
 the node permutations are unknown) with ``jittor`` backend.
 
+.. note::
+
+    As a feature of ``jittor``, please expect some just-in-time compiling overhead if you are running the code for the
+    first time.
+
 Step 0: Import packages and set backend
 
 ::
@@ -153,7 +161,7 @@ Step 1: Generate two isomorphic graphs
 
 ::
 
-    >>> num_nodes = 10
+    >>> num_nodes = 5
     >>> X_gt = jt.zeros((num_nodes, num_nodes))
     >>> X_gt[jt.arange(0, num_nodes, dtype=jt.int64), jt.randperm(num_nodes)] = 1
     >>> A1 = jt.rand(num_nodes, num_nodes)
@@ -180,23 +188,18 @@ Step 3: Solve graph matching by RRWM
     >>> X = pygm.rrwm(K, n1, n2, beta=100)
     >>> X = pygm.hungarian(X)
     >>> X # X is the permutation matrix
-    [[0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-      [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-      [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-      [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]]
+    jt.Var([[0. 1. 0. 0. 0.]
+            [0. 0. 0. 1. 0.]
+            [0. 0. 0. 0. 1.]
+            [1. 0. 0. 0. 0.]
+            [0. 0. 1. 0. 0.]], dtype=float32)
 
 Final Step: Evaluate the accuracy
 
 ::
 
     >>> (X * X_gt).sum() / X_gt.sum()
-    1.0
+    jt.Var([1.], dtype=float32)
 
 Paddle Backend
 ------------------------
@@ -243,7 +246,7 @@ Step 1: Generate two isomorphic graphs
 
 ::
 
-    >>> num_nodes = 10
+    >>> num_nodes = 5
     >>> X_gt = paddle.zeros((num_nodes, num_nodes))
     >>> X_gt[paddle.arange(0, num_nodes, dtype=paddle.int64), paddle.randperm(num_nodes)] = 1
     >>> A1 = paddle.rand((num_nodes, num_nodes))
@@ -270,23 +273,20 @@ Step 3: Solve graph matching by RRWM
     >>> X = pygm.rrwm(K, n1, n2, beta=100)
     >>> X = pygm.hungarian(X)
     >>> X # X is the permutation matrix
-    [[0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-      [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-      [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-      [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
-      [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-      [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
-      [0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]]
+    Tensor(shape=[5, 5], dtype=float32, place=Place(cpu), stop_gradient=True,
+           [[0., 0., 0., 0., 1.],
+            [1., 0., 0., 0., 0.],
+            [0., 1., 0., 0., 0.],
+            [0., 0., 0., 1., 0.],
+            [0., 0., 1., 0., 0.]])
 
 Final Step: Evaluate the accuracy
 
 ::
 
     >>> (X * X_gt).sum() / X_gt.sum()
-    1.0
+    Tensor(shape=[1], dtype=float32, place=Place(cpu), stop_gradient=True,
+           [1.])
 
 Tensorflow Backend
 ------------------------
@@ -333,7 +333,7 @@ Step 1: Generate two isomorphic graphs
 
 ::
 
-    >>> num_nodes = 10
+    >>> num_nodes = 5
     >>> X_gt = tf.Variable(tf.zeros([num_nodes, num_nodes]))
     >>> indices = tf.stack([tf.range(num_nodes),tf.random.shuffle(tf.range(num_nodes))], axis=1)
     >>> updates = tf.ones([num_nodes])
@@ -360,24 +360,19 @@ Step 3: Solve graph matching by RRWM
     >>> X = pygm.rrwm(K, n1, n2, beta=100)
     >>> X = pygm.hungarian(X)
     >>> X # X is the permutation matrix
-    tf.Tensor(
-    [[0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
-    [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-    [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]], shape=(10, 10), dtype=float32)
+    <tf.Tensor: shape=(5, 5), dtype=float32, numpy=
+    array([[0., 0., 1., 0., 0.],
+           [1., 0., 0., 0., 0.],
+           [0., 1., 0., 0., 0.],
+           [0., 0., 0., 0., 1.],
+           [0., 0., 0., 1., 0.]], dtype=float32)>
 
 Final Step: Evaluate the accuracy
 
 ::
 
     >>> tf.reduce_sum(X * X_gt) / tf.reduce_sum(X_gt)
-    tf.Tensor(1.0, shape=(), dtype=float32)
+    <tf.Tensor: shape=(), dtype=float32, numpy=1.0>
 
 Mindspore Backend
 ------------------------
@@ -422,7 +417,7 @@ Step 1: Generate two isomorphic graphs
 
 ::
 
-    >>> num_nodes = 10
+    >>> num_nodes = 5
     >>> X_gt = ms.numpy.zeros((num_nodes, num_nodes))
     >>> X_gt[ms.numpy.arange(0, num_nodes, dtype=ms.int32), ms.ops.Randperm(num_nodes)(ms.Tensor([num_nodes], dtype=ms.int32))] = 1
     >>> A1 = ms.numpy.rand((num_nodes, num_nodes))
@@ -436,7 +431,6 @@ Step 2: Build an affinity matrix and select an affinity function
 
     >>> conn1, edge1 = pygm.utils.dense_to_sparse(A1)
     >>> conn2, edge2 = pygm.utils.dense_to_sparse(A2)
-    >>> print(conn1.shape, edge1.shape)
     >>> import functools
     >>> gaussian_aff = functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1) # set affinity function
     >>> K = pygm.utils.build_aff_mat(None, edge1, conn1, None, edge2, conn2, n1, None, n2, None, edge_aff_fn=gaussian_aff)
@@ -448,23 +442,19 @@ Step 3: Solve graph matching by RRWM
     >>> X = pygm.rrwm(K, n1, n2, beta=100)
     >>> X = pygm.hungarian(X)
     >>> X # X is the permutation matrix
-    [[0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-    [0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 1. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-    [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
-    [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-    [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-    [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]]
+    Tensor(shape=[5, 5], dtype=Float32, value=
+    [[ 0.00000000e+00,  0.00000000e+00,  1.00000000e+00,  0.00000000e+00,  0.00000000e+00],
+     [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00],
+     [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00,  0.00000000e+00],
+     [ 1.00000000e+00,  0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  0.00000000e+00],
+     [ 0.00000000e+00,  1.00000000e+00,  0.00000000e+00,  0.00000000e+00,  0.00000000e+00]])
 
 Final Step: Evaluate the accuracy
 
 ::
 
     >>> (X * X_gt).sum() / X_gt.sum()
-    1.0
+    Tensor(shape=[], dtype=Float32, value= 1)
 
 What's Next
 ------------

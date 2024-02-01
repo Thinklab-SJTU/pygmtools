@@ -76,7 +76,7 @@ Step 3: Solve graph matching by RRWM
 
     >>> X = pygm.rrwm(K, n1, n2, beta=100)
     >>> X = pygm.hungarian(X)
-    >>> X # X is the permutation matrix
+    >>> X # X is the batched permutation matrix
     [[[0. 0. 0. 1.]
       [0. 0. 1. 0.]
       [1. 0. 0. 0.]

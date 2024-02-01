@@ -136,7 +136,8 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -173,12 +174,13 @@ def sinkhorn(s: np.ndarray, nrows: np.ndarray=None, ncols: np.ndarray=None,
             if i % 2 == 0:
                 log_sum = scipy.special.logsumexp(log_s, 2, keepdims=True)
                 log_s = log_s - np.where(row_mask, log_sum, np.zeros_like(log_sum))
-                log_s[np.isnan(log_s)] = -float('inf')
+                if np.any(np.isnan(log_s)):
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
                 log_sum = scipy.special.logsumexp(log_s, 1, keepdims=True)
                 log_s = log_s - np.where(col_mask, log_sum, np.zeros_like(log_sum))
-                log_s[np.isnan(log_s)] = -float('inf')
-
+                if np.any(np.isnan(log_s)):
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
         ret_log_s = log_s
     else:
         ret_log_s = np.full((batch_size, log_s.shape[1], log_s.shape[2]), -float('inf'), dtype=log_s.dtype)
@@ -329,7 +331,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = np.max(n2)
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:
@@ -444,10 +447,12 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         idx = np.argmax(score_combo,axis=-1)
         score_combo = np.max(score_combo, axis=-1)
         
-        assert np.all(score_combo + 1e-4 >= score_ori), np.min(score_combo - score_ori)
+        if not np.all(score_combo + 1e-4 >= score_ori):
+            raise RuntimeError('CAO-fast internal error', np.min(score_combo - score_ori))
         X_upt = X_combo[mask1, mask2, idx, :, :]
         X = X_upt * X_mask + X_upt.swapaxes(0,1).swapaxes(2,3) * X_mask.swapaxes(0,1) + X * (1 - X_mask - X_mask.swapaxes(0, 1))
-        assert np.all(X.swapaxes(0,1).swapaxes(2,3) == X)
+        if not np.all(X.swapaxes(0,1).swapaxes(2,3) == X):
+            raise RuntimeError('CAO-fast internal error')
     return X
 
 
@@ -1230,7 +1235,7 @@ def build_batch(input, return_ori_dim=False):
     """
     numpy implementation of building a batched np.ndarray
     """
-    assert type(input[0]) == np.ndarray
+    _check_data_type(input[0], 'input', True)
     it = iter(input)
     t = next(it)
     max_shape = list(t.shape)
@@ -1371,8 +1376,8 @@ def _check_data_type(input: np.ndarray, var_name, raise_err):
     numpy implementation of _check_data_type
     """
     if raise_err and type(input) is not np.ndarray:
-        raise ValueError(f'Expected numpy ndarray{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+        raise ValueError(f'Expected Numpy ndarray{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}.')
     return type(input) is np.ndarray
 
 

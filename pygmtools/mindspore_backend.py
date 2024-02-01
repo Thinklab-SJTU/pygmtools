@@ -109,7 +109,8 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -155,12 +156,14 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
                 index, m = mindspore.ops.max(log_s, axis=2, keep_dims=True)
                 log_sum = mindspore.ops.logsumexp(log_s - m, 2, keep_dims=True) + m
                 log_s = log_s - mindspore.numpy.where(row_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
-                assert not mindspore.ops.isnan(log_s).any()
+                if mindspore.ops.isnan(log_s).any():
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
                 index, m = mindspore.ops.max(log_s, axis=1, keep_dims=True)
                 log_sum = mindspore.ops.logsumexp(log_s - m, 1, keep_dims=True) + m
                 log_s = log_s - mindspore.numpy.where(col_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
-                assert not mindspore.ops.isnan(log_s).any()
+                if mindspore.ops.isnan(log_s).any():
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
 
         ret_log_s = log_s
     else:
@@ -316,7 +319,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = mindspore.ops.max(n2)[1]
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:
@@ -352,7 +356,7 @@ def build_batch(input, return_ori_dim=False):
     """
     mindspore implementation of building a batched tensor
     """
-    assert type(input[0]) == mindspore.Tensor
+    _check_data_type(input[0], 'input', True)
     # device = input[0].device
     it = iter(input)
     t = next(it)
@@ -505,10 +509,15 @@ def _check_data_type(input: mindspore.Tensor, var_name, raise_err):
     """
     mindspore implementation of _check_data_type
     """
-    if raise_err and type(input) is not mindspore.Tensor:
-        raise ValueError(f'Expected mindspore Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
-    return type(input) is mindspore.Tensor
+    ms_types = [mindspore.Tensor]
+    if hasattr(mindspore.common, '_stub_tensor'):  # MS tensor may be automatically transformed to StubTensor
+        ms_types += [mindspore.common._stub_tensor.StubTensor]
+    is_tensor = any([type(input) is t for t in ms_types])
+
+    if raise_err and not is_tensor:
+        raise ValueError(f'Expected MindSpore Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
+                         f'but got {type(input)}.')
+    return is_tensor
 
 
 def _check_shape(input, dim_num):

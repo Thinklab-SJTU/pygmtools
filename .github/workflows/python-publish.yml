@@ -41,70 +41,14 @@ jobs:
 
   linux:
     needs: deploy
-    runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
+        os: [ ubuntu-20.04, windows-latest, macos-latest ]
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r pygmtools/publish_requirements.txt
-    - name: Build Wheel
-      run: |
-        python setup.py bdist_wheel
-    - name: Upload Wheel to PyPI
-      run: |
-        pip install twine
-        python -m twine upload dist/*
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN_PYGMTOOLS }}
-
-
-  macos:
-    needs: deploy
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r pygmtools/publish_requirements.txt
-      - name: Build Wheel
-        run: |
-          python setup.py bdist_wheel
-      - name: Upload Wheel to PyPI
-        run: |
-          pip install twine
-          python -m twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN_PYGMTOOLS }}
-
-  windows:
-    needs: deploy
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2

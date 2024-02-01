@@ -115,7 +115,8 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
         unmatchcols = unmatchcols / tau
 
     if dummy_row:
-        assert log_s.shape[2] >= log_s.shape[1]
+        if not log_s.shape[2] >= log_s.shape[1]:
+            raise RuntimeError('Error in Sinkhorn with dummy row')
         dummy_shape = list(log_s.shape)
         dummy_shape[1] = log_s.shape[2] - log_s.shape[1]
         ori_nrows = nrows
@@ -153,12 +154,14 @@ def sinkhorn(s: paddle.Tensor, nrows: paddle.Tensor=None, ncols: paddle.Tensor=N
                 log_sum = paddle.logsumexp(log_s, 2, keepdim=True)
                 log_s = log_s - paddle.where(row_mask, log_sum, paddle.zeros_like(log_sum))
                 nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
-                assert nan_indices[0].size == 0
+                if not nan_indices[0].size == 0:
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
                 log_sum = paddle.logsumexp(log_s, 1, keepdim=True)
                 log_s = log_s - paddle.where(col_mask, log_sum, paddle.zeros_like(log_sum))
                 nan_indices = paddle.nonzero(paddle.isnan(log_s), True)
-                assert nan_indices[0].size == 0
+                if not nan_indices[0].size == 0:
+                    raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
 
         ret_log_s = log_s
     else:
@@ -310,7 +313,8 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2max is None:
         n2max = paddle.max(n2)
 
-    assert n1max * n2max == n1n2, 'the input size of K does not match with n1max * n2max!'
+    if not n1max * n2max == n1n2:
+        raise ValueError('the input size of K does not match with n1max * n2max!')
 
     # initialize x0 (also v0)
     if x0 is None:
@@ -432,10 +436,12 @@ def cao_fast_solver(K, X, num_graph, num_node, max_iter, lambda_init, lambda_ste
         idx = paddle.argmax(score_combo, axis=-1)
         score_combo = paddle.max(score_combo, axis=-1)
 
-        assert paddle.all(score_combo + 1e-4 >= score_ori), paddle.min(score_combo - score_ori)
+        if not paddle.all(score_combo + 1e-4 >= score_ori):
+            raise RuntimeError('CAO-fast internal error', paddle.min(score_combo - score_ori))
         X_upt = X_combo[mask1, mask2, idx]
         X = X_upt * X_mask + X_upt.transpose((1, 0, 3, 2))* X_mask.transpose((1, 0, 2, 3)) + X * (1 - X_mask - X_mask.transpose((1, 0, 2, 3)))
-        assert paddle.all(X.transpose((1, 0, 3, 2)) == X)
+        if not paddle.all(X.transpose((1, 0, 3, 2)) == X):
+            raise RuntimeError('CAO-fast internal error')
     return X
 
 
@@ -1156,7 +1162,7 @@ def build_batch(input, return_ori_dim=False):
     """
     Paddle implementation of building a batched tensor
     """
-    assert type(input[0]) == paddle.Tensor
+    _check_data_type(input[0], 'input', True)
     device = input[0].place
     it = iter(input)
     t = next(it)
@@ -1335,7 +1341,7 @@ def _check_data_type(input: paddle.Tensor, var_name, raise_err):
     """
     if raise_err and type(input) is not paddle.Tensor:
         raise ValueError(f'Expected Paddle Tensor{f" for variable {var_name}" if var_name is not None else ""}, '
-                         f'but got {type(input)}. Perhaps the wrong backend?')
+                         f'but got {type(input)}.')
     return type(input) is paddle.Tensor
 
 
