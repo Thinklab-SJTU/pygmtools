@@ -12,26 +12,28 @@ Utility functions: problem formulating, data processing, and beyond.
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 
-import time
-import functools
-import importlib
-import copy
-import requests
-import os
-from appdirs import user_cache_dir
-import hashlib
-import shutil
-from tqdm.auto import tqdm
-import inspect
-import numpy as np
-import pygmtools
-import networkx as nx
-import urllib.request
 import asyncio
+import copy
+import functools
+import hashlib
+import importlib
+import importlib.util
+import inspect
+import os
+import shutil
+import time
+import urllib.request
+from difflib import get_close_matches
+
 import aiohttp
 import async_timeout
-import importlib.util
-from difflib import get_close_matches
+import networkx as nx
+import numpy as np
+import requests
+from appdirs import user_cache_dir
+from tqdm.auto import tqdm
+
+import pygmtools
 
 NOT_IMPLEMENTED_MSG = \
     'The backend function for {} is not implemented.\n' \
