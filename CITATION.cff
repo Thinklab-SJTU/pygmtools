@@ -70,6 +70,6 @@ preferred-citation:
   start: 1 # First page number
   end: 7 # Last page number
   title: "Pygmtools: A Python Graph Matching Toolkit"
-  issue: 00
+  issue: 33
   volume: 25
   year: 2024
