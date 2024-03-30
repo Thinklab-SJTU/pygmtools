@@ -108,7 +108,7 @@ IMC-PT-SparseGM Dataset
 
 #. Download the IMC-PT-SparseGM dataset from `google drive <https://drive.google.com/file/d/1Po9pRMWXTqKK2ABPpVmkcsOq-6K_2v-B/view?usp=sharing>`_ or `baidu drive (code: 0576) <https://pan.baidu.com/s/1hlJdIFp4rkiz1Y-gztyHIw>`_
 
-#. Unzip the dataset and make sure it looks like ``data/IMC_PT_SparseGM/annotations``
+#. Unzip the dataset and make sure it looks like ``data/IMC-PT-SparseGM/annotations`` for 50 anchor points and ``data/IMC-PT-SparseGM/annotations_100`` for 100 anchor points
 
 Please cite the following papers if you use IMC-PT-SparseGM dataset:
 

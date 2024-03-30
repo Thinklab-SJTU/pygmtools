@@ -2,7 +2,7 @@
 Numerical Backends
 ======================
 
-Now the pygmtools is available with the default ``numpy`` backend:
+Once it is installed by ``pip install pygmtools``, ``pygmtools`` is available with the default ``numpy`` backend.
 
 .. image:: ../images/numpy_logo.png
     :width: 200

@@ -192,7 +192,7 @@ research, please cite:
 ```
 Runzhong Wang, Ziao Guo, Wenzheng Pan, Jiale Ma, Yikai Zhang, Nan Yang, Qi Liu, Longxuan Wei, Hanxue Zhang, Chang Liu, Zetian Jiang, Xiaokang Yang, and Junchi Yan.
 Pygmtools: A Python Graph Matching Toolkit.
-Journal of Machine Learning Research, 25(00):1−7, 2024.
+Journal of Machine Learning Research, 25(33):1−7, 2024.
 ```
 
 In Bibtex format:
@@ -203,7 +203,7 @@ In Bibtex format:
   journal = {Journal of Machine Learning Research},
   year    = {2024},
   volume  = {25},
-  number  = {00},
+  number  = {33},
   pages   = {1-7},
   url     = {https://jmlr.org/papers/v25/23-0572.html},
 }

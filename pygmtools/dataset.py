@@ -310,8 +310,8 @@ class PascalVOC:
         Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
         training set, and ``test.json`` for testing set.
         """
-        train_file = os.path.join(self.dataset_dir, 'train.json')
-        test_file = os.path.join(self.dataset_dir, 'test.json')
+        train_file = os.path.join(self.dataset_dir, 'train-' + self.suffix + '.json')
+        test_file = os.path.join(self.dataset_dir, 'test-' + self.suffix + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
         if not (os.path.exists(train_file) and os.path.exists(test_file) and os.path.exists(img_file)):
             if not (os.path.exists(train_file) and os.path.exists(test_file)):
@@ -564,8 +564,8 @@ class WillowObject:
         Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
         training set, and ``test.json`` for testing set.
         """
-        train_file = os.path.join(self.dataset_dir, 'train.json')
-        test_file = os.path.join(self.dataset_dir, 'test.json')
+        train_file = os.path.join(self.dataset_dir, 'train-' + self.suffix + '.json')
+        test_file = os.path.join(self.dataset_dir, 'test-' + self.suffix + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
 
         data_list = []
@@ -850,8 +850,8 @@ class SPair71k:
         Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
         training set, and ``test.json`` for testing set.
         """
-        train_file = os.path.join(self.dataset_dir, 'train.json')
-        test_file = os.path.join(self.dataset_dir, 'test.json')
+        train_file = os.path.join(self.dataset_dir, 'train-' + self.suffix + '.json')
+        test_file = os.path.join(self.dataset_dir, 'test-' + self.suffix + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
         if (not os.path.exists(train_file)) or (not os.path.exists(test_file)) or (not os.path.exists(img_file)):
             train_list = []
@@ -1104,7 +1104,7 @@ class IMC_PT_SparseGM:
         Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
         training set, and ``test.json`` for testing set.
         """
-        set_file = os.path.join(self.dataset_dir, self.sets + '.json')
+        set_file = os.path.join(self.dataset_dir, self.sets + '-' + self.suffix + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
 
         if not os.path.exists(set_file):
@@ -1301,7 +1301,7 @@ class CUB2011:
         Process the dataset and generate ``data-(size, size).json`` for preprocessed dataset, ``train.json`` for
         training set, and ``test.json`` for testing set.
         """
-        set_file = os.path.join(self.dataset_dir, self.sets + '.json')
+        set_file = os.path.join(self.dataset_dir, self.sets + '-' + self.suffix + '.json')
         img_file = os.path.join(self.dataset_dir, 'data-' + str(self.obj_resize) + '-' + self.suffix + '.json')
 
         if not os.path.exists(set_file):

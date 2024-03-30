@@ -59,7 +59,7 @@ class Benchmark:
         data_set = eval(self.name)(self.sets, self.obj_resize, **args)
         suffix = data_set.suffix
         self.data_path = os.path.join(data_set.dataset_dir, 'data-' + str(self.obj_resize) + '-' + suffix + '.json')
-        self.data_list_path = os.path.join(data_set.dataset_dir, sets + '.json')
+        self.data_list_path = os.path.join(data_set.dataset_dir, sets + '-' + suffix + '.json')
         self.classes = data_set.classes
 
         with open(self.data_path) as f:
