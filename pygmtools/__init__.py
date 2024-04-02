@@ -18,7 +18,7 @@ import importlib.util
 set_backend = utils.set_backend
 
 BACKEND = 'numpy'
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 __author__ = 'ThinkLab at SJTU'
 
 SUPPORTED_BACKENDS = [
