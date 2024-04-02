@@ -26,7 +26,7 @@ AUTHOR = get_property('__author__', NAME)
 VERSION = get_property('__version__', NAME)
 REQUIRED = [
      'requests>=2.25.1', 'scipy>=1.4.1', 'Pillow>=7.2.0', 'numpy>=1.18.5', 'easydict>=1.7', 'appdirs>=1.4.4', 'tqdm>=4.64.1', 
-     'async-timeout','aiohttp','networkx>=2.8.8'
+     'async-timeout', 'aiohttp', 'networkx>=2.8.8'
 ]
 EXTRAS = {}
 
@@ -52,7 +52,7 @@ else:
     
 class BdistWheelCommand(_bdist_wheel):
     def run(self):
-        os.system("python pygmtools/c_astar/get_c_astar.py")
+        os.system("python pygmtools/c_astar_src/build_c_astar.py")
         super().run()
 
     def get_tag(self):
@@ -74,7 +74,7 @@ class BdistWheelCommand(_bdist_wheel):
 class InstallCommand(_install):
     def run(self):
         try:
-            os.system("python pygmtools/c_astar/get_c_astar.py")
+            os.system("python pygmtools/c_astar_src/build_c_astar.py")
         except:
             pass
         _install.run(self)
@@ -89,7 +89,7 @@ setup(
     author=AUTHOR,
     url=URL,
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    package_data={NAME: ['*.pyd', '*.so', 'astar/*']},
+    package_data={NAME: ['*.pyd', '*.so', 'c_astar_src/*']},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
