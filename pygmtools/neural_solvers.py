@@ -285,8 +285,8 @@ def pca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
         if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
             feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
-            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+            if isinstance(n1, (int, np.integer)): n1 = from_numpy(np.array([n1]), backend=backend)
+            if isinstance(n2, (int, np.integer)): n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
             non_batched_input = False
@@ -592,8 +592,8 @@ def ipca_gm(feat1, feat2, A1, A2, n1=None, n2=None,
 
         if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
             feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
-            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+            if isinstance(n1, (int, np.integer)): n1 = from_numpy(np.array([n1]), backend=backend)
+            if isinstance(n2, (int, np.integer)): n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
             non_batched_input = False
@@ -913,8 +913,8 @@ def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1=None, n2=None
                 and all([_check_shape(_, 3, backend) for _ in (feat_edge1, feat_edge2)]):
             feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2 =\
                 [_unsqueeze(_, 0, backend) for _ in (feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2)]
-            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+            if isinstance(n1, (int, np.integer)): n1 = from_numpy(np.array([n1]), backend=backend)
+            if isinstance(n2, (int, np.integer)): n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat_node1, feat_node2, A1, A2)]) \
                 and all([_check_shape(_, 4, backend) for _ in (feat_edge1, feat_edge2)]):
@@ -1239,10 +1239,10 @@ def ngm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
         if _check_shape(K, 2, backend):
             K = _unsqueeze(K, 0, backend)
             non_batched_input = True
-            if type(n1) is int and n1max is None:
+            if isinstance(n1, (int, np.integer)) and n1max is None:
                 n1max = n1
                 n1 = None
-            if type(n2) is int and n2max is None:
+            if isinstance(n2, (int, np.integer)) and n2max is None:
                 n2max = n2
                 n2 = None
         elif _check_shape(K, 3, backend):
@@ -1444,8 +1444,8 @@ def genn_astar(feat1, feat2, A1, A2, n1=None, n2=None, channel=None, filters_1=6
 
         if all([_check_shape(_, 2, backend) for _ in (feat1, feat2, A1, A2)]):
             feat1, feat2, A1, A2 = [_unsqueeze(_, 0, backend) for _ in (feat1, feat2, A1, A2)]
-            if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-            if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+            if isinstance(n1, (int, np.integer)): n1 = from_numpy(np.array([n1]), backend=backend)
+            if isinstance(n2, (int, np.integer)): n2 = from_numpy(np.array([n2]), backend=backend)
             non_batched_input = True
         elif all([_check_shape(_, 3, backend) for _ in (feat1, feat2, A1, A2)]):
             non_batched_input = False

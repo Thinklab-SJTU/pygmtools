@@ -371,10 +371,10 @@ def sm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
-        if type(n1) is int and n1max is None:
+        if isinstance(n1, (int, np.integer)) and n1max is None:
             n1max = n1
             n1 = None
-        if type(n2) is int and n2max is None:
+        if isinstance(n2, (int, np.integer)) and n2max is None:
             n2max = n2
             n2 = None
     elif _check_shape(K, 3, backend):
@@ -727,10 +727,10 @@ def rrwm(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
-        if type(n1) is int and n1max is None:
+        if isinstance(n1, (int, np.integer)) and n1max is None:
             n1max = n1
             n1 = None
-        if type(n2) is int and n2max is None:
+        if isinstance(n2, (int, np.integer)) and n2max is None:
             n2max = n2
             n2 = None
     elif _check_shape(K, 3, backend):
@@ -1034,10 +1034,10 @@ def ipfp(K, n1=None, n2=None, n1max=None, n2max=None, x0=None,
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
-        if type(n1) is int and n1max is None:
+        if isinstance(n1, (int, np.integer)) and n1max is None:
             n1max = n1
             n1 = None
-        if type(n2) is int and n2max is None:
+        if isinstance(n2, (int, np.integer)) and n2max is None:
             n2max = n2
             n2 = None
     elif _check_shape(K, 3, backend):
@@ -1165,10 +1165,10 @@ def astar(K, n1=None, n2=None, n1max=None, n2max=None, beam_width=0, backend=Non
     if _check_shape(K, 2, backend):
         K = _unsqueeze(K, 0, backend)
         non_batched_input = True
-        if type(n1) is int and n1max is None:
+        if isinstance(n1, (int, np.integer)) and n1max is None:
             n1max = n1
             n1 = None
-        if type(n2) is int and n2max is None:
+        if isinstance(n2, (int, np.integer)) and n2max is None:
             n2max = n2
             n2 = None
     elif _check_shape(K, 3, backend):

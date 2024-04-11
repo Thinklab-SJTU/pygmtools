@@ -729,8 +729,8 @@ def sinkhorn(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     _check_data_type(s, 's', backend)
     if _check_shape(s, 2, backend):
         s = _unsqueeze(s, 0, backend)
-        if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-        if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+        if isinstance(n1, (int, np.integer)): n1 = from_numpy(np.array([n1]), backend=backend)
+        if isinstance(n2, (int, np.integer)): n2 = from_numpy(np.array([n2]), backend=backend)
         non_batched_input = True
     elif _check_shape(s, 3, backend):
         non_batched_input = False
@@ -1298,8 +1298,8 @@ def hungarian(s, n1=None, n2=None, unmatch1=None, unmatch2=None,
     _check_data_type(s, backend)
     if _check_shape(s, 2, backend):
         s = _unsqueeze(s, 0, backend)
-        if type(n1) is int: n1 = from_numpy(np.array([n1]), backend=backend)
-        if type(n2) is int: n2 = from_numpy(np.array([n2]), backend=backend)
+        if isinstance(n1, (int, np.integer)): n1 = from_numpy(np.array([n1]), backend=backend)
+        if isinstance(n2, (int, np.integer)): n2 = from_numpy(np.array([n2]), backend=backend)
         non_batched_input = True
     elif _check_shape(s, 3, backend):
         non_batched_input = False
