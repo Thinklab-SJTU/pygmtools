@@ -231,7 +231,7 @@ def sinkhorn(s: tf.Tensor, nrows: tf.Tensor=None, ncols: tf.Tensor=None,
 def rrwm(K: tf.Tensor, n1: tf.Tensor, n2: tf.Tensor, n1max, n2max, x0: tf.Tensor,
          max_iter: int, sk_iter: int, alpha: float, beta: float) -> tf.Tensor:
     """
-    Pytorch implementation of RRWM algorithm.
+    Tensorflow implementation of RRWM algorithm.
     """
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     # rescale the values in K
@@ -283,11 +283,13 @@ def sm(K: tf.Tensor, n1: tf.Tensor, n2: tf.Tensor, n1max, n2max, x0: tf.Tensor,
 def ipfp(K: tf.Tensor, n1: tf.Tensor, n2: tf.Tensor, n1max, n2max, x0: tf.Tensor,
          max_iter) -> tf.Tensor:
     """
-    Pytorch implementation of IPFP algorithm
+    Tensorflow implementation of IPFP algorithm
     """
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = v0
     last_v = v
+    best_v = v
+    best_obj = -1
 
     def comp_obj_score(v1, K, v2):
         return tf.matmul(tf.matmul(tf.reshape(v1, [batch_num, 1, -1]), K), v2)
@@ -296,18 +298,21 @@ def ipfp(K: tf.Tensor, n1: tf.Tensor, n2: tf.Tensor, n1max, n2max, x0: tf.Tensor
         cost = tf.transpose(tf.reshape(tf.matmul(K, v), [batch_num, n2max, n1max]), [0, 2, 1])
         binary_sol = hungarian(cost, n1, n2)
         binary_v = tf.reshape(tf.transpose(binary_sol, [0, 2, 1]), [batch_num, -1, 1])
-        alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
-        t0 = alpha / beta
-        v = tf.where(tf.math.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
-        last_v_sol = comp_obj_score(last_v, K, last_v)
-        if tf.reduce_max(tf.abs(
-                last_v_sol - tf.matmul(tf.reshape(cost, [batch_num, 1, -1]), tf.reshape(binary_sol, [batch_num, -1, 1]))
-        ) / last_v_sol) < 1e-3:
+        t0 = - alpha / beta
+        v = tf.where(tf.math.logical_or(beta >= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
+        last_v_obj = comp_obj_score(last_v, K, last_v)
+
+        current_obj = comp_obj_score(binary_v, K, binary_v)
+        best_v = tf.where(current_obj > best_obj, binary_v, best_v)
+        best_obj = tf.where(current_obj > best_obj, current_obj, best_obj)
+
+        if tf.reduce_max(tf.abs(last_v_obj - current_obj) / last_v_obj) < 1e-3:
             break
         last_v = v
 
-    pred_x = binary_sol
+    pred_x = tf.transpose(tf.reshape(best_v, [batch_num, n2max, n1max]), [0, 2, 1])
     return pred_x
 
 

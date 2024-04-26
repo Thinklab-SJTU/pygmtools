@@ -275,6 +275,8 @@ def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = v0
     last_v = v
+    best_v = v
+    best_obj = paddle.to_tensor(paddle.full((batch_num, 1, 1), -1.), place=K.place)
 
     def comp_obj_score(v1, K, v2):
         return paddle.bmm(paddle.bmm(paddle.reshape(v1, (batch_num, 1, -1)), K), v2)
@@ -285,16 +287,19 @@ def ipfp(K: paddle.Tensor, n1: paddle.Tensor, n2: paddle.Tensor, n1max, n2max, x
         binary_v = paddle.reshape(binary_sol.transpose((0, 2, 1)),(batch_num, -1, 1))
         alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
-        t0 = alpha / beta
-        v = paddle.where(paddle.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
-        last_v_sol = comp_obj_score(last_v, K, last_v)
-        if paddle.max(paddle.abs(
-                last_v_sol - paddle.bmm(paddle.reshape(cost,(batch_num, 1, -1)), paddle.reshape(binary_sol, (batch_num, -1, 1)))
-        ) / last_v_sol) < 1e-3:
+        t0 = - alpha / beta
+        v = paddle.where(paddle.logical_or(beta >= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
+        last_v_obj = comp_obj_score(last_v, K, last_v)
+
+        current_obj = comp_obj_score(binary_v, K, binary_v)
+        best_v = paddle.where(current_obj > best_obj, binary_v, best_v)
+        best_obj = paddle.where(current_obj > best_obj, current_obj, best_obj)
+
+        if paddle.max(paddle.abs(last_v_obj - current_obj) / last_v_obj) < 1e-3:
             break
         last_v = v
 
-    pred_x = binary_sol
+    pred_x = paddle.reshape(best_v, (batch_num, n2max, n1max)).transpose((0, 2, 1))
     return pred_x
 
 

@@ -293,6 +293,8 @@ def ipfp(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = v0
     last_v = v
+    best_v = v
+    best_obj = -1
 
     def comp_obj_score(v1, K, v2):
         return np.matmul(np.matmul(v1.reshape((batch_num, 1, -1)), K), v2)
@@ -303,16 +305,19 @@ def ipfp(K: np.ndarray, n1: np.ndarray, n2: np.ndarray, n1max, n2max, x0: np.nda
         binary_v = binary_sol.transpose((0, 2, 1)).reshape((batch_num, -1, 1))
         alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
-        t0 = alpha / beta
-        v = np.where(np.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
-        last_v_sol = comp_obj_score(last_v, K, last_v)
-        if np.max(np.abs(
-                last_v_sol - np.matmul(cost.reshape((batch_num, 1, -1)), binary_sol.reshape((batch_num, -1, 1)))
-        ) / last_v_sol) < 1e-3:
+        t0 = - alpha / beta
+        v = np.where(np.logical_or(beta >= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
+        last_v_obj = comp_obj_score(last_v, K, last_v)
+
+        current_obj = comp_obj_score(binary_v, K, binary_v)
+        best_v = np.where(current_obj > best_obj, binary_v, best_v)
+        best_obj = np.where(current_obj > best_obj, current_obj, best_obj)
+
+        if np.max(np.abs(last_v_obj - current_obj) / last_v_obj) < 1e-3:
             break
         last_v = v
 
-    pred_x = binary_sol
+    pred_x = best_v.reshape((batch_num, n2max, n1max)).transpose((0, 2, 1))
     return pred_x
 
 
