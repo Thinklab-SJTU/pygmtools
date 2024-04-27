@@ -282,6 +282,8 @@ def ipfp(K: Tensor, n1: Tensor, n2: Tensor, n1max, n2max, x0: Tensor,
     batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
     v = v0
     last_v = v
+    best_v = v
+    best_obj = -1
 
     def comp_obj_score(v1, K, v2):
         return torch.bmm(torch.bmm(v1.view(batch_num, 1, -1), K), v2)
@@ -290,18 +292,21 @@ def ipfp(K: Tensor, n1: Tensor, n2: Tensor, n1max, n2max, x0: Tensor,
         cost = torch.bmm(K, v).reshape(batch_num, n2max, n1max).transpose(1, 2)
         binary_sol = hungarian(cost, n1, n2)
         binary_v = binary_sol.transpose(1, 2).view(batch_num, -1, 1)
-        alpha = comp_obj_score(v, K, binary_v - v)  # + torch.mm(k_diag.view(1, -1), (binary_sol - v).view(-1, 1))
+        alpha = comp_obj_score(v, K, binary_v - v)
         beta = comp_obj_score(binary_v - v, K, binary_v - v)
-        t0 = alpha / beta
-        v = torch.where(torch.logical_or(beta <= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
-        last_v_sol = comp_obj_score(last_v, K, last_v)
-        if torch.max(torch.abs(
-                last_v_sol - torch.bmm(cost.reshape(batch_num, 1, -1), binary_sol.reshape(batch_num, -1, 1))
-        ) / last_v_sol) < 1e-3:
+        t0 = - alpha / beta
+        v = torch.where(torch.logical_or(beta >= 0, t0 >= 1), binary_v, v + t0 * (binary_v - v))
+        last_v_obj = comp_obj_score(last_v, K, last_v)
+
+        current_obj = comp_obj_score(binary_v, K, binary_v)
+        best_v = torch.where(current_obj > best_obj, binary_v, best_v)
+        best_obj = torch.where(current_obj > best_obj, current_obj, best_obj)
+
+        if torch.max(torch.abs(last_v_obj - current_obj) / last_v_obj) < 1e-3:
             break
         last_v = v
 
-    pred_x = binary_sol
+    pred_x = best_v.reshape(batch_num, n2max, n1max).transpose(1, 2)
     return pred_x
 
 

@@ -95,7 +95,7 @@ def _test_classic_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, so
                 _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,
                                               **aff_param_dict)
             if last_K is not None:
-                assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
+                assert np.abs(pygm.utils.to_numpy(_K) - last_K).max() < 0.01, \
                     f"Incorrect affinity matrix for {working_backend}, " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                     f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
