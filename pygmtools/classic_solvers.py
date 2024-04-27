@@ -2,12 +2,27 @@ r"""
 Classic (learning-free) **two-graph matching** solvers. These two-graph matching solvers are recommended to solve
 matching problems with two explicit graphs, or problems formulated as Quadratic Assignment Problem (QAP).
 
-The two-graph matching problem considers both nodes and edges, formulated as a QAP (Lawler's):
+The two-graph matching problem considers both nodes and edges, formulated as Lawler's QAP:
 
 .. math::
 
     &\max_{\mathbf{X}} \ \texttt{vec}(\mathbf{X})^\top \mathbf{K} \texttt{vec}(\mathbf{X})\\
     s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+All our solvers are designed to solve the Lawler's QAP, which is the most general form of the problem.
+
+.. note::
+
+    There are also many real-world problems being formulated as the so-called Koopmans-Beckmann's QAP:
+
+    .. math::
+
+        &\max_{\mathbf{X}} \ \text{tr}(\mathbf{X}^\top\mathbf{F}_1\mathbf{X}\mathbf{F}_2)+\text{tr}(\mathbf{K}_p^\top\mathbf{X})\\
+        s.t. \quad &\mathbf{X} \in \{0, 1\}^{n_1\times n_2}, \ \mathbf{X}\mathbf{1} = \mathbf{1}, \ \mathbf{X}^\top\mathbf{1} \leq \mathbf{1}
+
+    Its connection to Lawler's QAP is :math:`\mathbf{K} = \mathbf{F}_2\otimes\mathbf{F}_1^\top + \text{diag}(\mathbf{K}_p)`,
+    where :math:`\otimes` means Kronecker product.
+
 """
 
 # Copyright (c) 2022 Thinklab@SJTU
