@@ -186,8 +186,11 @@ class Benchmark:
         if self.sets == 'test':
             for pair in id_combination:
                 id_pair = (ids[pair[0]], ids[pair[1]])
-                gt_path = os.path.join(self.gt_cache_path, str(id_pair) + '.npy')
-                np.save(gt_path, perm_mat_dict[pair])
+                gt = perm_mat_dict[pair].toarray()
+                gt_path = os.path.join(self.gt_cache_path, str(id_pair) + '_' + str(gt.shape[0]) + '_'
+                                       + str(gt.shape[1]) + '.npy')
+                if not os.path.exists(gt_path):
+                    np.save(gt_path, perm_mat_dict[pair])
 
         if not test:
             return data_list, perm_mat_dict, ids
@@ -422,7 +425,8 @@ class Benchmark:
                 id_cache.append(ids)
                 pred_cls_dict[pair_dict['cls']] += 1
                 perm_mat = pair_dict['perm_mat']
-                gt_path = os.path.join(self.gt_cache_path, str(ids) + '.npy')
+                gt_path = os.path.join(self.gt_cache_path, str(ids) + '_' + str(perm_mat.shape[0]) + '_'
+                                       + str(perm_mat.shape[1]) + '.npy')
                 gt = np.load(gt_path, allow_pickle=True).item()
                 gt_array = gt.toarray()
                 assert type(perm_mat) == type(gt_array)
@@ -534,7 +538,8 @@ class Benchmark:
                 id_cache.append(ids)
                 pred_cls_dict += 1
                 perm_mat = pair_dict['perm_mat']
-                gt_path = os.path.join(self.gt_cache_path, str(ids) + '.npy')
+                gt_path = os.path.join(self.gt_cache_path, str(ids) + '_' + str(perm_mat.shape[0]) + '_'
+                                       + str(perm_mat.shape[1]) + '.npy')
                 gt = np.load(gt_path, allow_pickle=True).item()
                 gt_array = gt.toarray()
                 assert type(perm_mat) == type(gt_array)
