@@ -187,8 +187,7 @@ class Benchmark:
             for pair in id_combination:
                 id_pair = (ids[pair[0]], ids[pair[1]])
                 gt_path = os.path.join(self.gt_cache_path, str(id_pair) + '.npy')
-                if not os.path.exists(gt_path):
-                    np.save(gt_path, perm_mat_dict[pair])
+                np.save(gt_path, perm_mat_dict[pair])
 
         if not test:
             return data_list, perm_mat_dict, ids
