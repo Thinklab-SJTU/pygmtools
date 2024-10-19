@@ -9,7 +9,7 @@ import os
 import re
 import shutil
 from setuptools import find_packages, setup
-from wheel.bdist_wheel import bdist_wheel as _bdist_wheel, get_platform, get_abi_tag, tags
+from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel, get_platform, get_abi_tag, tags
 from setuptools.command.install import install as _install
     
 def get_property(prop, project):
