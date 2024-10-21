@@ -8,8 +8,14 @@ import io
 import os
 import re
 import shutil
+from importlib.metadata import version
 from setuptools import find_packages, setup
-from wheel.bdist_wheel import bdist_wheel as _bdist_wheel, get_platform, get_abi_tag, tags
+# Condition below may fail for setuptools < 70.1.0 and wheel >= 0.44
+if version('setuptools') >= "70.1.0":
+    from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel, get_platform, get_abi_tag, tags
+else:
+    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel, get_platform, get_abi_tag, tags
+
 from setuptools.command.install import install as _install
     
 def get_property(prop, project):
