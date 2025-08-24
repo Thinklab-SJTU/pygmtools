@@ -119,9 +119,9 @@ Graph Matching Best Practice
 -----------------------------
 
 We need to understand the advantages and limitations of graph matching solvers. As discussed above, the major advantage
-of graph matching solvers is that they are more robust to noises and outliers. Graph matching also utilizes edge
+of graph matching solvers is that they are more robust to noise and outliers. Graph matching also utilizes edge
 information, which is usually ignored in linear matching methods. The major drawback of graph matching
-solvers is their efficiency and scalability since the optimization problem is NP-hard. Therefore, to decide which
+solvers is their efficiency and scalability, since the optimization problem is NP-hard. Therefore, to decide which
 matching method is most suitable, one needs to balance between the required matching accuracy and the affordable time
 and memory cost according to his/her application.
 
@@ -154,10 +154,10 @@ We offer the following guidelines for your reference:
 When not to use pygmtools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As a highly packed toolkit, ``pygmtools`` lacks some flexibilities in the implementation details, especially for
+As a highly packed toolkit, ``pygmtools`` lacks some flexibility in the implementation details, especially for
 experts in graph matching. If you are researching new graph matching algorithms or developing next-generation deep
 graph matching neural networks, ``pygmtools`` may not be suitable. We recommend
-`ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_ as the protocol for academic research.
+`ThinkMatch <https://github.com/Thinklab-SJTU/ThinkMatch>`_ as the protocol for new algorithmic research.
 
 What's Next
 ------------
