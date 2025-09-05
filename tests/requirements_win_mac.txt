@@ -10,7 +10,7 @@ torch_geometric
 tqdm
 appdirs>=1.4.4
 tensorflow==2.15.0
-mindspore==1.10.0
+mindspore==2.0.0
 distro
 cython
 aiohttp
