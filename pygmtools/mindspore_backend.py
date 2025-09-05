@@ -5,6 +5,15 @@ import mindspore.nn as nn
 from mindspore.ops import stop_gradient
 import math
 
+import inspect
+signature = inspect.signature(mindspore.ops.max)
+if 'keep_dims' in signature.parameters:
+    MS_MAX_UNDERLINE = True
+elif 'keepdims' in signature.parameters:
+    MS_MAX_UNDERLINE = False
+else:
+    raise ValueError('Mindspore function mindspore.ops.max has unknown signature')
+
 #############################################
 #     Linear Assignment Problem Solvers     #
 #############################################
@@ -153,14 +162,22 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
 
         for i in range(max_iter):
             if i % 2 == 0:
-                index, m = mindspore.ops.max(log_s, axis=2, keep_dims=True)
-                log_sum = mindspore.ops.logsumexp(log_s - m, 2, keep_dims=True) + m
+                if MS_MAX_UNDERLINE:
+                    index, m = mindspore.ops.max(log_s, axis=2, keep_dims=True)
+                    log_sum = mindspore.ops.logsumexp(log_s - m, 2, keep_dims=True) + m
+                else:
+                    index, m = mindspore.ops.max(log_s, axis=2, keepdims=True)
+                    log_sum = mindspore.ops.logsumexp(log_s - m, 2, keepdim=True) + m
                 log_s = log_s - mindspore.numpy.where(row_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
                 if mindspore.ops.isnan(log_s).any():
                     raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
-                index, m = mindspore.ops.max(log_s, axis=1, keep_dims=True)
-                log_sum = mindspore.ops.logsumexp(log_s - m, 1, keep_dims=True) + m
+                if MS_MAX_UNDERLINE:
+                    index, m = mindspore.ops.max(log_s, axis=1, keep_dims=True)
+                    log_sum = mindspore.ops.logsumexp(log_s - m, 1, keep_dims=True) + m
+                else:
+                    index, m = mindspore.ops.max(log_s, axis=1, keepdims=True)
+                    log_sum = mindspore.ops.logsumexp(log_s - m, 1, keepdim=True) + m
                 log_s = log_s - mindspore.numpy.where(col_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
                 if mindspore.ops.isnan(log_s).any():
                     raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
@@ -178,12 +195,20 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    index, m = mindspore.ops.max(log_s_b, axis=1, keep_dims=True)
-                    log_sum = mindspore.ops.logsumexp(log_s_b - m, 1, keep_dims=True) + m
+                    if MS_MAX_UNDERLINE:
+                        index, m = mindspore.ops.max(log_s_b, axis=1, keep_dims=True)
+                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 1, keep_dims=True) + m
+                    else:
+                        index, m = mindspore.ops.max(log_s_b, axis=1, keepdims=True)
+                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 1, keepdim=True) + m
                     log_s_b = log_s_b - mindspore.numpy.where(row_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
                 else:
-                    index, m = mindspore.ops.max(log_s_b, axis=0, keep_dims=True)
-                    log_sum = mindspore.ops.logsumexp(log_s_b - m, 0, keep_dims=True) + m
+                    if MS_MAX_UNDERLINE:
+                        index, m = mindspore.ops.max(log_s_b, axis=0, keep_dims=True)
+                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 0, keep_dims=True) + m
+                    else:
+                        index, m = mindspore.ops.max(log_s_b, axis=0, keepdims=True)
+                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 0, keepdim=True) + m
                     log_s_b = log_s_b - mindspore.numpy.where(col_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
 
             ret_log_s[b, row_slice, col_slice] = log_s_b
