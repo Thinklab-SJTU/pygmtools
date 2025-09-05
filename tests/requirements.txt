@@ -3,7 +3,7 @@ scipy>=1.4.1
 Pillow==9.2.0
 numpy==1.24.0
 easydict>=1.7
-paddlepaddle==2.4.1
+paddlepaddle==2.5.1
 protobuf==3.19.5
 torch
 torch_geometric
