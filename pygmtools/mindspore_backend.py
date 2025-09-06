@@ -6,13 +6,29 @@ from mindspore.ops import stop_gradient
 import math
 
 import inspect
-signature = inspect.signature(mindspore.ops.max)
-if 'keep_dims' in signature.parameters:
-    MS_MAX_UNDERLINE = True
-elif 'keepdims' in signature.parameters:
-    MS_MAX_UNDERLINE = False
+import functools
+_max_signature = inspect.signature(mindspore.ops.max)
+if 'keep_dims' in _max_signature.parameters:
+    def _ms_max(*args, keep_dims=False, **kwargs):
+        return mindspore.ops.max(*args, keep_dims=keep_dims, **kwargs)
+elif 'keepdims' in _max_signature.parameters:
+    def _ms_max(*args, keep_dims=False, **kwargs):
+        max, indices = mindspore.ops.max(*args, keepdims=keep_dims, **kwargs)
+        return indices, max
 else:
-    raise ValueError('Mindspore function mindspore.ops.max has unknown signature')
+    raise ValueError('Mindspore function mindspore.ops.max has unsupported signature. It is likely you are working with '
+                     'a new Mindspore version which breaks backward compatibility. Please report your Mindspore version '
+                     'to GitHub issues.')
+
+_logsumexp_signature = inspect.signature(mindspore.ops.logsumexp)
+if 'keep_dims' in _logsumexp_signature.parameters:
+    _ms_logsumexp_keepdim = functools.partial(mindspore.ops.logsumexp, keep_dims=True)
+elif 'keepdim' in _logsumexp_signature.parameters:
+    _ms_logsumexp_keepdim = functools.partial(mindspore.ops.logsumexp, keepdim=True)
+else:
+    raise ValueError('Mindspore function mindspore.ops.logsumexp has unsupported signature. It is likely you are '
+                     'working with a new Mindspore version which breaks backward compatibility. Please report your '
+                     'Mindspore version to GitHub issues.')
 
 #############################################
 #     Linear Assignment Problem Solvers     #
@@ -162,22 +178,14 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
 
         for i in range(max_iter):
             if i % 2 == 0:
-                if MS_MAX_UNDERLINE:
-                    index, m = mindspore.ops.max(log_s, axis=2, keep_dims=True)
-                    log_sum = mindspore.ops.logsumexp(log_s - m, 2, keep_dims=True) + m
-                else:
-                    index, m = mindspore.ops.max(log_s, axis=2, keepdims=True)
-                    log_sum = mindspore.ops.logsumexp(log_s - m, 2, keepdim=True) + m
+                index, m = _ms_max(log_s, axis=2, keep_dims=True)
+                log_sum = _ms_logsumexp_keepdim(log_s - m, 2) + m
                 log_s = log_s - mindspore.numpy.where(row_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
                 if mindspore.ops.isnan(log_s).any():
                     raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
             else:
-                if MS_MAX_UNDERLINE:
-                    index, m = mindspore.ops.max(log_s, axis=1, keep_dims=True)
-                    log_sum = mindspore.ops.logsumexp(log_s - m, 1, keep_dims=True) + m
-                else:
-                    index, m = mindspore.ops.max(log_s, axis=1, keepdims=True)
-                    log_sum = mindspore.ops.logsumexp(log_s - m, 1, keepdim=True) + m
+                index, m = _ms_max(log_s, axis=1, keep_dims=True)
+                log_sum = _ms_logsumexp_keepdim(log_s - m, 1) + m
                 log_s = log_s - mindspore.numpy.where(col_mask, log_sum, mindspore.numpy.zeros_like(log_sum))
                 if mindspore.ops.isnan(log_s).any():
                     raise RuntimeError(f'NaN encountered in Sinkhorn iter_num={i}/{max_iter}')
@@ -195,20 +203,12 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
 
             for i in range(max_iter):
                 if i % 2 == 0:
-                    if MS_MAX_UNDERLINE:
-                        index, m = mindspore.ops.max(log_s_b, axis=1, keep_dims=True)
-                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 1, keep_dims=True) + m
-                    else:
-                        index, m = mindspore.ops.max(log_s_b, axis=1, keepdims=True)
-                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 1, keepdim=True) + m
+                    index, m = _ms_max(log_s_b, axis=1, keep_dims=True)
+                    log_sum = _ms_logsumexp_keepdim(log_s_b - m, 1) + m
                     log_s_b = log_s_b - mindspore.numpy.where(row_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
                 else:
-                    if MS_MAX_UNDERLINE:
-                        index, m = mindspore.ops.max(log_s_b, axis=0, keep_dims=True)
-                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 0, keep_dims=True) + m
-                    else:
-                        index, m = mindspore.ops.max(log_s_b, axis=0, keepdims=True)
-                        log_sum = mindspore.ops.logsumexp(log_s_b - m, 0, keepdim=True) + m
+                    index, m = _ms_max(log_s_b, axis=0, keep_dims=True)
+                    log_sum = _ms_logsumexp_keepdim(log_s_b - m, 0) + m
                     log_s_b = log_s_b - mindspore.numpy.where(col_mask_b, log_sum, mindspore.numpy.zeros_like(log_sum))
 
             ret_log_s[b, row_slice, col_slice] = log_s_b
@@ -325,7 +325,7 @@ def ipfp(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         best_v = mindspore.numpy.where(current_obj > best_obj, binary_v, best_v)
         best_obj = mindspore.numpy.where(current_obj > best_obj, current_obj, best_obj)
 
-        if (mindspore.ops.max(mindspore.ops.abs(last_v_obj - current_obj) / last_v_obj)[1] < 1e-3).any():
+        if (_ms_max(mindspore.ops.abs(last_v_obj - current_obj) / last_v_obj)[1] < 1e-3).any():
             break
         last_v = v
 
@@ -344,9 +344,9 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     if n2 is None:
         n2 = mindspore.numpy.full((batch_num,), n2max, dtype=mindspore.numpy.int_)
     if n1max is None:
-        n1max = mindspore.ops.max(n1)[1]
+        n1max = _ms_max(n1)[1]
     if n2max is None:
-        n2max = mindspore.ops.max(n2)[1]
+        n2max = _ms_max(n2)[1]
 
     if not n1max * n2max == n1n2:
         raise ValueError('the input size of K does not match with n1max * n2max!')
