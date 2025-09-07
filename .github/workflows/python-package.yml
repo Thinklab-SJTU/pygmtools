@@ -31,7 +31,7 @@ jobs:
         if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
         if [ "${{ matrix.python-version }}" != "3.10" ]; then pip install mindspore==2.0.0; fi
         wget https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
-        dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+        sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
     - name: Generate astar.so
       run: |
         python pygmtools/c_astar_src/build_c_astar.py
