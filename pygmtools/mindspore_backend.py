@@ -30,6 +30,19 @@ else:
                      'working with a new Mindspore version which breaks backward compatibility. Please report your '
                      'Mindspore version to GitHub issues.')
 
+_norm_signature = inspect.signature(mindspore.ops.norm)
+if 'axis' in _norm_signature.parameters:
+    def _ms_norm(*args, axis=None, **kwargs):
+        return mindspore.ops.norm(*args, axis=axis, **kwargs)
+elif 'dim' in _norm_signature.parameters:
+    def _ms_norm(*args, axis=None, **kwargs):
+        return mindspore.ops.norm(*args, dim=axis, **kwargs)
+else:
+    raise ValueError('Mindspore function mindspore.ops.norm has unsupported signature. It is likely you are '
+                     'working with a new Mindspore version which breaks backward compatibility. Please report your '
+                     'Mindspore version to GitHub issues.')
+
+
 #############################################
 #     Linear Assignment Problem Solvers     #
 #############################################
@@ -261,7 +274,7 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         # random walk
         v = mindspore.ops.BatchMatMul()(K, v)
         last_v = v
-        n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
+        n = _ms_norm(v, axis=1, p=1, keep_dims=True)
         v = v / n
 
         # reweighted jump
@@ -269,7 +282,7 @@ def rrwm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max,
         s = beta * s / s.max(axis=1, keepdims=True).max(axis=2, keepdims=True)
         v = alpha * sinkhorn(s, n1, n2, max_iter=sk_iter, batched_operation=True).swapaxes(1, 2).reshape(batch_num, n1n2, 1) + \
             (1 - alpha) * v
-        n = mindspore.ops.norm(v, axis=1, p=1, keep_dims=True)
+        n = _ms_norm(v, axis=1, p=1, keep_dims=True)
         v = mindspore.ops.matmul(v, 1 / n)
 
         if (v - last_v).sum().sqrt() < 1e-5:
@@ -287,7 +300,7 @@ def sm(K: mindspore.Tensor, n1: mindspore.Tensor, n2: mindspore.Tensor, n1max, n
     v = vlast = v0
     for i in range(max_iter):
         v = mindspore.ops.BatchMatMul()(K, v)
-        n = mindspore.ops.norm(v, axis=1, p=2)
+        n = _ms_norm(v, axis=1, p=2)
         v = mindspore.ops.matmul(v, (1 / n).view(batch_num, 1, 1))
         if (v - vlast).sum().sqrt() < 1e-5:
             break
