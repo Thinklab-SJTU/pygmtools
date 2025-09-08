@@ -35,7 +35,7 @@ if 'axis' in _norm_signature.parameters and 'p' in _norm_signature.parameters an
     def _ms_norm(*args, p=None, axis=None, keep_dims=False, **kwargs):
         return mindspore.ops.norm(*args, p=p, axis=axis, keep_dims=keep_dims, **kwargs)
 elif 'dim' in _norm_signature.parameters and 'ord' in _norm_signature.parameters and 'keepdim' in _norm_signature.parameters:
-    def _ms_norm(*args, p=None, axis=None, keepdim=False, **kwargs):
+    def _ms_norm(*args, p=None, axis=None, keep_dims=False, **kwargs):
         return mindspore.ops.norm(*args, ord=p, dim=axis, keepdim=keep_dims, **kwargs)
 else:
     raise ValueError('Mindspore function mindspore.ops.norm has unsupported signature. It is likely you are '
