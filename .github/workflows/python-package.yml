@@ -24,46 +24,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install libssl1.1
-      shell: bash
-      run: |
-        set -euxo pipefail
-
-        # Add focal (20.04) security + updates for amd64
-        sudo tee /etc/apt/sources.list.d/focal-libssl.list >/dev/null <<'EOF'
-        deb [arch=amd64] http://security.ubuntu.com/ubuntu focal-security main
-        deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal-updates main
-        EOF
-
-        # Pin ONLY libssl1.1 to come from focal; keep everything else on ubuntu-latest
-        sudo tee /etc/apt/preferences.d/libssl1.1 >/dev/null <<'EOF'
-        Package: libssl1.1
-        Pin: release n=focal-security
-        Pin-Priority: 1001
-
-        Package: libssl1.1
-        Pin: release n=focal-updates
-        Pin-Priority: 1001
-
-        Package: *
-        Pin: release n=focal-security
-        Pin-Priority: 50
-
-        Package: *
-        Pin: release n=focal-updates
-        Pin-Priority: 50
-        EOF
-
-        sudo apt-get update
-
-        # Try focal-security first; fall back to focal-updates if needed
-        if ! sudo apt-get install -y -t focal-security libssl1.1; then
-          sudo apt-get install -y -t focal-updates libssl1.1
-        fi
-
-        # Sanity check
-        apt-cache policy libssl1.1 || true
-        ldconfig -p | grep -E 'libssl\.so\.(1\.1|3)' || true
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
