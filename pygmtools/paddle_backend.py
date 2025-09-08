@@ -1284,10 +1284,9 @@ def permutation_loss(pred_dsmat, gt_perm, n1, n2):
     loss = paddle.to_tensor(0., place=pred_dsmat.place)
     n_sum = paddle.zeros_like(loss)
     for b in range(batch_num):
-        batch_slice = [b, slice(n1[b]), slice(n2[b])]
         loss += paddle.nn.functional.binary_cross_entropy(
-            pred_dsmat[batch_slice],
-            gt_perm[batch_slice],
+            pred_dsmat[b, :n1[b], :n2[b]],
+            gt_perm[b, :n1[b], :n2[b]],
             reduction='sum')
         n_sum += paddle.to_tensor(n1[b].astype(n_sum.dtype), place=pred_dsmat.place)
 
