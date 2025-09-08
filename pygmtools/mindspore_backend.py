@@ -31,12 +31,12 @@ else:
                      'Mindspore version to GitHub issues.')
 
 _norm_signature = inspect.signature(mindspore.ops.norm)
-if 'axis' in _norm_signature.parameters:
-    def _ms_norm(*args, axis=None, **kwargs):
-        return mindspore.ops.norm(*args, axis=axis, **kwargs)
-elif 'dim' in _norm_signature.parameters:
-    def _ms_norm(*args, axis=None, **kwargs):
-        return mindspore.ops.norm(*args, dim=axis, **kwargs)
+if 'axis' in _norm_signature.parameters and 'p' in _norm_signature.parameters:
+    def _ms_norm(*args, p=None, axis=None, **kwargs):
+        return mindspore.ops.norm(*args, p=p, axis=axis, **kwargs)
+elif 'dim' in _norm_signature.parameters and 'ord' in _norm_signature.parameters:
+    def _ms_norm(*args, p=None, axis=None, **kwargs):
+        return mindspore.ops.norm(*args, ord=p, dim=axis, **kwargs)
 else:
     raise ValueError('Mindspore function mindspore.ops.norm has unsupported signature. It is likely you are '
                      'working with a new Mindspore version which breaks backward compatibility. Please report your '
