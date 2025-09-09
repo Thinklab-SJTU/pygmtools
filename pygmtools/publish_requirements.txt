@@ -1,4 +1,5 @@
 numpy
 cython
-wheel
+setuptools>=70.1
+wheel>=0.45
 torch
