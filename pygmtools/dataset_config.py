@@ -31,6 +31,8 @@ __C.WillowObject.TRAIN_NUM = 20
 __C.WillowObject.SPLIT_OFFSET = 0
 __C.WillowObject.TRAIN_SAME_AS_TEST = False
 __C.WillowObject.RAND_OUTLIER = 0
+__C.WillowObject.RAND_NC_FP = 0
+__C.WillowObject.RAND_NC_FN = 0
 
 # CUB2011 dataset
 __C.CUB2011 = edict()

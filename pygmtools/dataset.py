@@ -480,6 +480,9 @@ class WillowObject:
         SPLIT_OFFSET = dataset_cfg.WillowObject.SPLIT_OFFSET
         TRAIN_SAME_AS_TEST = dataset_cfg.WillowObject.TRAIN_SAME_AS_TEST
         RAND_OUTLIER = dataset_cfg.WillowObject.RAND_OUTLIER
+        RAND_NC_FP = dataset_cfg.WillowObject.RAND_NC_FP
+        RAND_NC_FN = dataset_cfg.WillowObject.RAND_NC_FN
+
         URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/WILLOW-ObjectClass_dataset.zip',
                'http://www.di.ens.fr/willow/research/graphlearning/WILLOW-ObjectClass_dataset.zip']
         if len(ds_dict.keys()) > 0:
@@ -497,6 +500,10 @@ class WillowObject:
                 RAND_OUTLIER = ds_dict['RAND_OUTLIER']
             if 'URL' in ds_dict.keys():
                 URL = ds_dict['URL']
+            if 'RAND_NC_FP' in ds_dict.keys():
+                RAND_NC_FP = ds_dict['RAND_NC_FP']
+            if 'RAND_NC_FN' in ds_dict.keys():
+                RAND_NC_FN = ds_dict['RAND_NC_FN']
 
         self.dataset_dir = 'data/WillowObject'
         if not os.path.exists(ROOT_DIR):
@@ -508,7 +515,7 @@ class WillowObject:
 
         self.sets = sets
         self.obj_resize = obj_resize
-        self.suffix = 'willow-' + str(RAND_OUTLIER)
+        self.suffix = 'willow-' + str(RAND_OUTLIER) + '-' + str(RAND_NC_FP) + '-' + str(RAND_NC_FN)
 
         self.classes = CLASSES
         self.kpt_len = [KPT_LEN for _ in self.classes]
@@ -521,6 +528,8 @@ class WillowObject:
         self.train_len = TRAIN_NUM
         self.train_same_as_test = TRAIN_SAME_AS_TEST
         self.rand_outlier = RAND_OUTLIER
+        self.rand_nc_fp = RAND_NC_FP
+        self.rand_nc_fn = RAND_NC_FN
 
         self.mat_list = []
 
@@ -670,23 +679,23 @@ class WillowObject:
         f2.write(str2)
         f2.close()
 
-        if not os.path.exists(img_file):
-            data_dict = dict()
+        # if not os.path.exists(img_file):
+        data_dict = dict()
 
-            for x in range(len(data_list)):
-                for name in data_list[x]:
-                    tmp = os.path.split(str(name))
-                    objID = tmp[-1].split('.')[0]
-                    cls = os.path.split(tmp[0])[-1]
-                    annotations = self.__get_anno_dict(name, cls)
-                    data_dict[objID] = annotations
+        for x in range(len(data_list)):
+            for name in data_list[x]:
+                tmp = os.path.split(str(name))
+                objID = tmp[-1].split('.')[0]
+                cls = os.path.split(tmp[0])[-1]
+                annotations = self.__get_anno_dict(name, cls, objID, train_list)
+                data_dict[objID] = annotations
 
-            data_str = json.dumps(data_dict)
-            f3 = open(img_file, 'w')
-            f3.write(data_str)
-            f3.close()
+        data_str = json.dumps(data_dict)
+        f3 = open(img_file, 'w')
+        f3.write(data_str)
+        f3.close()
 
-    def __get_anno_dict(self, mat_file, cls):
+    def __get_anno_dict(self, mat_file, cls,  objID, train_list):
         """
         Get an annotation dict from .mat annotation
         """
@@ -710,15 +719,75 @@ class WillowObject:
             attr = {'labels': idx}
             attr['x'] = float(keypoint[0]) * self.obj_resize[0] / w
             attr['y'] = float(keypoint[1]) * self.obj_resize[1] / h
+            attr['identify_label'] = 'keypoint'
             keypoint_list.append(attr)
+
 
         for idx in range(self.rand_outlier):
             attr = {
+                'identify_label': 'outlier',
                 'labels': 'outlier',
                 'x': random.uniform(0, self.obj_resize[0]),
                 'y': random.uniform(0, self.obj_resize[1])
             }
             keypoint_list.append(attr)
+
+        def generate_noise_theta(keypoint, scope=0.2):
+            x = keypoint['x']
+            y = keypoint['y']
+            max_x, max_y = self.obj_resize
+            if x > max_x or y > max_y or x < 0 or y < 0:
+                # mark keypoints out of the bounding box as noise
+                # print((x, y))
+                return x, y
+
+            distance = np.random.uniform(0.5, 1) * scope * max(max_x, max_y)  # s ∼ U (0.1, 0.2)
+            theta = np.random.uniform() * 2 * np.pi
+            x_add = np.cos(theta) * distance
+            y_add = np.sin(theta) * distance
+            while (x + x_add) > max_x or (x + x_add) < 0 or (y + y_add) > max_y or (y + y_add) < 0:
+                distance = np.random.uniform(0.5, 1) * scope * 256
+                theta = np.random.uniform() * 2 * np.pi
+                x_add = np.cos(theta) * distance
+                y_add = np.sin(theta) * distance
+
+            x = x + x_add
+            y = y + y_add
+            return x, y
+
+        if objID in train_list:
+            nc_num = self.rand_nc_fp + self.rand_nc_fn
+            valid_keypoints = [kp for kp in keypoint_list if kp['labels'] != 'outlier']
+            if nc_num > len(valid_keypoints):
+                raise ValueError(f"Requested sample size nc_num={nc_num} exceeds the number of available keypoints {len(valid_keypoints)}.")
+            sampled_keypoints = random.sample(valid_keypoints, nc_num)
+
+            fp_keypoints = sampled_keypoints[:self.rand_nc_fp]
+            for keypoint in fp_keypoints:
+                new_x, new_y = generate_noise_theta(keypoint)
+                keypoint['identify_label'] = 'falsepositive'
+                keypoint['x'] = new_x
+                keypoint['y'] = new_y
+
+            fn_keypoints = sampled_keypoints[self.rand_nc_fp:]
+            available_swap_kps = [kp for kp in valid_keypoints if (kp not in fp_keypoints and kp not in fn_keypoints)]
+            random.shuffle(available_swap_kps)
+
+            if len(available_swap_kps) < len(fn_keypoints):
+                print("Warning: Not enough swappable keypoints to handle all false negative keypoints.")
+                fn_keypoints = fn_keypoints[:len(available_swap_kps)]
+
+            # Assign a unique swap target to each false negative keypoint
+            for fn_kp, swap_kp in zip(fn_keypoints, available_swap_kps):
+                # Ensure not swapping with itself
+                if fn_kp == swap_kp:
+                    print(f"Warning: Cannot swap label with itself for keypoint ({fn_kp['x']}, {fn_kp['y']}).")
+                    continue
+                # Swap 'labels'
+                fn_kp['labels'], swap_kp['labels'] = swap_kp['labels'], fn_kp['labels']
+                #  For false negative keypoints, record the original label as identify_label
+                fn_kp['identify_label'] = swap_kp['labels']
+                swap_kp['identify_label'] = fn_kp['labels']
 
         anno_dict = dict()
         anno_dict['path'] = str(img_file)
@@ -782,11 +851,11 @@ class SPair71k:
         )
 
         assert not problem == 'MGM', 'No match found for problem {} in SPair-71k'.format(problem)
-        
+
         if not os.path.exists(SPair71k_image_path):
             assert ROOT_DIR == dataset_cfg.SPair.ROOT_DIR, 'you should not change ROOT_DIR unless the data have been manually downloaded'
             self.download(url=URL)
-            
+
         self.dataset_dir = 'data/SPair-71k'
         self.obj_resize = obj_resize
         self.sets = sets_translation_dict[sets]
@@ -828,11 +897,11 @@ class SPair71k:
             print('Warning: Content error. Retrying...\n', err)
             os.remove(filename)
             return self.download(url, retries - 1)
-                
+
         self.dataset_dir = 'data/SPair-71k'
         if not os.path.exists(self.dataset_dir):
             os.makedirs(self.dataset_dir)
-            
+
         file_names = tar.getnames()
         print('Unzipping files...')
         sleep(0.5)
@@ -1029,7 +1098,7 @@ class IMC_PT_SparseGM:
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
         URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz',
                'https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download']
-        
+
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
                 MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
