@@ -109,6 +109,9 @@ def _resolve_google_drive_url(url):
     """
     parsed_url = urlparse(url)
     if parsed_url.netloc in ('drive.google.com', 'www.drive.google.com'):
+        file_match = re.search(r'/file/d/([^/]+)', parsed_url.path)
+        if file_match is not None:
+            url = 'https://drive.google.com/uc?export=download&id={}'.format(file_match.group(1))
         query = parse_qs(parsed_url.query)
         if 'id' in query and query['id']:
             url = 'https://drive.google.com/uc?export=download&id={}'.format(query['id'][0])
@@ -132,6 +135,9 @@ def _resolve_google_drive_url(url):
 
 
 def _resolve_download_urls(urls):
+    if isinstance(urls, str):
+        urls = [urls]
+
     resolved_urls = []
     for candidate in urls:
         if 'drive.google.com' in candidate or 'drive.usercontent.google.com' in candidate:
