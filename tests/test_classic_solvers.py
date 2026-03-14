@@ -16,6 +16,7 @@ import numpy as np
 import torch
 import functools
 import itertools
+import pytest
 from tqdm import tqdm
 
 from test_utils import *
@@ -260,7 +261,42 @@ def _test_graphml(graph_num_nodes, backends):
             accuracy = (pygm.utils.to_numpy(pygm.hungarian(X, num_node, num_node)) * X_gt).sum() / X_gt.sum()
             assert accuracy == 1, f'When testing the graphml function with rrwm algorithm, there is an error in accuracy, \
                                     and the accuracy is {accuracy}, the num_node is {num_node},.'
-                              
+
+
+# The testing function for RDKit
+def _test_rdkit(backends):
+    """
+    Test the RRWM algorithm on a pair of isomorphic molecules using RDKit
+    """
+    Chem = pytest.importorskip('rdkit.Chem')
+
+    smiles = 'CCO'
+    mol1 = Chem.MolFromSmiles(smiles)
+    mol2 = Chem.MolFromSmiles(smiles)
+    order = [2, 0, 1]
+    mol2 = Chem.RenumberAtoms(mol2, order)
+
+    for working_backend in backends:
+        pygm.BACKEND = working_backend
+        K = pygm.utils.build_aff_mat_from_rdkit(mol1, mol2)
+        n1 = mol1.GetNumAtoms()
+        n2 = mol2.GetNumAtoms()
+        X = pygm.rrwm(K, n1=n1, n2=n2)
+        X = pygm.utils.to_numpy(pygm.hungarian(X, n1, n2))
+        X_gt = np.zeros((n1, n2), dtype=np.float32)
+        for j, i in enumerate(order):
+            X_gt[i, j] = 1
+        accuracy = (X * X_gt).sum() / X_gt.sum()
+        assert accuracy == 1, f'When testing the rdkit function with rrwm algorithm, there is an error in accuracy, accuracy={accuracy}'
+
+        atom_dist_fn = lambda a1, a2: float(a1.GetSymbol() != a2.GetSymbol())
+        bond_dist_fn = lambda b1, b2: float((b1 is None) != (b2 is None) or (b1 is not None and b2 is not None and b1.GetBondTypeAsDouble() != b2.GetBondTypeAsDouble()))
+        K_custom = pygm.utils.build_aff_mat_from_rdkit(mol1, mol2, atom_dist_fn=atom_dist_fn, bond_dist_fn=bond_dist_fn)
+        X_custom = pygm.rrwm(K_custom, n1=n1, n2=n2)
+        X_custom = pygm.utils.to_numpy(pygm.hungarian(X_custom, n1, n2))
+        custom_accuracy = (X_custom * X_gt).sum() / X_gt.sum()
+        assert custom_accuracy == 1, f'When testing customized distance metric for rdkit with rrwm algorithm, there is an error in accuracy, accuracy={custom_accuracy}'
+
 
 # The testing function for PyG
 def _test_pyg(graph_num_nodes, backends):
@@ -466,6 +502,11 @@ def test_pyg():
     _test_pyg(list(range(10, 30, 2)), backends=backends)
 
 
+def test_rdkit():
+    backends = ['pytorch', 'numpy']
+    _test_rdkit(backends=backends)
+
+
 if __name__ == '__main__':
     test_hungarian('all')
     test_sinkhorn('all')
@@ -476,3 +517,4 @@ if __name__ == '__main__':
     test_networkx()
     test_graphml()
     test_pyg()
+    test_rdkit()

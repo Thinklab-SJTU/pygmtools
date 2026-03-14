@@ -1569,6 +1569,72 @@ def build_aff_mat_from_pyg(G1, G2, node_aff_fn=None, edge_aff_fn=None, backend=N
     return K
 
 
+def build_aff_mat_from_rdkit(mol1, mol2, atom_dist_fn=None, bond_dist_fn=None, backend=None):
+    r"""
+    Build affinity matrix from two RDKit molecule objects.
+
+    The default distance metrics are:
+
+    * atom distance = 1 if atom types are different, else 0;
+    * bond distance = 1 if bond types are different, or one side has a bond while the other side has no bond, else 0.
+
+    Users can pass custom distance functions via ``atom_dist_fn`` and ``bond_dist_fn``.
+
+    :param mol1: RDKit ``Chem.Mol`` object.
+    :param mol2: RDKit ``Chem.Mol`` object.
+    :param atom_dist_fn: callable with signature ``atom_dist_fn(atom1, atom2) -> float``.
+    :param bond_dist_fn: callable with signature ``bond_dist_fn(bond1, bond2) -> float``. ``bond1``/``bond2`` can be
+                         ``None`` for non-edges.
+    :param backend: (default: ``pygmtools.BACKEND`` variable) backend for computation.
+    :return: affinity matrix corresponding to ``mol1`` and ``mol2``.
+    """
+    if backend is None:
+        backend = pygmtools.BACKEND
+
+    graph1 = from_rdkit(mol1)
+    graph2 = from_rdkit(mol2)
+
+    if atom_dist_fn is None:
+        atom_dist_fn = lambda atom1, atom2: float(atom1.GetAtomicNum() != atom2.GetAtomicNum())
+    if bond_dist_fn is None:
+        bond_dist_fn = lambda bond1, bond2: float(
+            (bond1 is None) != (bond2 is None)
+            or (
+                bond1 is not None and bond2 is not None
+                and bond1.GetBondType() != bond2.GetBondType()
+            )
+        )
+
+    node_aff = np.zeros((graph1['n_node'], graph2['n_node']), dtype=np.float32)
+    for i, atom1 in enumerate(graph1['atoms']):
+        for j, atom2 in enumerate(graph2['atoms']):
+            node_aff[i, j] = 1.0 - float(atom_dist_fn(atom1, atom2))
+
+    edge_aff = np.zeros((graph1['n_edge'], graph2['n_edge']), dtype=np.float32)
+    for e1, (src1, dst1) in enumerate(graph1['connectivity']):
+        bond1 = graph1['mol'].GetBondBetweenAtoms(int(src1), int(dst1))
+        for e2, (src2, dst2) in enumerate(graph2['connectivity']):
+            bond2 = graph2['mol'].GetBondBetweenAtoms(int(src2), int(dst2))
+            edge_aff[e1, e2] = 1.0 - float(bond_dist_fn(bond1, bond2))
+
+    # _aff_mat_from_node_edge_aff expects batched inputs. Wrap the single-molecule
+    # tensors and exact sizes, then squeeze the batch dimension on return.
+    n1 = np.asarray([graph1['n_node']], dtype=np.int64)
+    n2 = np.asarray([graph2['n_node']], dtype=np.int64)
+    ne1 = np.asarray([graph1['n_edge']], dtype=np.int64)
+    ne2 = np.asarray([graph2['n_edge']], dtype=np.int64)
+    K = _aff_mat_from_node_edge_aff(
+        from_numpy(node_aff[None, ...], backend=backend),
+        from_numpy(edge_aff[None, ...], backend=backend),
+        from_numpy(graph1['connectivity'][None, ...], backend=backend),
+        from_numpy(graph2['connectivity'][None, ...], backend=backend),
+        from_numpy(n1, backend=backend), from_numpy(n2, backend=backend),
+        from_numpy(ne1, backend=backend), from_numpy(ne2, backend=backend),
+        backend=backend
+    )
+    return _squeeze(K, 0, backend=backend)
+
+
 def from_networkx(G: nx.Graph):
     r"""
     Convert networkx object to adjacency matrix
@@ -1608,6 +1674,28 @@ def from_networkx(G: nx.Graph):
     is_directed = isinstance(G, nx.DiGraph)
     adj_matrix = nx.to_numpy_array(G, nodelist=G.nodes()) if is_directed else nx.to_numpy_array(G)
     return adj_matrix
+
+
+def from_rdkit(mol):
+    r"""
+    Convert an RDKit molecule object to pygmtools graph representation.
+
+    :param mol: RDKit ``Chem.Mol`` object.
+    :return: a dict with ``mol``, ``atoms``, ``connectivity``, ``n_node``, and ``n_edge``.
+    """
+    if not hasattr(mol, 'GetNumAtoms') or not hasattr(mol, 'GetAtoms'):
+        raise ValueError('mol must be an RDKit Chem.Mol object')
+
+    n_node = mol.GetNumAtoms()
+    connectivity = np.asarray([[i, j] for i in range(n_node) for j in range(n_node) if i != j], dtype=np.int64)
+
+    return {
+        'mol': mol,
+        'atoms': list(mol.GetAtoms()),
+        'connectivity': connectivity,
+        'n_node': n_node,
+        'n_edge': connectivity.shape[0],
+    }
 
 
 def from_graphml(filename):

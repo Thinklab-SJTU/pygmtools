@@ -18,3 +18,4 @@ cython
 aiohttp
 async-timeout
 networkx==2.8.8
+rdkit-pypi

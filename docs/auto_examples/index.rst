@@ -619,6 +619,97 @@ Application of Graph Matching: Matching Image Keypoints by Graph Matching Neural
    /auto_examples/7.image_matching_by_NN/plot_deep_image_matching_jittor
    /auto_examples/7.image_matching_by_NN/plot_deep_image_matching_paddle
 
+RDKit Graph Matching
+--------------------
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example matches two SMILES forms of aspirin with RRWM. The affinity matrix is built from R...">
+
+.. only:: html
+
+  .. image:: /auto_examples/8.rdkit_graph_matching/images/thumb/sphx_glr_plot_rdkit_graph_matching_numpy_thumb.png
+    :alt: Numpy Backend Example: RDKit Graph Matching
+
+  :ref:`sphx_glr_auto_examples_8.rdkit_graph_matching_plot_rdkit_graph_matching_numpy.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Numpy Backend Example: RDKit Graph Matching</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example matches two SMILES forms of aspirin with RRWM. The affinity matrix is built from R...">
+
+.. only:: html
+
+  .. image:: /auto_examples/8.rdkit_graph_matching/images/thumb/sphx_glr_plot_rdkit_graph_matching_jittor_thumb.png
+    :alt: Jittor Backend Example: RDKit Graph Matching
+
+  :ref:`sphx_glr_auto_examples_8.rdkit_graph_matching_plot_rdkit_graph_matching_jittor.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Jittor Backend Example: RDKit Graph Matching</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example matches two SMILES forms of aspirin with RRWM. The affinity matrix is built from R...">
+
+.. only:: html
+
+  .. image:: /auto_examples/8.rdkit_graph_matching/images/thumb/sphx_glr_plot_rdkit_graph_matching_paddle_thumb.png
+    :alt: Paddle Backend Example: RDKit Graph Matching
+
+  :ref:`sphx_glr_auto_examples_8.rdkit_graph_matching_plot_rdkit_graph_matching_paddle.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Paddle Backend Example: RDKit Graph Matching</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example matches two SMILES forms of aspirin with RRWM. The affinity matrix is built from R...">
+
+.. only:: html
+
+  .. image:: /auto_examples/8.rdkit_graph_matching/images/thumb/sphx_glr_plot_rdkit_graph_matching_pytorch_thumb.png
+    :alt: PyTorch Backend Example: RDKit Graph Matching
+
+  :ref:`sphx_glr_auto_examples_8.rdkit_graph_matching_plot_rdkit_graph_matching_pytorch.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">PyTorch Backend Example: RDKit Graph Matching</div>
+    </div>
+
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/8.rdkit_graph_matching/plot_rdkit_graph_matching_numpy
+   /auto_examples/8.rdkit_graph_matching/plot_rdkit_graph_matching_jittor
+   /auto_examples/8.rdkit_graph_matching/plot_rdkit_graph_matching_paddle
+   /auto_examples/8.rdkit_graph_matching/plot_rdkit_graph_matching_pytorch
+
 
 .. only:: html
 
