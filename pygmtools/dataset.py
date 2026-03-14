@@ -12,10 +12,11 @@ The implementations of data loading and data processing.
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 
-import requests
 import os
+import re
 import zipfile
 import tarfile
+import requests
 from pygmtools.dataset_config import dataset_cfg
 from pathlib import Path
 from xml.etree.ElementTree import Element
@@ -30,6 +31,7 @@ import json
 import scipy.io as sio
 import glob
 import random
+from urllib.parse import parse_qs, urlencode, urlparse
 from pygmtools.utils import download
 
 
@@ -99,6 +101,44 @@ VOC2011_KPT_NAMES = {
     'bus': ['L_B_Base', 'L_B_RoofTop', 'L_F_Base', 'L_F_RoofTop', 'R_B_Base',
             'R_B_RoofTop', 'R_F_Base', 'R_F_RoofTop']
 }
+
+
+def _resolve_google_drive_url(url):
+    r"""
+    Resolve the Google Drive virus warning page to the actual download URL.
+    """
+    parsed_url = urlparse(url)
+    if parsed_url.netloc in ('drive.google.com', 'www.drive.google.com'):
+        query = parse_qs(parsed_url.query)
+        if 'id' in query and query['id']:
+            url = 'https://drive.google.com/uc?export=download&id={}'.format(query['id'][0])
+
+    session = requests.Session()
+    response = session.get(url, timeout=60)
+    response.raise_for_status()
+
+    if response.headers.get('content-type', '').startswith(('application/', 'binary/')):
+        return response.url
+
+    action_match = re.search(r'<form[^>]*id="download-form"[^>]*action="([^"]+)"', response.text)
+    if action_match is None:
+        return response.url
+
+    params = dict(re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)"', response.text))
+    if not params:
+        return response.url
+
+    return '{}?{}'.format(action_match.group(1), urlencode(params))
+
+
+def _resolve_download_urls(urls):
+    resolved_urls = []
+    for candidate in urls:
+        if 'drive.google.com' in candidate or 'drive.usercontent.google.com' in candidate:
+            resolved_urls.append(_resolve_google_drive_url(candidate))
+        else:
+            resolved_urls.append(candidate)
+    return resolved_urls
 
 
 class PascalVOC:
@@ -1027,9 +1067,9 @@ class IMC_PT_SparseGM:
         CLASSES = dataset_cfg.IMC_PT_SparseGM.CLASSES
         ROOT_DIR_NPZ = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_NPZ
         ROOT_DIR_IMG = dataset_cfg.IMC_PT_SparseGM.ROOT_DIR_IMG
-        URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/IMC-PT-SparseGM.tar.gz',
-               'https://drive.google.com/u/0/uc?id=1bisri2Ip1Of3RsUA8OBrdH5oa6HlH3k-&export=download']
-        
+        URL = ['https://huggingface.co/datasets/esflfei/IMC-PT-SparseGM/resolve/main/IMC-PT-SparseGM.tar.gz',
+               'https://drive.google.com/uc?export=download&id=1C3xl_eWaCG3lL2C3vP8Fpsck88xZOHtg']
+
         if len(ds_dict.keys()) > 0:
             if 'MAX_KPT_NUM' in ds_dict.keys():
                 MAX_KPT_NUM = ds_dict['MAX_KPT_NUM']
@@ -1079,7 +1119,7 @@ class IMC_PT_SparseGM:
             os.makedirs(dirs)
         print('Downloading dataset IMC-PT-SparseGM...')
         filename = 'data/IMC-PT-SparseGM.tar.gz'
-        download(filename=filename, url=url, to_cache=False)
+        download(filename=filename, url=_resolve_download_urls(url), to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
@@ -1202,7 +1242,7 @@ class CUB2011:
         CLS_SPLIT = dataset_cfg.CUB2011.CLASS_SPLIT
         ROOT_DIR = dataset_cfg.CUB2011.ROOT_DIR
         URL = ['https://huggingface.co/heatingma/pygmtools/resolve/main/CUB_200_2011.tgz',
-               'https://drive.google.com/u/0/uc?export=download&confirm=B8eu&id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45']
+               'https://drive.google.com/uc?export=download&id=1jUTTlx8vv7doQUHSCdl39laV-y0FBC61']
         if len(ds_dict.keys()) > 0:
             if 'ROOT_DIR' in ds_dict.keys():
                 ROOT_DIR = ds_dict['ROOT_DIR']
@@ -1276,7 +1316,7 @@ class CUB2011:
             os.makedirs(dirs)
         print('Downloading dataset CUB2011...')
         filename = 'data/CUB_200_2011.tgz'
-        download(filename=filename, url=url, to_cache=False)
+        download(filename=filename, url=_resolve_download_urls(url), to_cache=False)
         try:
             tar = tarfile.open(filename, "r")
         except tarfile.ReadError as err:
