@@ -5,6 +5,7 @@ import mindspore.nn as nn
 from mindspore.ops import stop_gradient
 import math
 
+import pygmtools
 import inspect
 import functools
 _max_signature = inspect.signature(mindspore.ops.max)
@@ -161,7 +162,8 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
                                                                      -float('inf'), dtype=log_s.dtype
                                                                      )), axis=1)
         for b in range(batch_size):
-            log_s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
+            if int(nrows[b]) > int(ori_nrows[b]):
+                log_s[b, int(ori_nrows[b]):int(nrows[b]), :int(ncols[b])] = -100
 
     # assign the unmatch weights
     if unmatchrows is not None and unmatchcols is not None:
@@ -238,7 +240,8 @@ def sinkhorn(s: mindspore.Tensor, nrows: mindspore.Tensor = None, ncols: mindspo
         if dummy_shape[1] > 0:
             ret_log_s = ret_log_s[:, :-dummy_shape[1]]
         for b in range(batch_size):
-            ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
+            if int(nrows[b]) > int(ori_nrows[b]):
+                ret_log_s[b, ori_nrows[b]:nrows[b], :ncols[b]] = -float('inf')
 
     if transposed_batch.any():
         s_t = ret_log_s.swapaxes(1, 2)
@@ -602,3 +605,323 @@ def _mm(input1, input2):
     mindspore implementation of _mm
     """
     return mindspore.ops.matmul(input1, input2)
+
+
+############################################
+#          Neural Network Solvers          #
+############################################
+
+from pygmtools.mindspore_modules import *
+
+
+class PCA_GM_Net(nn.Cell):
+    """
+    MindSpore implementation of PCA-GM and IPCA-GM network.
+    """
+
+    def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
+        super().__init__()
+        self.gnn_layer = num_layers
+        self.gnn_layer_list = nn.CellList()
+        self.affinity_list = nn.CellList()
+        self.cross_graph_list = nn.CellList()
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_Gconv(in_channel, hidden_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_Gconv(hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_Gconv(hidden_channel, out_channel)
+            self.gnn_layer_list.append(gnn_layer)
+
+            if i == self.gnn_layer - 1:
+                self.affinity_list.append(WeightedInnerProdAffinity(out_channel))
+            elif i == self.gnn_layer - 2 and cross_iter_num <= 0:
+                self.affinity_list.append(WeightedInnerProdAffinity(hidden_channel))
+            else:
+                self.affinity_list.append(Identity())
+
+            if i == self.gnn_layer - 2:
+                self.cross_graph_list.append(nn.Dense(hidden_channel * 2, hidden_channel))
+            else:
+                self.cross_graph_list.append(Identity())
+
+    def construct(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(
+            sinkhorn, dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False
+        )
+        emb1, emb2 = feat1, feat2
+        if cross_iter_num <= 0:
+            for i in range(self.gnn_layer):
+                emb1, emb2 = self.gnn_layer_list[i]([A1, emb1], [A2, emb2])
+                if i == self.gnn_layer - 2:
+                    s = self.affinity_list[i](emb1, emb2)
+                    s = _sinkhorn_func(s, n1, n2)
+                    cross_graph = self.cross_graph_list[i]
+                    new_emb1 = cross_graph(mindspore.ops.concat((emb1, mindspore.ops.BatchMatMul()(s, emb2)), axis=-1))
+                    new_emb2 = cross_graph(
+                        mindspore.ops.concat((emb2, mindspore.ops.BatchMatMul()(s.swapaxes(1, 2), emb1)), axis=-1)
+                    )
+                    emb1, emb2 = new_emb1, new_emb2
+
+            s = self.affinity_list[self.gnn_layer - 1](emb1, emb2)
+            s = _sinkhorn_func(s, n1, n2)
+        else:
+            for i in range(self.gnn_layer - 1):
+                emb1, emb2 = self.gnn_layer_list[i]([A1, emb1], [A2, emb2])
+
+            emb1_0, emb2_0 = emb1, emb2
+            s = mindspore.ops.zeros((emb1.shape[0], emb1.shape[1], emb2.shape[1]), emb1.dtype)
+            for _ in range(cross_iter_num):
+                i = self.gnn_layer - 2
+                cross_graph = self.cross_graph_list[i]
+                emb1 = cross_graph(mindspore.ops.concat((emb1_0, mindspore.ops.BatchMatMul()(s, emb2_0)), axis=-1))
+                emb2 = cross_graph(
+                    mindspore.ops.concat((emb2_0, mindspore.ops.BatchMatMul()(s.swapaxes(1, 2), emb1_0)), axis=-1)
+                )
+                i = self.gnn_layer - 1
+                emb1, emb2 = self.gnn_layer_list[i]([A1, emb1], [A2, emb2])
+                s = self.affinity_list[i](emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+        return s
+
+
+class CIE_Net(nn.Cell):
+    """
+    MindSpore implementation of CIE graph matching network.
+    """
+
+    def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
+        super().__init__()
+        self.gnn_layer = num_layers
+        self.gnn_layer_list = nn.CellList()
+        self.affinity_list = nn.CellList()
+        self.cross_graph_list = nn.CellList()
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_ChannelIndependentConv(in_node_channel, hidden_channel, in_edge_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, out_channel, hidden_channel)
+            self.gnn_layer_list.append(gnn_layer)
+
+            if i == self.gnn_layer - 1:
+                self.affinity_list.append(WeightedInnerProdAffinity(out_channel))
+            elif i == self.gnn_layer - 2:
+                self.affinity_list.append(WeightedInnerProdAffinity(hidden_channel))
+            else:
+                self.affinity_list.append(Identity())
+
+            if i == self.gnn_layer - 2:
+                self.cross_graph_list.append(nn.Dense(hidden_channel * 2, hidden_channel))
+            else:
+                self.cross_graph_list.append(Identity())
+
+    def construct(self, feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(
+            sinkhorn, dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False
+        )
+        emb1, emb2 = feat_node1, feat_node2
+        emb_edge1, emb_edge2 = feat_edge1, feat_edge2
+        for i in range(self.gnn_layer):
+            emb1, emb2, emb_edge1, emb_edge2 = self.gnn_layer_list[i]([A1, emb1, emb_edge1], [A2, emb2, emb_edge2])
+            if i == self.gnn_layer - 2:
+                s = self.affinity_list[i](emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+                cross_graph = self.cross_graph_list[i]
+                new_emb1 = cross_graph(mindspore.ops.concat((emb1, mindspore.ops.BatchMatMul()(s, emb2)), axis=-1))
+                new_emb2 = cross_graph(
+                    mindspore.ops.concat((emb2, mindspore.ops.BatchMatMul()(s.swapaxes(1, 2), emb1)), axis=-1)
+                )
+                emb1, emb2 = new_emb1, new_emb2
+
+        s = self.affinity_list[self.gnn_layer - 1](emb1, emb2)
+        s = _sinkhorn_func(s, n1, n2)
+        return s
+
+
+class NGM_Net(nn.Cell):
+    """
+    MindSpore implementation of NGM network.
+    """
+
+    def __init__(self, gnn_channels, sk_emb):
+        super().__init__()
+        self.gnn_layer = len(gnn_channels)
+        self.gnn_layer_list = nn.CellList()
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = NGMConvLayer(1, 1, gnn_channels[i] + sk_emb, gnn_channels[i], sk_channel=sk_emb)
+            else:
+                gnn_layer = NGMConvLayer(
+                    gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
+                    gnn_channels[i] + sk_emb, gnn_channels[i], sk_channel=sk_emb
+                )
+            self.gnn_layer_list.append(gnn_layer)
+        self.classifier = nn.Dense(gnn_channels[-1] + sk_emb, 1)
+
+    def construct(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(
+            sinkhorn, dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False
+        )
+        emb = v0
+        A = (K != 0).astype(K.dtype)
+        emb_K = mindspore.ops.expand_dims(K, axis=-1)
+        for i in range(self.gnn_layer):
+            emb_K, emb = self.gnn_layer_list[i](A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
+        v = self.classifier(emb)
+        s = v.reshape((v.shape[0], int(n2max), -1)).swapaxes(1, 2)
+        return _sinkhorn_func(s, n1, n2, dummy_row=True)
+
+
+pca_gm_pretrain_path = {
+    'voc': ('pca_gm_voc_mindspore.ckpt',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc_mindspore.ckpt'],
+            'e49379424ffea6759526bd9d436a0dcf'),
+    'willow': ('pca_gm_willow_mindspore.ckpt',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_willow_mindspore.ckpt'],
+               '3ed733a9b04e2a83142b08db2b9952cf'),
+    'voc-all': ('pca_gm_voc-all_mindspore.ckpt',
+                ['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc-all_mindspore.ckpt'],
+                '28d40ccdc8bc743d2eca459758d887a2'),
+}
+
+ipca_gm_pretrain_path = {
+    'voc': ('ipca_gm_voc_mindspore.ckpt',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_voc_mindspore.ckpt'],
+            'c9f888eefbc22684317f5deedf175da7'),
+    'willow': ('ipca_gm_willow_mindspore.ckpt',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_willow_mindspore.ckpt'],
+               '8d25c7bc7d7350467e07e53d1d004d63'),
+}
+
+cie_pretrain_path = {
+    'voc': ('cie_voc_mindspore.ckpt',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_voc_mindspore.ckpt'],
+            'be80f98e26af89a68421286f60d544f7'),
+    'willow': ('cie_willow_mindspore.ckpt',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_willow_mindspore.ckpt'],
+               'b295e0bfa7367e9a2830b0ec25a99220'),
+}
+
+ngm_pretrain_path = {
+    'voc': ('ngm_voc_mindspore.ckpt',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_voc_mindspore.ckpt'],
+            'afa3d94ac9685dba82629e9ef79b19cf'),
+    'willow': ('ngm_willow_mindspore.ckpt',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_willow_mindspore.ckpt'],
+               '877aad75a62ad6cddbd45a0f4ece3790'),
+}
+
+
+def _save_model(model, path):
+    mindspore.save_checkpoint(model, path)
+
+
+def _load_model(model, path, strict=True):
+    param_dict = mindspore.load_checkpoint(path)
+    try:
+        param_not_load, ckpt_not_load = mindspore.load_param_into_net(model, param_dict, strict_load=strict)
+    except TypeError:
+        param_not_load, ckpt_not_load = mindspore.load_param_into_net(model, param_dict)
+    if len(ckpt_not_load) > 0:
+        print('Warning: Unexpected key(s) in state_dict: {}. '.format(
+            ', '.join('"{}"'.format(k) for k in ckpt_not_load)))
+    if len(param_not_load) > 0:
+        print('Warning: Missing key(s) in state_dict: {}. '.format(
+            ', '.join('"{}"'.format(k) for k in param_not_load)))
+
+
+def _get_pretrain_file(pretrain, pretrain_path):
+    if pretrain in pretrain_path:
+        filename, url, md5 = pretrain_path[pretrain]
+        return pygmtools.utils.download(filename, url, md5)
+    raise ValueError(f'Unknown pretrain tag. Available tags: {pretrain_path.keys()}')
+
+
+def pca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    MindSpore implementation of PCA-GM.
+    """
+    forward_pass = feat1 is not None
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            _load_model(network, _get_pretrain_file(pretrain, pca_gm_pretrain_path))
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = mindspore.Tensor([feat1.shape[1]] * batch_size, dtype=mindspore.int32)
+        if n2 is None:
+            n2 = mindspore.Tensor([feat2.shape[1]] * batch_size, dtype=mindspore.int32)
+        result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+def ipca_gm(feat1, feat2, A1, A2, n1, n2,
+            in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+            network, pretrain):
+    """
+    MindSpore implementation of IPCA-GM.
+    """
+    forward_pass = feat1 is not None
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
+        if pretrain:
+            _load_model(network, _get_pretrain_file(pretrain, ipca_gm_pretrain_path))
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = mindspore.Tensor([feat1.shape[1]] * batch_size, dtype=mindspore.int32)
+        if n2 is None:
+            n2 = mindspore.Tensor([feat2.shape[1]] * batch_size, dtype=mindspore.int32)
+        result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
+        in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+        network, pretrain):
+    """
+    MindSpore implementation of CIE.
+    """
+    forward_pass = feat_node1 is not None
+    if network is None:
+        network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            _load_model(network, _get_pretrain_file(pretrain, cie_pretrain_path))
+    if forward_pass:
+        batch_size = feat_node1.shape[0]
+        if n1 is None:
+            n1 = mindspore.Tensor([feat_node1.shape[1]] * batch_size, dtype=mindspore.int32)
+        if n2 is None:
+            n2 = mindspore.Tensor([feat_node1.shape[1]] * batch_size, dtype=mindspore.int32)
+        result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
+    """
+    MindSpore implementation of NGM.
+    """
+    forward_pass = K is not None
+    if network is None:
+        network = NGM_Net(gnn_channels, sk_emb)
+        if pretrain:
+            _load_model(network, _get_pretrain_file(pretrain, ngm_pretrain_path))
+    if forward_pass:
+        batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+        v0 = v0 / mindspore.ops.mean(v0)
+        result = network(K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network

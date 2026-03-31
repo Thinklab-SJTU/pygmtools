@@ -8,11 +8,14 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 
+import functools
+import os
 import tensorflow as tf
 import tensorflow.experimental.numpy as tnp
 import numpy as np
 from multiprocessing import Pool
 
+import pygmtools
 import pygmtools.utils
 from pygmtools.numpy_backend import _hung_kernel
 
@@ -344,6 +347,342 @@ def _check_and_init_gm(K, n1, n2, n1max, n2max, x0):
     v0 = tf.reshape(tf.transpose(x0, perm=[0, 2, 1]), [batch_num, n1n2, 1])
 
     return batch_num, n1, n2, n1max, n2max, n1n2, v0
+
+
+############################################
+#          Neural Network Solvers          #
+############################################
+
+from pygmtools.tensorflow_modules import *
+
+
+class PCA_GM_Net(tf.keras.Model):
+    """
+    TensorFlow implementation of PCA-GM and IPCA-GM network.
+    """
+
+    def __init__(self, in_channel, hidden_channel, out_channel, num_layers, cross_iter_num=-1):
+        super().__init__()
+        self.gnn_layer = num_layers
+        self.gnn_layer_list = []
+        self.affinity_list = {}
+        self.cross_graph_list = {}
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_Gconv(in_channel, hidden_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_Gconv(hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_Gconv(hidden_channel, out_channel)
+                self.affinity_list[i] = WeightedInnerProdAffinity(out_channel)
+            self.gnn_layer_list.append(gnn_layer)
+            if i == self.gnn_layer - 2:
+                self.cross_graph_list[i] = tf.keras.layers.Dense(hidden_channel)
+                if cross_iter_num <= 0:
+                    self.affinity_list[i] = WeightedInnerProdAffinity(hidden_channel)
+
+    def call(self, feat1, feat2, A1, A2, n1, n2, cross_iter_num, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(
+            sinkhorn, dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False
+        )
+        emb1, emb2 = feat1, feat2
+        if cross_iter_num <= 0:
+            for i in range(self.gnn_layer):
+                emb1, emb2 = self.gnn_layer_list[i]([A1, emb1], [A2, emb2])
+                if i == self.gnn_layer - 2:
+                    s = self.affinity_list[i](emb1, emb2)
+                    s = _sinkhorn_func(s, n1, n2)
+                    cross_graph = self.cross_graph_list[i]
+                    new_emb1 = cross_graph(tf.concat((emb1, tf.matmul(s, emb2)), axis=-1))
+                    new_emb2 = cross_graph(tf.concat((emb2, tf.matmul(tf.transpose(s, perm=[0, 2, 1]), emb1)), axis=-1))
+                    emb1, emb2 = new_emb1, new_emb2
+
+            s = self.affinity_list[self.gnn_layer - 1](emb1, emb2)
+            s = _sinkhorn_func(s, n1, n2)
+        else:
+            for i in range(self.gnn_layer - 1):
+                emb1, emb2 = self.gnn_layer_list[i]([A1, emb1], [A2, emb2])
+
+            emb1_0, emb2_0 = emb1, emb2
+            s = tf.zeros((tf.shape(emb1)[0], tf.shape(emb1)[1], tf.shape(emb2)[1]), dtype=emb1.dtype)
+            for _ in range(cross_iter_num):
+                i = self.gnn_layer - 2
+                cross_graph = self.cross_graph_list[i]
+                emb1 = cross_graph(tf.concat((emb1_0, tf.matmul(s, emb2_0)), axis=-1))
+                emb2 = cross_graph(tf.concat((emb2_0, tf.matmul(tf.transpose(s, perm=[0, 2, 1]), emb1_0)), axis=-1))
+                i = self.gnn_layer - 1
+                emb1, emb2 = self.gnn_layer_list[i]([A1, emb1], [A2, emb2])
+                s = self.affinity_list[i](emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+        return s
+
+
+class CIE_Net(tf.keras.Model):
+    """
+    TensorFlow implementation of CIE graph matching network.
+    """
+
+    def __init__(self, in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers):
+        super().__init__()
+        self.gnn_layer = num_layers
+        self.gnn_layer_list = []
+        self.affinity_list = {}
+        self.cross_graph_list = {}
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = Siamese_ChannelIndependentConv(in_node_channel, hidden_channel, in_edge_channel)
+            elif 0 < i < self.gnn_layer - 1:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, hidden_channel, hidden_channel)
+            else:
+                gnn_layer = Siamese_ChannelIndependentConv(hidden_channel, out_channel, hidden_channel)
+                self.affinity_list[i] = WeightedInnerProdAffinity(out_channel)
+            self.gnn_layer_list.append(gnn_layer)
+            if i == self.gnn_layer - 2:
+                self.cross_graph_list[i] = tf.keras.layers.Dense(hidden_channel)
+                self.affinity_list[i] = WeightedInnerProdAffinity(hidden_channel)
+
+    def call(self, feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(
+            sinkhorn, dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False
+        )
+        emb1, emb2 = feat_node1, feat_node2
+        emb_edge1, emb_edge2 = feat_edge1, feat_edge2
+        for i in range(self.gnn_layer):
+            emb1, emb2, emb_edge1, emb_edge2 = self.gnn_layer_list[i](
+                [A1, emb1, emb_edge1], [A2, emb2, emb_edge2]
+            )
+            if i == self.gnn_layer - 2:
+                s = self.affinity_list[i](emb1, emb2)
+                s = _sinkhorn_func(s, n1, n2)
+                cross_graph = self.cross_graph_list[i]
+                new_emb1 = cross_graph(tf.concat((emb1, tf.matmul(s, emb2)), axis=-1))
+                new_emb2 = cross_graph(tf.concat((emb2, tf.matmul(tf.transpose(s, perm=[0, 2, 1]), emb1)), axis=-1))
+                emb1, emb2 = new_emb1, new_emb2
+
+        s = self.affinity_list[self.gnn_layer - 1](emb1, emb2)
+        s = _sinkhorn_func(s, n1, n2)
+        return s
+
+
+class NGM_Net(tf.keras.Model):
+    """
+    TensorFlow implementation of NGM network.
+    """
+
+    def __init__(self, gnn_channels, sk_emb):
+        super().__init__()
+        self.gnn_layer = len(gnn_channels)
+        self.gnn_layer_list = []
+        for i in range(self.gnn_layer):
+            if i == 0:
+                gnn_layer = NGMConvLayer(1, 1, gnn_channels[i] + sk_emb, gnn_channels[i], sk_channel=sk_emb)
+            else:
+                gnn_layer = NGMConvLayer(
+                    gnn_channels[i - 1] + sk_emb, gnn_channels[i - 1],
+                    gnn_channels[i] + sk_emb, gnn_channels[i], sk_channel=sk_emb
+                )
+            self.gnn_layer_list.append(gnn_layer)
+        self.classifier = tf.keras.layers.Dense(1)
+
+    def call(self, K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau):
+        _sinkhorn_func = functools.partial(
+            sinkhorn, dummy_row=False, max_iter=sk_max_iter, tau=sk_tau, batched_operation=False
+        )
+        emb = v0
+        A = tf.cast(K != 0, K.dtype)
+        emb_K = tf.expand_dims(K, axis=-1)
+        for i in range(self.gnn_layer):
+            emb_K, emb = self.gnn_layer_list[i](A, emb_K, emb, n1, n2, sk_func=_sinkhorn_func)
+        v = self.classifier(emb)
+        s = tf.transpose(tf.reshape(v, [tf.shape(v)[0], n2max, -1]), perm=[0, 2, 1])
+        return _sinkhorn_func(s, n1, n2, dummy_row=True)
+
+
+def _build_tf_network(network, example_args):
+    if network.built:
+        return
+    network(*example_args)
+
+
+pca_gm_pretrain_path = {
+    'voc': ('pca_gm_voc_tensorflow.weights.h5',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc_tensorflow.weights.h5'],
+            'a9d14a35e7d5c186f50c3bb8d5e172c2'),
+    'willow': ('pca_gm_willow_tensorflow.weights.h5',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_willow_tensorflow.weights.h5'],
+               '7c5f1cc721836763574c72b2bd010858'),
+    'voc-all': ('pca_gm_voc-all_tensorflow.weights.h5',
+                ['https://huggingface.co/heatingma/pygmtools/resolve/main/pca_gm_voc-all_tensorflow.weights.h5'],
+                '7c3c706d005d725a636f4f1b86ff8283'),
+}
+
+ipca_gm_pretrain_path = {
+    'voc': ('ipca_gm_voc_tensorflow.weights.h5',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_voc_tensorflow.weights.h5'],
+            'a0ae166e8611836287612396e6fa471f'),
+    'willow': ('ipca_gm_willow_tensorflow.weights.h5',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/ipca_gm_willow_tensorflow.weights.h5'],
+               '00a393379b9e0b2b556d59de2f9b0d97'),
+}
+
+cie_pretrain_path = {
+    'voc': ('cie_voc_tensorflow.weights.h5',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_voc_tensorflow.weights.h5'],
+            'edd6b58b366390d1b09a97c28f6cb62a'),
+    'willow': ('cie_willow_tensorflow.weights.h5',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/cie_willow_tensorflow.weights.h5'],
+               'e6016bd187ef9c6835eedef4dd02344f'),
+}
+
+ngm_pretrain_path = {
+    'voc': ('ngm_voc_tensorflow.weights.h5',
+            ['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_voc_tensorflow.weights.h5'],
+            'febcbdf60a706d655abc3b3a93641ffa'),
+    'willow': ('ngm_willow_tensorflow.weights.h5',
+               ['https://huggingface.co/heatingma/pygmtools/resolve/main/ngm_willow_tensorflow.weights.h5'],
+               'b8b3c600ea6ff60ba1161a52a99cdf13'),
+}
+
+
+def _save_model(model, path):
+    model.save_weights(path)
+
+
+def _load_model(model, path):
+    model.load_weights(path)
+
+
+def _get_pretrain_file(pretrain, pretrain_path):
+    if pretrain in pretrain_path:
+        filename, url, md5 = pretrain_path[pretrain]
+        return pygmtools.utils.download(filename, url, md5)
+    raise ValueError(f'Unknown pretrain tag. Available tags: {pretrain_path.keys()}')
+
+
+def _build_pca_gm_network(network, in_channel, cross_iter, sk_max_iter, sk_tau):
+    n = 4
+    feat1 = tf.zeros((1, n, in_channel), dtype=tf.float32)
+    feat2 = tf.zeros((1, n, in_channel), dtype=tf.float32)
+    A1 = tf.eye(n, batch_shape=[1], dtype=tf.float32)
+    A2 = tf.eye(n, batch_shape=[1], dtype=tf.float32)
+    n1 = tf.constant([n], dtype=tf.int32)
+    n2 = tf.constant([n], dtype=tf.int32)
+    _build_tf_network(network, (feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau))
+
+
+def _build_cie_network(network, in_node_channel, in_edge_channel, sk_max_iter, sk_tau):
+    n = 4
+    feat_node1 = tf.zeros((1, n, in_node_channel), dtype=tf.float32)
+    feat_node2 = tf.zeros((1, n, in_node_channel), dtype=tf.float32)
+    A1 = tf.eye(n, batch_shape=[1], dtype=tf.float32)
+    A2 = tf.eye(n, batch_shape=[1], dtype=tf.float32)
+    feat_edge1 = tf.zeros((1, n, n, in_edge_channel), dtype=tf.float32)
+    feat_edge2 = tf.zeros((1, n, n, in_edge_channel), dtype=tf.float32)
+    n1 = tf.constant([n], dtype=tf.int32)
+    n2 = tf.constant([n], dtype=tf.int32)
+    _build_tf_network(network, (feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau))
+
+
+def _build_ngm_network(network, sk_max_iter, sk_tau):
+    n = 4
+    n1 = tf.constant([n], dtype=tf.int32)
+    n2 = tf.constant([n], dtype=tf.int32)
+    n1max = n
+    n2max = n
+    K = tf.zeros((1, n * n, n * n), dtype=tf.float32)
+    v0 = tf.ones((1, n * n, 1), dtype=tf.float32) / float(n * n)
+    _build_tf_network(network, (K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau))
+
+
+def pca_gm(feat1, feat2, A1, A2, n1, n2,
+           in_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+           network, pretrain):
+    """
+    TensorFlow implementation of PCA-GM.
+    """
+    forward_pass = feat1 is not None
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            _build_pca_gm_network(network, in_channel, -1, sk_max_iter, sk_tau)
+            _load_model(network, _get_pretrain_file(pretrain, pca_gm_pretrain_path))
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = tf.cast(tf.fill((batch_size,), feat1.shape[1]), tf.int32)
+        if n2 is None:
+            n2 = tf.cast(tf.fill((batch_size,), feat2.shape[1]), tf.int32)
+        result = network(feat1, feat2, A1, A2, n1, n2, -1, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+def ipca_gm(feat1, feat2, A1, A2, n1, n2,
+            in_channel, hidden_channel, out_channel, num_layers, cross_iter, sk_max_iter, sk_tau,
+            network, pretrain):
+    """
+    TensorFlow implementation of IPCA-GM.
+    """
+    forward_pass = feat1 is not None
+    if network is None:
+        network = PCA_GM_Net(in_channel, hidden_channel, out_channel, num_layers, cross_iter)
+        if pretrain:
+            _build_pca_gm_network(network, in_channel, cross_iter, sk_max_iter, sk_tau)
+            _load_model(network, _get_pretrain_file(pretrain, ipca_gm_pretrain_path))
+    if forward_pass:
+        batch_size = feat1.shape[0]
+        if n1 is None:
+            n1 = tf.cast(tf.fill((batch_size,), feat1.shape[1]), tf.int32)
+        if n2 is None:
+            n2 = tf.cast(tf.fill((batch_size,), feat2.shape[1]), tf.int32)
+        result = network(feat1, feat2, A1, A2, n1, n2, cross_iter, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+def cie(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2,
+        in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers, sk_max_iter, sk_tau,
+        network, pretrain):
+    """
+    TensorFlow implementation of CIE.
+    """
+    forward_pass = feat_node1 is not None
+    if network is None:
+        network = CIE_Net(in_node_channel, in_edge_channel, hidden_channel, out_channel, num_layers)
+        if pretrain:
+            _build_cie_network(network, in_node_channel, in_edge_channel, sk_max_iter, sk_tau)
+            _load_model(network, _get_pretrain_file(pretrain, cie_pretrain_path))
+    if forward_pass:
+        batch_size = feat_node1.shape[0]
+        if n1 is None:
+            n1 = tf.cast(tf.fill((batch_size,), feat_node1.shape[1]), tf.int32)
+        if n2 is None:
+            n2 = tf.cast(tf.fill((batch_size,), feat_node1.shape[1]), tf.int32)
+        result = network(feat_node1, feat_node2, A1, A2, feat_edge1, feat_edge2, n1, n2, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
+
+
+def ngm(K, n1, n2, n1max, n2max, x0, gnn_channels, sk_emb, sk_max_iter, sk_tau, network, return_network, pretrain):
+    """
+    TensorFlow implementation of NGM.
+    """
+    forward_pass = K is not None
+    if network is None:
+        network = NGM_Net(gnn_channels, sk_emb)
+        if pretrain:
+            _build_ngm_network(network, sk_max_iter, sk_tau)
+            _load_model(network, _get_pretrain_file(pretrain, ngm_pretrain_path))
+    if forward_pass:
+        batch_num, n1, n2, n1max, n2max, n1n2, v0 = _check_and_init_gm(K, n1, n2, n1max, n2max, x0)
+        v0 = v0 / tf.reduce_mean(v0)
+        result = network(K, n1, n2, n1max, n2max, v0, sk_max_iter, sk_tau)
+    else:
+        result = None
+    return result, network
 
 
 #############################################

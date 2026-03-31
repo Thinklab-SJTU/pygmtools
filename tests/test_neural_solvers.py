@@ -9,6 +9,7 @@
 # See the Mulan PSL v2 for more details.
 
 import sys
+import os
 
 sys.path.insert(0, '.')
 
@@ -16,17 +17,66 @@ import numpy as np
 import torch
 import functools
 import itertools
+import importlib.util
+from appdirs import user_cache_dir
 from tqdm import tqdm
 
 from test_utils import *
 
 import platform
 os_name = platform.system()
-backends = ['pytorch', 'numpy', 'jittor', 'paddle'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle']
+
+
+def _backend_available(backend):
+    module_name = {
+        'pytorch': 'torch',
+        'numpy': 'numpy',
+        'jittor': 'jittor',
+        'paddle': 'paddle',
+        'tensorflow': 'tensorflow',
+        'mindspore': 'mindspore',
+    }[backend]
+    return importlib.util.find_spec(module_name) is not None
+
+
+def _pick_backends(candidates):
+    return [backend for backend in candidates if _backend_available(backend)]
+
+
+def _backend_pretrain_available(backend, model_name, tags):
+    if not _backend_available(backend):
+        return False
+    if backend not in ('tensorflow', 'mindspore'):
+        return True
+
+    suffix = {
+        'tensorflow': '.weights.h5',
+        'mindspore': '.ckpt',
+    }[backend]
+    roots = [
+        user_cache_dir("pygmtools"),
+        os.path.join(os.path.dirname(__file__), '..', 'pretrained'),
+    ]
+    for tag in tags:
+        filename = f'{model_name}_{tag}_{backend}{suffix}'
+        if not any(os.path.exists(os.path.join(root, filename)) for root in roots):
+            return False
+    return True
+
+
+def _pick_pretrained_backends(candidates, model_name, tags):
+    return [backend for backend in candidates if _backend_pretrain_available(backend, model_name, tags)]
+
+
+base_backends = ['pytorch', 'numpy', 'jittor', 'paddle'] if os_name == 'Linux' else ['pytorch', 'numpy', 'paddle']
+extended_backends = base_backends + ['tensorflow', 'mindspore']
+pretrained_backends = _pick_backends(base_backends)
+non_pretrained_backends = _pick_backends(extended_backends)
 
 
 # The testing function for quadratic assignment
 def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, solver_func, mode, matrix_params, backends):
+    backends = list(backends)
     if mode == 'lawler-qap':
         assert 'edge_aff_fn' in matrix_params
         assert 'node_aff_fn' in matrix_params
@@ -67,9 +117,15 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
     for values in tqdm(itertools.product(*matrix_params.values()), total=total):
         aff_param_dict = {}
         solver_param_dict = {}
+        check_accuracy = True
+        check_consistency = True
         for k, v in zip(matrix_params.keys(), values):
             if k in ['node_aff_fn', 'edge_aff_fn']:
                 aff_param_dict[k] = v
+            elif k == 'check_accuracy':
+                check_accuracy = v
+            elif k == 'check_consistency':
+                check_consistency = v
             else:
                 solver_param_dict[k] = v
 
@@ -80,7 +136,8 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             _A1, _A2, _F1, _F2, _EF1, _EF2, _n1, _n2 = data_from_numpy(A1, A2, F1, F2, EF1, EF2, n1, n2)
             if batch_size == 1:
                 if mode == 'lawler-qap':
-                    _n1, _n2 = _n1.item(), _n2.item()
+                    _n1 = np.asarray(pygm.utils.to_numpy(_n1)).item()
+                    _n2 = np.asarray(pygm.utils.to_numpy(_n2)).item()
                 else:
                     _n1, _n2 = None, None
 
@@ -95,11 +152,12 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                     _conn2, _edge2 = pygm.utils.dense_to_sparse(_A2)
                     _K = pygm.utils.build_aff_mat(_F1, _edge1, _conn1, _F2, _edge2, _conn2, _n1, None, _n2, None,
                                                   **aff_param_dict)
-                if last_K is not None:
-                    assert np.abs(pygm.utils.to_numpy(_K) - last_K).sum() < 0.1, \
+            if mode == 'lawler-qap':
+                if check_consistency and last_K is not None:
+                    assert np.max(np.abs(pygm.utils.to_numpy(_K) - last_K)) < 1e-4, \
                         f"Incorrect affinity matrix for {working_backend}, " \
                         f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
-                        f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+                            f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
                 last_K = pygm.utils.to_numpy(_K)
                 _X1, net = solver_func(_K, _n1, _n2, return_network=True, **solver_param_dict)
                 _X2 = solver_func(_K, _n1, _n2, network=net, **solver_param_dict)
@@ -123,21 +181,23 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
             if 'pretrain' in solver_param_dict and solver_param_dict['pretrain'] is None:
                 _X1 = pygm.hungarian(_X1, _n1, _n2)
 
-            if last_X is not None:
+            if check_consistency and last_X is not None:
                 assert np.abs(pygm.utils.to_numpy(_X1) - last_X).sum() < 5e-3, \
                     f"Incorrect GM solution for {working_backend}, " \
                     f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                     f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
             last_X = pygm.utils.to_numpy(_X1)
 
-            accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X1, _n1, _n2)) * X_gt).sum() / X_gt.sum()
-            assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
-                                  f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
-                                  f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
+            if check_accuracy:
+                accuracy = (pygm.utils.to_numpy(pygm.hungarian(_X1, _n1, _n2)) * X_gt).sum() / X_gt.sum()
+                assert accuracy == 1, f"GM is inaccurate for {working_backend}, accuracy={accuracy:.4f}, " \
+                                      f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
+                                      f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
 
 
 # The testing function for genn_astar
 def _test_genn_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params, backends):
+    backends = list(backends)
     if backends[0] != 'pytorch':
         backends.insert(0, 'pytorch') # force pytorch as the reference backend
     backends = ['pytorch'] # Due to currently only supporting pytorch, testing is only conducted under pytorch
@@ -202,69 +262,82 @@ def _test_genn_astar(graph_num_nodes, node_feat_dim, solver_func, matrix_params,
                                   
 
 def test_pca_gm():
+    pretrained_backends = _pick_pretrained_backends(extended_backends, 'pca_gm', ['voc', 'willow', 'voc-all'])
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow', 'voc-all'],
-    }, backends)
+    }, pretrained_backends)
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
         'pretrain': ['voc'],
-    }, backends)
+    }, pretrained_backends)
 
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.pca_gm, 'individual-graphs', {
         'num_layers': [3],
         'pretrain': [None],
-    }, backends)
+    }, non_pretrained_backends)
 
 
 def test_ipca_gm():
+    pretrained_backends = _pick_pretrained_backends(extended_backends, 'ipca_gm', ['voc', 'willow'])
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc', 'willow'],
-    }, backends)
+    }, pretrained_backends)
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
         'pretrain': ['voc'],
-    }, backends)
+    }, pretrained_backends)
 
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
         'num_layers': [3],
         'pretrain': [None],
-    }, backends)
+    }, non_pretrained_backends)
 
 
 def test_cie():
+    pretrained_backends = _pick_pretrained_backends(extended_backends, 'cie', ['voc', 'willow'])
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.cie, 'individual-graphs-edge', {
             'pretrain': ['voc', 'willow'],
-        }, backends)
+        }, pretrained_backends)
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
         'pretrain': ['voc'],
-    }, backends)
+    }, pretrained_backends)
 
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.cie, 'individual-graphs-edge', {
         'num_layers': [3],
         'pretrain': [None],
-    }, backends)
+    }, non_pretrained_backends)
 
 
 def test_ngm():
+    pretrained_backends = _pick_pretrained_backends(extended_backends, 'ngm', ['voc', 'willow'])
     _test_neural_solver_on_isomorphic_graphs(list(range(10, 30, 2)), 1024, pygm.ngm, 'lawler-qap', {
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.), pygm.utils.inner_prod_aff_fn],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1), pygm.utils.inner_prod_aff_fn],
         'pretrain': ['voc', 'willow'],
-    }, backends)
+    }, pretrained_backends)
 
     # non-batched input
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ngm, 'lawler-qap', {
         'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
         'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
         'pretrain': ['voc'],
-    }, backends)
+    }, pretrained_backends)
+
+    _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ngm, 'lawler-qap', {
+        'edge_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=1.)],
+        'node_aff_fn': [functools.partial(pygm.utils.gaussian_aff_fn, sigma=.1)],
+        'gnn_channels': [[16, 16, 16]],
+        'check_accuracy': [False],
+        'check_consistency': [False],
+        'pretrain': [None],
+    }, non_pretrained_backends)
 
 
 def test_genn_astar():
@@ -275,7 +348,7 @@ def test_genn_astar():
         "trust_fact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
     
-    }, backends)
+    }, pretrained_backends)
     
     # non-batched input
     args2 = ([10], 36, pygm.genn_astar,{
@@ -283,7 +356,7 @@ def test_genn_astar():
         "beam_width": [0, 1, 2],
         "trust_fact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
-    }, backends)
+    }, pretrained_backends)
     
     # test pretrained by LINUX
     args3 = (list(range(10, 30, 2)), 8, pygm.genn_astar,{
@@ -291,7 +364,7 @@ def test_genn_astar():
         "beam_width": [0, 1, 2],
         "trust_fact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
-    }, backends)
+    }, pretrained_backends)
     
     # non-batched input
     args4 = ([10], 8, pygm.genn_astar,{
@@ -299,7 +372,7 @@ def test_genn_astar():
         "beam_width": [0, 1, 2],
         "trust_fact": [0.9, 0.95, 1.0],
         "no_pred_size": [0, 1],
-    }, backends)
+    }, pretrained_backends)
     
     _test_genn_astar(*args1)
     _test_genn_astar(*args2)
