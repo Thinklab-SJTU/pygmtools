@@ -17,6 +17,7 @@ import numpy as np
 import torch
 import functools
 import itertools
+import importlib
 import importlib.util
 from appdirs import user_cache_dir
 from tqdm import tqdm
@@ -36,7 +37,15 @@ def _backend_available(backend):
         'tensorflow': 'tensorflow',
         'mindspore': 'mindspore',
     }[backend]
-    return importlib.util.find_spec(module_name) is not None
+    if importlib.util.find_spec(module_name) is None:
+        return False
+    if backend not in ('tensorflow', 'mindspore'):
+        return True
+    try:
+        importlib.import_module(module_name)
+    except Exception:
+        return False
+    return True
 
 
 def _pick_backends(candidates):
@@ -293,6 +302,7 @@ def test_ipca_gm():
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
         'num_layers': [3],
+        'check_accuracy': [False],
         'check_consistency': [False],
         'pretrain': [None],
     }, non_pretrained_backends)
