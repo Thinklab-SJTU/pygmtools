@@ -130,27 +130,20 @@ The following backends are available:
 
 <img src="https://pygmtools.readthedocs.io/en/latest/_images/tensorflow_logo.png" alt="tensorflow logo" width="200"/>
 
-### Development status
+* [MindSpore](https://www.mindspore.cn/) (GPU friendly, deep learning friendly)
 
-|                     | Numpy | PyTorch | Jittor | PaddlePaddle | Tensorflow | MindSpore |
-| ------------------- | ----- | ------- | ------ | ------------ | ---------- | --------- |
-| Linear Solvers      | ✔     | ✔       | ✔      | ✔            | ✔         | ✔        |
-| Classic Solvers     | ✔     | ✔       | ✔      | ✔            | ✔         | ✔        |
-| Multi-Graph Solvers | ✔    | ✔       | ✔      | ✔            | 📆         | 📆        |
-| Neural Solvers      | ✔    | ✔       | ✔      | ✔           | 📆         | 📆        |
-| Examples Gallery    | ✔    | ✔       | ✔      | ✔           | 📆         | 📆        |
-
-✔: Supported; 📆: Planned for future versions (contributions welcomed!).
+<img src="https://pygmtools.readthedocs.io/en/latest/_images/mindspore_logo.png" alt="mindspore logo" width="200"/>
 
 For more details, please [read the documentation](https://pygmtools.readthedocs.io/en/latest/guide/get_started.html#install-other-backends).
 
 ## Pretrained Models
 
 The library includes several neural network solvers. The pretrained models shall be automatically downloaded upon 
-needed from Google Drive. If you are experiencing issues accessing Google Drive, please download the pretrained models
-manually and put them at ``~/.cache/pygmtools`` (for Linux).
+needed from the hosted model repository. If you are experiencing issues with automatic download, please download the
+pretrained models manually and put them at ``~/.cache/pygmtools`` (for Linux).
 
 Available at:
+[[huggingface]](https://huggingface.co/heatingma/pygmtools/tree/main)
 [[google drive]](https://drive.google.com/drive/folders/1O7vkIW8QXBJsNsHUIRiSw91HJ_0FAzu_?usp=sharing)
 [[baidu drive]](https://pan.baidu.com/s/1MvzfM52NJeLWx2JXbbc6HA?pwd=x8bv)
 

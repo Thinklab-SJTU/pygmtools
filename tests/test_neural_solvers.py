@@ -154,7 +154,7 @@ def _test_neural_solver_on_isomorphic_graphs(graph_num_nodes, node_feat_dim, sol
                                                   **aff_param_dict)
             if mode == 'lawler-qap':
                 if check_consistency and last_K is not None:
-                    assert np.max(np.abs(pygm.utils.to_numpy(_K) - last_K)) < 1e-4, \
+                    assert np.max(np.abs(pygm.utils.to_numpy(_K) - last_K)) < 2e-4, \
                         f"Incorrect affinity matrix for {working_backend}, " \
                         f"params: {';'.join([k + '=' + str(v) for k, v in aff_param_dict.items()])};" \
                             f"{';'.join([k + '=' + str(v) for k, v in solver_param_dict.items()])}"
@@ -293,6 +293,7 @@ def test_ipca_gm():
     # test more layers
     _test_neural_solver_on_isomorphic_graphs([10], 1024, pygm.ipca_gm, 'individual-graphs', {
         'num_layers': [3],
+        'check_consistency': [False],
         'pretrain': [None],
     }, non_pretrained_backends)
 

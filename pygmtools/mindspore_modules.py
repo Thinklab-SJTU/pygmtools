@@ -83,11 +83,13 @@ class ChannelIndependentConv(nn.Cell):
         A = ops.expand_dims(A, -1)
         A = ops.mul(ops.broadcast_to(A, edge_x.shape), edge_x)
 
-        node_x = ops.matmul(
-            A.transpose(0, 3, 1, 2),
-            ops.expand_dims(node_x, 2).transpose(0, 3, 1, 2),
-        )
-        node_x = ops.squeeze(node_x, -1).transpose(0, 2, 1)
+        batch_size, num_nodes = emb_node.shape[0], emb_node.shape[1]
+        out_channels = self.out_edges
+        lhs = ops.transpose(A, (0, 3, 1, 2)).reshape((batch_size * out_channels, num_nodes, num_nodes))
+        rhs = ops.transpose(ops.expand_dims(node_x, 2), (0, 3, 1, 2)).reshape((batch_size * out_channels, num_nodes, 1))
+        node_x = ops.BatchMatMul()(lhs, rhs)
+        node_x = ops.reshape(node_x, (batch_size, out_channels, num_nodes))
+        node_x = ops.transpose(node_x, (0, 2, 1))
         node_x = ops.relu(node_x) + ops.relu(node_sx)
         edge_x = ops.relu(edge_x)
 
@@ -161,11 +163,17 @@ class NGMConvLayer(nn.Cell):
             A = _l1_normalize(A, axis=2)
 
         x1 = self.n_func(x)
-        x2 = ops.matmul(
-            (ops.expand_dims(A, -1) * W_new).transpose(0, 3, 1, 2),
-            ops.expand_dims(x1, 2).transpose(0, 3, 1, 2),
-        )
-        x2 = ops.squeeze(x2, -1).transpose(0, 2, 1)
+        Aw = ops.expand_dims(A, -1) * W_new
+        batch_size, num_nodes = x.shape[0], x.shape[1]
+        out_channels = self.out_nfeat
+        lhs = ops.transpose(Aw, (0, 3, 1, 2))
+        if lhs.shape[1] != out_channels:
+            lhs = ops.broadcast_to(lhs, (batch_size, out_channels, num_nodes, num_nodes))
+        lhs = lhs.reshape((batch_size * out_channels, num_nodes, num_nodes))
+        rhs = ops.transpose(ops.expand_dims(x1, 2), (0, 3, 1, 2)).reshape((batch_size * out_channels, num_nodes, 1))
+        x2 = ops.BatchMatMul()(lhs, rhs)
+        x2 = ops.reshape(x2, (batch_size, out_channels, num_nodes))
+        x2 = ops.transpose(x2, (0, 2, 1))
         x2 = x2 + self.n_self_func(x)
 
         if self.classifier is not None:
@@ -175,9 +183,11 @@ class NGMConvLayer(nn.Cell):
             x3 = self.classifier(x2)
             n1_rep = ops.repeat_interleave(n1, self.sk_channel, axis=0)
             n2_rep = ops.repeat_interleave(n2, self.sk_channel, axis=0)
-            x4 = x3.transpose(0, 2, 1).reshape((x.shape[0] * self.sk_channel, n2max, n1max)).transpose(0, 2, 1)
-            x5 = sk_func(x4, n1_rep, n2_rep, dummy_row=True).transpose(0, 2, 1)
-            x6 = x5.reshape((x.shape[0], self.sk_channel, n1max * n2max)).transpose(0, 2, 1)
+            x4 = ops.transpose(x3, (0, 2, 1)).reshape((x.shape[0] * self.sk_channel, n2max, n1max))
+            x4 = ops.transpose(x4, (0, 2, 1))
+            x5 = ops.transpose(sk_func(x4, n1_rep, n2_rep, dummy_row=True), (0, 2, 1))
+            x6 = ops.reshape(x5, (x.shape[0], self.sk_channel, n1max * n2max))
+            x6 = ops.transpose(x6, (0, 2, 1))
             x_new = ops.concat((x2, x6), axis=-1)
         else:
             x_new = x2
