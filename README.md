@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/Thinklab-SJTU/pygmtools/branch/main/graph/badge.svg?token=Q68XTY0N0C)](https://codecov.io/gh/Thinklab-SJTU/pygmtools)
 [![discord channel](https://img.shields.io/discord/1028701206526304317.svg?&color=blueviolet&label=discord)](https://discord.gg/8m6n7rRz9T)
 [![QQ group](https://img.shields.io/badge/QQ%20group-696401889-blue)](https://qm.qq.com/cgi-bin/qm/qr?k=QolXYJn_M5ilDEM9e2jEjlPnJ02Ktabd&jump_from=webapi&authKey=6zG6D/Js4YF5h5zj778aO5MDKOXBwPFi8gQ4LsXJN8Hn1V8uCVGV81iT4J/FjPGT)
-[![GitHub stars](https://img.shields.io/github/stars/Thinklab-SJTU/pygmtools.svg?style=social&label=Star&maxAge=8640)](https://GitHub.com/Thinklab-SJTU/pygmtools/stargazers/) 
+[![GitHub stars](https://badgen.net/github/stars/Thinklab-SJTU/pygmtools?icon=github)](https://github.com/Thinklab-SJTU/pygmtools/stargazers)
 
 -----------------------------------------
 
